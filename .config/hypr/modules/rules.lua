@@ -5,13 +5,32 @@
 -- See https://wiki.hypr.land/Configuring/Basics/Window-Rules/
 -- and https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 
--- Persistent workspaces (default 1 to 4)
-for i = 1, 4 do
-    hl.workspace_rule({
-        workspace = tostring(i),
-        persistent = true,
-    })
-end
+-- Persistent workspaces (1 to 4)
+-- Workspace 1 defaults to internal laptop display (eDP-1)
+hl.workspace_rule({
+    workspace  = "1",
+    monitor    = "eDP-1",
+    default    = true,
+    persistent = true,
+})
+
+-- Workspace 2 defaults to external monitor (or secondary display)
+hl.workspace_rule({
+    workspace  = "2",
+    default    = true,
+    persistent = true,
+})
+
+-- Workspaces 3 and 4 are persistent
+hl.workspace_rule({
+    workspace  = "3",
+    persistent = true,
+})
+
+hl.workspace_rule({
+    workspace  = "4",
+    persistent = true,
+})
 
 -- Ref https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 -- "Smart gaps" / "No gaps when only"

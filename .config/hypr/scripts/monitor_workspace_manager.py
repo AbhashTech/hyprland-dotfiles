@@ -66,6 +66,15 @@ def run_hyprctl(args: list) -> str:
         return ""
 
 
+def run_hyprctl_eval(lua_code: str) -> str:
+    try:
+        res = subprocess.run(["hyprctl", "eval", lua_code], capture_output=True, text=True, check=True)
+        return res.stdout.strip()
+    except Exception as e:
+        log(f"Error running hyprctl eval {lua_code}: {e}")
+        return ""
+
+
 def get_monitors():
     raw = run_hyprctl(["monitors", "-j"])
     if not raw:
@@ -158,12 +167,7 @@ def assign_workspaces():
             best_ws = find_available_workspace(m_name, monitors, clients)
             log(f"Monitor {m_name} is on workspace {active_ws}. Reassigning to available workspace {best_ws}...")
             
-            # Move target workspace to this monitor and focus it
-            run_hyprctl(["dispatch", "moveworkspacetomonitor", f"{best_ws},{m_name}"])
-            run_hyprctl(["dispatch", "focusmonitor", m_name])
-            run_hyprctl(["dispatch", "workspace", str(best_ws)])
-            
-            # Refresh local monitors state
+            run_hyprctl_eval(f'hl.dsp.focus({{ monitor = "{m_name}" }}); hl.dsp.focus({{ workspace = {best_ws} }})')
             monitors = get_monitors()
 
 
@@ -183,9 +187,7 @@ def assign_monitor_workspace(monitor_name: str):
     best_ws = find_available_workspace(monitor_name, monitors, clients)
     log(f"New monitor {monitor_name} connected. Assigning available workspace {best_ws}...")
     
-    run_hyprctl(["dispatch", "moveworkspacetomonitor", f"{best_ws},{monitor_name}"])
-    run_hyprctl(["dispatch", "focusmonitor", monitor_name])
-    run_hyprctl(["dispatch", "workspace", str(best_ws)])
+    run_hyprctl_eval(f'hl.dsp.focus({{ monitor = "{monitor_name}" }}); hl.dsp.focus({{ workspace = {best_ws} }})')
 
 
 def get_hypr_socket2(timeout_sec=15.0):
