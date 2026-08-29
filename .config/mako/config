@@ -1,0 +1,65 @@
+# =============================================================================
+# Mako Notification Daemon Configuration
+# Catppuccin Mocha Glassmorphic Theme with 10s Dismiss Timeout
+# =============================================================================
+
+# Core Behavior
+default-timeout=10000
+ignore-timeout=0
+history=1
+max-history=100
+max-visible=5
+sort=+time
+
+# Geometry & Positioning
+width=380
+height=160
+margin=12,12
+padding=14,18
+border-size=2
+border-radius=14
+anchor=top-right
+layer=overlay
+
+# Catppuccin Mocha Colors
+background-color=#1e1e2ee6
+text-color=#cdd6f4
+border-color=#cba6f7
+progress-color=over #313244
+
+# Typography & Icons
+font=JetBrainsMono Nerd Font 10
+icons=1
+max-icon-size=48
+icon-border-radius=8
+markup=1
+actions=1
+format=<b>%s</b>\n%b
+
+# Urgency Overrides
+[urgency=low]
+border-color=#89b4fa
+default-timeout=8000
+
+[urgency=normal]
+border-color=#cba6f7
+default-timeout=10000
+
+[urgency=critical]
+border-color=#f38ba8
+text-color=#f38ba8
+default-timeout=0
+
+[mode=dnd]
+invisible=1
+
+# OSD & Transient Rules (Do not store in notification history)
+[category=osd]
+history=0
+
+[app-name=VolumeControl]
+history=0
+
+[app-name=BrightnessControl]
+history=0
+

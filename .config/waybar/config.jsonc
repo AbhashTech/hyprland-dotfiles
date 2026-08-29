@@ -1,0 +1,315 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 38,
+    "spacing": 6,
+    "margin-top": 8,
+    "margin-left": 12,
+    "margin-right": 12,
+    "margin-bottom": 0,
+    "exclusive": true,
+    "passthrough": false,
+    "reload_style_on_change": true,
+
+    // Modules Layout
+    "modules-left": [
+        "custom/launcher",
+        "hyprland/workspaces",
+        "hyprland/window",
+        "mpris"
+    ],
+    "modules-center": [
+        "clock"
+    ],
+    "modules-right": [
+        "group/tray-notif",
+        "group/status",
+        "group/quickdrawer",
+        "custom/power"
+    ],
+
+    // ==========================================
+    // Left Modules
+    // ==========================================
+    "custom/launcher": {
+        "format": "󰣇",
+        "tooltip": true,
+        "tooltip-format": "Applications (Super+R)",
+        "on-click": "bash /home/kunal/.config/hypr/scripts/fuzzel_launcher.sh",
+        "on-click-right": "/home/kunal/.config/waybar/scripts/power-menu.sh"
+    },
+
+    "hyprland/workspaces": {
+        "format": "{name}",
+        "on-click": "activate",
+        "on-scroll-up": "hyprctl dispatch 'hl.dsp.focus({ workspace = \"e+1\" })'",
+        "on-scroll-down": "hyprctl dispatch 'hl.dsp.focus({ workspace = \"e-1\" })'",
+        "all-outputs": true,
+        "persistent-workspaces": {
+            "*": 5
+        },
+        "sort-by-number": true,
+        "active-only": false
+    },
+
+    "hyprland/window": {
+        "format": "{title}",
+        "max-length": 30,
+        "separate-outputs": true,
+        "rewrite": {
+            "": "󰖲 Desktop",
+            "(.*) — Mozilla Firefox": "󰈹 $1",
+            "(.*) - Kitty": "󰞷 $1",
+            "(.*) - Dolphin": "󰉋 $1",
+            "(.*) - Visual Studio Code": "󰨞 $1"
+        }
+    },
+
+    "mpris": {
+        "format": "{player_icon}  {dynamic}",
+        "format-paused": "{status_icon}  <i>{dynamic}</i>",
+        "player-icons": {
+            "default": "󰐊",
+            "spotify": "",
+            "firefox": "󰈹",
+            "mpv": "󰎆"
+        },
+        "status-icons": {
+            "paused": "󰏤"
+        },
+        "dynamic-order": ["title", "artist"],
+        "dynamic-len": 26,
+        "dynamic-importance-order": ["title", "artist"],
+        "dynamic-separator": " • ",
+        "on-click": "playerctl play-pause",
+        "on-scroll-up": "playerctl next",
+        "on-scroll-down": "playerctl previous",
+        "tooltip-format": "{player}: {title} - {artist} ({album})"
+    },
+
+    // ==========================================
+    // Center Modules
+    // ==========================================
+    "clock": {
+        "interval": 1,
+        "format": "  {:%I:%M %p}",
+        "format-alt": "  {:%I:%M:%S %p  󰃭 %A, %d %B %Y}",
+        "tooltip-format": "<tt><small>{calendar}</small></tt>",
+        "calendar": {
+            "mode": "month",
+            "mode-mon-col": 3,
+            "weeks-pos": "right",
+            "on-scroll": 1,
+            "format": {
+                "months": "<span color='#cdd6f4'><b>{}</b></span>",
+                "days": "<span color='#bac2de'>{}</span>",
+                "weeks": "<span color='#94e2d5'><b>W{}</b></span>",
+                "weekdays": "<span color='#f9e2af'><b>{}</b></span>",
+                "today": "<span color='#f38ba8'><b><u>{}</u></b></span>"
+            }
+        },
+        "actions": {
+            "on-click-right": "mode",
+            "on-scroll-up": "shift_up",
+            "on-scroll-down": "shift_down"
+        }
+    },
+
+    // ==========================================
+    // Right Modules (Collapsible Drawer & Control Center)
+    // ==========================================
+    "group/quickdrawer": {
+        "orientation": "inherit",
+        "drawer": {
+            "transition-duration": 300,
+            "children-class": "drawer-item",
+            "transition-left-to-right": false
+        },
+        "modules": [
+            "custom/quicksettings",
+            "group/hardware"
+        ]
+    },
+
+    "group/tray-notif": {
+        "orientation": "horizontal",
+        "modules": [
+            "tray",
+            "custom/clipboard",
+            "custom/notification"
+        ]
+    },
+
+    "group/status": {
+        "orientation": "horizontal",
+        "modules": [
+            "pulseaudio",
+            "network",
+            "bluetooth",
+            "battery"
+        ]
+    },
+
+    "custom/quicksettings": {
+        "format": "  Stats",
+        "tooltip": true,
+        "tooltip-format": "<b>Hardware Stats &amp; Settings</b>\n• Left Click: Open Quick Settings Menu\n• Hover: Expand Hardware Stats",
+        "on-click": "/home/kunal/.config/waybar/scripts/quick-settings.py"
+    },
+
+    "group/hardware": {
+        "orientation": "horizontal",
+        "modules": [
+            "cpu",
+            "memory",
+            "temperature",
+            "disk"
+        ]
+    },
+
+    "cpu": {
+        "interval": 2,
+        "format": "󰍛 {usage}%",
+        "tooltip": true,
+        "tooltip-format": "CPU Usage: {usage}%\nCores: {cores}",
+        "on-click": "kitty --class btop -e btop"
+    },
+
+    "memory": {
+        "interval": 5,
+        "format": "󰘚 {percentage}%",
+        "tooltip-format": "RAM: {used:0.1f}GiB / {total:0.1f}GiB ({percentage}%)\nSwap: {swapUsed:0.1f}GiB / {swapTotal:0.1f}GiB",
+        "on-click": "kitty --class btop -e btop"
+    },
+
+    "temperature": {
+        "interval": 5,
+        "thermal-zone": 0,
+        "critical-threshold": 80,
+        "format": "󰔏 {temperatureC}°C",
+        "format-critical": "󰔏 {temperatureC}°C",
+        "tooltip": true,
+        "tooltip-format": "Temperature: {temperatureC}°C"
+    },
+
+    "disk": {
+        "interval": 30,
+        "format": "󰋊 {percentage_used}%",
+        "path": "/",
+        "tooltip-format": "Disk: {used} / {total} used ({percentage_used}%) on {path}",
+        "on-click": "kitty --hold -e df -h /"
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-bluetooth": "󰂰 {volume}%",
+        "format-muted": "󰝟",
+        "format-icons": {
+            "headphone": "󰋋",
+            "hands-free": "󰋋",
+            "headset": "󰋋",
+            "phone": "󰏲",
+            "portable": "󰏲",
+            "car": "󰄋",
+            "default": ["󰕿", "󰖀", "󰕾"]
+        },
+        "scroll-step": 5,
+        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle || pactl set-sink-mute @DEFAULT_SINK@ toggle",
+        "on-click-right": "kitty --hold -e wpctl status",
+        "tooltip-format": "{desc} | Volume: {volume}%"
+    },
+
+    "bluetooth": {
+        "format": "󰂯",
+        "format-disabled": "󰂲",
+        "format-off": "󰂲",
+        "format-on": "󰂯",
+        "format-connected": "󰂱 {num_connections}",
+        "format-connected-battery": "󰂱 {device_battery_percentage}%",
+        "tooltip-format": "{controller_alias}\t{controller_address}\n\n{num_connections} connected",
+        "tooltip-format-disabled": "Bluetooth is disabled / off",
+        "tooltip-format-off": "Bluetooth is turned off",
+        "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
+        "tooltip-format-enumerate-connected": "󰂱 {device_alias}\t{device_address}",
+        "tooltip-format-enumerate-connected-battery": "󰂱 {device_alias}\t{device_address}\t({device_battery_percentage}%)",
+        "on-click": "/home/kunal/.config/waybar/scripts/bluetooth-menu.sh",
+        "on-click-right": "rfkill toggle bluetooth"
+    },
+
+    "network": {
+        "interval": 5,
+        "format-wifi": "󰤨 {signalStrength}%",
+        "format-ethernet": "󰈀",
+        "format-linked": "󰈀",
+        "format-disconnected": "󰤭",
+        "tooltip-format-wifi": "󰤨  {essid} ({signalStrength}%)\n⇣ {bandwidthDownBytes}   ⇡ {bandwidthUpBytes}\nIP: {ipaddr}/{cidr}",
+        "tooltip-format-ethernet": "󰈀  {ifname}\n⇣ {bandwidthDownBytes}   ⇡ {bandwidthUpBytes}\nIP: {ipaddr}/{cidr}",
+        "tooltip-format-disconnected": "Disconnected",
+        "on-click": "/home/kunal/.config/waybar/scripts/network-menu.sh"
+    },
+
+    "battery": {
+        "interval": 10,
+        "states": {
+            "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon} {capacity}%",
+        "format-charging": "󰂄 {capacity}%",
+        "format-plugged": "󰚥 {capacity}%",
+        "format-alt": "{icon} {time}",
+        "format-icons": [
+            "󰂎",
+            "󰁺",
+            "󰁻",
+            "󰁼",
+            "󰁽",
+            "󰁾",
+            "󰁿",
+            "󰂀",
+            "󰂁",
+            "󰂂",
+            "󰁹"
+        ],
+        "tooltip-format": "{timeTo} remaining ({capacity}%)\nHealth: {health}%"
+    },
+
+    "tray": {
+        "icon-size": 16,
+        "spacing": 8
+    },
+
+    "custom/clipboard": {
+        "format": "{}",
+        "return-type": "json",
+        "exec-if": "command -v cliphist",
+        "exec": "/home/kunal/.config/hypr/scripts/clipboard_manager.py --status",
+        "on-click": "/home/kunal/.config/hypr/scripts/clipboard_manager.py --menu",
+        "on-click-right": "/home/kunal/.config/hypr/scripts/clipboard_manager.py --delete",
+        "on-click-middle": "/home/kunal/.config/hypr/scripts/clipboard_manager.py --toggle-pause",
+        "interval": 2,
+        "signal": 9,
+        "tooltip": true
+    },
+
+    "custom/notification": {
+        "format": "{}",
+        "return-type": "json",
+        "exec-if": "command -v makoctl",
+        "exec": "/home/kunal/.config/waybar/scripts/notifications.py --status",
+        "on-click": "/home/kunal/.config/waybar/scripts/notifications.py",
+        "on-click-right": "/home/kunal/.config/waybar/scripts/notifications.py --toggle-dnd",
+        "on-click-middle": "/home/kunal/.config/waybar/scripts/notifications.py --clear",
+        "interval": 2,
+        "signal": 10,
+        "tooltip": true
+    },
+
+    "custom/power": {
+        "format": "󰐥",
+        "tooltip": true,
+        "tooltip-format": "Power / Session Menu",
+        "on-click": "/home/kunal/.config/waybar/scripts/power-menu.sh"
+    }
+}

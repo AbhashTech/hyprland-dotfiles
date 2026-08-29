@@ -1,0 +1,1 @@
+/home/kunal/.config/hypr/scripts/clipboard_manager.py

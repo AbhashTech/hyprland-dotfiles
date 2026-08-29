@@ -1,0 +1,155 @@
+/* =============================================================================
+ * Catppuccin Mocha Glassmorphic Wofi Stylesheet
+ * Beautiful, modern, sleek popup styling
+ * ============================================================================= */
+
+/* Catppuccin Mocha Color Palette */
+@define-color base         #1e1e2e;
+@define-color mantle       #181825;
+@define-color crust        #11111b;
+@define-color text         #cdd6f4;
+@define-color subtext0     #a6adc8;
+@define-color subtext1     #bac2de;
+@define-color surface0     #313244;
+@define-color surface1     #45475a;
+@define-color surface2     #585b70;
+@define-color overlay0     #6c7086;
+
+@define-color blue         #89b4fa;
+@define-color lavender     #b4befe;
+@define-color sapphire     #74c7ec;
+@define-color sky          #89dceb;
+@define-color teal         #94e2d5;
+@define-color green        #a6e3a1;
+@define-color yellow       #f9e2af;
+@define-color peach        #fab387;
+@define-color maroon       #eba0ac;
+@define-color red          #f38ba8;
+@define-color mauve        #cba6f7;
+@define-color pink         #f5c2e7;
+@define-color flamingo     #f2cdcd;
+@define-color rosewater    #f5e0dc;
+
+/* Global Base */
+* {
+    font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", "RobotoMono Nerd Font", sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    border: none;
+    outline: none;
+    text-shadow: none;
+    box-shadow: none;
+}
+
+/* Wofi Main Window */
+window {
+    margin: 0px;
+    padding: 0px;
+    background-color: transparent;
+}
+
+/* Outer Container (Glass Card) */
+#outer-box {
+    margin: 10px;
+    padding: 16px;
+    background-color: rgba(24, 24, 37, 0.92);
+    border: 1.5px solid rgba(203, 166, 247, 0.35);
+    border-radius: 18px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 0 16px rgba(203, 166, 247, 0.12);
+}
+
+/* Search Bar Input */
+#input {
+    margin: 0px 0px 12px 0px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background-color: rgba(49, 50, 68, 0.65);
+    color: @text;
+    caret-color: @mauve;
+    font-size: 14px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#input:focus {
+    border: 1px solid rgba(203, 166, 247, 0.80);
+    background-color: rgba(49, 50, 68, 0.85);
+    box-shadow: 0 0 14px rgba(203, 166, 247, 0.25);
+}
+
+#input image {
+    border: none;
+    color: @mauve;
+    margin-right: 8px;
+}
+
+/* Scroll Container */
+#scroll {
+    margin: 0px;
+    padding: 0px;
+    border: none;
+    background-color: transparent;
+}
+
+/* Inner Box Container */
+#inner-box {
+    margin: 0px;
+    padding: 2px 0px;
+    border: none;
+    background-color: transparent;
+}
+
+/* List Entry (Row Item) */
+#entry {
+    margin: 3px 0px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background-color: transparent;
+    color: @subtext1;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hovered Item */
+#entry:hover {
+    background-color: rgba(49, 50, 68, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: @text;
+}
+
+/* Selected / Active Item */
+#entry:selected {
+    background: linear-gradient(90deg, rgba(203, 166, 247, 0.32) 0%, rgba(137, 180, 250, 0.20) 100%);
+    border: 1px solid rgba(203, 166, 247, 0.65);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), 0 0 8px rgba(203, 166, 247, 0.2);
+}
+
+/* Item Text */
+#text {
+    margin: 0px;
+    padding: 2px 0px;
+    color: @subtext1;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+#entry:hover #text {
+    color: @text;
+}
+
+#entry:selected #text {
+    color: #ffffff;
+    font-weight: 800;
+}
+
+/* App Icon / Image */
+#img {
+    margin-right: 12px;
+    background-color: transparent;
+    border: none;
+}
+
+/* Dropdown / Unselected state */
+#unselected {
+    color: @subtext0;
+}

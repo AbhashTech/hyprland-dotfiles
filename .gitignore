@@ -1,0 +1,15 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Caches and temporary logs
+*.tmp
+*.log
+.cache/
+.DS_Store
+
+# Backups created during installation
+*.bak
+*.backup

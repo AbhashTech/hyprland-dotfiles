@@ -1,0 +1,36 @@
+# =============================================================================
+# Wofi Configuration
+# Modern, responsive, beautiful application launcher & dmenu
+# =============================================================================
+
+# Mode and Appearance
+mode=drun,run
+show=drun
+prompt=   Search...
+filter_rate=100
+allow_markup=true
+allow_images=true
+image_size=28
+hide_scroll=true
+no_actions=true
+halign=fill
+content_halign=fill
+orientation=vertical
+insensitive=true
+gtk_dark=true
+layer=overlay
+term=kitty
+
+# Geometry
+width=480
+height=420
+lines=8
+columns=1
+
+# Navigation Keybindings (Vim keys + Arrows)
+key_up=Up,Control_L-k,Control_L-p
+key_down=Down,Control_L-j,Control_L-n
+key_left=Left,Control_L-h
+key_right=Right,Control_L-l
+key_submit=Return,KP_Enter
+key_exit=Escape

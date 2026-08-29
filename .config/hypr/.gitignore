@@ -1,0 +1,13 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Temporary & cache files
+*.tmp
+*.log
+.DS_Store
+
+# Local overrides or credentials (if any)
+*.local.lua
