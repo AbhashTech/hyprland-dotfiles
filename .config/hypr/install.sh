@@ -129,10 +129,19 @@ if ! lsmod | grep -q "i2c_dev"; then
     sudo modprobe i2c-dev 2>/dev/null || log_warn "Could not load i2c-dev automatically."
 fi
 
-# 5. Finished
+# 5. Initialize Theme & Color Variables
+log_info "Initializing desktop theme and dynamic color variables..."
+if [ -f "${SCRIPTS_DIR}/theme_switcher.py" ]; then
+    python3 "${SCRIPTS_DIR}/theme_switcher.py" --set catppuccin-mocha --silent 2>/dev/null || true
+    log_success "Catppuccin Mocha theme variables initialized."
+fi
+
+# 6. Finished
 echo ""
 log_success "Installation and environment setup completed!"
 echo -e "To launch or apply the configuration:"
-echo -e "  • Start Hyprland: ${COLOR_BOLD}Hyprland${COLOR_RESET}"
+echo -e "  • Start Hyprland:    ${COLOR_BOLD}Hyprland${COLOR_RESET}"
+echo -e "  • Theme Switcher:    ${COLOR_BOLD}SUPER + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --menu${COLOR_RESET})"
 echo -e "  • If already in Hyprland, reload with: ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"
 echo -e "  • Toggle Waybar with: ${COLOR_BOLD}SUPER + SHIFT + W${COLOR_RESET} (or ${COLOR_BOLD}~/.config/waybar/scripts/launch_waybar.sh${COLOR_RESET})"
+

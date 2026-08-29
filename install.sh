@@ -248,6 +248,14 @@ if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/app-shortcut-creator.desktop" ]; t
     log_success "Application shortcut creator added to desktop menu."
 fi
 
+# 9. Initialize Theme & Color Variables
+
+log_info "Initializing desktop theme and dynamic color variables..."
+if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" ]; then
+    python3 "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" --set catppuccin-mocha --silent 2>/dev/null || true
+    log_success "Catppuccin Mocha theme variables initialized."
+fi
+
 echo ""
 log_success "Unified dotfiles deployed successfully!"
 echo -e "To load the productivity shell suite in your terminal, add this to your ~/.bashrc or ~/.zshrc:"
@@ -255,9 +263,11 @@ echo -e "  ${COLOR_BOLD}source ~/.config/shell/env.sh${COLOR_RESET}"
 echo -e "  ${COLOR_BOLD}source ~/.config/shell/aliases.sh${COLOR_RESET}"
 echo ""
 echo -e "To apply or reload desktop components:"
+echo -e "  • Theme Switcher:    ${COLOR_BOLD}SUPER + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --menu${COLOR_RESET})"
 echo -e "  • Hyprland Reload:   ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"
 echo -e "  • Waybar Toggle:     ${COLOR_BOLD}SUPER + SHIFT + W${COLOR_RESET} (or ${COLOR_BOLD}~/.config/waybar/scripts/launch_waybar.sh${COLOR_RESET})"
 echo -e "  • Power Menu:        ${COLOR_BOLD}SUPER + ESCAPE${COLOR_RESET} / ${COLOR_BOLD}SUPER + M${COLOR_RESET} (wlogout)"
 echo -e "  • Git TUI Overlay:   ${COLOR_BOLD}SUPER + G${COLOR_RESET} (lazygit)"
 echo -e "  • Notification Mako: ${COLOR_BOLD}makoctl reload${COLOR_RESET}"
 echo -e "  • Test SDDM Theme:   ${COLOR_BOLD}~/.dotfiles/sddm/test-theme.sh${COLOR_RESET}"
+

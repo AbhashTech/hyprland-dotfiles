@@ -220,7 +220,45 @@ The dotfiles include a dedicated **Power Profile & Battery Management** system:
 
 ---
 
+## 🎨 Universal Theming System & Dynamic Color Variables
+
+The dotfiles include a centralized, modular **Theming System** ([`theme_switcher.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/theme_switcher.py)) allowing seamless live switching between 12 curated themes across the entire desktop:
+
+- **12 Curated Palettes**:
+  - **Catppuccin Mocha** (Default Warm Dark)
+  - **Catppuccin Macchiato** (Medium Dark)
+  - **Catppuccin Frappé** (Soft Slate Dark)
+  - **Catppuccin Latte** (Crisp Light Theme)
+  - **Tokyo Night** (Iconic Cyberpunk Dark Blue)
+  - **Nord Arctic** (Arctic Ice Blue & Frost)
+  - **Gruvbox Dark** (Retro Earthy Golden Tones)
+  - **Rosé Pine** (Soho Warm Pine & Rose Gold)
+  - **Dracula** (Vibrant Gothic Purple & Neon Green)
+  - **Everforest Dark** (Serene Forest Green & Moss)
+  - **One Dark Pro** (Atom Balanced Dark Aesthetic)
+  - **Cyberpunk Synthwave** (High-Octane Neon Magenta & Cyan)
+
+- **Dynamic Color Variables Architecture**:
+  - **Hyprland**: Border colors and shadows consume variables from [`modules/theme.lua`](file:///home/kunal/.dotfiles/.config/hypr/modules/theme.lua).
+  - **Waybar**: Glassmorphic stylesheet uses centralized CSS variables from [`colors.css`](file:///home/kunal/.dotfiles/.config/waybar/colors.css).
+  - **Kitty**: Automatically includes [`theme.conf`](file:///home/kunal/.dotfiles/.config/kitty/theme.conf) containing active 16-color ANSI terminal palette.
+  - **Fuzzel, Mako, Wofi, Wlogout & Hyprlock**: Color variables updated seamlessly.
+  - **Starship, Zellij, Btop, Lazygit & Swappy**: Palettes and accents dynamically synchronized.
+
+- **Usage**:
+  - **Graphical Menu**: Press **`SUPER + T`** to open the interactive Fuzzel/Wofi theme picker with active indicator.
+  - **Cycle Themes**: Press **`SUPER + CTRL + T`** to instantly cycle forward through all available themes.
+  - **Terminal CLI**:
+    ```bash
+    python3 ~/.config/hypr/scripts/theme_switcher.py --list
+    python3 ~/.config/hypr/scripts/theme_switcher.py --set tokyo-night
+    python3 ~/.config/hypr/scripts/theme_switcher.py --next
+    ```
+
+---
+
 ## ⚡ Dynamic Keybindings Viewer & Cheat Sheet
+
 
 The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewer.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/keybinds_viewer.py)) that parses doc-comments directly from [`keybinds.lua`](file:///home/kunal/.dotfiles/.config/hypr/modules/keybinds.lua):
 
