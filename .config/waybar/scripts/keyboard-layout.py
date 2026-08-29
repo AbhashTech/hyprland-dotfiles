@@ -1,0 +1,1 @@
+/home/kunal/.config/hypr/scripts/keyboard_layout.py

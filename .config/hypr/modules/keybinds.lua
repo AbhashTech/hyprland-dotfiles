@@ -63,6 +63,12 @@ hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd(keybindViewer))
 hl.bind(mainMod .. " + question", hl.dsp.exec_cmd(keybindViewer))
 hl.bind(mainMod .. " + F1", hl.dsp.exec_cmd(keybindViewer))
 
+-- Keyboard Layout Switcher & Manager
+local kbLayoutScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/keyboard_layout.py"
+hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(kbLayoutScript .. " --next"))
+hl.bind(mainMod .. " + SHIFT + K", hl.dsp.exec_cmd(kbLayoutScript .. " --menu"))
+hl.bind(mainMod .. " + ALT + K", hl.dsp.exec_cmd(kbLayoutScript .. " --add-menu"))
+
 -- =============================================================================
 -- 🔔 Notifications & Quick Settings
 -- =============================================================================

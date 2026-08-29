@@ -70,6 +70,7 @@ tooltip label {
 #window,
 #mpris,
 #clock,
+#language,
 #group-hardware,
 #group-status,
 #group-tray-notif,
@@ -90,6 +91,7 @@ tooltip label {
 #window:hover,
 #mpris:hover,
 #clock:hover,
+#language:hover,
 #group-hardware:hover,
 #group-status:hover,
 #group-tray-notif:hover,
@@ -190,6 +192,22 @@ window#waybar.empty #window {
 }
 
 #clock:hover {
+    border-color: @mauve;
+}
+
+/* Keyboard Layout / Language */
+#language {
+    color: @mauve;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 3px 11px;
+    border-color: rgba(203, 166, 247, 0.3);
+    min-width: 32px;
+}
+
+#language:hover {
+    color: @text;
+    background: linear-gradient(135deg, rgba(203, 166, 247, 0.25), rgba(137, 180, 250, 0.25));
     border-color: @mauve;
 }
 

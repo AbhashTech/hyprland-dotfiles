@@ -19,7 +19,8 @@
         "mpris"
     ],
     "modules-center": [
-        "clock"
+        "clock",
+        "hyprland/language"
     ],
     "modules-right": [
         "group/tray-notif",
@@ -113,6 +114,16 @@
             "on-scroll-up": "shift_up",
             "on-scroll-down": "shift_down"
         }
+    },
+
+    "hyprland/language": {
+        "format": "󰌌  {}",
+        "format-en": "US",
+        "tooltip": true,
+        "tooltip-format": "Active Layout: {long}\n\n• Left Click: Switch Next Layout\n• Right Click: Keyboard Layout Menu\n• Middle Click: Add New Layout",
+        "on-click": "/home/kunal/.config/hypr/scripts/keyboard_layout.py --next",
+        "on-click-right": "/home/kunal/.config/hypr/scripts/keyboard_layout.py --menu",
+        "on-click-middle": "/home/kunal/.config/hypr/scripts/keyboard_layout.py --add-menu"
     },
 
     // ==========================================
