@@ -27,7 +27,11 @@ case "$chosen" in
         fi
         ;;
     *"Logout"*)
-        hyprctl dispatch exit 0
+        if command -v uwsm >/dev/null 2>&1 && [ -n "$UWSM_APP_ID" ]; then
+            uwsm stop
+        else
+            hyprctl dispatch 'hl.dsp.exit()' 2>/dev/null || hyprctl dispatch exit 2>/dev/null || loginctl terminate-session "${XDG_SESSION_ID}" 2>/dev/null || loginctl terminate-user "$USER" 2>/dev/null || pkill -u "$USER" -x Hyprland
+        fi
         ;;
     *"Suspend"*)
         systemctl suspend
