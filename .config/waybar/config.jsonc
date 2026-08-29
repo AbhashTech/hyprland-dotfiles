@@ -47,7 +47,7 @@
         "on-scroll-down": "hyprctl dispatch 'hl.dsp.focus({ workspace = \"e-1\" })'",
         "all-outputs": true,
         "persistent-workspaces": {
-            "*": 5
+            "*": 4
         },
         "sort-by-number": true,
         "active-only": false

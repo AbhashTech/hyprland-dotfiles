@@ -5,8 +5,8 @@
 -- See https://wiki.hypr.land/Configuring/Basics/Window-Rules/
 -- and https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 
--- Persistent workspaces
-for i = 1, 5 do
+-- Persistent workspaces (default 1 to 4)
+for i = 1, 4 do
     hl.workspace_rule({
         workspace = tostring(i),
         persistent = true,

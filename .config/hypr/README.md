@@ -35,6 +35,7 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
     ├── fuzzel_launcher.sh       # Fuzzel application launcher toggle wrapper
     ├── keybinds_viewer.py       # Dynamic keybindings parser & interactive cheat sheet
     ├── keyboard_layout.py       # Dynamic keyboard layout switcher & installer
+    ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
     ├── nightlight.py            # Warm blue-light filter (3800K night / 6500K day)
     ├── ocr_grab.py              # Screen OCR text extraction via Tesseract
     ├── quick_calc.py            # Interactive math expression evaluator
