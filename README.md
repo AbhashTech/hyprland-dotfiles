@@ -1,6 +1,6 @@
 # 🌌 Unified Hyprland & Wayland Dotfiles
 
-A modular, unified, and fully version-controlled dotfiles suite for **Hyprland** on Arch Linux. Features **Waybar**, **Fuzzel**, **Mako**, **Wofi**, **Btop**, **Kitty**, **Starship**, **Lazygit**, **Zellij**, **Swappy**, custom OSD overlays, Catppuccin Mocha themed SDDM greeter, dynamic power profiles, keyboard layout management, clipboard history, media/audio switchers, dynamic shortcut viewer, and a comprehensive modern CLI productivity suite (100% official Pacman packages).
+A modular, unified, and fully version-controlled dotfiles suite for **Hyprland** on Arch Linux. Features **Waybar**, **Fuzzel**, **Mako**, **Wofi**, **Wlogout**, **Btop**, **Kitty**, **Starship**, **Lazygit**, **Zellij**, **Swappy**, custom OSD overlays, Catppuccin Mocha themed SDDM greeter, dynamic power profiles, keyboard layout management, clipboard history, media/audio switchers, dynamic shortcut viewer, and a comprehensive modern CLI productivity suite (100% official Pacman packages).
 
 ---
 
@@ -24,12 +24,56 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 └── .config/
     ├── hypr/                    # Hyprland Compositor Config & Scripts
     │   ├── hyprland.lua         # Main modular entrypoint
+    │   ├── hyprlock.conf        # Catppuccin Mocha lockscreen configuration
+    │   ├── hypridle.conf        # Screen timeout & idle power management
+    │   ├── install.sh           # Standalone Hyprland installer
     │   ├── modules/             # Config modules (animations, keybinds, rules, monitors, input, etc.)
-    │   └── scripts/             # Python & Shell utilities (keybinds viewer, brightness, audio, capture, scaling, keyboard)
+    │   │   ├── animations.lua   # Fluid window & workspace animation curves
+    │   │   ├── appearance.lua   # Gaps, active/inactive borders, shadows & blur
+    │   │   ├── autostart.lua    # Services, background daemons & polkit agent
+    │   │   ├── env.lua          # Wayland & cursor environment variables
+    │   │   ├── input.lua        # Keyboard layout, mouse sensitivity & touchpad gestures
+    │   │   ├── keybinds.lua     # Complete keybindings & application shortcuts
+    │   │   ├── layouts.lua      # Dwindle, master, and scrolling tiling layouts
+    │   │   ├── misc.lua         # Wallpaper, logo & miscellaneous compositor settings
+    │   │   ├── monitors.lua     # Display resolution, position & scaling
+    │   │   ├── permissions.lua  # Security & ecosystem permission settings
+    │   │   ├── programs.lua     # Default apps (terminal, browser, file manager, launcher)
+    │   │   └── rules.lua        # Window rules, layer blur & workspace persistence
+    │   └── scripts/             # Python & Shell utilities
+    │       ├── brightness_control.py # Panel & external DDC brightness with OSD & presets
+    │       ├── clipboard_manager.py  # Image/text clipboard manager with previews & purge
+    │       ├── emoji_picker.py       # Searchable emoji catalog with auto-typing
+    │       ├── fuzzel_launcher.sh    # Fuzzel wrapper with outside-click dismissal
+    │       ├── keybinds_viewer.py    # Dynamic keybinds parser & searchable overlay
+    │       ├── keyboard_layout.py    # Dynamic keyboard layout switcher & installer
+    │       ├── nightlight.py         # Blue-light filter (3800K night / 6500K day)
+    │       ├── ocr_grab.py           # Optical character recognition text grabber
+    │       ├── quick_calc.py         # Interactive math expression evaluator
+    │       ├── resolution_menu.py    # Display resolution & UI scaling switcher
+    │       ├── scale_window.py       # Window resizing with on-screen dimensions overlay
+    │       ├── screen_capture.py     # Screenshot & video recorder with Swappy annotation
+    │       ├── volume_control.py     # Speaker/mic volume control, OSD & sink switcher
+    │       └── wofi_launcher.py      # Wofi wrapper with transparent backdrop layer
     ├── waybar/                  # Waybar Status Bar
     │   ├── config.jsonc         # Bar layout, modules, click actions & tooltips
     │   ├── style.css            # Styling, gradients, glassmorphism & dynamic colors
-    │   └── scripts/             # Battery status, power profile popup, connectivity, notifications & network
+    │   └── scripts/             # Waybar helper scripts & TUI / popup menus
+    │       ├── battery-status.py     # Battery health & power profile JSON provider
+    │       ├── bluetooth-menu.sh     # Interactive Bluetooth device manager
+    │       ├── clipboard.py          # Clipboard history Waybar status provider
+    │       ├── connectivity.py       # Network & Internet connectivity tester
+    │       ├── keyboard-layout.py    # Layout status & click switcher for Waybar
+    │       ├── launch_waybar.sh      # Waybar launch & toggle script with persistence
+    │       ├── launch_waybar.py      # Python Waybar process controller
+    │       ├── netctl-tui.py         # Terminal UI network connection manager
+    │       ├── network-menu.sh       # Wi-Fi / Ethernet interactive network menu
+    │       ├── notifications.py      # Mako notification center & DND toggle
+    │       ├── power-menu.sh         # Wlogout & session power launcher
+    │       ├── power-profile.py      # Interactive GTK LayerShell power profile selector
+    │       ├── quick-settings.py     # Quick settings & hardware shortcuts menu
+    │       ├── system-stats.py       # Interactive GTK LayerShell hardware & stats dashboard
+    │       └── toggle-stats.py       # Hardware stats drawer toggler
     ├── kitty/                   # Kitty Terminal Emulator
     │   └── kitty.conf           # Catppuccin Mocha theme, font, padding & shortcuts
     ├── starship.toml            # Starship Cross-Shell Prompt (Catppuccin Mocha)
@@ -41,6 +85,9 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   └── config.jsonc         # Minimal, clean hardware/OS summary
     ├── swappy/                  # Screenshot Annotator
     │   └── config               # Paint tools, fonts & instant save rules
+    ├── wlogout/                 # Wayland Logout & Power Menu
+    │   ├── layout               # Lock, logout, suspend, reboot, shutdown buttons
+    │   └── style.css            # Catppuccin glassmorphism modal stylesheet
     ├── shell/                   # Modular Shell Setup
     │   ├── aliases.sh           # Modern aliases (ls->eza, cat->bat, grep->rg, rm->trash-put)
     │   └── env.sh               # Prompt hooks (Starship, Atuin, Zoxide, Direnv, Mise)
@@ -63,7 +110,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | :--- | :--- | :--- |
 | **Display Manager (SDDM)**| `sddm`, `qt6-declarative`, `qt6-svg`, `qt6-5compat` | Qt6 display manager & Catppuccin Mocha glassmorphic greeter |
 | **Compositor & Portals** | `hyprland`, `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk`, `hyprpolkitagent` | Wayland compositor, screen sharing portals, and Polkit authentication agent |
-| **Session & Lock Screen** | `hyprlock`, `hypridle` | Catppuccin Mocha lockscreen and smart idle management |
+| **Session, Lock & Logout** | `hyprlock`, `hypridle`, `wlogout` | Catppuccin Mocha lockscreen, idle management, and Wayland power modal |
 | **Status Bar & Power** | `waybar`, `power-profiles-daemon`, `upower` | Status bar with hardware stats, power profile selector & battery metrics |
 | **Notifications** | `mako`, `libnotify` | Notification daemon & `notify-send` for OSDs (with click-to-focus) |
 | **Wallpaper** | `hyprpaper` | Fast Wayland wallpaper daemon |
@@ -76,7 +123,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | **Brightness & Night Light**| `brightnessctl`, `ddcutil`, `hyprsunset` / `wlsunset` | Backlight, external DDC brightness, and warm blue-light filter |
 | **Clipboard** | `wl-clipboard`, `cliphist` | Wayland clipboard manager with binary image and thumbnail support |
 | **Screen Capture & OCR** | `grim`, `slurp`, `swappy`, `wf-recorder`, `hyprpicker`, `tesseract`, `tesseract-data-eng` | Screenshots, annotation, video recording, color picker, OCR |
-| **Python Runtime & UI** | `python`, `python-gobject`, `gtk3`, `gtk-layer-shell`, `python-dbus` | Python 3, PyGObject, DBus, and Wayland layer-shell for popups |
+| **Python Runtime & UI** | `python`, `python-gobject`, `gtk3`, `gtk-layer-shell` | Python 3, PyGObject, and Wayland layer-shell for popups |
 | **Fonts & Icons** | `ttf-jetbrains-mono-nerd`, `papirus-icon-theme` | Nerd font glyphs and system icon theme |
 
 ---
@@ -95,7 +142,7 @@ The installer will:
 - Symlink all `~/.dotfiles/.config/*` into `~/.config/` (safely backing up existing folders).
 - Set executable permissions on all Python and Shell scripts.
 - Initialize tealdeer cheatsheets, directories (`~/Pictures/Screenshots`, `~/Videos/Recordings`), and `i2c-dev`.
-- Deploy the Catppuccin Mocha SDDM theme.
+- Deploy and activate the Catppuccin Mocha SDDM theme.
 
 ### Shell Integration
 
@@ -104,6 +151,55 @@ Add the following lines to your `~/.bashrc` or `~/.zshrc`:
 source ~/.config/shell/env.sh
 source ~/.config/shell/aliases.sh
 ```
+
+---
+
+## 📊 Waybar Architecture & Interactive Features
+
+The top status bar is divided into three functional zones:
+
+### 1. Left Zone
+- **󰣇 Application Launcher (`custom/launcher`)**: Left-click launches **Fuzzel** with backdrop blur; right-click opens the **Wlogout** power menu.
+- **Workspaces (`hyprland/workspaces`)**: Persistent workspaces 1–5 with live active badges; mouse scroll cycles through workspaces.
+- **Active Window (`hyprland/window`)**: Shows current focused window title with contextual application icons (Firefox, Kitty, Dolphin, VS Code).
+- **MPRIS Media Controller (`mpris`)**: Shows currently playing media (Spotify, Firefox, mpv) with play/pause click and scroll track skipping.
+
+### 2. Center Zone
+- ** Clock & Calendar (`clock`)**: 12h/24h digital clock with a rich interactive Catppuccin calendar tooltip. Right-click toggles format; scroll navigates months.
+- **󰌌 Keyboard Layout (`hyprland/language`)**: Live keyboard layout indicator (e.g. US). Left-click cycles layout; right-click opens layout menu; middle-click opens layout installer.
+
+### 3. Right Zone
+- **Group Tray & Notifications (`group/tray-notif`)**:
+  - System tray (`tray`) for background application indicators.
+  - Clipboard indicator (`custom/clipboard`): Left-click browses history; right-click opens deletion menu; middle-click pauses/resumes daemon.
+  - Notification center (`custom/notification`): Left-click shows history; right-click toggles Do-Not-Disturb (DND); middle-click clears all.
+- **Group Status (`group/status`)**:
+  - PipeWire Audio (`pulseaudio`): Volume level and mute state. Left-click toggles mute; right-click shows `wpctl status`; scroll adjusts volume.
+  - Network (`network`): Wi-Fi signal strength and Ethernet link state. Left-click opens network manager menu.
+  - Bluetooth (`bluetooth`): Connection status and battery percentage. Left-click opens device selector; right-click toggles RFKill.
+  - Battery & Power Profiles (`custom/battery`): Dynamic battery percentage and power profile color indicator.
+- **󰍛 System Hardware & Stats Chip (`custom/stats`)**:
+  - Displays a clean chip icon in Waybar.
+  - **Left-Click**: Opens the **GTK LayerShell** System Hardware & Stats Dashboard with live metrics, gradient progress bars, and outside-click dismissal.
+  - **Right-Click**: Directly opens **Btop** task monitor (`kitty --class btop -e btop`).
+- **󰐥 Power Menu (`custom/power`)**: Left-click launches **Wlogout** session modal.
+
+---
+
+## 🖥️ System Hardware & Stats Dashboard
+
+The dotfiles include a dedicated **System Hardware & Stats** popup ([`system-stats.py`](file:///home/kunal/.dotfiles/.config/waybar/scripts/system-stats.py)):
+
+- **Chip Icon in Waybar (`󰍛`)**: A minimal and responsive chip indicator on the right side of the status bar.
+- **Left-Click Dashboard Popup**: Opens a glassmorphic **GTK LayerShell** modal styled with Catppuccin Mocha colors:
+  - **Host & System Info**: Displays hostname, Linux kernel release, and formatted system uptime.
+  - **CPU Utilization**: Live percentage, CPU model name, total core count, 1m/5m/15m load averages, and a Sky/Mauve gradient progress bar.
+  - **Memory & Swap**: Detailed GiB RAM and Swap usage metrics with Pink/Mauve visual capacity gauges.
+  - **Storage**: Root disk (`/`) used, free capacity, and percentage bar.
+  - **Thermals & Top Processes**: Live thermal zone sensor readings (°C) with color-coded warning states, alongside top CPU-consuming background processes.
+  - **Quick Btop Launcher**: Built-in action button and right-click direct trigger to launch **Btop** in Kitty.
+  - **Outside-Click & Escape Dismissal**: Features transparent full-screen backdrop dismissal and Escape key handling.
+- **Right-Click Action**: Instantly launches the **Btop** interactive terminal monitor.
 
 ---
 
@@ -116,7 +212,7 @@ The dotfiles include a dedicated **Power Profile & Battery Management** system:
   - **⚖ Balanced**: **Orange** (`#fab387`) — Standard dynamic balance between speed and battery life.
   - **🚀 Performance**: **Red** (`#f38ba8`) — Maximum CPU clock speeds and responsiveness for heavy workloads.
 - **Rich Hover Tooltip**: Hovering over the battery icon displays the active power mode, charging state, estimated time remaining, and battery hardware health percentage.
-- **Interactive Selector Popup**: **Right-clicking** the battery icon opens a glassmorphic **GTK LayerShell** popup styled with Catppuccin Mocha colors:
+- **Interactive Selector Popup**: **Clicking** the battery icon opens a glassmorphic **GTK LayerShell** popup styled with Catppuccin Mocha colors:
   - Features high-contrast cards, active state badges, outside-click backdrop dismissal, and `Escape` key handling.
   - Switches profiles instantly via `power-profiles-daemon` over DBus and notifies Waybar for zero-latency UI updates.
 
@@ -126,7 +222,7 @@ The dotfiles include a dedicated **Power Profile & Battery Management** system:
 
 The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewer.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/keybinds_viewer.py)) that parses doc-comments directly from [`keybinds.lua`](file:///home/kunal/.dotfiles/.config/hypr/modules/keybinds.lua):
 
-- **Desktop GUI**: Press **`SUPER + /`** or **`SUPER + F1`** to open an interactive, fuzzy-searchable Fuzzel overlay. Selecting any shortcut automatically copies the key combination to your clipboard.
+- **Desktop GUI**: Press **`SUPER + /`**, **`SUPER + ?`**, or **`SUPER + F1`** to open an interactive, fuzzy-searchable Fuzzel overlay. Selecting any shortcut automatically copies the key combination to your clipboard.
 - **Terminal CLI**: Run `python3 ~/.config/hypr/scripts/keybinds_viewer.py --cli` for categorized, ANSI-colored tables.
 - **Export Formats**: Supports `--json` and `--markdown` for automated documentation generation.
 
@@ -172,7 +268,7 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + N` | **Notifications Center** | Open notification history and management center |
 | `SUPER + SHIFT + N` | **Toggle DND** | Toggle Do-Not-Disturb notification silencing mode |
 | `SUPER + SHIFT + V` | **Clipboard Browser** | Open searchable clipboard history with images and snippets |
-| `SUPER + ALT + V` / `SHIFT + C` | **Clipboard Browser** | Alternate shortcuts for clipboard history |
+| `SUPER + ALT + V` / `SUPER + SHIFT + C` | **Clipboard Browser** | Alternate shortcuts for clipboard history |
 | `SUPER + ALT + D` | **Clipboard Cleaner** | Open menu to delete individual entries or wipe clipboard cache |
 
 ---
@@ -195,11 +291,11 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 ### ⚡ Productivity & Workflow Utilities
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
-| `SUPER + /` / `F1` / `?` | **Shortcut Cheat Sheet** | Open interactive **Fuzzel/Wofi** dynamic keybindings viewer |
+| `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Shortcut Cheat Sheet** | Open interactive **Fuzzel/Wofi** dynamic keybindings viewer |
 | `SUPER + SHIFT + P` | **Hyprpicker** | Pick color from screen, copy hex code to clipboard & trigger notification |
-| `SUPER + SHIFT + T` / `ALT + T` | **Screen OCR** | Select region with mouse, extract text via Tesseract & copy to clipboard |
+| `SUPER + SHIFT + T` / `SUPER + ALT + T` | **Screen OCR** | Select region with mouse, extract text via Tesseract & copy to clipboard |
 | `SUPER + ALT + N` | **Night Light** | Toggle warm blue-light filter (3800K night / 6500K day) |
-| `SUPER + =` / `ALT + C` | **Quick Calculator** | Interactive math expression evaluator via Fuzzel prompt |
+| `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator** | Interactive math expression evaluator via Fuzzel prompt |
 | `SUPER + .` (period) | **Emoji Picker** | Searchable emoji catalog with automatic clipboard copy & keystroke paste |
 
 ---
@@ -226,7 +322,7 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `XF86AudioMicMute` | **Toggle Mic Mute** | Mute / unmute microphone input |
 | `SHIFT + XF86AudioRaiseVolume` | **Mic Volume Up** | Increase microphone input gain |
 | `SHIFT + XF86AudioLowerVolume` | **Mic Volume Down** | Decrease microphone input gain |
-| `SUPER + SHIFT + A` / `ALT + A` | **Audio Device Switcher** | Interactive menu to switch sinks (headphones, speakers, Bluetooth) |
+| `SUPER + SHIFT + A` / `SUPER + ALT + A` | **Audio Device Switcher** | Interactive menu to switch sinks (headphones, speakers, Bluetooth) |
 | `XF86AudioPlay` / `XF86AudioPause` | **Play / Pause** | Toggle media playback (Spotify, browser, playerctl) |
 | `XF86AudioNext` | **Next Track** | Skip to next track in active media player |
 | `XF86AudioPrev` | **Previous Track** | Skip to previous track in active media player |
@@ -242,21 +338,24 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SHIFT + XF86MonBrightnessDown` | **External DDC Down** | Decrease external monitor brightness via DDC/CI (`ddcutil`) |
 | `SUPER + XF86MonBrightnessUp` | **External DDC Up** | Alternate shortcut for external monitor brightness up |
 | `SUPER + XF86MonBrightnessDown` | **External DDC Down** | Alternate shortcut for external monitor brightness down |
-| `SUPER + SHIFT + B` / `ALT + B` | **Brightness Presets Menu**| Select brightness presets (20%, 40%, 60%, 80%, 100%) |
+| `SUPER + SHIFT + B` / `SUPER + ALT + B` | **Brightness Presets Menu**| Select brightness presets (20%, 40%, 60%, 80%, 100%) |
 
 ---
 
 ### 📐 Window Resizing & Screen Scaling (`scale_window.py` & `resolution_menu.py`)
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
-| `SUPER + CTRL + =` / `+` | **Scale Window Up** | Increase active window size by +40px with live dimension OSD |
-| `SUPER + CTRL + -` | **Scale Window Down** | Decrease active window size by -40px with live dimension OSD |
+| `SUPER + CTRL + =` / `+` / `KP_Add` | **Scale Window Up** | Increase active window size by +40px with live dimension OSD |
+| `SUPER + CTRL + -` / `KP_Subtract` | **Scale Window Down** | Decrease active window size by -40px with live dimension OSD |
 | `SUPER + CTRL + Right / L` | **Resize Width Right** | Grow window horizontally to the right |
 | `SUPER + CTRL + Left / H` | **Resize Width Left** | Shrink window horizontally from the left |
 | `SUPER + CTRL + Up / K` | **Resize Height Up** | Shrink window vertically from the top |
 | `SUPER + CTRL + Down / J` | **Resize Height Down** | Grow window vertically to the bottom |
 | `SUPER + CTRL + I` / `0` | **Show Window Size** | Display active window dimensions & screen coverage percentage |
-| `SUPER + SHIFT + R` / `SHIFT + D` | **Resolution & Scaling Menu**| Interactive menu to set monitor resolution and DPI scaling |
+| `SUPER + SHIFT + R` / `SUPER + SHIFT + D` | **Resolution & Scaling Menu**| Interactive menu to set monitor resolution and DPI scaling |
+| `SUPER + ALT + =` / `+` | **Display Scale Up** | Increment display scaling (+0.1) |
+| `SUPER + ALT + -` | **Display Scale Down** | Decrement display scaling (-0.1) |
+| `SUPER + ALT + 0` | **Show Display Scale** | Display active monitor resolution & scale factor |
 | `SUPER + ALT + 1` to `5` | **Direct Scale Presets** | Set display scale: `1`=1.0x, `2`=1.25x, `3`=1.5x, `4`=1.75x, `5`=2.0x |
 | `SUPER + ALT + BackSpace` | **Reset Display Scale** | Instantly reset display scale to default 1.0x (100%) |
 

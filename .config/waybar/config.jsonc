@@ -25,7 +25,7 @@
     "modules-right": [
         "group/tray-notif",
         "group/status",
-        "group/quickdrawer",
+        "custom/stats",
         "custom/power"
     ],
 
@@ -127,21 +127,8 @@
     },
 
     // ==========================================
-    // Right Modules (Collapsible Drawer & Control Center)
+    // Right Modules
     // ==========================================
-    "group/quickdrawer": {
-        "orientation": "inherit",
-        "drawer": {
-            "transition-duration": 300,
-            "children-class": "drawer-item",
-            "transition-left-to-right": false
-        },
-        "modules": [
-            "custom/quicksettings",
-            "group/hardware"
-        ]
-    },
-
     "group/tray-notif": {
         "orientation": "horizontal",
         "modules": [
@@ -161,11 +148,12 @@
         ]
     },
 
-    "custom/quicksettings": {
-        "format": "  Stats",
+    "custom/stats": {
+        "format": "󰍛",
         "tooltip": true,
-        "tooltip-format": "<b>Hardware Stats &amp; Settings</b>\n• Left Click: Open Quick Settings Menu\n• Hover: Expand Hardware Stats",
-        "on-click": "/home/kunal/.config/waybar/scripts/quick-settings.py"
+        "tooltip-format": "<b>System Hardware &amp; Stats</b>\n• Left Click: Open Stats Dashboard\n• Right Click: Launch Btop Task Monitor",
+        "on-click": "/home/kunal/.config/waybar/scripts/system-stats.py",
+        "on-click-right": "kitty --class btop -e btop"
     },
 
     "group/hardware": {
