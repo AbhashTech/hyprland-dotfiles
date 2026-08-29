@@ -1,6 +1,6 @@
 # 🌌 Unified Hyprland & Wayland Dotfiles
 
-A unified, modular, and fully version-controlled dotfiles suite for **Hyprland** on Linux. Includes **Waybar**, **Fuzzel**, **Mako**, **Wofi**, **Btop**, custom OSD overlays, Catppuccin-themed clipboard management, media/audio switchers, and outside-click application launchers.
+A unified, modular, and fully version-controlled dotfiles suite for **Hyprland** on Linux. Includes **Waybar**, **Fuzzel**, **Mako**, **Wofi**, **Btop**, **Kitty**, **Wlogout**, **Zellij**, **Lazygit**, **Starship**, custom OSD overlays, Catppuccin-themed clipboard management, media/audio switchers, and a comprehensive modern CLI productivity suite (100% official Pacman packages).
 
 ---
 
@@ -8,7 +8,7 @@ A unified, modular, and fully version-controlled dotfiles suite for **Hyprland**
 
 ```
 ~/.dotfiles/
-├── install.sh                   # All-in-one dependency installer & symlink deployer
+├── install.sh                   # All-in-one dependency installer & symlink deployer (Pacman native)
 ├── .gitignore                   # Exclusions for temporary files & Python cache
 ├── README.md                    # Full documentation and shortcut cheat sheet
 ├── sddm/                        # SDDM Catppuccin Mocha Theme Suite
@@ -30,6 +30,23 @@ A unified, modular, and fully version-controlled dotfiles suite for **Hyprland**
     │   ├── config.jsonc         # Bar layout, modules, click actions & tooltips
     │   ├── style.css            # Styling, gradients, glassmorphism & padding
     │   └── scripts/             # Connectivity, notifications, bluetooth & power scripts
+    ├── kitty/                   # Kitty Terminal Emulator
+    │   └── kitty.conf           # Catppuccin Mocha theme, font, padding & shortcuts
+    ├── starship.toml            # Starship Cross-Shell Prompt (Catppuccin Mocha)
+    ├── wlogout/                 # Wayland Logout & Power Overlay
+    │   ├── layout               # Button layouts & systemctl actions
+    │   └── style.css            # Catppuccin Mocha stylesheet & icons
+    ├── zellij/                  # Terminal Multiplexer
+    │   └── config.kdl           # Themes, compact status bar & ergonomics
+    ├── lazygit/                 # Git Terminal UI
+    │   └── config.yml           # Theme & delta side-by-side pager integration
+    ├── fastfetch/               # System Information Display
+    │   └── config.jsonc         # Minimal, clean hardware/OS summary
+    ├── swappy/                  # Screenshot Annotator
+    │   └── config               # Paint tools, fonts & instant save rules
+    ├── shell/                   # Modular Shell Setup
+    │   ├── aliases.sh           # Modern aliases (ls->eza, cat->bat, grep->rg, rm->trash-put)
+    │   └── env.sh               # Prompt hooks (Starship, Atuin, Zoxide, Direnv, Mise)
     ├── fuzzel/                  # Application Launcher & Dmenu
     │   └── fuzzel.ini           # Font, border radius, prompt & colors
     ├── mako/                    # Notification Daemon
@@ -43,23 +60,25 @@ A unified, modular, and fully version-controlled dotfiles suite for **Hyprland**
 
 ---
 
-## 📦 What All Needs to be Installed
+## 📦 What All Needs to be Installed (100% Official Pacman Repos)
 
 | Component | Packages / Tools | Description |
 | :--- | :--- | :--- |
 | **Display Manager (SDDM)**| `sddm`, `qt6-declarative`, `qt6-svg`, `qt6-5compat` | Qt6 display manager & Catppuccin Mocha glassmorphic greeter |
-| **Compositor & Portals** | `hyprland`, `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk` | Wayland compositor and portals for screen sharing / file dialogues |
-| **Session & Lock Screen** | `hyprlock`, `hypridle` | Catppuccin Mocha lockscreen and smart idle management |
+| **Compositor & Portals** | `hyprland`, `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk`, `hyprpolkitagent` | Wayland compositor, screen sharing portals, and Polkit authentication agent |
+| **Session, Lock & Power** | `hyprlock`, `hypridle`, `wlogout` | Catppuccin Mocha lockscreen, idle daemon, and graphical power menu |
 | **Status Bar** | `waybar` | Status bar with system trays, volume, network, and workspaces |
 | **Notifications** | `mako`, `libnotify` | Notification daemon & `notify-send` for OSDs (with click-to-focus) |
 | **Wallpaper** | `hyprpaper` | Fast Wayland wallpaper daemon |
-| **App Launchers** | `fuzzel`, `wofi` | Fast Wayland app launcher and GTK dmenu launcher |
+| **App Launchers & Theming** | `fuzzel`, `wofi`, `nwg-look` | Fast Wayland launcher, GTK dmenu, and GTK3/4 theme switcher |
 | **Terminal & Apps** | `kitty`, `yazi`, `dolphin`, `firefox`, `btop` | Terminal, CLI file manager, KDE file manager, browser, and monitor |
-| **CLI Ergonomics** | `zoxide`, `fzf`, `wtype` | Smart cd, fuzzy searching, and Wayland keystroke simulation |
+| **Modern CLI Power Suite** | `eza`, `bat`, `ripgrep`, `fd`, `git-delta`, `duf`, `dust`, `tealdeer`, `trash-cli`, `xh`, `glow` | Rust/Go daily replacements for ls, cat, grep, find, diff, du, df, man, rm, curl |
+| **TUIs & Multiplexing** | `lazygit`, `lazydocker`, `zellij` | Interactive terminal UIs for Git, Docker, and terminal multiplexing |
+| **Shell & Environment** | `starship`, `atuin`, `direnv`, `mise`, `zoxide`, `fzf`, `wtype` | Fast prompt, SQLite history search, per-directory env/venv, tool version manager |
 | **Audio Subsystem** | `pipewire`, `pipewire-pulse`, `wireplumber`, `libpulse`, `playerctl` | PipeWire audio, `wpctl`/`pactl` controls, and media playback keys |
 | **Brightness & Night Light**| `brightnessctl`, `ddcutil`, `hyprsunset` / `wlsunset` | Backlight, external DDC brightness, and warm blue-light filter |
 | **Clipboard** | `wl-clipboard`, `cliphist` | Wayland clipboard manager with binary image and thumbnail support |
-| **Screen Capture & OCR** | `grim`, `slurp`, `tesseract`, `tesseract-data-eng`, `wf-recorder`, `hyprpicker`, `swappy`/`satty` (AUR) | Screenshots, OCR text extraction, video recorder, color picker, annotations |
+| **Screen Capture & OCR** | `grim`, `slurp`, `swappy`, `wl-screenrec`, `wf-recorder`, `hyprpicker`, `tesseract`, `tesseract-data-eng` | Screenshots, annotation, GPU-accelerated video recording, color picker, OCR |
 | **Python Runtime & UI** | `python`, `python-gobject`, `gtk3`, `gtk-layer-shell` | Python 3, PyGObject, and Wayland layer-shell for launchers |
 | **Fonts & Icons** | `ttf-jetbrains-mono-nerd`, `papirus-icon-theme` | Nerd font glyphs and system icon theme |
 
@@ -69,118 +88,25 @@ A unified, modular, and fully version-controlled dotfiles suite for **Hyprland**
 
 ### Automated Setup (Recommended)
 
-1. Clone the repository to `~/.dotfiles`:
-   ```bash
-   git clone <your-repo-url> ~/.dotfiles
-   ```
-2. Run the installer:
-   ```bash
-   chmod +x ~/.dotfiles/install.sh
-   ~/.dotfiles/install.sh
-   ```
+```bash
+chmod +x ~/.dotfiles/install.sh
+~/.dotfiles/install.sh
+```
 
 The installer will:
-- Install all required Arch/AUR packages.
-- Symlink `~/.dotfiles/.config/*` into `~/.config/` (safely backing up any existing folders).
+- Install all official Arch Linux packages via `pacman`.
+- Symlink all `~/.dotfiles/.config/*` into `~/.config/` (safely backing up existing folders).
 - Set executable permissions on all Python and Shell scripts.
-- Create user media directories (`~/Pictures/Screenshots`, `~/Videos/Recordings`, `~/.cache/cliphist_thumbs`).
-- Load the `i2c-dev` kernel module for external monitor DDC brightness.
+- Initialize tealdeer cheatsheets, directories (`~/Pictures/Screenshots`, `~/Videos/Recordings`), and `i2c-dev`.
+- Deploy the SDDM theme.
 
----
+### Shell Integration
 
-### Manual Installation (Arch Linux)
-
+Add the following lines to your `~/.bashrc` or `~/.zshrc`:
 ```bash
-# 1. Install Official Packages
-sudo pacman -S --needed \
-    hyprland hypridle hyprlock hyprpicker hyprsunset wlsunset \
-    xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
-    waybar mako hyprpaper fuzzel wofi kitty yazi zoxide fzf wtype \
-    dolphin firefox btop \
-    pipewire pipewire-pulse wireplumber libpulse playerctl \
-    brightnessctl ddcutil wl-clipboard cliphist \
-    grim slurp tesseract tesseract-data-eng wf-recorder \
-    libnotify python python-gobject gtk3 gtk-layer-shell \
-    ttf-jetbrains-mono-nerd papirus-icon-theme
-
-# 2. Install Optional AUR Annotation Tools
-paru -S --needed swappy satty # or: yay -S --needed swappy satty
-
-# 3. Create Symlinks
-mkdir -p ~/.config
-for pkg in hypr waybar fuzzel mako wofi btop; do
-    ln -s ~/.dotfiles/.config/$pkg ~/.config/$pkg
-done
-
-# 4. Make Scripts Executable
-find ~/.dotfiles/.config -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod +x {} +
+source ~/.config/shell/env.sh
+source ~/.config/shell/aliases.sh
 ```
-
----
-
-## 🚀 How to Apply & Reload Configs
-
-- **Start Hyprland**: Run `Hyprland` from TTY or login manager.
-- **Reload Hyprland**: Run `hyprctl reload`.
-- **Lock Screen**: Press `SUPER + L` or `SUPER + ALT + L`.
-- **Restart Waybar**: Press `SUPER + SHIFT + W` or run `killall waybar && waybar &`.
-- **Reload Mako Notifications**: Run `makoctl reload`.
-- **Test SDDM Theme**: Run `~/.dotfiles/sddm/test-theme.sh`.
-
----
-
-## 🎨 Catppuccin Mocha SDDM Theme
-
-A sleek, responsive, and glassmorphic login theme built with Qt6 QML that seamlessly integrates with the desktop aesthetic.
-
-### ✨ Highlights
-- **Frosted Glassmorphism**: Translucent floating card (`#181825`) with glowing Mauve (`#cba6f7`) focus borders and dark backdrop vignette.
-- **Dynamic Clock & Greeting**: Real-time 24h/12h digital clock, full date formatting, and contextual greeting based on the time of day.
-- **User Avatar & Profile Switcher**: Circular user avatar with glowing border ring and multi-user dropdown selector.
-- **Password Input**: Modern pill input with reveal/hide password toggle (eye icon), auto-focus, Caps Lock active warning banner, and error shake animation with feedback on failed authentication.
-- **Session Selector**: Wayland / X11 desktop session switcher (Hyprland, etc.) with styled popup list.
-- **Power Menu & Confirmation**: Fast access to Power Off, Restart, Suspend, and Hibernate with safety confirmation modals to prevent accidental shutdowns.
-- **Host & Status Indicator**: System hostname badge and battery monitor.
-
-### 🧪 Live Preview / Test Mode
-You can test and preview the SDDM theme in a standalone window without root permissions:
-
-```bash
-# Preview using the built-in runner script:
-~/.dotfiles/sddm/test-theme.sh
-
-# Or directly with sddm-greeter-qt6:
-sddm-greeter-qt6 --test-mode --theme ~/.dotfiles/sddm/themes/catppuccin-mocha
-```
-
-### 📦 Manual SDDM Installation & Activation
-
-```bash
-# 1. Install dependencies
-sudo pacman -S --needed sddm qt6-declarative qt6-svg qt6-5compat
-
-# 2. Deploy theme to system directory
-sudo mkdir -p /usr/share/sddm/themes
-sudo cp -r ~/.dotfiles/sddm/themes/catppuccin-mocha /usr/share/sddm/themes/catppuccin-mocha
-
-# 3. Activate theme in SDDM configuration
-sudo mkdir -p /etc/sddm.conf.d
-sudo tee /etc/sddm.conf.d/theme.conf << 'EOF'
-[Theme]
-Current=catppuccin-mocha
-EOF
-
-# 4. Enable and start SDDM (if not already enabled)
-sudo systemctl enable sddm.service
-```
-
-### ⚙️ Theme Customization (`sddm/themes/catppuccin-mocha/theme.conf`)
-Modify `~/.dotfiles/sddm/themes/catppuccin-mocha/theme.conf` to customize:
-- `Background`: Path to custom wallpaper (SVG/PNG/JPG)
-- `FontFamily`: Preferred system font (defaults to `JetBrainsMono Nerd Font`)
-- `ClockFormat` / `DateFormat`: Time and date layout formats
-- `AccentColor`: Primary accent hex color (`#cba6f7`)
-- `ShowSessions` / `ShowPowerButtons` / `ShowGreeting`: Toggle UI component visibility
 
 ---
 
@@ -190,20 +116,24 @@ Modify `~/.dotfiles/sddm/themes/catppuccin-mocha/theme.conf` to customize:
 | Shortcut | Action |
 | :--- | :--- |
 | `SUPER + Q` | Open Kitty Terminal |
+| `SUPER + grave (~)` | Toggle Dropdown Scratchpad Terminal |
+| `SUPER + G` | Open Floating **Lazygit** TUI |
+| `SUPER + D` | Open Floating **Lazydocker** TUI |
+| `SUPER + SHIFT + Z` | Open Floating **Zellij** Multiplexer Session |
 | `SUPER + E` | Open Dolphin File Manager |
 | `SUPER + SHIFT + E` | Open Yazi Terminal File Manager |
 | `SUPER + B` | Open Firefox Web Browser |
 | `SUPER + R` | Open Fuzzel Launcher (with outside-click dismissal) |
+| `SUPER + ESCAPE` / `SUPER + M` | Open **Wlogout** Power & Session Overlay |
 | `SUPER + L` / `ALT + L` | Lock Screen immediately (`hyprlock`) |
 | `SUPER + C` | Close Active Window |
 | `SUPER + V` | Toggle Window Floating Mode |
 | `SUPER + P` | Toggle Pseudo Tiling |
 | `SUPER + J` | Toggle Split (Dwindle layout) |
-| `SUPER + M` | Hyprland Exit / Power Menu |
 | `SUPER + SHIFT + W` | Restart / Reload Waybar |
 | `SUPER + [1-9, 0]` | Switch to Workspace 1–10 |
 | `SUPER + SHIFT + [1-9, 0]` | Move Active Window to Workspace 1–10 |
-| `SUPER + S` / `grave (~)` | Toggle Special Scratchpad Workspace |
+| `SUPER + S` | Toggle Special Scratchpad Workspace |
 | `SUPER + SHIFT + S` | Move Active Window to Special Scratchpad |
 
 ---
@@ -228,16 +158,16 @@ Modify `~/.dotfiles/sddm/themes/catppuccin-mocha/theme.conf` to customize:
 
 ---
 
-### 📐 Window Resizing & Screen Scaling
+### 📸 Screenshots & Screen Recording (`screen_capture.py`)
 | Shortcut | Action |
 | :--- | :--- |
-| `SUPER + CTRL + =` / `+` | Scale Window Up (+40px) with live dimension OSD |
-| `SUPER + CTRL + -` | Scale Window Down (-40px) with live dimension OSD |
-| `SUPER + CTRL + Arrow / HJKL` | Directional Window Resize (Left / Right / Up / Down) |
-| `SUPER + CTRL + I` or `0` | Display active window dimensions & screen % overlay |
-| `SUPER + SHIFT + R` / `SHIFT + D` | Open Interactive Screen Resolution & Display Scaling Menu |
-| `SUPER + ALT + 1` to `5` | Switch display scaling (1.0x, 1.25x, 1.5x, 1.75x, 2.0x) |
-| `SUPER + ALT + BackSpace` | Reset display scale to 1.0x (100%) |
+| `Print` | Capture Area / Selection to clipboard & file |
+| `SHIFT + Print` | Capture Full Screen |
+| `ALT + Print` | Capture Active Window |
+| `CTRL + Print` | Capture Area & Open in **Swappy** Annotation Tool |
+| `SUPER + Print` | Open Interactive Capture Menu |
+| `SUPER + ALT + R` | Toggle Area Video Screen Recording |
+| `SUPER + SHIFT + R` | Stop Active Video Screen Recording |
 
 ---
 
@@ -253,16 +183,3 @@ Modify `~/.dotfiles/sddm/themes/catppuccin-mocha/theme.conf` to customize:
 | `XF86MonBrightnessUp / Down` | Adjust Laptop Screen Brightness with OSD |
 | `SUPER / SHIFT + Brightness` | Adjust External Monitor Brightness (DDC/CI) |
 | `SUPER + SHIFT + B` / `ALT + B` | Open Interactive Brightness Presets Menu |
-
----
-
-### 📸 Screenshots & Screen Recording (`screen_capture.py`)
-| Shortcut | Action |
-| :--- | :--- |
-| `Print` | Capture Area / Selection to clipboard & file |
-| `SHIFT + Print` | Capture Full Screen |
-| `ALT + Print` | Capture Active Window |
-| `CTRL + Print` | Capture Area & Open in Annotation Tool (Swappy/Satty) |
-| `SUPER + Print` | Open Interactive Capture Menu |
-| `SUPER + ALT + R` | Toggle Area Video Screen Recording |
-| `SUPER + SHIFT + R` | Stop Active Video Screen Recording |

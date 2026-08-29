@@ -105,7 +105,7 @@ hl.window_rule({
     center = true,
 })
 
--- Scratchpad Dropdown Terminal
+-- Scratchpad Dropdown Terminal & TUI Overlays
 hl.window_rule({
     name    = "float-dropdown-terminal",
     match   = { class = "dropdown-terminal" },
@@ -113,6 +113,40 @@ hl.window_rule({
     size    = "1100 680",
     center  = true,
     opacity = "0.95 0.90",
+})
+
+hl.window_rule({
+    name    = "float-lazygit",
+    match   = { class = "lazygit-floating" },
+    float   = true,
+    size    = "1200 750",
+    center  = true,
+    opacity = "0.98 0.92",
+})
+
+hl.window_rule({
+    name    = "float-lazydocker",
+    match   = { class = "lazydocker-floating" },
+    float   = true,
+    size    = "1200 750",
+    center  = true,
+    opacity = "0.98 0.92",
+})
+
+hl.window_rule({
+    name    = "float-zellij",
+    match   = { class = "zellij-floating" },
+    float   = true,
+    size    = "1200 750",
+    center  = true,
+    opacity = "0.98 0.92",
+})
+
+-- Layer rules (Fuzzel, Wlogout)
+hl.layer_rule({
+    name  = "wlogout-blur",
+    match = { namespace = "wlogout" },
+    blur  = true,
 })
 
 -- Screenshot Annotation Tools (Swappy / Satty)
@@ -137,6 +171,3 @@ hl.window_rule({
     float  = true,
     center = true,
 })
-
-
-
