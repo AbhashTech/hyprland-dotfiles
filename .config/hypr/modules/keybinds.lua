@@ -90,6 +90,11 @@ hl.bind(mainMod .. " + ALT + D",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME
 -- Toggle Waybar Bar
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/waybar/scripts/launch_waybar.sh"))
 
+-- Cycle Desktop Wallpaper (Random)
+local wallpaperScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/wallpaper_switcher.py"
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(wallpaperScript .. " --random"))
+hl.bind(mainMod .. " + ALT + W", hl.dsp.exec_cmd(wallpaperScript .. " --menu"))
+
 -- =============================================================================
 -- ⚡ Productivity & Workflow Utilities
 -- =============================================================================

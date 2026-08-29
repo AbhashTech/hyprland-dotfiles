@@ -40,6 +40,7 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
     ├── scale_window.py          # Window resizing with on-screen dimensions overlay
     ├── screen_capture.py        # Screenshot & video screen recording with audio & editor support
     ├── volume_control.py        # Speaker & mic volume control, OSD, and device switcher
+    ├── wallpaper_switcher.py    # Wallpaper randomizer & selector (~/Wallpaper, hyprpaper/swww)
     └── wofi_launcher.py         # Wofi wrapper with transparent backdrop layer
 ```
 
@@ -230,6 +231,8 @@ sudo usermod -aG i2c $USER
 | `SUPER + ALT + N` | **Night Light**: Toggle warm blue light filter (3800K / 6500K) |
 | `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator**: Interactive math evaluator via Fuzzel |
 | `SUPER + .` (period) | **Emoji Picker**: Searchable emoji menu with instant copy & auto-typing |
+| `SUPER + W` | **Random Wallpaper**: Cycle through random wallpapers in `~/Wallpaper` |
+| `SUPER + ALT + W` | **Wallpaper Menu**: Interactive graphical wallpaper picker |
 
 ---
 
