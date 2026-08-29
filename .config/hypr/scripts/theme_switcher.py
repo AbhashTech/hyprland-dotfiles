@@ -223,16 +223,55 @@ def generate_hypr_conf(theme):
         (DOTFILES_DIR / "hypr" / "theme.conf").write_text(content)
 
 def generate_waybar_colors(theme):
-    """Generate ~/.config/waybar/colors.css for Waybar."""
+    """Generate ~/.config/waybar/colors.css for Waybar with dynamic transparency."""
     c = theme["colors"]
+    is_light = theme.get("type") == "light"
     lines = [f"/* Waybar Colors: {theme.get('name', theme['id'])} */"]
     for k, hex_val in c.items():
         if isinstance(hex_val, str) and hex_val.startswith("#"):
             lines.append(f"@define-color {k} {hex_val};")
+
+    cr_r, cr_g, cr_b = hex_to_rgb_tuple(c.get("crust", "#11111b"))
+    ma_r, ma_g, ma_b = hex_to_rgb_tuple(c.get("mantle", "#181825"))
+    ba_r, ba_g, ba_b = hex_to_rgb_tuple(c.get("base", "#1e1e2e"))
+    s0_r, s0_g, s0_b = hex_to_rgb_tuple(c.get("surface0", "#313244"))
+    s1_r, s1_g, s1_b = hex_to_rgb_tuple(c.get("surface1", "#45475a"))
+    ac_r, ac_g, ac_b = hex_to_rgb_tuple(c.get("accent", "#cba6f7"))
+
+    if is_light:
+        border_rgba = "rgba(0, 0, 0, 0.12)"
+        border_subtle = "rgba(0, 0, 0, 0.06)"
+        shadow_rgba = "rgba(0, 0, 0, 0.12)"
+        bg_alpha = "0.72"
+        mod_alpha = "0.85"
+    else:
+        border_rgba = "rgba(255, 255, 255, 0.12)"
+        border_subtle = "rgba(255, 255, 255, 0.06)"
+        shadow_rgba = "rgba(0, 0, 0, 0.40)"
+        bg_alpha = "0.60"
+        mod_alpha = "0.88"
+
+    lines.append("")
+    lines.append("/* Dynamic Glassmorphic Waybar Backgrounds & Borders */")
+    lines.append(f"@define-color waybar_bg rgba({cr_r}, {cr_g}, {cr_b}, {bg_alpha});")
+    lines.append(f"@define-color waybar_border {border_rgba};")
+    lines.append(f"@define-color waybar_shadow {shadow_rgba};")
+    lines.append(f"@define-color tooltip_bg rgba({ma_r}, {ma_g}, {ma_b}, 0.95);")
+    lines.append(f"@define-color tooltip_border rgba({ac_r}, {ac_g}, {ac_b}, 0.45);")
+    lines.append(f"@define-color module_bg rgba({ba_r}, {ba_g}, {ba_b}, {mod_alpha});")
+    lines.append(f"@define-color module_border {border_rgba};")
+    lines.append(f"@define-color module_hover_bg rgba({s0_r}, {s0_g}, {s0_b}, 0.95);")
+    lines.append(f"@define-color module_hover_border rgba({ac_r}, {ac_g}, {ac_b}, 0.50);")
+    lines.append(f"@define-color module_subtle_bg rgba({s0_r}, {s0_g}, {s0_b}, 0.45);")
+    lines.append(f"@define-color module_subtle_border {border_subtle};")
+    lines.append(f"@define-color module_active_bg rgba({s1_r}, {s1_g}, {s1_b}, 0.80);")
+    lines.append(f"@define-color accent_glow rgba({ac_r}, {ac_g}, {ac_b}, 0.40);")
+
     content = "\n".join(lines) + "\n"
     (CONFIG_DIR / "waybar" / "colors.css").write_text(content)
     if (DOTFILES_DIR / "waybar").exists():
         (DOTFILES_DIR / "waybar" / "colors.css").write_text(content)
+
 
 def generate_wofi_colors(theme):
     """Generate ~/.config/wofi/colors.css for Wofi."""

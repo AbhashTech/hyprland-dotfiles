@@ -222,28 +222,39 @@ The dotfiles include a dedicated **Power Profile & Battery Management** system:
 
 ## 🎨 Universal Theming System & Dynamic Color Variables
 
-The dotfiles include a centralized, modular **Theming System** ([`theme_switcher.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/theme_switcher.py)) allowing seamless live switching between 12 curated themes across the entire desktop:
+The dotfiles include a centralized, modular **Theming System** ([`theme_switcher.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/theme_switcher.py)) that dynamically discovers JSON theme files from `~/.config/theme/*.json` and applies them live across the entire desktop:
 
-- **12 Curated Palettes**:
-  - **Catppuccin Mocha** (Default Warm Dark)
-  - **Catppuccin Macchiato** (Medium Dark)
-  - **Catppuccin Frappé** (Soft Slate Dark)
-  - **Catppuccin Latte** (Crisp Light Theme)
-  - **Tokyo Night** (Iconic Cyberpunk Dark Blue)
-  - **Nord Arctic** (Arctic Ice Blue & Frost)
-  - **Gruvbox Dark** (Retro Earthy Golden Tones)
-  - **Rosé Pine** (Soho Warm Pine & Rose Gold)
-  - **Dracula** (Vibrant Gothic Purple & Neon Green)
-  - **Everforest Dark** (Serene Forest Green & Moss)
-  - **One Dark Pro** (Atom Balanced Dark Aesthetic)
-  - **Cyberpunk Synthwave** (High-Octane Neon Magenta & Cyan)
+- **19 Curated Palettes (11 Dark & 8 Light)**:
+  - **Dark Palettes**:
+    - **Catppuccin Mocha** (Default Warm Dark)
+    - **Catppuccin Macchiato** (Medium Dark)
+    - **Catppuccin Frappé** (Soft Slate Dark)
+    - **Tokyo Night** (Iconic Cyberpunk Dark Blue)
+    - **Nord Arctic** (Arctic Ice Blue & Frost)
+    - **Gruvbox Dark** (Retro Earthy Golden Tones)
+    - **Rosé Pine** (Soho Warm Pine & Rose Gold)
+    - **Dracula** (Vibrant Gothic Purple & Neon Green)
+    - **Everforest Dark** (Serene Forest Green & Moss)
+    - **One Dark Pro** (Atom Balanced Dark Aesthetic)
+    - **Cyberpunk Synthwave** (High-Octane Neon Magenta & Cyan)
+  - **Light Palettes**:
+    - **Catppuccin Latte** (Crisp Clean Light Theme)
+    - **Tokyo Night Day** (Daylight Cyberpunk Sky Blue & Indigo)
+    - **Gruvbox Light** (Warm Parchment Paper & Retro Tones)
+    - **Rosé Pine Dawn** (Soft Morning Light, Blush & Gold)
+    - **Everforest Light** (Warm Natural Paper & Sage Green)
+    - **Nord Snow Storm** (Pure Arctic Snow & Frosted Slate)
+    - **One Light Pro** (Atom Balanced Bright Development Theme)
+    - **Solarized Light** (Warm Precision Calibrated Light Palette)
 
-- **Dynamic Color Variables Architecture**:
+- **Dynamic Color Variables & Transparent Waybar Architecture**:
+  - **Waybar Dynamic Backdrop**: Waybar's root glassmorphic background, shadow, module containers, borders, and tooltips automatically adjust their transparency, tint, and borders based on the active theme's palette and dark/light mode (`@waybar_bg`, `@waybar_border`, `@module_bg`, `@module_hover_bg`).
   - **Hyprland**: Border colors and shadows consume variables from [`modules/theme.lua`](file:///home/kunal/.dotfiles/.config/hypr/modules/theme.lua).
-  - **Waybar**: Glassmorphic stylesheet uses centralized CSS variables from [`colors.css`](file:///home/kunal/.dotfiles/.config/waybar/colors.css).
   - **Kitty**: Automatically includes [`theme.conf`](file:///home/kunal/.dotfiles/.config/kitty/theme.conf) containing active 16-color ANSI terminal palette.
   - **Fuzzel, Mako, Wofi, Wlogout & Hyprlock**: Color variables updated seamlessly.
   - **Starship, Zellij, Btop, Lazygit & Swappy**: Palettes and accents dynamically synchronized.
+  - **Extensibility**: Add new themes at any time by dropping a single `.json` file into `~/.config/theme/<name>.json`.
+
 
 - **Usage**:
   - **Graphical Menu**: Press **`SUPER + T`** to open the interactive Fuzzel/Wofi theme picker with active indicator.

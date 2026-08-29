@@ -26,3 +26,18 @@
 @define-color flamingo #f2cdcd;
 @define-color rosewater #f5e0dc;
 @define-color accent #cba6f7;
+
+/* Dynamic Glassmorphic Waybar Backgrounds & Borders */
+@define-color waybar_bg rgba(17, 17, 27, 0.60);
+@define-color waybar_border rgba(255, 255, 255, 0.12);
+@define-color waybar_shadow rgba(0, 0, 0, 0.40);
+@define-color tooltip_bg rgba(24, 24, 37, 0.95);
+@define-color tooltip_border rgba(203, 166, 247, 0.45);
+@define-color module_bg rgba(30, 30, 46, 0.88);
+@define-color module_border rgba(255, 255, 255, 0.12);
+@define-color module_hover_bg rgba(49, 50, 68, 0.95);
+@define-color module_hover_border rgba(203, 166, 247, 0.50);
+@define-color module_subtle_bg rgba(49, 50, 68, 0.45);
+@define-color module_subtle_border rgba(255, 255, 255, 0.06);
+@define-color module_active_bg rgba(69, 71, 90, 0.80);
+@define-color accent_glow rgba(203, 166, 247, 0.40);

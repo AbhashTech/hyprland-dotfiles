@@ -10,6 +10,97 @@ pane_frames false
 simplified_ui false
 
 themes {
+    solarized-light {
+        bg "#93a1a1"
+        fg "#657b83"
+        red "#dc322f"
+        green "#859900"
+        blue "#268bd2"
+        yellow "#b58900"
+        magenta "#d33682"
+        orange "#cb4b16"
+        cyan "#2aa198"
+        black "#eee8d5"
+        white "#657b83"
+    }
+    rose-pine-dawn {
+        bg "#9893a5"
+        fg "#575279"
+        red "#b4637a"
+        green "#286983"
+        blue "#286983"
+        yellow "#ea9d34"
+        magenta "#907aa9"
+        orange "#d7827e"
+        cyan "#286983"
+        black "#f2e9de"
+        white "#575279"
+    }
+    one-light {
+        bg "#a0a1a7"
+        fg "#383a42"
+        red "#e45649"
+        green "#50a14f"
+        blue "#4078f2"
+        yellow "#c18401"
+        magenta "#a626a4"
+        orange "#986801"
+        cyan "#0184bc"
+        black "#f0f0f0"
+        white "#383a42"
+    }
+    nord-light {
+        bg "#9aa7c0"
+        fg "#2e3440"
+        red "#bf616a"
+        green "#a3be8c"
+        blue "#5e81ac"
+        yellow "#ebcb8b"
+        magenta "#b48ead"
+        orange "#d08770"
+        cyan "#8fbcbb"
+        black "#e5e9f0"
+        white "#2e3440"
+    }
+    gruvbox-light {
+        bg "#a89984"
+        fg "#3c3836"
+        red "#9d0006"
+        green "#79740e"
+        blue "#076678"
+        yellow "#b57614"
+        magenta "#8f3f71"
+        orange "#af3a03"
+        cyan "#427b58"
+        black "#f2e5bc"
+        white "#3c3836"
+    }
+    everforest-light {
+        bg "#bdbaa3"
+        fg "#5c6a72"
+        red "#f85552"
+        green "#8da101"
+        blue "#3a94c5"
+        yellow "#dfa000"
+        magenta "#df69ba"
+        orange "#f57d26"
+        cyan "#35a77c"
+        black "#f4ede8"
+        white "#5c6a72"
+    }
+    tokyo-night-day {
+        bg "#9699a8"
+        fg "#3760bf"
+        red "#f52a65"
+        green "#587539"
+        blue "#2e7de9"
+        yellow "#8c6c3e"
+        magenta "#9854f1"
+        orange "#b15c00"
+        cyan "#188092"
+        black "#d5d6db"
+        white "#3760bf"
+    }
     cyberpunk {
         bg "#3e3266"
         fg "#e0f8ff"
