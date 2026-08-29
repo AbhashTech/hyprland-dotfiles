@@ -74,7 +74,6 @@ def is_category_header(raw_line, comment_content):
     """Check if a comment represents a major section / category header."""
     if not comment_content:
         return False
-    # Headers with category emoji icons
     if any(emoji in comment_content for emoji in ["🖥️", "🔔", "⚡", "🗂️", "📐", "🔊", "☀️", "📸", "🎨", "📁"]):
         return True
     if "@category" in comment_content.lower():
@@ -221,8 +220,9 @@ def format_cli_table(entries):
 
 def show_gui_menu(entries):
     """
-    Display keybindings in a compact, non-full-screen 2-line layout
-    so nothing is cut off and it doesn't consume the screen height.
+    Display keybindings with key combination AND description on every single line,
+    with reduced font size (10.5) and compact height (10 lines) so searches always
+    show the exact shortcut alongside the description.
     """
     if not entries:
         return
@@ -230,21 +230,14 @@ def show_gui_menu(entries):
     lines = []
     entry_map = {}
 
-    for idx, item in enumerate(entries):
+    for item in entries:
         key = item["key"]
         desc = item["desc"]
-        cat = item["category"]
-
-        # 2-Line Format: Shortcut on top, Description on next line
-        key_line = f"󰌌 {key}"
-        desc_line = f"   ↳ {desc}"
-
-        lines.append(key_line)
-        lines.append(desc_line)
-
-        # Map both lines so selecting either works seamlessly
-        entry_map[key_line] = item
-        entry_map[desc_line] = item
+        
+        # Single line pairing: Key combo on the left, action description on the right
+        display_line = f"󰌌 {key:<28}  ❯  {desc}"
+        lines.append(display_line)
+        entry_map[display_line] = item
 
     menu_input = "\n".join(lines)
     selected = None
@@ -255,9 +248,10 @@ def show_gui_menu(entries):
                 [
                     "fuzzel",
                     "--dmenu",
+                    "--font", "JetBrainsMono Nerd Font:size=10.5",  # Slightly smaller font size
                     "--prompt", " 󰌌 Shortcuts: ",
-                    "--width", "52",    # Clean, compact modal width
-                    "--lines", "10",    # Reduced height (only 10 lines visible)
+                    "--width", "68",                                # Clean, compact centered width
+                    "--lines", "10",                                # Minimized height (10 items)
                 ],
                 input=menu_input,
                 capture_output=True,
@@ -274,8 +268,8 @@ def show_gui_menu(entries):
                     "wofi",
                     "--dmenu",
                     "--prompt", "Search Shortcuts",
-                    "--width", "620",
-                    "--height", "340",
+                    "--width", "720",
+                    "--height", "360",
                     "--insensitive",
                 ],
                 input=menu_input,
@@ -302,7 +296,7 @@ def show_gui_menu(entries):
                     "-a", "Shortcut Helper",
                     "-i", "preferences-desktop-keyboard-shortcuts",
                     f"⌨️ {item['key']}",
-                    f"{item['desc']}\nCategory: {item['category']}\n(Copied to clipboard)"
+                    f"{item['desc']}\nCategory: {item['category']}\n(Shortcut copied to clipboard)"
                 ], check=False)
             except Exception:
                 pass
