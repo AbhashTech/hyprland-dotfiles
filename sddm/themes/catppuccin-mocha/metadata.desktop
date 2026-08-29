@@ -1,0 +1,14 @@
+[SddmGreeterTheme]
+Name=Catppuccin Mocha
+Description=A sleek, modern glassmorphic SDDM theme for Hyprland and Wayland desktops in Catppuccin Mocha colors.
+Type=sddm-theme
+Author=Kunal
+Copyright=(c) 2026, Kunal
+Screenshot=assets/background.svg
+License=MIT
+Version=1.0.0
+MainScript=Main.qml
+ConfigFile=theme.conf
+Theme-Id=catppuccin-mocha
+Theme-API=2.0
+Website=https://github.com

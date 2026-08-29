@@ -83,6 +83,10 @@ if command -v pacman >/dev/null 2>&1; then
         gtk-layer-shell
         ttf-jetbrains-mono-nerd
         papirus-icon-theme
+        sddm
+        qt6-declarative
+        qt6-svg
+        qt6-5compat
     )
 
     sudo pacman -S --needed --noconfirm "${PACKAGES[@]}" || {
@@ -106,7 +110,7 @@ if command -v pacman >/dev/null 2>&1; then
 
 else
     log_warn "Non-Arch Linux distribution detected."
-    log_info "Ensure Hyprland, Waybar, Mako, Fuzzel, Cliphist, Grim, Slurp, Pipewire, and Python dependencies are installed."
+    log_info "Ensure Hyprland, Waybar, Mako, Fuzzel, Cliphist, Grim, Slurp, Pipewire, SDDM, and Python dependencies are installed."
 fi
 
 # 2. Symlink Configs to ~/.config
@@ -137,6 +141,7 @@ done
 # 3. Ensure Permissions
 log_info "Configuring executable permissions for all custom scripts..."
 find "${DOTFILES_DIR}/.config" -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod +x {} + 2>/dev/null || true
+find "${DOTFILES_DIR}/sddm" -type f -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
 chmod +x "${DOTFILES_DIR}/install.sh" 2>/dev/null || true
 log_success "Script permissions configured."
 
@@ -153,9 +158,28 @@ if ! lsmod | grep -q "i2c_dev"; then
     sudo modprobe i2c-dev 2>/dev/null || log_warn "Could not load i2c-dev automatically."
 fi
 
+# 6. SDDM Theme Installation & Activation
+if [ -d "${DOTFILES_DIR}/sddm/themes/catppuccin-mocha" ]; then
+    log_info "Deploying Catppuccin Mocha SDDM Theme..."
+    if command -v sudo >/dev/null 2>&1; then
+        sudo mkdir -p /usr/share/sddm/themes
+        sudo rm -rf /usr/share/sddm/themes/catppuccin-mocha
+        sudo cp -r "${DOTFILES_DIR}/sddm/themes/catppuccin-mocha" /usr/share/sddm/themes/catppuccin-mocha
+        sudo mkdir -p /etc/sddm.conf.d
+        sudo tee /etc/sddm.conf.d/theme.conf >/dev/null << 'EOF'
+[Theme]
+Current=catppuccin-mocha
+EOF
+        log_success "Catppuccin Mocha SDDM theme installed and activated (/etc/sddm.conf.d/theme.conf)."
+    else
+        log_warn "Sudo not available. Run 'sddm/scripts/install-theme.sh' with root privileges to activate the SDDM theme."
+    fi
+fi
+
 echo ""
 log_success "Unified dotfiles deployed successfully!"
 echo -e "To apply or reload:"
 echo -e "  • Hyprland Reload:   ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"
 echo -e "  • Waybar Restart:    ${COLOR_BOLD}SUPER + SHIFT + W${COLOR_RESET} (or ${COLOR_BOLD}killall waybar && waybar &${COLOR_RESET})"
 echo -e "  • Notification Mako: ${COLOR_BOLD}makoctl reload${COLOR_RESET}"
+echo -e "  • Test SDDM Theme:   ${COLOR_BOLD}~/.dotfiles/sddm/test-theme.sh${COLOR_RESET}"

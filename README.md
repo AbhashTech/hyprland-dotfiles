@@ -11,6 +11,16 @@ A unified, modular, and fully version-controlled dotfiles suite for **Hyprland**
 ├── install.sh                   # All-in-one dependency installer & symlink deployer
 ├── .gitignore                   # Exclusions for temporary files & Python cache
 ├── README.md                    # Full documentation and shortcut cheat sheet
+├── sddm/                        # SDDM Catppuccin Mocha Theme Suite
+│   ├── test-theme.sh            # Live test-mode theme previewer (Qt6)
+│   ├── scripts/
+│   │   └── install-theme.sh     # System deployment & /etc/sddm.conf.d activator
+│   └── themes/catppuccin-mocha/ # Full Qt6 QML Theme
+│       ├── Main.qml             # Main greeter entrypoint & SDDM bindings
+│       ├── metadata.desktop     # Theme metadata definition
+│       ├── theme.conf           # User-customizable settings (colors, background, fonts)
+│       ├── components/          # Modular QML components (GlassCard, Clock, Avatar, Password, Session, Power)
+│       └── assets/              # Vector SVG icons & Catppuccin Mocha background wallpaper
 └── .config/
     ├── hypr/                    # Hyprland Compositor Config & Scripts
     │   ├── hyprland.lua         # Main modular entrypoint
@@ -37,6 +47,7 @@ A unified, modular, and fully version-controlled dotfiles suite for **Hyprland**
 
 | Component | Packages / Tools | Description |
 | :--- | :--- | :--- |
+| **Display Manager (SDDM)**| `sddm`, `qt6-declarative`, `qt6-svg`, `qt6-5compat` | Qt6 display manager & Catppuccin Mocha glassmorphic greeter |
 | **Compositor & Portals** | `hyprland`, `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk` | Wayland compositor and portals for screen sharing / file dialogues |
 | **Session & Lock Screen** | `hyprlock`, `hypridle` | Catppuccin Mocha lockscreen and smart idle management |
 | **Status Bar** | `waybar` | Status bar with system trays, volume, network, and workspaces |
@@ -114,6 +125,62 @@ find ~/.dotfiles/.config -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod 
 - **Lock Screen**: Press `SUPER + L` or `SUPER + ALT + L`.
 - **Restart Waybar**: Press `SUPER + SHIFT + W` or run `killall waybar && waybar &`.
 - **Reload Mako Notifications**: Run `makoctl reload`.
+- **Test SDDM Theme**: Run `~/.dotfiles/sddm/test-theme.sh`.
+
+---
+
+## 🎨 Catppuccin Mocha SDDM Theme
+
+A sleek, responsive, and glassmorphic login theme built with Qt6 QML that seamlessly integrates with the desktop aesthetic.
+
+### ✨ Highlights
+- **Frosted Glassmorphism**: Translucent floating card (`#181825`) with glowing Mauve (`#cba6f7`) focus borders and dark backdrop vignette.
+- **Dynamic Clock & Greeting**: Real-time 24h/12h digital clock, full date formatting, and contextual greeting based on the time of day.
+- **User Avatar & Profile Switcher**: Circular user avatar with glowing border ring and multi-user dropdown selector.
+- **Password Input**: Modern pill input with reveal/hide password toggle (eye icon), auto-focus, Caps Lock active warning banner, and error shake animation with feedback on failed authentication.
+- **Session Selector**: Wayland / X11 desktop session switcher (Hyprland, etc.) with styled popup list.
+- **Power Menu & Confirmation**: Fast access to Power Off, Restart, Suspend, and Hibernate with safety confirmation modals to prevent accidental shutdowns.
+- **Host & Status Indicator**: System hostname badge and battery monitor.
+
+### 🧪 Live Preview / Test Mode
+You can test and preview the SDDM theme in a standalone window without root permissions:
+
+```bash
+# Preview using the built-in runner script:
+~/.dotfiles/sddm/test-theme.sh
+
+# Or directly with sddm-greeter-qt6:
+sddm-greeter-qt6 --test-mode --theme ~/.dotfiles/sddm/themes/catppuccin-mocha
+```
+
+### 📦 Manual SDDM Installation & Activation
+
+```bash
+# 1. Install dependencies
+sudo pacman -S --needed sddm qt6-declarative qt6-svg qt6-5compat
+
+# 2. Deploy theme to system directory
+sudo mkdir -p /usr/share/sddm/themes
+sudo cp -r ~/.dotfiles/sddm/themes/catppuccin-mocha /usr/share/sddm/themes/catppuccin-mocha
+
+# 3. Activate theme in SDDM configuration
+sudo mkdir -p /etc/sddm.conf.d
+sudo tee /etc/sddm.conf.d/theme.conf << 'EOF'
+[Theme]
+Current=catppuccin-mocha
+EOF
+
+# 4. Enable and start SDDM (if not already enabled)
+sudo systemctl enable sddm.service
+```
+
+### ⚙️ Theme Customization (`sddm/themes/catppuccin-mocha/theme.conf`)
+Modify `~/.dotfiles/sddm/themes/catppuccin-mocha/theme.conf` to customize:
+- `Background`: Path to custom wallpaper (SVG/PNG/JPG)
+- `FontFamily`: Preferred system font (defaults to `JetBrainsMono Nerd Font`)
+- `ClockFormat` / `DateFormat`: Time and date layout formats
+- `AccentColor`: Primary accent hex color (`#cba6f7`)
+- `ShowSessions` / `ShowPowerButtons` / `ShowGreeting`: Toggle UI component visibility
 
 ---
 
