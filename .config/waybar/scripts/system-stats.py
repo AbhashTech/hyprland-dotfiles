@@ -4,7 +4,7 @@
  Catppuccin Mocha System Hardware & Stats Dashboard for Waybar & Hyprland
  High-contrast, polished GTK LayerShell popup displaying live CPU, Memory,
  Disk, all Hardware Temperature Sensors, Uptime and Top Active Processes
- with outside-click dismissal.
+ with smooth scrolling support for scaled/small screens and outside-click dismissal.
 =============================================================================
 """
 
@@ -325,6 +325,38 @@ window {
     background-color: transparent;
 }
 
+scrolledwindow,
+.scrolled-window {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+scrollbar {
+    background-color: transparent;
+    border: none;
+    -GtkScrollbar-has-backward-stepper: false;
+    -GtkScrollbar-has-forward-stepper: false;
+    min-width: 6px;
+}
+
+scrollbar trough {
+    background-color: transparent;
+    border: none;
+}
+
+scrollbar slider {
+    background-color: rgba(203, 166, 247, 0.4);
+    border-radius: 6px;
+    min-width: 5px;
+    border: none;
+}
+
+scrollbar slider:hover {
+    background-color: #cba6f7;
+}
+
 button {
     background-image: none;
     background-color: transparent;
@@ -343,18 +375,18 @@ button:focus {
     background-color: #181825;
     border: 1.5px solid rgba(203, 166, 247, 0.45);
     border-radius: 18px;
-    padding: 18px 22px;
+    padding: 14px 18px;
     box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
 }
 
 .header-icon {
-    font-size: 22px;
+    font-size: 20px;
     color: #cba6f7;
     margin-right: 8px;
 }
 
 .header-title {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 800;
     color: #ffffff;
 }
@@ -363,16 +395,16 @@ button:focus {
     font-size: 11px;
     font-weight: 600;
     color: #cdd6f4;
-    margin-top: 2px;
-    margin-bottom: 12px;
+    margin-top: 1px;
+    margin-bottom: 8px;
 }
 
 .stat-box {
     background-color: #1e1e2e;
     border: 1.5px solid #313244;
-    border-radius: 14px;
-    padding: 10px 14px;
-    margin-bottom: 8px;
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
 }
 
 .stat-box:hover {
@@ -381,44 +413,44 @@ button:focus {
 }
 
 .stat-icon {
-    font-size: 17px;
-    margin-right: 9px;
+    font-size: 16px;
+    margin-right: 8px;
 }
 
 .stat-name {
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 800;
     color: #ffffff;
 }
 
 .stat-value {
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 800;
 }
 
 .stat-desc {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
     color: #cdd6f4;
-    margin-top: 2px;
-    margin-bottom: 5px;
+    margin-top: 1px;
+    margin-bottom: 4px;
 }
 
 /* Progress bar styling */
 progressbar {
-    border-radius: 6px;
-    min-height: 7px;
+    border-radius: 5px;
+    min-height: 6px;
 }
 
 progressbar trough {
     background-color: #313244;
-    border-radius: 6px;
-    min-height: 7px;
+    border-radius: 5px;
+    min-height: 6px;
 }
 
 progressbar progress {
-    border-radius: 6px;
-    min-height: 7px;
+    border-radius: 5px;
+    min-height: 6px;
 }
 
 .progress-cpu progress {
@@ -445,27 +477,27 @@ progressbar progress {
 
 /* Thermal Pill Badges */
 .temp-grid {
-    margin-top: 6px;
-    margin-bottom: 2px;
+    margin-top: 4px;
+    margin-bottom: 1px;
 }
 
 .temp-pill {
     background-color: #181825;
     border: 1.5px solid #313244;
     border-radius: 8px;
-    padding: 3px 8px;
-    margin: 2px 3px;
+    padding: 2px 7px;
+    margin: 2px 2px;
 }
 
 .temp-pill-label {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
     color: #cdd6f4;
-    margin-right: 6px;
+    margin-right: 5px;
 }
 
 .temp-pill-val {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 800;
 }
 
@@ -474,8 +506,8 @@ progressbar progress {
     background-color: #181825;
     border: 1.5px solid #313244;
     border-radius: 8px;
-    padding: 5px 10px;
-    margin-top: 4px;
+    padding: 4px 8px;
+    margin-top: 3px;
 }
 
 .proc-item:hover {
@@ -484,35 +516,35 @@ progressbar progress {
 }
 
 .proc-name {
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 800;
     color: #ffffff;
 }
 
 .proc-pid {
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 500;
     color: #a6adc8;
-    margin-left: 6px;
+    margin-left: 5px;
 }
 
 .proc-cpu-badge {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 800;
     color: #fab387;
     background-color: #313244;
-    border-radius: 6px;
-    padding: 2px 7px;
-    margin-left: 6px;
+    border-radius: 5px;
+    padding: 1px 6px;
+    margin-left: 5px;
 }
 
 .proc-mem-badge {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 800;
     color: #f5c2e7;
     background-color: #313244;
-    border-radius: 6px;
-    padding: 2px 7px;
+    border-radius: 5px;
+    padding: 1px 6px;
     margin-left: 4px;
 }
 
@@ -520,9 +552,9 @@ progressbar progress {
 .action-btn {
     background-color: #1e1e2e;
     border: 1.5px solid #cba6f7;
-    border-radius: 12px;
-    padding: 10px 16px;
-    margin-top: 6px;
+    border-radius: 11px;
+    padding: 8px 14px;
+    margin-top: 4px;
     transition: all 0.15s ease-in-out;
 }
 
@@ -537,13 +569,13 @@ progressbar progress {
 }
 
 .action-btn .action-btn-text {
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 800;
     color: #ffffff;
 }
 
 .action-btn .action-btn-icon {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 800;
     color: #cba6f7;
     margin-right: 8px;
@@ -586,7 +618,7 @@ def launch_gtk_gui():
     backdrop.set_app_paintable(True)
 
     screen = backdrop.get_screen()
-    visual = screen.get_rgba_visual()
+    visual = screen.get_rgba_visual() if screen else None
     if visual:
         backdrop.set_visual(visual)
 
@@ -628,8 +660,8 @@ def launch_gtk_gui():
     GtkLayerShell.set_keyboard_mode(win, GtkLayerShell.KeyboardMode.ON_DEMAND)
     GtkLayerShell.set_anchor(win, GtkLayerShell.Edge.TOP, True)
     GtkLayerShell.set_anchor(win, GtkLayerShell.Edge.RIGHT, True)
-    GtkLayerShell.set_margin(win, GtkLayerShell.Edge.TOP, 48)
-    GtkLayerShell.set_margin(win, GtkLayerShell.Edge.RIGHT, 14)
+    GtkLayerShell.set_margin(win, GtkLayerShell.Edge.TOP, 44)
+    GtkLayerShell.set_margin(win, GtkLayerShell.Edge.RIGHT, 12)
 
     def on_key_press(widget, event):
         if event.keyval == Gdk.KEY_Escape:
@@ -694,7 +726,7 @@ def launch_gtk_gui():
     card.pack_start(cpu_box, False, False, 0)
 
     # --- Memory & Disk Row ---
-    mem_disk_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    mem_disk_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
 
     # Memory Box (Left)
     mem_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
@@ -765,7 +797,7 @@ def launch_gtk_gui():
     card.pack_start(mem_disk_row, False, False, 0)
 
     # --- All Hardware Temperatures Box ---
-    temp_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+    temp_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
     temp_box.get_style_context().add_class("stat-box")
 
     temp_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
@@ -869,7 +901,30 @@ def launch_gtk_gui():
     btop_btn.connect("clicked", on_btop_clicked)
     card.pack_start(btop_btn, False, False, 0)
 
-    win.add(card)
+    # --- Scrolled Window Container for Scaled/Small Displays ---
+    # Calculate available screen height
+    screen_height = 800
+    try:
+        display = Gdk.Display.get_default()
+        if display:
+            monitor = display.get_primary_monitor() or display.get_monitor(0)
+            if monitor:
+                screen_height = monitor.get_geometry().height
+    except Exception:
+        pass
+
+    # Reserve 65px for top Waybar margin and bottom screen edge
+    max_scroll_height = max(380, screen_height - 65)
+
+    scrolled = Gtk.ScrolledWindow()
+    scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+    scrolled.set_propagate_natural_height(True)
+    scrolled.set_propagate_natural_width(True)
+    scrolled.set_max_content_height(max_scroll_height)
+    scrolled.get_style_context().add_class("scrolled-window")
+    scrolled.add(card)
+
+    win.add(scrolled)
     win.show_all()
     Gtk.main()
 
