@@ -320,7 +320,6 @@ row:selected {
 textview.preview {
     font-family: 'JetBrainsMono Nerd Font', 'Fira Code', monospace;
     font-size: 12px;
-    line-height: 1.4;
     background-color: #11111b;
     color: #a6e3a1;
 }
@@ -502,16 +501,19 @@ def run_gtk_gui():
     gi.require_version("Gtk", "3.0")
     from gi.repository import Gtk, Gdk, GLib, Pango, GdkPixbuf
 
-    # Apply Catppuccin Dark Theme CSS
+    # Apply Catppuccin Dark Theme CSS safely
     screen = Gdk.Screen.get_default()
     if screen:
-        css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(CATPPUCCIN_CSS)
-        Gtk.StyleContext.add_provider_for_screen(
-            screen,
-            css_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
-        )
+        try:
+            css_provider = Gtk.CssProvider()
+            css_provider.load_from_data(CATPPUCCIN_CSS)
+            Gtk.StyleContext.add_provider_for_screen(
+                screen,
+                css_provider,
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+            )
+        except Exception as e:
+            print(f"Warning: Custom CSS error: {e}", file=sys.stderr)
 
     class ShortcutCreatorApp(Gtk.Window):
         def __init__(self):
@@ -1395,7 +1397,7 @@ def main():
         try:
             run_gtk_gui()
         except Exception as e:
-            print(f"GUI failed to initialize ({e}). Falling back to interactive CLI...", file=sys.stderr)
+            print(f"GUI failed to run ({e}). Falling back to interactive CLI...", file=sys.stderr)
             run_cli_interactive()
     else:
         run_cli_interactive()
