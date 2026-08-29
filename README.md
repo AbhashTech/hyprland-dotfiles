@@ -192,11 +192,12 @@ The dotfiles include a dedicated **System Hardware & Stats** popup ([`system-sta
 
 - **Chip Icon in Waybar (`󰍛`)**: A minimal and responsive chip indicator on the right side of the status bar.
 - **Left-Click Dashboard Popup**: Opens a glassmorphic **GTK LayerShell** modal styled with high-contrast Catppuccin Mocha colors:
+  - **Dynamic Sizing & Scrolling**: Automatically calculates active monitor dimensions via `hyprctl` to utilize **~90% of screen height** with a smooth custom-styled scrolling container, preventing any overflow on compact or fractional scaled screens.
   - **Host & System Info**: Displays hostname, Linux kernel release, and formatted system uptime.
   - **CPU Utilization**: Live percentage, CPU model name, total core count, 1m/5m/15m load averages, and a Sky/Mauve gradient progress bar.
   - **Memory & Storage Metrics**: Dual cards showing GiB RAM and Swap usage metrics alongside root disk (`/`) capacity and utilization bars.
   - **All Hardware Temperatures**: Aggregates and displays all detected hardware temperature sensors (**CPU Package**, **Per-Core temperatures**, **NVMe SSD**, and **Motherboard/Ambient sensors**) with dynamic thermal health badges and color thresholds.
-  - **Dedicated Top Active Processes**: A dedicated section displaying the top CPU-consuming tasks with process name, PID, `% CPU` badge, and `% RAM` badge.
+  - **Dedicated Top Active Processes**: A dedicated section displaying the top active tasks with process name, PID, `% CPU` badge, and `% RAM` badge.
   - **High-Contrast Btop Launcher**: High-visibility interactive action button (and right-click trigger) to launch **Btop** in Kitty terminal.
   - **Outside-Click & Escape Dismissal**: Transparent full-screen backdrop dismissal and Escape key handling.
 - **Right-Click Action**: Instantly launches the **Btop** interactive terminal monitor.
