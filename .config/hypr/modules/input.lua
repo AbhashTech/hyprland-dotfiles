@@ -6,7 +6,7 @@
 hl.config({
     input = {
         kb_layout  = "us,in",
-        kb_variant = "",
+        kb_variant = ",bolnagri",
         kb_model   = "",
         kb_options = "",
         kb_rules   = "",
