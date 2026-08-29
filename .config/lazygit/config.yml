@@ -1,28 +1,28 @@
 # =============================================================================
-# Lazygit Configuration - Nord Arctic
+# Lazygit Configuration - Catppuccin Mocha
 # =============================================================================
 
 gui:
   theme:
     activeBorderColor:
-      - '#88c0d0'
+      - '#cba6f7'
       - bold
     inactiveBorderColor:
-      - '#4c566a'
+      - '#585b70'
     optionsTextColor:
-      - '#81a1c1'
+      - '#89b4fa'
     selectedLineBgColor:
-      - '#3b4252'
+      - '#313244'
     cherryPickedCommitBgColor:
-      - '#434c5e'
+      - '#45475a'
     cherryPickedCommitFgColor:
-      - '#88c0d0'
+      - '#cba6f7'
     unstagedChangesColor:
-      - '#bf616a'
+      - '#f38ba8'
     defaultFgColor:
-      - '#eceff4'
+      - '#cdd6f4'
     searchingActiveBorderColor:
-      - '#ebcb8b'
+      - '#f9e2af'
 
 git:
   paging:

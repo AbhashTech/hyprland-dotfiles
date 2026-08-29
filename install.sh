@@ -155,7 +155,9 @@ DOT_CONFIG_DIRS=(
     "lazygit"
     "swappy"
     "shell"
+    "theme"
 )
+
 
 for pkg in "${DOT_CONFIG_DIRS[@]}"; do
     SRC="${DOTFILES_DIR}/.config/${pkg}"
