@@ -15,6 +15,7 @@ import signal
 import subprocess
 import re
 import shutil
+import traceback
 
 LOG_FILE = os.path.expanduser("~/.cache/waybar_proxy.log")
 WAYBAR_LOG = os.path.expanduser("~/.cache/waybar.log")
@@ -35,7 +36,7 @@ def daemonize():
         pid = os.fork()
         if pid > 0:
             sys.exit(0)
-    except OSError as e:
+    except OSError:
         sys.exit(1)
 
     os.setsid()
@@ -44,7 +45,7 @@ def daemonize():
         pid = os.fork()
         if pid > 0:
             sys.exit(0)
-    except OSError as e:
+    except OSError:
         sys.exit(1)
 
     sys.stdout.flush()
@@ -96,7 +97,6 @@ def get_hypr_paths(timeout_sec=20.0):
             sock1 = os.path.join(real_dir, ".socket.sock")
             sock2 = os.path.join(real_dir, ".socket2.sock")
             if os.path.exists(sock1) and os.path.exists(sock2):
-                # Verify Hyprland is actually accepting IPC queries
                 if probe_socket(sock1):
                     real_sock = sock1
                     real_sock2 = sock2
@@ -153,130 +153,156 @@ def translate_command(data: bytes) -> bytes:
 
 def main():
     global stop_requested
-    args = sys.argv[1:]
-    is_daemon = "--daemon" in args or "-d" in args
-    filtered_args = [a for a in args if a not in ("--daemon", "-d")]
-
-    if is_daemon:
-        daemonize()
-
-    log("Starting Waybar launcher bridge & supervisor...")
-
-    real_sig, real_sock, real_sock2, proxy_sig, proxy_dir, proxy_sock, proxy_sock2 = get_hypr_paths()
-    log(f"Hyprland signature verified & ready: {real_sig}")
-
-    os.makedirs(proxy_dir, exist_ok=True)
-
-    # Setup .socket2.sock symlink (event listener)
-    if os.path.exists(proxy_sock2) or os.path.islink(proxy_sock2):
-        try:
-            os.remove(proxy_sock2)
-        except OSError:
-            pass
     try:
-        os.symlink(real_sock2, proxy_sock2)
-    except Exception as e:
-        log(f"Error creating socket2 symlink: {e}")
+        args = sys.argv[1:]
+        is_daemon = "--daemon" in args or "-d" in args
+        filtered_args = [a for a in args if a not in ("--daemon", "-d")]
 
-    # Setup .socket.sock listener (command dispatcher)
-    if os.path.exists(proxy_sock):
-        try:
-            os.remove(proxy_sock)
-        except OSError:
-            pass
+        if is_daemon:
+            daemonize()
 
-    server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    server.bind(proxy_sock)
-    server.listen(64)
-    server.setblocking(False)
+        log("Starting Waybar launcher bridge & supervisor...")
+        xdg_runtime = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
 
-    # Launch waybar subprocess with proxy signature
-    env = dict(os.environ)
-    env["HYPRLAND_INSTANCE_SIGNATURE"] = proxy_sig
+        real_sig, real_sock, real_sock2, proxy_sig, proxy_dir, proxy_sock, proxy_sock2 = get_hypr_paths()
+        log(f"Hyprland signature verified & ready: {real_sig}")
 
-    log(f"Spawning waybar with args: {filtered_args}")
-    waybar_log_fd = open(WAYBAR_LOG, "a")
-    waybar_proc = subprocess.Popen(["waybar"] + filtered_args, env=env, stdout=waybar_log_fd, stderr=waybar_log_fd)
-    last_spawn_time = time.time()
-    crash_count = 0
+        os.makedirs(proxy_dir, exist_ok=True)
 
-    def cleanup(*args):
-        global stop_requested
-        stop_requested = True
-        log("Cleaning up Waybar proxy bridge...")
-        if waybar_proc and waybar_proc.poll() is None:
-            waybar_proc.terminate()
+        # Setup .socket2.sock symlink (event listener)
+        if os.path.exists(proxy_sock2) or os.path.islink(proxy_sock2):
             try:
-                waybar_proc.wait(timeout=2)
-            except subprocess.TimeoutExpired:
-                waybar_proc.kill()
+                os.remove(proxy_sock2)
+            except OSError:
+                pass
         try:
-            server.close()
-        except Exception:
-            pass
-        try:
-            waybar_log_fd.close()
-        except Exception:
-            pass
-        shutil.rmtree(proxy_dir, ignore_errors=True)
-        sys.exit(0)
+            os.symlink(real_sock2, proxy_sock2)
+        except Exception as e:
+            log(f"Error creating socket2 symlink: {e}")
 
-    signal.signal(signal.SIGTERM, cleanup)
-    signal.signal(signal.SIGINT, cleanup)
+        # Setup .socket.sock listener (command dispatcher)
+        if os.path.exists(proxy_sock):
+            try:
+                os.remove(proxy_sock)
+            except OSError:
+                pass
 
-    inputs = [server]
+        server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        server.bind(proxy_sock)
+        server.listen(64)
+        server.setblocking(False)
 
-    while not stop_requested:
-        # Check if waybar exited unexpectedly and auto-restart if needed
-        if waybar_proc.poll() is not None:
-            code = waybar_proc.returncode
-            log(f"Waybar process exited with code {code}")
-            if stop_requested:
-                break
-            
-            # Reset crash count if Waybar was running stably for more than 5s
-            if (time.time() - last_spawn_time) > 5.0:
-                crash_count = 0
+        # Launch waybar subprocess with proxy signature and verified Wayland display
+        env = dict(os.environ)
+        env["HYPRLAND_INSTANCE_SIGNATURE"] = proxy_sig
+        
+        curr_wd = os.environ.get("WAYLAND_DISPLAY")
+        if not curr_wd or not os.path.exists(os.path.join(xdg_runtime, curr_wd)):
+            try:
+                wl_socks = [
+                    f for f in os.listdir(xdg_runtime)
+                    if f.startswith("wayland-") and not f.endswith(".lock")
+                ]
+                if wl_socks:
+                    wl_socks.sort(key=lambda s: os.path.getmtime(os.path.join(xdg_runtime, s)), reverse=True)
+                    curr_wd = wl_socks[0]
+            except Exception:
+                pass
+        if curr_wd:
+            env["WAYLAND_DISPLAY"] = curr_wd
+            log(f"Wayland display resolved: {curr_wd}")
 
-            crash_count += 1
-            if crash_count > 15:
-                log("Too many consecutive Waybar crashes. Exiting supervisor.")
-                break
+        env["GDK_BACKEND"] = "wayland"
+        env["XDG_CURRENT_DESKTOP"] = "Hyprland"
+        env["XDG_SESSION_TYPE"] = "wayland"
+        env["XDG_SESSION_DESKTOP"] = "Hyprland"
 
-            log(f"Auto-recovering: restarting Waybar (attempt {crash_count})...")
-            time.sleep(0.5)
-            waybar_proc = subprocess.Popen(["waybar"] + filtered_args, env=env, stdout=waybar_log_fd, stderr=waybar_log_fd)
-            last_spawn_time = time.time()
-            continue
+        log(f"Spawning waybar with args: {filtered_args}")
+        waybar_log_fd = open(WAYBAR_LOG, "a")
+        waybar_proc = subprocess.Popen(["waybar"] + filtered_args, env=env, stdout=waybar_log_fd, stderr=waybar_log_fd)
+        last_spawn_time = time.time()
+        crash_count = 0
 
-        readable, _, exceptional = select.select(inputs, [], inputs, 0.5)
-
-        for s in readable:
-            if s is server:
+        def cleanup(*args):
+            global stop_requested
+            stop_requested = True
+            log("Cleaning up Waybar proxy bridge...")
+            if waybar_proc and waybar_proc.poll() is None:
+                waybar_proc.terminate()
                 try:
-                    client_sock, _ = server.accept()
-                    client_sock.settimeout(2.0)
-                    data = client_sock.recv(4096)
-                    if data:
-                        translated = translate_command(data)
-                        real_client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                        real_client.settimeout(2.0)
-                        real_client.connect(real_sock)
-                        real_client.sendall(translated)
-                        
-                        resp = b""
-                        while True:
-                            chunk = real_client.recv(4096)
-                            if not chunk:
-                                break
-                            resp += chunk
-                        real_client.close()
-                        client_sock.sendall(resp)
-                    client_sock.close()
-                except Exception:
-                    pass
+                    waybar_proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    waybar_proc.kill()
+            try:
+                server.close()
+            except Exception:
+                pass
+            try:
+                waybar_log_fd.close()
+            except Exception:
+                pass
+            shutil.rmtree(proxy_dir, ignore_errors=True)
+            sys.exit(0)
 
-    cleanup()
+        signal.signal(signal.SIGTERM, cleanup)
+        signal.signal(signal.SIGINT, cleanup)
+
+        inputs = [server]
+
+        while not stop_requested:
+            # Check if waybar exited unexpectedly and auto-restart if needed
+            if waybar_proc.poll() is not None:
+                code = waybar_proc.returncode
+                log(f"Waybar process exited with code {code}")
+                if stop_requested:
+                    break
+                
+                # Reset crash count if Waybar was running stably for more than 5s
+                if (time.time() - last_spawn_time) > 5.0:
+                    crash_count = 0
+
+                crash_count += 1
+                if crash_count > 15:
+                    log("Too many consecutive Waybar crashes. Exiting supervisor.")
+                    break
+
+                log(f"Auto-recovering: restarting Waybar (attempt {crash_count})...")
+                time.sleep(0.5)
+                waybar_proc = subprocess.Popen(["waybar"] + filtered_args, env=env, stdout=waybar_log_fd, stderr=waybar_log_fd)
+                last_spawn_time = time.time()
+                continue
+
+            readable, _, exceptional = select.select(inputs, [], inputs, 0.5)
+
+            for s in readable:
+                if s is server:
+                    try:
+                        client_sock, _ = server.accept()
+                        client_sock.settimeout(2.0)
+                        data = client_sock.recv(4096)
+                        if data:
+                            translated = translate_command(data)
+                            real_client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                            real_client.settimeout(2.0)
+                            real_client.connect(real_sock)
+                            real_client.sendall(translated)
+                            
+                            resp = b""
+                            while True:
+                                chunk = real_client.recv(4096)
+                                if not chunk:
+                                    break
+                                resp += chunk
+                            real_client.close()
+                            client_sock.sendall(resp)
+                        client_sock.close()
+                    except Exception:
+                        pass
+
+        cleanup()
+    except Exception as e:
+        log(f"Fatal error in launch_waybar: {e}\n{traceback.format_exc()}")
+        raise
 
 if __name__ == "__main__":
     main()
