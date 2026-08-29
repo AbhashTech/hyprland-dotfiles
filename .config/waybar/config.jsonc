@@ -92,7 +92,7 @@
     // Center Modules
     // ==========================================
     "clock": {
-        "interval": 1,
+        "interval": 30,
         "format": "  {:%I:%M %p}",
         "format-alt": "  {:%I:%M:%S %p  󰃭 %A, %d %B %Y}",
         "tooltip-format": "<tt><small>{calendar}</small></tt>",
@@ -265,7 +265,7 @@
         "exec": "/home/kunal/.config/waybar/scripts/battery-status.py",
         "on-click-right": "/home/kunal/.config/waybar/scripts/power-profile.py",
         "on-click": "/home/kunal/.config/waybar/scripts/power-profile.py",
-        "interval": 5,
+        "interval": 30,
         "signal": 8,
         "tooltip": true
     },
@@ -283,7 +283,7 @@
         "on-click": "/home/kunal/.config/hypr/scripts/clipboard_manager.py --menu",
         "on-click-right": "/home/kunal/.config/hypr/scripts/clipboard_manager.py --delete",
         "on-click-middle": "/home/kunal/.config/hypr/scripts/clipboard_manager.py --toggle-pause",
-        "interval": 2,
+        "interval": 30,
         "signal": 9,
         "tooltip": true
     },
@@ -296,7 +296,7 @@
         "on-click": "/home/kunal/.config/waybar/scripts/notifications.py",
         "on-click-right": "/home/kunal/.config/waybar/scripts/notifications.py --toggle-dnd",
         "on-click-middle": "/home/kunal/.config/waybar/scripts/notifications.py --clear",
-        "interval": 2,
+        "interval": 30,
         "signal": 10,
         "tooltip": true
     },
