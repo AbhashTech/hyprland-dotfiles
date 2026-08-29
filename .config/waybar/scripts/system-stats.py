@@ -4,10 +4,11 @@
  Catppuccin Mocha System Hardware & Stats Dashboard for Waybar & Hyprland
  High-contrast, polished GTK LayerShell popup displaying live CPU, Memory,
  Disk, all Hardware Temperature Sensors, Uptime and Top Active Processes
- with smooth scrolling support for scaled/small screens and outside-click dismissal.
+ with 90% screen height adaptation and smooth scrolling support.
 =============================================================================
 """
 
+import json
 import os
 import platform
 import re
@@ -32,6 +33,32 @@ def check_and_kill_existing():
                 sys.exit(0)
     except Exception:
         pass
+
+
+def get_screen_dimensions():
+    try:
+        out = subprocess.run(["hyprctl", "-j", "monitors"], capture_output=True, text=True).stdout
+        monitors = json.loads(out)
+        for m in monitors:
+            if m.get("focused", False) or len(monitors) == 1:
+                scale = float(m.get("scale", 1.0))
+                h = int(float(m.get("height", 1080)) / scale)
+                w = int(float(m.get("width", 1920)) / scale)
+                return w, h
+    except Exception:
+        pass
+
+    try:
+        import gi
+        gi.require_version('Gdk', '3.0')
+        from gi.repository import Gdk
+        s = Gdk.Screen.get_default()
+        if s:
+            return s.get_width(), s.get_height()
+    except Exception:
+        pass
+
+    return 1920, 1080
 
 
 def get_cpu_info():
@@ -296,7 +323,7 @@ def get_top_processes():
         )
         lines = res.stdout.strip().splitlines()
         procs = []
-        for line in lines[1:5]:
+        for line in lines[1:6]:  # Show top 5 processes
             parts = line.split()
             if len(parts) >= 4:
                 pid, comm, cpu, mem = parts[0], parts[1], parts[2], parts[3]
@@ -375,7 +402,7 @@ button:focus {
     background-color: #181825;
     border: 1.5px solid rgba(203, 166, 247, 0.45);
     border-radius: 18px;
-    padding: 14px 18px;
+    padding: 16px 20px;
     box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
 }
 
@@ -395,16 +422,16 @@ button:focus {
     font-size: 11px;
     font-weight: 600;
     color: #cdd6f4;
-    margin-top: 1px;
-    margin-bottom: 8px;
+    margin-top: 2px;
+    margin-bottom: 10px;
 }
 
 .stat-box {
     background-color: #1e1e2e;
     border: 1.5px solid #313244;
-    border-radius: 12px;
-    padding: 8px 12px;
-    margin-bottom: 6px;
+    border-radius: 13px;
+    padding: 9px 13px;
+    margin-bottom: 7px;
 }
 
 .stat-box:hover {
@@ -432,8 +459,8 @@ button:focus {
     font-size: 10.5px;
     font-weight: 600;
     color: #cdd6f4;
-    margin-top: 1px;
-    margin-bottom: 4px;
+    margin-top: 2px;
+    margin-bottom: 5px;
 }
 
 /* Progress bar styling */
@@ -477,15 +504,15 @@ progressbar progress {
 
 /* Thermal Pill Badges */
 .temp-grid {
-    margin-top: 4px;
-    margin-bottom: 1px;
+    margin-top: 5px;
+    margin-bottom: 2px;
 }
 
 .temp-pill {
     background-color: #181825;
     border: 1.5px solid #313244;
     border-radius: 8px;
-    padding: 2px 7px;
+    padding: 3px 8px;
     margin: 2px 2px;
 }
 
@@ -552,9 +579,9 @@ progressbar progress {
 .action-btn {
     background-color: #1e1e2e;
     border: 1.5px solid #cba6f7;
-    border-radius: 11px;
-    padding: 8px 14px;
-    margin-top: 4px;
+    border-radius: 12px;
+    padding: 9px 14px;
+    margin-top: 5px;
     transition: all 0.15s ease-in-out;
 }
 
@@ -593,6 +620,11 @@ def launch_gtk_gui():
     gi.require_version('Gtk', '3.0')
     gi.require_version('GtkLayerShell', '0.1')
     from gi.repository import Gtk, Gdk, GtkLayerShell
+
+    # Fetch screen dimensions
+    screen_w, screen_h = get_screen_dimensions()
+    target_popup_height = min(int(screen_h * 0.88), screen_h - 55)
+    popup_width = 440
 
     # Fetch system metrics
     cpu = get_cpu_info()
@@ -660,8 +692,8 @@ def launch_gtk_gui():
     GtkLayerShell.set_keyboard_mode(win, GtkLayerShell.KeyboardMode.ON_DEMAND)
     GtkLayerShell.set_anchor(win, GtkLayerShell.Edge.TOP, True)
     GtkLayerShell.set_anchor(win, GtkLayerShell.Edge.RIGHT, True)
-    GtkLayerShell.set_margin(win, GtkLayerShell.Edge.TOP, 44)
-    GtkLayerShell.set_margin(win, GtkLayerShell.Edge.RIGHT, 12)
+    GtkLayerShell.set_margin(win, GtkLayerShell.Edge.TOP, 42)
+    GtkLayerShell.set_margin(win, GtkLayerShell.Edge.RIGHT, 14)
 
     def on_key_press(widget, event):
         if event.keyval == Gdk.KEY_Escape:
@@ -674,7 +706,7 @@ def launch_gtk_gui():
     # Main Card Container
     card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     card.get_style_context().add_class("main-card")
-    card.set_size_request(420, -1)
+    card.set_size_request(popup_width - 16, -1)
 
     # --- Header Box ---
     header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -901,29 +933,18 @@ def launch_gtk_gui():
     btop_btn.connect("clicked", on_btop_clicked)
     card.pack_start(btop_btn, False, False, 0)
 
-    # --- Scrolled Window Container for Scaled/Small Displays ---
-    # Calculate available screen height
-    screen_height = 800
-    try:
-        display = Gdk.Display.get_default()
-        if display:
-            monitor = display.get_primary_monitor() or display.get_monitor(0)
-            if monitor:
-                screen_height = monitor.get_geometry().height
-    except Exception:
-        pass
-
-    # Reserve 65px for top Waybar margin and bottom screen edge
-    max_scroll_height = max(380, screen_height - 65)
-
+    # --- Scrolled Window Container utilizing ~90% Screen Height ---
     scrolled = Gtk.ScrolledWindow()
     scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-    scrolled.set_propagate_natural_height(True)
     scrolled.set_propagate_natural_width(True)
-    scrolled.set_max_content_height(max_scroll_height)
+    scrolled.set_propagate_natural_height(False)
+    scrolled.set_min_content_height(target_popup_height)
+    scrolled.set_max_content_height(target_popup_height)
     scrolled.get_style_context().add_class("scrolled-window")
     scrolled.add(card)
 
+    win.set_size_request(popup_width, target_popup_height)
+    win.set_default_size(popup_width, target_popup_height)
     win.add(scrolled)
     win.show_all()
     Gtk.main()
