@@ -11,6 +11,11 @@ max-history=100
 max-visible=5
 sort=+time
 
+# Mouse Bindings
+on-button-left=invoke-default-action
+on-button-right=dismiss
+on-button-middle=dismiss-all
+
 # Geometry & Positioning
 width=380
 height=160
