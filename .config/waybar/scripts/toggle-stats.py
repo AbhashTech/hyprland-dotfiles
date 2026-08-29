@@ -36,7 +36,7 @@ def set_mode(mode):
 
 def send_waybar_signal():
     try:
-        subprocess.run(["pkill", "-RTMIN+9", "waybar"], capture_output=True)
+        subprocess.run(["bash", "-c", "pgrep -x waybar >/dev/null && pkill -RTMIN+9 waybar || true"], capture_output=True)
     except Exception:
         pass
 

@@ -147,16 +147,22 @@ def is_dnd():
     return file_dnd or mako_dnd
 
 
+def notify_waybar():
+    try:
+        run_cmd(["bash", "-c", "pgrep -x waybar >/dev/null && pkill -RTMIN+10 waybar || true"])
+    except Exception:
+        pass
+
+
 def toggle_dnd():
-    """Toggle Do Not Disturb mode and persist state."""
-    currently_dnd = is_dnd()
-    if currently_dnd:
+    """Toggle Do-Not-Disturb mode on/off."""
+    if is_dnd():
         run_cmd(["makoctl", "mode", "-r", "dnd"])
-        if os.path.exists(DND_STATE_FILE):
-            try:
+        try:
+            if os.path.exists(DND_STATE_FILE):
                 os.remove(DND_STATE_FILE)
-            except Exception:
-                pass
+        except Exception:
+            pass
     else:
         run_cmd(["makoctl", "mode", "-a", "dnd"])
         try:
@@ -167,7 +173,7 @@ def toggle_dnd():
             pass
 
     # Notify waybar to update
-    run_cmd(["pkill", "-RTMIN+10", "waybar"])
+    notify_waybar()
 
 
 def clear_all():
@@ -191,7 +197,7 @@ def clear_all():
     if dnd_active:
         run_cmd(["makoctl", "mode", "-a", "dnd"])
 
-    run_cmd(["pkill", "-RTMIN+10", "waybar"])
+    notify_waybar()
 
 
 def clean_markup(text):
@@ -315,10 +321,10 @@ def open_menu():
         clear_all()
     elif "Restore Last" in chosen:
         run_cmd(["makoctl", "restore"])
-        run_cmd(["pkill", "-RTMIN+10", "waybar"])
+        notify_waybar()
     elif "Send Test" in chosen:
         run_cmd(["notify-send", "-a", "Demo App", "✨ Test Notification", "This notification will dismiss in 10 seconds!"])
-        run_cmd(["pkill", "-RTMIN+10", "waybar"])
+        notify_waybar()
     elif "[" in chosen and "]" in chosen:
         match = re.search(r'\[(\d+)\]', chosen)
         if match:
@@ -367,7 +373,7 @@ def show_notification_detail(n):
     elif "Dismiss" in chosen and n_id is not None:
         run_cmd(["makoctl", "dismiss", "-n", str(n_id), "-h"])
         add_dismissed_id(n_id)
-        run_cmd(["pkill", "-RTMIN+10", "waybar"])
+        notify_waybar()
         open_menu()
 
 
@@ -385,7 +391,7 @@ def main():
             return
         elif arg == "--restore":
             run_cmd(["makoctl", "restore"])
-            run_cmd(["pkill", "-RTMIN+10", "waybar"])
+            notify_waybar()
             return
 
     open_menu()

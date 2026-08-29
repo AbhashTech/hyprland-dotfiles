@@ -412,7 +412,7 @@ def launch_gtk_gui():
         def make_click_handler(target_prof, target_meta):
             def on_btn_clicked(widget):
                 set_dbus_power_profile(target_prof)
-                subprocess.run(["pkill", "-RTMIN+8", "waybar"], check=False)
+                subprocess.run(["bash", "-c", "pgrep -x waybar >/dev/null && pkill -RTMIN+8 waybar || true"], check=False)
                 notify(
                     "Power Profile Changed",
                     f"Switched to {target_meta['title']}",

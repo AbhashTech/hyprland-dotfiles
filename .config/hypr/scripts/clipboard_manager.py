@@ -65,7 +65,10 @@ def notify(title, msg, icon="edit-paste", urgency="low"):
 
 def notify_waybar():
     """Trigger signal 9 on Waybar to instantly refresh clipboard module."""
-    run_cmd(["pkill", "-RTMIN+9", "waybar"])
+    try:
+        run_cmd(["bash", "-c", "pgrep -x waybar >/dev/null && pkill -RTMIN+9 waybar || true"])
+    except Exception:
+        pass
 
 
 def is_paused():
@@ -120,11 +123,11 @@ def start_daemon(silent=False):
 
     cmd_text = (
         'wl-paste --type text --watch bash -c "'
-        'cliphist store && pkill -RTMIN+9 waybar"'
+        'cliphist store && (pgrep -x waybar >/dev/null && pkill -RTMIN+9 waybar || true)"'
     )
     cmd_image = (
         'wl-paste --type image --watch bash -c "'
-        'cliphist store && pkill -RTMIN+9 waybar"'
+        'cliphist store && (pgrep -x waybar >/dev/null && pkill -RTMIN+9 waybar || true)"'
     )
 
     try:

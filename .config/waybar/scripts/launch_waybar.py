@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Waybar Hyprland IPC Compatibility Bridge & Robust Launcher
+Waybar Hyprland IPC Compatibility Bridge & Robust Supervisor
 Fixes workspace on-click actions when running Hyprland with Lua configuration (v0.55+ / v0.56+).
 Translates legacy text-based IPC dispatch commands sent by Waybar into modern Lua dispatchers.
-Ensures Waybar reliably waits for Hyprland sockets during login autostart.
+Ensures Waybar reliably waits for Hyprland sockets during login autostart and auto-restarts on signals.
 """
 
 import os
@@ -17,6 +17,7 @@ import re
 import shutil
 
 LOG_FILE = os.path.expanduser("~/.cache/waybar_proxy.log")
+stop_requested = False
 
 def log(msg: str):
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -135,6 +136,7 @@ def translate_command(data: bytes) -> bytes:
     return data
 
 def main():
+    global stop_requested
     args = sys.argv[1:]
     is_daemon = "--daemon" in args or "-d" in args
     filtered_args = [a for a in args if a not in ("--daemon", "-d")]
@@ -142,7 +144,7 @@ def main():
     if is_daemon:
         daemonize()
 
-    log("Starting Waybar launcher bridge...")
+    log("Starting Waybar launcher bridge & supervisor...")
 
     real_sig, real_sock, real_sock2, proxy_sig, proxy_dir, proxy_sock, proxy_sock2 = get_hypr_paths()
     log(f"Hyprland signature detected: {real_sig}")
@@ -178,10 +180,14 @@ def main():
 
     log(f"Spawning waybar with args: {filtered_args}")
     waybar_proc = subprocess.Popen(["waybar"] + filtered_args, env=env)
+    last_spawn_time = time.time()
+    crash_count = 0
 
     def cleanup(*args):
+        global stop_requested
+        stop_requested = True
         log("Cleaning up Waybar proxy bridge...")
-        if waybar_proc.poll() is None:
+        if waybar_proc and waybar_proc.poll() is None:
             waybar_proc.terminate()
             try:
                 waybar_proc.wait(timeout=2)
@@ -199,11 +205,28 @@ def main():
 
     inputs = [server]
 
-    while True:
-        # Check if waybar exited
+    while not stop_requested:
+        # Check if waybar exited unexpectedly and auto-restart if needed
         if waybar_proc.poll() is not None:
-            log(f"Waybar process exited with code {waybar_proc.returncode}")
-            break
+            code = waybar_proc.returncode
+            log(f"Waybar process exited with code {code}")
+            if stop_requested:
+                break
+            
+            # Reset crash count if Waybar was running stably for more than 10s
+            if (time.time() - last_spawn_time) > 10.0:
+                crash_count = 0
+
+            crash_count += 1
+            if crash_count > 15:
+                log("Too many consecutive Waybar crashes. Exiting supervisor.")
+                break
+
+            log(f"Auto-recovering: restarting Waybar (attempt {crash_count})...")
+            time.sleep(0.3)
+            waybar_proc = subprocess.Popen(["waybar"] + filtered_args, env=env)
+            last_spawn_time = time.time()
+            continue
 
         readable, _, exceptional = select.select(inputs, [], inputs, 0.5)
 
@@ -229,7 +252,7 @@ def main():
                         real_client.close()
                         client_sock.sendall(resp)
                     client_sock.close()
-                except Exception as e:
+                except Exception:
                     pass
 
     cleanup()
