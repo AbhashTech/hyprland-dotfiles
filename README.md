@@ -1,6 +1,6 @@
 # 🌌 Unified Hyprland & Wayland Dotfiles
 
-A modular, unified, and fully version-controlled dotfiles suite for **Hyprland** on Arch Linux. Features **Waybar**, **Fuzzel**, **Mako**, **Wofi**, **Btop**, **Kitty**, **Starship**, **Lazygit**, **Zellij**, **Swappy**, custom OSD overlays, Catppuccin Mocha themed SDDM greeter, clipboard management, media/audio switchers, dynamic shortcut viewer, and a comprehensive modern CLI productivity suite (100% official Pacman packages).
+A modular, unified, and fully version-controlled dotfiles suite for **Hyprland** on Arch Linux. Features **Waybar**, **Fuzzel**, **Mako**, **Wofi**, **Btop**, **Kitty**, **Starship**, **Lazygit**, **Zellij**, **Swappy**, custom OSD overlays, Catppuccin Mocha themed SDDM greeter, dynamic power profiles, keyboard layout management, clipboard history, media/audio switchers, dynamic shortcut viewer, and a comprehensive modern CLI productivity suite (100% official Pacman packages).
 
 ---
 
@@ -24,12 +24,12 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 └── .config/
     ├── hypr/                    # Hyprland Compositor Config & Scripts
     │   ├── hyprland.lua         # Main modular entrypoint
-    │   ├── modules/             # Config modules (animations, keybinds, rules, monitors, etc.)
-    │   └── scripts/             # Python & Shell utilities (keybinds viewer, brightness, audio, capture, scaling)
+    │   ├── modules/             # Config modules (animations, keybinds, rules, monitors, input, etc.)
+    │   └── scripts/             # Python & Shell utilities (keybinds viewer, brightness, audio, capture, scaling, keyboard)
     ├── waybar/                  # Waybar Status Bar
     │   ├── config.jsonc         # Bar layout, modules, click actions & tooltips
-    │   ├── style.css            # Styling, gradients, glassmorphism & padding
-    │   └── scripts/             # Connectivity, notifications, bluetooth & power scripts
+    │   ├── style.css            # Styling, gradients, glassmorphism & dynamic colors
+    │   └── scripts/             # Battery status, power profile popup, connectivity, notifications & network
     ├── kitty/                   # Kitty Terminal Emulator
     │   └── kitty.conf           # Catppuccin Mocha theme, font, padding & shortcuts
     ├── starship.toml            # Starship Cross-Shell Prompt (Catppuccin Mocha)
@@ -64,7 +64,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | **Display Manager (SDDM)**| `sddm`, `qt6-declarative`, `qt6-svg`, `qt6-5compat` | Qt6 display manager & Catppuccin Mocha glassmorphic greeter |
 | **Compositor & Portals** | `hyprland`, `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk`, `hyprpolkitagent` | Wayland compositor, screen sharing portals, and Polkit authentication agent |
 | **Session & Lock Screen** | `hyprlock`, `hypridle` | Catppuccin Mocha lockscreen and smart idle management |
-| **Status Bar** | `waybar` | Status bar with system trays, volume, network, and workspaces |
+| **Status Bar & Power** | `waybar`, `power-profiles-daemon`, `upower` | Status bar with hardware stats, power profile selector & battery metrics |
 | **Notifications** | `mako`, `libnotify` | Notification daemon & `notify-send` for OSDs (with click-to-focus) |
 | **Wallpaper** | `hyprpaper` | Fast Wayland wallpaper daemon |
 | **App Launchers & Theming** | `fuzzel`, `wofi`, `nwg-look` | Fast Wayland launcher, GTK dmenu, and GTK3/4 theme switcher |
@@ -76,7 +76,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | **Brightness & Night Light**| `brightnessctl`, `ddcutil`, `hyprsunset` / `wlsunset` | Backlight, external DDC brightness, and warm blue-light filter |
 | **Clipboard** | `wl-clipboard`, `cliphist` | Wayland clipboard manager with binary image and thumbnail support |
 | **Screen Capture & OCR** | `grim`, `slurp`, `swappy`, `wf-recorder`, `hyprpicker`, `tesseract`, `tesseract-data-eng` | Screenshots, annotation, video recording, color picker, OCR |
-| **Python Runtime & UI** | `python`, `python-gobject`, `gtk3`, `gtk-layer-shell` | Python 3, PyGObject, and Wayland layer-shell for launchers |
+| **Python Runtime & UI** | `python`, `python-gobject`, `gtk3`, `gtk-layer-shell`, `python-dbus` | Python 3, PyGObject, DBus, and Wayland layer-shell for popups |
 | **Fonts & Icons** | `ttf-jetbrains-mono-nerd`, `papirus-icon-theme` | Nerd font glyphs and system icon theme |
 
 ---
@@ -104,6 +104,21 @@ Add the following lines to your `~/.bashrc` or `~/.zshrc`:
 source ~/.config/shell/env.sh
 source ~/.config/shell/aliases.sh
 ```
+
+---
+
+## 🔋 Power Management & Waybar Profiles
+
+The dotfiles include a dedicated **Power Profile & Battery Management** system:
+
+- **Dynamic Icon Coloring**: The Waybar battery icon changes color in real-time based on the active power profile:
+  - **🌱 Power Saver**: **Green** (`#a6e3a1`) — Reduces CPU clocks and limits background power draw.
+  - **⚖ Balanced**: **Orange** (`#fab387`) — Standard dynamic balance between speed and battery life.
+  - **🚀 Performance**: **Red** (`#f38ba8`) — Maximum CPU clock speeds and responsiveness for heavy workloads.
+- **Rich Hover Tooltip**: Hovering over the battery icon displays the active power mode, charging state, estimated time remaining, and battery hardware health percentage.
+- **Interactive Selector Popup**: **Right-clicking** the battery icon opens a glassmorphic **GTK LayerShell** popup styled with Catppuccin Mocha colors:
+  - Features high-contrast cards, active state badges, outside-click backdrop dismissal, and `Escape` key handling.
+  - Switches profiles instantly via `power-profiles-daemon` over DBus and notifies Waybar for zero-latency UI updates.
 
 ---
 
@@ -138,7 +153,27 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + V` | **Toggle Floating** | Switch active window between tiled and floating mode |
 | `SUPER + P` | **Toggle Pseudo Tiling** | Toggle pseudo-tile on active window |
 | `SUPER + J` | **Toggle Layout Split** | Toggle horizontal/vertical split orientation (dwindle) |
-| `SUPER + SHIFT + W` | **Restart Waybar** | Reload and restart Waybar status bar |
+| `SUPER + SHIFT + W` | **Toggle Waybar** | Toggle Waybar status bar on/off with state persistence |
+
+---
+
+### 🌐 Keyboard Layout & Input Switching
+| Shortcut | Action | Description |
+| :--- | :--- | :--- |
+| `SUPER + Space` | **Next Keyboard Layout** | Cycle to next active keyboard layout |
+| `SUPER + SHIFT + K` | **Keyboard Layout Menu** | Open interactive selector for active layouts |
+| `SUPER + ALT + K` | **Add Keyboard Layout** | Search and add regional layout variants (including Indian languages) |
+
+---
+
+### 🔔 Notifications & Quick Settings
+| Shortcut | Action | Description |
+| :--- | :--- | :--- |
+| `SUPER + N` | **Notifications Center** | Open notification history and management center |
+| `SUPER + SHIFT + N` | **Toggle DND** | Toggle Do-Not-Disturb notification silencing mode |
+| `SUPER + SHIFT + V` | **Clipboard Browser** | Open searchable clipboard history with images and snippets |
+| `SUPER + ALT + V` / `SHIFT + C` | **Clipboard Browser** | Alternate shortcuts for clipboard history |
+| `SUPER + ALT + D` | **Clipboard Cleaner** | Open menu to delete individual entries or wipe clipboard cache |
 
 ---
 
@@ -166,16 +201,6 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + ALT + N` | **Night Light** | Toggle warm blue-light filter (3800K night / 6500K day) |
 | `SUPER + =` / `ALT + C` | **Quick Calculator** | Interactive math expression evaluator via Fuzzel prompt |
 | `SUPER + .` (period) | **Emoji Picker** | Searchable emoji catalog with automatic clipboard copy & keystroke paste |
-
----
-
-### 📋 Clipboard Manager (`clipboard_manager.py`)
-| Shortcut | Action | Description |
-| :--- | :--- | :--- |
-| `SUPER + SHIFT + V` | **Clipboard Browser** | Open searchable clipboard history with images, snippets, and thumbnails |
-| `SUPER + ALT + V` | **Clipboard Browser** | Alternate shortcut for clipboard history |
-| `SUPER + SHIFT + C` | **Clipboard Browser** | Alternate shortcut for clipboard history |
-| `SUPER + ALT + D` | **Clipboard Cleaner** | Open menu to delete individual entries or wipe complete clipboard cache |
 
 ---
 
