@@ -16,6 +16,7 @@
 
 hl.on("hyprland.start", function ()
     hl.exec_cmd("hyprpaper")
+    hl.exec_cmd("waybar")
     hl.exec_cmd("mako")
     hl.exec_cmd("hypridle")
     hl.exec_cmd("systemctl --user start hyprpolkitagent || /usr/lib/polkit-kde-authentication-agent-1 || /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &")
