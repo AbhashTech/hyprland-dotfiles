@@ -13,6 +13,7 @@ import sys
 import re
 import json
 import shutil
+import textwrap
 import argparse
 import subprocess
 from pathlib import Path
@@ -220,9 +221,9 @@ def format_cli_table(entries):
 
 def show_gui_menu(entries):
     """
-    Display keybindings across 2 dedicated lines (Shortcut on top, full description below).
-    Uses width 92 and font size 9.2 so even the longest shortcut and description fit
-    with generous space and zero text clipping during search.
+    Display keybindings with automatic multi-line text wrapping for long descriptions.
+    Each entry shows the shortcut on line 1, and wraps long descriptions across lines 2, 3, etc.
+    Every continuation line retains the shortcut identifier and maps back to the same keybinding.
     """
     if not entries:
         return
@@ -230,22 +231,33 @@ def show_gui_menu(entries):
     lines = []
     entry_map = {}
 
+    # Wrap descriptions at 48 characters to guarantee no clipping in any window width
+    wrap_width = 48
+
     for item in entries:
         key = item["key"]
         desc = item["desc"]
 
-        # Line 1: Primary Keyboard Shortcut Header
+        # Line 1: Main Keyboard Shortcut Header
         key_line = f"󰌌 {key}"
-        
-        # Line 2: Full Description with shortcut tag (for instant visibility during search)
-        desc_line = f"   ↳ [{key}] {desc}"
-
         lines.append(key_line)
-        lines.append(desc_line)
-
-        # Map both lines to the entry item so selecting either works
         entry_map[key_line] = item
-        entry_map[desc_line] = item
+
+        # Split long descriptions across multiple lines if needed
+        wrapped_chunks = textwrap.wrap(desc, width=wrap_width, break_long_words=False, break_on_hyphens=False)
+        if not wrapped_chunks:
+            wrapped_chunks = [desc]
+
+        for chunk_idx, chunk in enumerate(wrapped_chunks):
+            if chunk_idx == 0:
+                # First line of description with shortcut tag for search matching
+                desc_line = f"   ↳ [{key}] {chunk}"
+            else:
+                # Continuation line(s) for long descriptions
+                desc_line = f"     [{key}] {chunk}"
+
+            lines.append(desc_line)
+            entry_map[desc_line] = item
 
     menu_input = "\n".join(lines)
     selected = None
@@ -256,10 +268,10 @@ def show_gui_menu(entries):
                 [
                     "fuzzel",
                     "--dmenu",
-                    "--font", "JetBrainsMono Nerd Font:weight=medium:size=9.2",
+                    "--font", "JetBrainsMono Nerd Font:weight=medium:size=9.5",
                     "--prompt", " 󰌌 Shortcuts: ",
-                    "--width", "92",   # Extra-wide horizontal space to prevent any clipping
-                    "--lines", "10",   # Compact height (10 items)
+                    "--width", "75",    # Generous modal width
+                    "--lines", "12",    # 12 lines visible for comfortable reading
                 ],
                 input=menu_input,
                 capture_output=True,
@@ -276,8 +288,8 @@ def show_gui_menu(entries):
                     "wofi",
                     "--dmenu",
                     "--prompt", "Search Shortcuts",
-                    "--width", "850",
-                    "--height", "360",
+                    "--width", "780",
+                    "--height", "420",
                     "--insensitive",
                 ],
                 input=menu_input,
