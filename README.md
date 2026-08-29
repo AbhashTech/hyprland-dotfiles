@@ -150,6 +150,7 @@ source ~/.config/shell/aliases.sh
 ### ⚡ Productivity & Workflow Utilities
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
+| `SUPER + /` / `F1` / `?` | **Shortcut Cheat Sheet** | Open interactive **Fuzzel/Wofi** dynamic keybindings viewer |
 | `SUPER + SHIFT + P` | **Hyprpicker** | Pick color from screen, copy hex code to clipboard & trigger notification |
 | `SUPER + SHIFT + T` / `ALT + T` | **Screen OCR** | Select region with mouse, extract text via Tesseract & copy to clipboard |
 | `SUPER + ALT + N` | **Night Light** | Toggle warm blue-light filter (3800K night / 6500K day) |
