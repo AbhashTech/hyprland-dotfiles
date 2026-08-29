@@ -42,7 +42,6 @@ def get_cpu_info():
             for line in f:
                 if "model name" in line:
                     model = line.split(":", 1)[1].strip()
-                    # Shorten verbose CPU names
                     model = re.sub(r'\(R\)|\(TM\)|Processor|CPU|Core|Eight-Core|Six-Core|Quad-Core', '', model).strip()
                     model = re.sub(r'\s+', ' ', model)
                     break
@@ -54,7 +53,7 @@ def get_cpu_info():
             with open("/proc/stat", "r") as f:
                 first_line = f.readline()
                 parts = [float(x) for x in first_line.split()[1:8]]
-                idle = parts[3] + parts[4]  # idle + iowait
+                idle = parts[3] + parts[4]
                 total = sum(parts)
                 return idle, total
         except Exception:
@@ -297,7 +296,7 @@ def get_top_processes():
         )
         lines = res.stdout.strip().splitlines()
         procs = []
-        for line in lines[1:5]:  # Top 4 active processes
+        for line in lines[1:5]:
             parts = line.split()
             if len(parts) >= 4:
                 pid, comm, cpu, mem = parts[0], parts[1], parts[2], parts[3]
@@ -326,6 +325,20 @@ window {
     background-color: transparent;
 }
 
+button {
+    background-image: none;
+    background-color: transparent;
+    box-shadow: none;
+    text-shadow: none;
+    border: none;
+    outline: none;
+}
+
+button:focus {
+    box-shadow: none;
+    outline: none;
+}
+
 .main-card {
     background-color: #181825;
     border: 1.5px solid rgba(203, 166, 247, 0.45);
@@ -343,13 +356,13 @@ window {
 .header-title {
     font-size: 16px;
     font-weight: 800;
-    color: #cdd6f4;
+    color: #ffffff;
 }
 
 .header-subtitle {
     font-size: 11px;
     font-weight: 600;
-    color: #a6adc8;
+    color: #cdd6f4;
     margin-top: 2px;
     margin-bottom: 12px;
 }
@@ -375,7 +388,7 @@ window {
 .stat-name {
     font-size: 13px;
     font-weight: 800;
-    color: #cdd6f4;
+    color: #ffffff;
 }
 
 .stat-value {
@@ -385,8 +398,8 @@ window {
 
 .stat-desc {
     font-size: 11px;
-    font-weight: 500;
-    color: #a6adc8;
+    font-weight: 600;
+    color: #cdd6f4;
     margin-top: 2px;
     margin-bottom: 5px;
 }
@@ -438,7 +451,7 @@ progressbar progress {
 
 .temp-pill {
     background-color: #181825;
-    border: 1px solid #313244;
+    border: 1.5px solid #313244;
     border-radius: 8px;
     padding: 3px 8px;
     margin: 2px 3px;
@@ -447,7 +460,7 @@ progressbar progress {
 .temp-pill-label {
     font-size: 11px;
     font-weight: 600;
-    color: #bac2de;
+    color: #cdd6f4;
     margin-right: 6px;
 }
 
@@ -459,9 +472,9 @@ progressbar progress {
 /* Top Process Rows */
 .proc-item {
     background-color: #181825;
-    border: 1px solid #313244;
+    border: 1.5px solid #313244;
     border-radius: 8px;
-    padding: 4px 10px;
+    padding: 5px 10px;
     margin-top: 4px;
 }
 
@@ -479,7 +492,7 @@ progressbar progress {
 .proc-pid {
     font-size: 10px;
     font-weight: 500;
-    color: #6c7086;
+    color: #a6adc8;
     margin-left: 6px;
 }
 
@@ -503,14 +516,19 @@ progressbar progress {
     margin-left: 4px;
 }
 
-/* Action Button */
+/* Action Button - High Contrast Styling */
 .action-btn {
-    background-color: #313244;
-    border: 1.5px solid rgba(203, 166, 247, 0.3);
+    background-color: #1e1e2e;
+    border: 1.5px solid #cba6f7;
     border-radius: 12px;
-    padding: 9px 14px;
-    margin-top: 4px;
+    padding: 10px 16px;
+    margin-top: 6px;
     transition: all 0.15s ease-in-out;
+}
+
+.action-btn:focus {
+    background-color: #1e1e2e;
+    border: 1.5px solid #cba6f7;
 }
 
 .action-btn:hover {
@@ -518,20 +536,22 @@ progressbar progress {
     border-color: #cba6f7;
 }
 
-.action-btn:hover label {
-    color: #11111b;
-    font-weight: 800;
-}
-
-.action-btn-text {
+.action-btn .action-btn-text {
     font-size: 13px;
-    font-weight: 700;
-    color: #cdd6f4;
+    font-weight: 800;
+    color: #ffffff;
 }
 
-.action-btn-icon {
-    font-size: 15px;
+.action-btn .action-btn-icon {
+    font-size: 16px;
+    font-weight: 800;
+    color: #cba6f7;
     margin-right: 8px;
+}
+
+.action-btn:hover .action-btn-text,
+.action-btn:hover .action-btn-icon {
+    color: #11111b;
 }
 """
 

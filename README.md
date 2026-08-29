@@ -191,14 +191,14 @@ The top status bar is divided into three functional zones:
 The dotfiles include a dedicated **System Hardware & Stats** popup ([`system-stats.py`](file:///home/kunal/.dotfiles/.config/waybar/scripts/system-stats.py)):
 
 - **Chip Icon in Waybar (`󰍛`)**: A minimal and responsive chip indicator on the right side of the status bar.
-- **Left-Click Dashboard Popup**: Opens a glassmorphic **GTK LayerShell** modal styled with Catppuccin Mocha colors:
+- **Left-Click Dashboard Popup**: Opens a glassmorphic **GTK LayerShell** modal styled with high-contrast Catppuccin Mocha colors:
   - **Host & System Info**: Displays hostname, Linux kernel release, and formatted system uptime.
   - **CPU Utilization**: Live percentage, CPU model name, total core count, 1m/5m/15m load averages, and a Sky/Mauve gradient progress bar.
-  - **Memory & Swap**: Detailed GiB RAM and Swap usage metrics with Pink/Mauve visual capacity gauges.
-  - **Storage**: Root disk (`/`) used, free capacity, and percentage bar.
-  - **Thermals & Top Processes**: Live thermal zone sensor readings (°C) with color-coded warning states, alongside top CPU-consuming background processes.
-  - **Quick Btop Launcher**: Built-in action button and right-click direct trigger to launch **Btop** in Kitty.
-  - **Outside-Click & Escape Dismissal**: Features transparent full-screen backdrop dismissal and Escape key handling.
+  - **Memory & Storage Metrics**: Dual cards showing GiB RAM and Swap usage metrics alongside root disk (`/`) capacity and utilization bars.
+  - **All Hardware Temperatures**: Aggregates and displays all detected hardware temperature sensors (**CPU Package**, **Per-Core temperatures**, **NVMe SSD**, and **Motherboard/Ambient sensors**) with dynamic thermal health badges and color thresholds.
+  - **Dedicated Top Active Processes**: A dedicated section displaying the top CPU-consuming tasks with process name, PID, `% CPU` badge, and `% RAM` badge.
+  - **High-Contrast Btop Launcher**: High-visibility interactive action button (and right-click trigger) to launch **Btop** in Kitty terminal.
+  - **Outside-Click & Escape Dismissal**: Transparent full-screen backdrop dismissal and Escape key handling.
 - **Right-Click Action**: Instantly launches the **Btop** interactive terminal monitor.
 
 ---
