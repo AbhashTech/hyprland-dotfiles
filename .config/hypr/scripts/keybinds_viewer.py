@@ -70,6 +70,18 @@ def extract_inline_comment(line):
     return None
 
 
+def is_category_header(raw_line, comment_content):
+    """Check if a comment represents a major section / category header."""
+    if not comment_content:
+        return False
+    # Headers with category emoji icons
+    if any(emoji in comment_content for emoji in ["🖥️", "🔔", "⚡", "🗂️", "📐", "🔊", "☀️", "📸", "🎨", "📁"]):
+        return True
+    if "@category" in comment_content.lower():
+        return True
+    return False
+
+
 def parse_keybinds(file_path):
     """
     Parse keybinds.lua and extract categories, comments, and key combinations.
@@ -78,7 +90,7 @@ def parse_keybinds(file_path):
         return []
 
     entries = []
-    current_category = "General Navigation & System"
+    current_category = "🖥️ Core Applications & Navigation"
     pending_comments = []
     last_description = ""
     in_for_loop = False
@@ -91,35 +103,32 @@ def parse_keybinds(file_path):
         raw_line = lines[i]
         line = raw_line.strip()
 
-        # 1. Blank lines reset pending comments (but preserve last_description for contiguous binds)
+        # 1. Blank line
         if not line:
             pending_comments = []
             last_description = ""
             i += 1
             continue
 
-        # 2. Section / Category headers
-        if line.startswith("-- ==") or line.startswith("-- --") or "@category" in line:
-            comment_content = clean_comment(line)
-            cat_match = re.search(r"@category\s+(.+)$", comment_content, re.IGNORECASE)
-            if cat_match:
-                current_category = cat_match.group(1).strip()
-            elif comment_content:
-                current_category = comment_content
-            pending_comments = []
-            last_description = ""
-            i += 1
-            continue
-
-        # 3. Regular comments
+        # 2. Category header detection
         if line.startswith("--"):
             comment_content = clean_comment(line)
-            if comment_content and not comment_content.startswith("hl."):
+            if is_category_header(line, comment_content):
+                cat_match = re.search(r"@category\s+(.+)$", comment_content, re.IGNORECASE)
+                if cat_match:
+                    current_category = cat_match.group(1).strip()
+                elif comment_content:
+                    current_category = comment_content
+                pending_comments = []
+                last_description = ""
+                i += 1
+                continue
+            elif comment_content and not comment_content.startswith("hl."):
                 pending_comments.append(comment_content)
             i += 1
             continue
 
-        # 4. Handle workspace loop
+        # 3. Handle workspace generation loop
         if "for i = 1, 10 do" in line:
             in_for_loop = True
             entries.append({
@@ -143,7 +152,7 @@ def parse_keybinds(file_path):
             i += 1
             continue
 
-        # 5. Detect hl.bind statements
+        # 4. Detect hl.bind statements
         if "hl.bind(" in line:
             # Extract key combo
             key_combo = "Unknown"
@@ -211,7 +220,10 @@ def format_cli_table(entries):
 
 
 def show_gui_menu(entries):
-    """Display keybindings inside a searchable Fuzzel or Wofi dmenu overlay."""
+    """
+    Display keybindings in a compact, non-full-screen 2-line layout
+    so nothing is cut off and it doesn't consume the screen height.
+    """
     if not entries:
         return
 
@@ -222,9 +234,17 @@ def show_gui_menu(entries):
         key = item["key"]
         desc = item["desc"]
         cat = item["category"]
-        display_line = f"󰌌 {key:<30}   {desc}  [{cat}]"
-        lines.append(display_line)
-        entry_map[display_line] = item
+
+        # 2-Line Format: Shortcut on top, Description on next line
+        key_line = f"󰌌 {key}"
+        desc_line = f"   ↳ {desc}"
+
+        lines.append(key_line)
+        lines.append(desc_line)
+
+        # Map both lines so selecting either works seamlessly
+        entry_map[key_line] = item
+        entry_map[desc_line] = item
 
     menu_input = "\n".join(lines)
     selected = None
@@ -236,8 +256,8 @@ def show_gui_menu(entries):
                     "fuzzel",
                     "--dmenu",
                     "--prompt", " 󰌌 Shortcuts: ",
-                    "--width", "80",
-                    "--lines", "18",
+                    "--width", "52",    # Clean, compact modal width
+                    "--lines", "10",    # Reduced height (only 10 lines visible)
                 ],
                 input=menu_input,
                 capture_output=True,
@@ -254,8 +274,8 @@ def show_gui_menu(entries):
                     "wofi",
                     "--dmenu",
                     "--prompt", "Search Shortcuts",
-                    "--width", "900",
-                    "--height", "580",
+                    "--width", "620",
+                    "--height", "340",
                     "--insensitive",
                 ],
                 input=menu_input,
@@ -282,7 +302,7 @@ def show_gui_menu(entries):
                     "-a", "Shortcut Helper",
                     "-i", "preferences-desktop-keyboard-shortcuts",
                     f"⌨️ {item['key']}",
-                    f"{item['desc']}\nCategory: {item['category']}\n(Key combination copied to clipboard)"
+                    f"{item['desc']}\nCategory: {item['category']}\n(Copied to clipboard)"
                 ], check=False)
             except Exception:
                 pass
