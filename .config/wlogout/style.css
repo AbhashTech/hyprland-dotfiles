@@ -1,6 +1,4 @@
-/* =============================================================================
- * Wlogout Catppuccin Mocha Theme
- * ============================================================================= */
+@import "colors.css";
 
 * {
     background-image: none;
@@ -11,13 +9,13 @@
 }
 
 window {
-    background-color: rgba(17, 17, 27, 0.75);
+    background-color: @bg_overlay;
 }
 
 button {
-    color: #cdd6f4;
-    background-color: #1e1e2e;
-    border: 2px solid #313244;
+    color: @text;
+    background-color: @base;
+    border: 2px solid @surface0;
     border-radius: 16px;
     margin: 15px;
     background-repeat: no-repeat;
@@ -27,11 +25,12 @@ button {
 }
 
 button:focus, button:hover {
-    background-color: #313244;
-    border-color: #cba6f7;
-    color: #cba6f7;
+    background-color: @surface0;
+    border-color: @accent;
+    color: @accent;
     outline: none;
 }
+
 
 #lock {
     background-image: image(url("/usr/share/wlogout/icons/lock.png"));

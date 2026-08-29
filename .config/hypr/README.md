@@ -25,8 +25,10 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
 │   ├── monitors.lua             # Monitor resolution, position, and scaling definitions
 │   ├── permissions.lua          # Security and ecosystem permissions
 │   ├── programs.lua             # Default apps (terminal, browser, file manager, app launcher)
-│   └── rules.lua                # Window rules, layer rules, and workspace persistence
+│   ├── rules.lua                # Window rules, layer rules, and workspace persistence
+│   └── theme.lua                # Dynamic theme & color variables module
 └── scripts/                     # Custom Python & Shell utilities
+    ├── app_shortcut_creator.py  # Application shortcut & desktop entry creator
     ├── brightness_control.py    # Backlight & external DDC monitor brightness with OSD & GUI menu
     ├── clipboard_manager.py     # Image/text clipboard manager with thumbnails, pause & delete
     ├── emoji_picker.py          # Searchable emoji catalog with instant copy & auto-typing
@@ -39,10 +41,12 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
     ├── resolution_menu.py       # Interactive display resolution & UI scale switcher
     ├── scale_window.py          # Window resizing with on-screen dimensions overlay
     ├── screen_capture.py        # Screenshot & video screen recording with audio & editor support
+    ├── theme_switcher.py        # Universal desktop theme switcher & palette manager (SUPER + T)
     ├── volume_control.py        # Speaker & mic volume control, OSD, and device switcher
     ├── wallpaper_switcher.py    # Wallpaper randomizer & selector (~/Wallpaper, hyprpaper/swww)
     └── wofi_launcher.py         # Wofi wrapper with transparent backdrop layer
 ```
+
 
 ---
 
@@ -225,9 +229,12 @@ sudo usermod -aG i2c $USER
 ### ⚡ Productivity & Workflow Utilities
 | Shortcut | Action |
 | :--- | :--- |
+| `SUPER + T` | **Theme Switcher**: Interactive graphical theme selector & live palette manager |
+| `SUPER + CTRL + T` | **Cycle Theme**: Instantly cycle to next theme in palette registry |
 | `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Dynamic Keybindings Viewer**: Searchable shortcut cheat sheet |
 | `SUPER + SHIFT + P` | **Hyprpicker**: Pick color from screen, copy hex code & notify |
 | `SUPER + SHIFT + T` / `SUPER + ALT + T` | **Screen OCR**: Grab and extract text from any screen region to clipboard |
+
 | `SUPER + ALT + N` | **Night Light**: Toggle warm blue light filter (3800K / 6500K) |
 | `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator**: Interactive math evaluator via Fuzzel |
 | `SUPER + .` (period) | **Emoji Picker**: Searchable emoji menu with instant copy & auto-typing |

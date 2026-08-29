@@ -2,6 +2,9 @@
 ---- APPEARANCE & DECORATION ----
 --------------------------------
 
+local theme = require("modules.theme")
+local c = theme.colors
+
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
 hl.config({
     general = {
@@ -11,8 +14,8 @@ hl.config({
         border_size = 2,
 
         col = {
-            active_border   = { colors = {"rgba(33ccffee)", "rgba(00ff99ee)"}, angle = 45 },
-            inactive_border = "rgba(595959aa)",
+            active_border   = { colors = {c.active_border_1, c.active_border_2}, angle = 45 },
+            inactive_border = c.inactive_border,
         },
 
         -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
@@ -36,7 +39,7 @@ hl.config({
             enabled      = true,
             range        = 4,
             render_power = 3,
-            color        = 0xee1a1a1a,
+            color        = c.shadow,
         },
 
         blur = {
@@ -47,3 +50,4 @@ hl.config({
         },
     },
 })
+

@@ -1,0 +1,9 @@
+/* Wlogout Colors: Nord Arctic */
+@define-color base            #2e3440;
+@define-color mantle          #242933;
+@define-color crust           #1e222a;
+@define-color text            #eceff4;
+@define-color surface0        #3b4252;
+@define-color surface1        #434c5e;
+@define-color accent          #88c0d0;
+@define-color bg_overlay      rgba(30, 34, 42, 0.75);

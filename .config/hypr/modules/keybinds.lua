@@ -102,9 +102,15 @@ hl.bind(mainMod .. " + ALT + W", hl.dsp.exec_cmd(wallpaperScript .. " --menu"))
 -- Pick Color from Screen & Copy Hex
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprpicker -a -f hex && notify-send -a Hyprpicker -i color-picker 'Color Picked' \"$(wl-paste)\""))
 
+-- Theme Switcher & Palette Manager
+local themeScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/theme_switcher.py"
+hl.bind(mainMod .. " + T",         hl.dsp.exec_cmd(themeScript .. " --menu"))
+hl.bind(mainMod .. " + CTRL + T",  hl.dsp.exec_cmd(themeScript .. " --next"))
+
 -- Screen OCR: Grab Text to Clipboard
 hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/ocr_grab.py"))
 hl.bind(mainMod .. " + ALT + T",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/ocr_grab.py"))
+
 
 -- Night Light: Toggle Blue-Light Filter
 hl.bind(mainMod .. " + ALT + N",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/nightlight.py toggle"))

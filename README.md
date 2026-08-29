@@ -293,6 +293,8 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 ### ⚡ Productivity & Workflow Utilities
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
+| `SUPER + T` | **Theme Switcher** | Open interactive **Fuzzel/Wofi** theme selector (12 curated themes, live reload) |
+| `SUPER + CTRL + T` | **Cycle Theme** | Instantly cycle to the next color palette in the theme registry |
 | `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Shortcut Cheat Sheet** | Open interactive **Fuzzel/Wofi** dynamic keybindings viewer |
 | `SUPER + SHIFT + P` | **Hyprpicker** | Pick color from screen, copy hex code to clipboard & trigger notification |
 | `SUPER + SHIFT + T` / `SUPER + ALT + T` | **Screen OCR** | Select region with mouse, extract text via Tesseract & copy to clipboard |
@@ -300,6 +302,7 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator** | Interactive math expression evaluator via Fuzzel prompt |
 | `SUPER + .` (period) | **Emoji Picker** | Searchable emoji catalog with automatic clipboard copy & keystroke paste |
 | `SUPER + ALT + S` | **App Shortcut Creator** | Launch interactive GTK/CLI desktop shortcut (.desktop) creator & manager |
+
 
 
 ---
