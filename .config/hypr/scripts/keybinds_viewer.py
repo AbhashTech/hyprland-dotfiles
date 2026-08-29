@@ -13,7 +13,6 @@ import sys
 import re
 import json
 import shutil
-import textwrap
 import argparse
 import subprocess
 from pathlib import Path
@@ -138,7 +137,7 @@ def parse_keybinds(file_path):
             })
             entries.append({
                 "key": "SUPER + SHIFT + [1-9, 0]",
-                "desc": "Move Active Window to Workspace 1 through 10",
+                "desc": "Move Window to Workspace 1 through 10",
                 "category": current_category,
             })
             pending_comments = []
@@ -221,8 +220,9 @@ def format_cli_table(entries):
 
 def show_gui_menu(entries):
     """
-    Display keybindings across clean wrapped lines without cluttering descriptions
-    with shortcut tags.
+    Display each keybinding as a single row containing BOTH the keyboard shortcut
+    and its action description. When searching keywords (e.g. 'power', 'scale', 'vol'),
+    the matching line always displays the key combo alongside the description.
     """
     if not entries:
         return
@@ -230,31 +230,14 @@ def show_gui_menu(entries):
     lines = []
     entry_map = {}
 
-    # Wrap descriptions cleanly at 54 characters
-    wrap_width = 54
-
     for item in entries:
         key = item["key"]
         desc = item["desc"]
 
-        # Line 1: Clean Shortcut Header
-        key_line = f"󰌌 {key}"
-        lines.append(key_line)
-        entry_map[key_line] = item
-
-        # Split long descriptions across multiple lines if needed
-        wrapped_chunks = textwrap.wrap(desc, width=wrap_width, break_long_words=False, break_on_hyphens=False)
-        if not wrapped_chunks:
-            wrapped_chunks = [desc]
-
-        for chunk_idx, chunk in enumerate(wrapped_chunks):
-            if chunk_idx == 0:
-                desc_line = f"   ↳ {chunk}"
-            else:
-                desc_line = f"     {chunk}"
-
-            lines.append(desc_line)
-            entry_map[desc_line] = item
+        # Formatted single line: Key combo on the left, clear arrow separator, description on right
+        display_line = f"󰌌 {key:<20} ➜  {desc}"
+        lines.append(display_line)
+        entry_map[display_line] = item
 
     menu_input = "\n".join(lines)
     selected = None
@@ -265,10 +248,10 @@ def show_gui_menu(entries):
                 [
                     "fuzzel",
                     "--dmenu",
-                    "--font", "JetBrainsMono Nerd Font:weight=medium:size=10",
-                    "--prompt", " 󰌌 Shortcuts: ",
-                    "--width", "65",
-                    "--lines", "12",
+                    "-f", "JetBrainsMono Nerd Font:size=10",
+                    "-p", " 󰌌 Shortcuts: ",
+                    "-w", "76",    # Wide width so lines fit cleanly with zero clipping
+                    "-l", "10",    # Compact height (10 items)
                 ],
                 input=menu_input,
                 capture_output=True,
@@ -285,8 +268,8 @@ def show_gui_menu(entries):
                     "wofi",
                     "--dmenu",
                     "--prompt", "Search Shortcuts",
-                    "--width", "700",
-                    "--height", "400",
+                    "--width", "750",
+                    "--height", "380",
                     "--insensitive",
                 ],
                 input=menu_input,
