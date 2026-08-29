@@ -3,7 +3,7 @@
 Waybar Hyprland IPC Compatibility Bridge & Robust Supervisor
 Fixes workspace on-click actions when running Hyprland with Lua configuration (v0.55+ / v0.56+).
 Translates legacy text-based IPC dispatch commands sent by Waybar into modern Lua dispatchers.
-Ensures Waybar reliably waits for Hyprland sockets during login autostart and auto-restarts on signals.
+Ensures Waybar reliably probes Hyprland IPC socket readiness before launching.
 """
 
 import os
@@ -17,6 +17,7 @@ import re
 import shutil
 
 LOG_FILE = os.path.expanduser("~/.cache/waybar_proxy.log")
+WAYBAR_LOG = os.path.expanduser("~/.cache/waybar.log")
 stop_requested = False
 
 def log(msg: str):
@@ -54,7 +55,20 @@ def daemonize():
         os.dup2(devnull.fileno(), sys.stdout.fileno())
         os.dup2(devnull.fileno(), sys.stderr.fileno())
 
-def get_hypr_paths(timeout_sec=10.0):
+def probe_socket(sock_path: str) -> bool:
+    """Test if Hyprland's socket is genuinely accepting connections and responding."""
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(0.5)
+        s.connect(sock_path)
+        s.sendall(b"j/monitors")
+        data = s.recv(256)
+        s.close()
+        return bool(data)
+    except Exception:
+        return False
+
+def get_hypr_paths(timeout_sec=20.0):
     start_time = time.time()
     xdg_runtime = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
     
@@ -82,14 +96,16 @@ def get_hypr_paths(timeout_sec=10.0):
             sock1 = os.path.join(real_dir, ".socket.sock")
             sock2 = os.path.join(real_dir, ".socket2.sock")
             if os.path.exists(sock1) and os.path.exists(sock2):
-                real_sock = sock1
-                real_sock2 = sock2
-                break
+                # Verify Hyprland is actually accepting IPC queries
+                if probe_socket(sock1):
+                    real_sock = sock1
+                    real_sock2 = sock2
+                    break
 
-        time.sleep(0.1)
+        time.sleep(0.2)
 
     if not real_sig or not real_sock or not real_sock2:
-        log("Hyprland sockets not found within timeout. Launching Waybar directly.")
+        log("Hyprland sockets probe timed out. Launching Waybar directly.")
         os.execvp("waybar", ["waybar"] + [arg for arg in sys.argv[1:] if arg not in ("--daemon", "-d")])
 
     proxy_sig = f"{real_sig}_waybar"
@@ -147,7 +163,7 @@ def main():
     log("Starting Waybar launcher bridge & supervisor...")
 
     real_sig, real_sock, real_sock2, proxy_sig, proxy_dir, proxy_sock, proxy_sock2 = get_hypr_paths()
-    log(f"Hyprland signature detected: {real_sig}")
+    log(f"Hyprland signature verified & ready: {real_sig}")
 
     os.makedirs(proxy_dir, exist_ok=True)
 
@@ -171,7 +187,7 @@ def main():
 
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     server.bind(proxy_sock)
-    server.listen(32)
+    server.listen(64)
     server.setblocking(False)
 
     # Launch waybar subprocess with proxy signature
@@ -179,7 +195,8 @@ def main():
     env["HYPRLAND_INSTANCE_SIGNATURE"] = proxy_sig
 
     log(f"Spawning waybar with args: {filtered_args}")
-    waybar_proc = subprocess.Popen(["waybar"] + filtered_args, env=env)
+    waybar_log_fd = open(WAYBAR_LOG, "a")
+    waybar_proc = subprocess.Popen(["waybar"] + filtered_args, env=env, stdout=waybar_log_fd, stderr=waybar_log_fd)
     last_spawn_time = time.time()
     crash_count = 0
 
@@ -195,6 +212,10 @@ def main():
                 waybar_proc.kill()
         try:
             server.close()
+        except Exception:
+            pass
+        try:
+            waybar_log_fd.close()
         except Exception:
             pass
         shutil.rmtree(proxy_dir, ignore_errors=True)
@@ -213,8 +234,8 @@ def main():
             if stop_requested:
                 break
             
-            # Reset crash count if Waybar was running stably for more than 10s
-            if (time.time() - last_spawn_time) > 10.0:
+            # Reset crash count if Waybar was running stably for more than 5s
+            if (time.time() - last_spawn_time) > 5.0:
                 crash_count = 0
 
             crash_count += 1
@@ -223,8 +244,8 @@ def main():
                 break
 
             log(f"Auto-recovering: restarting Waybar (attempt {crash_count})...")
-            time.sleep(0.3)
-            waybar_proc = subprocess.Popen(["waybar"] + filtered_args, env=env)
+            time.sleep(0.5)
+            waybar_proc = subprocess.Popen(["waybar"] + filtered_args, env=env, stdout=waybar_log_fd, stderr=waybar_log_fd)
             last_spawn_time = time.time()
             continue
 
