@@ -146,7 +146,7 @@
             "pulseaudio",
             "network",
             "bluetooth",
-            "battery"
+            "custom/battery"
         ]
     },
 
@@ -248,31 +248,15 @@
         "on-click": "/home/kunal/.config/waybar/scripts/network-menu.sh"
     },
 
-    "battery": {
-        "interval": 10,
-        "states": {
-            "good": 95,
-            "warning": 30,
-            "critical": 15
-        },
-        "format": "{icon} {capacity}%",
-        "format-charging": "󰂄 {capacity}%",
-        "format-plugged": "󰚥 {capacity}%",
-        "format-alt": "{icon} {time}",
-        "format-icons": [
-            "󰂎",
-            "󰁺",
-            "󰁻",
-            "󰁼",
-            "󰁽",
-            "󰁾",
-            "󰁿",
-            "󰂀",
-            "󰂁",
-            "󰂂",
-            "󰁹"
-        ],
-        "tooltip-format": "{timeTo} remaining ({capacity}%)\nHealth: {health}%"
+    "custom/battery": {
+        "format": "{}",
+        "return-type": "json",
+        "exec": "/home/kunal/.config/waybar/scripts/battery-status.py",
+        "on-click-right": "/home/kunal/.config/waybar/scripts/power-profile.py",
+        "on-click": "/home/kunal/.config/waybar/scripts/power-profile.py",
+        "interval": 5,
+        "signal": 8,
+        "tooltip": true
     },
 
     "tray": {

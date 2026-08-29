@@ -239,7 +239,8 @@ window#waybar.empty #window {
 #group-status #pulseaudio,
 #group-status #network,
 #group-status #bluetooth,
-#group-status #battery {
+#group-status #battery,
+#group-status #custom-battery {
     background: transparent;
     border: none;
     box-shadow: none;
@@ -252,7 +253,8 @@ window#waybar.empty #window {
 #group-status #pulseaudio:hover,
 #group-status #network:hover,
 #group-status #bluetooth:hover,
-#group-status #battery:hover {
+#group-status #battery:hover,
+#group-status #custom-battery:hover {
     background-color: rgba(69, 71, 90, 0.6);
 }
 
@@ -293,22 +295,32 @@ window#waybar.empty #window {
     color: @red;
 }
 
-/* Battery */
-#battery {
-    color: @green;
+/* Battery & Power Profile Dynamic Colors */
+#battery,
+#custom-battery {
     padding: 3px 8px;
+    transition: color 0.3s ease;
 }
 
-#battery.charging,
-#battery.plugged {
-    color: @teal;
+#custom-battery.power-saver {
+    color: @green; /* Green */
 }
 
-#battery.warning:not(.charging) {
+#custom-battery.balanced {
+    color: @peach; /* Orange */
+}
+
+#custom-battery.performance {
+    color: @red; /* Red */
+}
+
+#battery.warning:not(.charging),
+#custom-battery.warning:not(.charging) {
     color: @yellow;
 }
 
-#battery.critical:not(.charging) {
+#battery.critical:not(.charging),
+#custom-battery.critical:not(.charging) {
     color: @red;
     background-color: rgba(243, 139, 168, 0.2);
     border-color: @red;
