@@ -39,21 +39,23 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
 
 ## 📦 Required Dependencies & Software
 
-### 1. Core Window Manager & Desktop Portals
+### 1. Core Window Manager, Session & Desktop Portals
 - **Hyprland** — Dynamic tiling Wayland compositor.
 - **Hyprland Lua integration** — Enables modular Lua configuration.
+- **hyprlock** & **hypridle** — Modern Catppuccin Mocha lock screen and idle management.
 - **xdg-desktop-portal-hyprland** & **xdg-desktop-portal-gtk** — Screen sharing, file picker, and portals.
 
 ### 2. Status Bar, Notifications & Launchers
 - **waybar** — Highly customizable top status bar.
-- **mako** — Lightweight notification daemon.
+- **mako** — Lightweight notification daemon (with click-to-focus window activation).
 - **hyprpaper** — Fast wallpaper utility.
 - **fuzzel** — High-performance Wayland application launcher and dmenu.
 - **wofi** — Alternative launcher with menu support.
 
-### 3. Default Applications
+### 3. Applications & File Management
 - **kitty** — GPU-accelerated terminal emulator (`SUPER + Q`).
-- **dolphin** — File manager (`SUPER + E`).
+- **yazi** — Lightning fast terminal file manager (`SUPER + SHIFT + E`).
+- **dolphin** — GUI file manager (`SUPER + E`).
 - **firefox** — Web browser (`SUPER + B`).
 - **btop** — Floating system monitor.
 
@@ -62,13 +64,17 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
 - **libpulse** (`pactl`) — Device switching and volume control.
 - **playerctl** — Media control (Play/Pause, Next, Prev).
 
-### 5. Brightness & Hardware Controls
+### 5. Brightness & Night Light
 - **brightnessctl** — Internal laptop display backlight control.
 - **ddcutil** — External monitor DDC/CI brightness adjustment.
+- **hyprsunset** / **wlsunset** — Blue light filter & night light temperature manager.
 
-### 6. Clipboard Management
+### 6. Clipboard & Productivity Tools
 - **wl-clipboard** (`wl-copy`, `wl-paste`) — Wayland clipboard utilities.
 - **cliphist** — Clipboard history daemon for text and binary images.
+- **hyprpicker** — Wayland pixel color picker (`SUPER + SHIFT + P`).
+- **tesseract** & **tesseract-data-eng** — Optical character recognition text grabber (`SUPER + SHIFT + T`).
+- **wtype** — Wayland keystroke simulation for emoji typing.
 
 ### 7. Screenshots & Screen Recording
 - **grim** — Wayland screenshot capture.
@@ -105,37 +111,15 @@ chmod +x ~/.config/hypr/install.sh
 #### 1. Install Official Arch Packages
 ```bash
 sudo pacman -S --needed \
-    hyprland \
-    xdg-desktop-portal-hyprland \
-    xdg-desktop-portal-gtk \
-    waybar \
-    mako \
-    hyprpaper \
-    fuzzel \
-    wofi \
-    kitty \
-    dolphin \
-    firefox \
-    btop \
-    pipewire \
-    pipewire-pulse \
-    wireplumber \
-    libpulse \
-    playerctl \
-    brightnessctl \
-    ddcutil \
-    wl-clipboard \
-    cliphist \
-    grim \
-    slurp \
-    wf-recorder \
-    libnotify \
-    python \
-    python-gobject \
-    gtk3 \
-    gtk-layer-shell \
-    ttf-jetbrains-mono-nerd \
-    papirus-icon-theme
+    hyprland hypridle hyprlock hyprpicker hyprsunset wlsunset \
+    xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
+    waybar mako hyprpaper fuzzel wofi kitty yazi zoxide fzf wtype \
+    dolphin firefox btop \
+    pipewire pipewire-pulse wireplumber libpulse playerctl \
+    brightnessctl ddcutil wl-clipboard cliphist \
+    grim slurp tesseract tesseract-data-eng wf-recorder \
+    libnotify python python-gobject gtk3 gtk-layer-shell \
+    ttf-jetbrains-mono-nerd papirus-icon-theme
 ```
 
 #### 2. Install AUR Packages (Annotation Tools)
@@ -179,6 +163,7 @@ sudo usermod -aG i2c $USER
   ```bash
   hyprctl reload
   ```
+- **Lock Screen**: Press `SUPER + L` or `SUPER + ALT + L`.
 - **Restarting Waybar**:
   Press `SUPER + SHIFT + W` or run:
   ```bash
@@ -194,8 +179,10 @@ sudo usermod -aG i2c $USER
 | :--- | :--- |
 | `SUPER + Q` | Open Kitty Terminal |
 | `SUPER + E` | Open Dolphin File Manager |
+| `SUPER + SHIFT + E` | Open Yazi Terminal File Manager |
 | `SUPER + B` | Open Firefox Browser |
 | `SUPER + R` | Open Fuzzel Application Launcher (with outside click-dismiss) |
+| `SUPER + L` / `ALT + L` | Lock Screen immediately (`hyprlock`) |
 | `SUPER + C` | Close Active Window |
 | `SUPER + V` | Toggle Window Floating Mode |
 | `SUPER + P` | Toggle Pseudo Tiling |
@@ -204,7 +191,19 @@ sudo usermod -aG i2c $USER
 | `SUPER + SHIFT + W` | Restart Waybar |
 | `SUPER + [1-9, 0]` | Switch to Workspace 1–10 |
 | `SUPER + SHIFT + [1-9, 0]` | Move Active Window to Workspace 1–10 |
-| `SUPER + S` / `SHIFT + S` | Toggle Special Scratchpad Workspace |
+| `SUPER + S` / `grave (~)` | Toggle Special Scratchpad Workspace |
+| `SUPER + SHIFT + S` | Move Active Window to Special Scratchpad |
+
+---
+
+### ⚡ Productivity & Workflow Utilities
+| Shortcut | Action |
+| :--- | :--- |
+| `SUPER + SHIFT + P` | **Hyprpicker**: Pick color from screen, copy hex code & notify |
+| `SUPER + SHIFT + T` / `ALT + T` | **Screen OCR**: Grab and extract text from any screen region to clipboard |
+| `SUPER + ALT + N` | **Night Light**: Toggle warm blue light filter (3800K / 6500K) |
+| `SUPER + =` / `ALT + C` | **Quick Calculator**: Interactive math evaluator via Fuzzel |
+| `SUPER + .` (period) | **Emoji Picker**: Searchable emoji menu with instant copy & auto-typing |
 
 ---
 

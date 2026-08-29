@@ -38,15 +38,17 @@ A unified, modular, and fully version-controlled dotfiles suite for **Hyprland**
 | Component | Packages / Tools | Description |
 | :--- | :--- | :--- |
 | **Compositor & Portals** | `hyprland`, `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk` | Wayland compositor and portals for screen sharing / file dialogues |
+| **Session & Lock Screen** | `hyprlock`, `hypridle` | Catppuccin Mocha lockscreen and smart idle management |
 | **Status Bar** | `waybar` | Status bar with system trays, volume, network, and workspaces |
-| **Notifications** | `mako`, `libnotify` | Notification daemon & `notify-send` for OSDs |
+| **Notifications** | `mako`, `libnotify` | Notification daemon & `notify-send` for OSDs (with click-to-focus) |
 | **Wallpaper** | `hyprpaper` | Fast Wayland wallpaper daemon |
 | **App Launchers** | `fuzzel`, `wofi` | Fast Wayland app launcher and GTK dmenu launcher |
-| **Terminal & Apps** | `kitty`, `dolphin`, `firefox`, `btop` | Terminal, KDE file manager, browser, and process monitor |
+| **Terminal & Apps** | `kitty`, `yazi`, `dolphin`, `firefox`, `btop` | Terminal, CLI file manager, KDE file manager, browser, and monitor |
+| **CLI Ergonomics** | `zoxide`, `fzf`, `wtype` | Smart cd, fuzzy searching, and Wayland keystroke simulation |
 | **Audio Subsystem** | `pipewire`, `pipewire-pulse`, `wireplumber`, `libpulse`, `playerctl` | PipeWire audio, `wpctl`/`pactl` controls, and media playback keys |
-| **Brightness** | `brightnessctl`, `ddcutil` | Laptop backlight and external monitor DDC/CI control |
+| **Brightness & Night Light**| `brightnessctl`, `ddcutil`, `hyprsunset` / `wlsunset` | Backlight, external DDC brightness, and warm blue-light filter |
 | **Clipboard** | `wl-clipboard`, `cliphist` | Wayland clipboard manager with binary image and thumbnail support |
-| **Screen Capture** | `grim`, `slurp`, `wf-recorder`, `swappy`/`satty` (AUR) | Screenshots, area selection, video recording, and annotations |
+| **Screen Capture & OCR** | `grim`, `slurp`, `tesseract`, `tesseract-data-eng`, `wf-recorder`, `hyprpicker`, `swappy`/`satty` (AUR) | Screenshots, OCR text extraction, video recorder, color picker, annotations |
 | **Python Runtime & UI** | `python`, `python-gobject`, `gtk3`, `gtk-layer-shell` | Python 3, PyGObject, and Wayland layer-shell for launchers |
 | **Fonts & Icons** | `ttf-jetbrains-mono-nerd`, `papirus-icon-theme` | Nerd font glyphs and system icon theme |
 
@@ -80,10 +82,13 @@ The installer will:
 ```bash
 # 1. Install Official Packages
 sudo pacman -S --needed \
-    hyprland xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
-    waybar mako hyprpaper fuzzel wofi kitty dolphin firefox btop \
+    hyprland hypridle hyprlock hyprpicker hyprsunset wlsunset \
+    xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
+    waybar mako hyprpaper fuzzel wofi kitty yazi zoxide fzf wtype \
+    dolphin firefox btop \
     pipewire pipewire-pulse wireplumber libpulse playerctl \
-    brightnessctl ddcutil wl-clipboard cliphist grim slurp wf-recorder \
+    brightnessctl ddcutil wl-clipboard cliphist \
+    grim slurp tesseract tesseract-data-eng wf-recorder \
     libnotify python python-gobject gtk3 gtk-layer-shell \
     ttf-jetbrains-mono-nerd papirus-icon-theme
 
@@ -106,6 +111,7 @@ find ~/.dotfiles/.config -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod 
 
 - **Start Hyprland**: Run `Hyprland` from TTY or login manager.
 - **Reload Hyprland**: Run `hyprctl reload`.
+- **Lock Screen**: Press `SUPER + L` or `SUPER + ALT + L`.
 - **Restart Waybar**: Press `SUPER + SHIFT + W` or run `killall waybar && waybar &`.
 - **Reload Mako Notifications**: Run `makoctl reload`.
 
@@ -118,8 +124,10 @@ find ~/.dotfiles/.config -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod 
 | :--- | :--- |
 | `SUPER + Q` | Open Kitty Terminal |
 | `SUPER + E` | Open Dolphin File Manager |
+| `SUPER + SHIFT + E` | Open Yazi Terminal File Manager |
 | `SUPER + B` | Open Firefox Web Browser |
 | `SUPER + R` | Open Fuzzel Launcher (with outside-click dismissal) |
+| `SUPER + L` / `ALT + L` | Lock Screen immediately (`hyprlock`) |
 | `SUPER + C` | Close Active Window |
 | `SUPER + V` | Toggle Window Floating Mode |
 | `SUPER + P` | Toggle Pseudo Tiling |
@@ -128,7 +136,19 @@ find ~/.dotfiles/.config -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod 
 | `SUPER + SHIFT + W` | Restart / Reload Waybar |
 | `SUPER + [1-9, 0]` | Switch to Workspace 1–10 |
 | `SUPER + SHIFT + [1-9, 0]` | Move Active Window to Workspace 1–10 |
-| `SUPER + S` / `SHIFT + S` | Toggle Special Scratchpad Workspace |
+| `SUPER + S` / `grave (~)` | Toggle Special Scratchpad Workspace |
+| `SUPER + SHIFT + S` | Move Active Window to Special Scratchpad |
+
+---
+
+### ⚡ Productivity & Workflow Utilities
+| Shortcut | Action |
+| :--- | :--- |
+| `SUPER + SHIFT + P` | **Hyprpicker**: Pick color from screen, copy hex code & notify |
+| `SUPER + SHIFT + T` / `ALT + T` | **Screen OCR**: Grab and extract text from any screen region to clipboard |
+| `SUPER + ALT + N` | **Night Light**: Toggle warm blue light filter (3800K / 6500K) |
+| `SUPER + =` / `ALT + C` | **Quick Calculator**: Interactive math evaluator via Fuzzel |
+| `SUPER + .` (period) | **Emoji Picker**: Searchable emoji menu with instant copy & auto-typing |
 
 ---
 

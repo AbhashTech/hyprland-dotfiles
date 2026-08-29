@@ -105,5 +105,38 @@ hl.window_rule({
     center = true,
 })
 
+-- Scratchpad Dropdown Terminal
+hl.window_rule({
+    name    = "float-dropdown-terminal",
+    match   = { class = "dropdown-terminal" },
+    float   = true,
+    size    = "1100 680",
+    center  = true,
+    opacity = "0.95 0.90",
+})
+
+-- Screenshot Annotation Tools (Swappy / Satty)
+hl.window_rule({
+    name   = "float-swappy",
+    match  = { class = "swappy" },
+    float  = true,
+    center = true,
+})
+
+hl.window_rule({
+    name   = "float-satty",
+    match  = { class = "satty" },
+    float  = true,
+    center = true,
+})
+
+-- Polkit Authentication Agent Dialog
+hl.window_rule({
+    name   = "float-polkit",
+    match  = { class = ".*polkit.*" },
+    float  = true,
+    center = true,
+})
+
 
 

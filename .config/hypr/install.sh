@@ -41,6 +41,11 @@ if command -v pacman >/dev/null 2>&1; then
     
     PACKAGES=(
         hyprland
+        hypridle
+        hyprlock
+        hyprpicker
+        hyprsunset
+        wlsunset
         xdg-desktop-portal-hyprland
         xdg-desktop-portal-gtk
         waybar
@@ -49,6 +54,10 @@ if command -v pacman >/dev/null 2>&1; then
         fuzzel
         wofi
         kitty
+        yazi
+        zoxide
+        fzf
+        wtype
         dolphin
         firefox
         btop
@@ -63,6 +72,8 @@ if command -v pacman >/dev/null 2>&1; then
         cliphist
         grim
         slurp
+        tesseract
+        tesseract-data-eng
         wf-recorder
         libnotify
         python
