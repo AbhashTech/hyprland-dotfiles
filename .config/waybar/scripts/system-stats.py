@@ -3,7 +3,8 @@
 =============================================================================
  Catppuccin Mocha System Hardware & Stats Dashboard for Waybar & Hyprland
  High-contrast, polished GTK LayerShell popup displaying live CPU, Memory,
- Disk, Temperature, Uptime and top processes with outside-click dismissal.
+ Disk, all Hardware Temperature Sensors, Uptime and Top Active Processes
+ with outside-click dismissal.
 =============================================================================
 """
 
@@ -48,7 +49,6 @@ def get_cpu_info():
     except Exception:
         pass
 
-    # Read /proc/stat for accurate CPU usage percentage
     def read_stat():
         try:
             with open("/proc/stat", "r") as f:
@@ -63,7 +63,7 @@ def get_cpu_info():
     idle1, total1 = read_stat()
     time.sleep(0.08)
     idle2, total2 = read_stat()
-    
+
     total_diff = total2 - total1
     idle_diff = idle2 - idle1
     cpu_pct = 0.0
@@ -140,31 +140,129 @@ def get_disk_info(path="/"):
         return {"path": path, "used_gb": 0, "total_gb": 0, "free_gb": 0, "pct": 0}
 
 
-def get_temp_info():
-    temp_c = 0
-    # Try thermal zones
-    for zone in range(10):
-        t_path = f"/sys/class/thermal/thermal_zone{zone}/temp"
-        if os.path.exists(t_path):
-            try:
-                with open(t_path, "r") as f:
-                    val = int(f.read().strip())
-                    if val > 0:
-                        temp_c = round(val / 1000)
-                        break
-            except Exception:
-                pass
+def get_all_temperatures():
+    raw_sensors = []
+
+    # 1. Inspect hwmon devices
+    hwmon_dir = "/sys/class/hwmon"
+    if os.path.exists(hwmon_dir):
+        for h in sorted(os.listdir(hwmon_dir)):
+            h_path = os.path.join(hwmon_dir, h)
+            name_file = os.path.join(h_path, "name")
+            h_name = ""
+            if os.path.exists(name_file):
+                try:
+                    with open(name_file) as f:
+                        h_name = f.read().strip()
+                except Exception:
+                    pass
+
+            for entry in sorted(os.listdir(h_path)):
+                if entry.startswith("temp") and entry.endswith("_input"):
+                    prefix = entry[:-6]
+                    input_file = os.path.join(h_path, entry)
+                    label_file = os.path.join(h_path, f"{prefix}_label")
+                    label = ""
+                    if os.path.exists(label_file):
+                        try:
+                            with open(label_file) as f:
+                                label = f.read().strip()
+                        except Exception:
+                            pass
+
+                    if not label:
+                        label = f"{h_name} {prefix}".strip()
+
+                    try:
+                        with open(input_file) as f:
+                            val = int(f.read().strip())
+                            if 5000 < val < 130000:
+                                temp_c = round(val / 1000)
+                                raw_sensors.append({
+                                    "device": h_name,
+                                    "label": label,
+                                    "temp_c": temp_c
+                                })
+                    except Exception:
+                        pass
+
+    # 2. Inspect thermal zones
+    has_cpu_pkg = any("package" in s["label"].lower() or "core" in s["label"].lower() for s in raw_sensors)
+    tz_dir = "/sys/class/thermal"
+    if os.path.exists(tz_dir):
+        for tz in sorted(os.listdir(tz_dir)):
+            if tz.startswith("thermal_zone"):
+                tz_path = os.path.join(tz_dir, tz)
+                type_file = os.path.join(tz_path, "type")
+                temp_file = os.path.join(tz_path, "temp")
+                tz_type = tz
+                if os.path.exists(type_file):
+                    try:
+                        with open(type_file) as f:
+                            tz_type = f.read().strip()
+                    except Exception:
+                        pass
+                if os.path.exists(temp_file):
+                    try:
+                        with open(temp_file) as f:
+                            val = int(f.read().strip())
+                            if 15000 < val < 130000:
+                                if has_cpu_pkg and tz_type in ("x86_pkg_temp", "TCPU"):
+                                    continue
+                                raw_sensors.append({
+                                    "device": "Thermal",
+                                    "label": tz_type,
+                                    "temp_c": round(val / 1000)
+                                })
+                    except Exception:
+                        pass
+
+    # Normalize labels & deduplicate
+    clean_sensors = []
+    seen_labels = set()
+    for s in raw_sensors:
+        lbl = s["label"]
+        dev = s["device"].lower()
+        if "package id" in lbl.lower():
+            friendly = "CPU Pkg"
+        elif "core " in lbl.lower():
+            friendly = lbl.title()
+        elif "composite" in lbl.lower() or (dev == "nvme" and "sensor" not in lbl.lower()):
+            friendly = "NVMe SSD"
+        elif dev == "nvme" and "sensor 1" in lbl.lower():
+            continue
+        elif "int3400" in lbl.lower():
+            friendly = "Ambient"
+        elif lbl.upper() in ("SEN1", "SEN2", "SEN3", "SEN4", "SEN5"):
+            friendly = f"Sensor {lbl[-1]}"
+        else:
+            friendly = lbl.title()
+
+        if friendly not in seen_labels:
+            seen_labels.add(friendly)
+            clean_sensors.append({
+                "device": s["device"],
+                "label": friendly,
+                "temp_c": s["temp_c"]
+            })
+
+    max_c = max([s["temp_c"] for s in clean_sensors], default=45)
 
     status = "Normal"
-    color_class = "temp-good"
-    if temp_c >= 80:
+    status_class = "temp-good"
+    if max_c >= 80:
         status = "Critical"
-        color_class = "temp-critical"
-    elif temp_c >= 65:
+        status_class = "temp-critical"
+    elif max_c >= 65:
         status = "Warm"
-        color_class = "temp-warm"
+        status_class = "temp-warm"
 
-    return {"temp_c": temp_c, "status": status, "class": color_class}
+    return {
+        "sensors": clean_sensors,
+        "max_c": max_c,
+        "status": status,
+        "class": status_class
+    }
 
 
 def get_system_summary():
@@ -194,20 +292,29 @@ def get_system_summary():
 def get_top_processes():
     try:
         res = subprocess.run(
-            ["ps", "-eo", "comm,%cpu,%mem", "--sort=-%cpu"],
+            ["ps", "-eo", "pid,comm,%cpu,%mem", "--sort=-%cpu"],
             capture_output=True, text=True, check=False
         )
         lines = res.stdout.strip().splitlines()
-        top_procs = []
-        for line in lines[1:4]:
+        procs = []
+        for line in lines[1:5]:  # Top 4 active processes
             parts = line.split()
-            if len(parts) >= 3:
-                name = parts[0]
-                cpu = parts[1]
-                top_procs.append(f"{name} ({cpu}%)")
-        return ", ".join(top_procs) if top_procs else "None"
+            if len(parts) >= 4:
+                pid, comm, cpu, mem = parts[0], parts[1], parts[2], parts[3]
+                try:
+                    cpu_f = float(cpu)
+                    mem_f = float(mem)
+                except Exception:
+                    cpu_f, mem_f = 0.0, 0.0
+                procs.append({
+                    "pid": pid,
+                    "name": comm,
+                    "cpu": f"{cpu_f:.1f}%",
+                    "mem": f"{mem_f:.1f}%"
+                })
+        return procs
     except Exception:
-        return "N/A"
+        return []
 
 
 CSS = """
@@ -244,15 +351,15 @@ window {
     font-weight: 600;
     color: #a6adc8;
     margin-top: 2px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 
 .stat-box {
     background-color: #1e1e2e;
     border: 1.5px solid #313244;
     border-radius: 14px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
 }
 
 .stat-box:hover {
@@ -261,8 +368,8 @@ window {
 }
 
 .stat-icon {
-    font-size: 18px;
-    margin-right: 10px;
+    font-size: 17px;
+    margin-right: 9px;
 }
 
 .stat-name {
@@ -281,24 +388,24 @@ window {
     font-weight: 500;
     color: #a6adc8;
     margin-top: 2px;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 }
 
 /* Progress bar styling */
 progressbar {
     border-radius: 6px;
-    min-height: 8px;
+    min-height: 7px;
 }
 
 progressbar trough {
     background-color: #313244;
     border-radius: 6px;
-    min-height: 8px;
+    min-height: 7px;
 }
 
 progressbar progress {
     border-radius: 6px;
-    min-height: 8px;
+    min-height: 7px;
 }
 
 .progress-cpu progress {
@@ -317,16 +424,91 @@ progressbar progress {
 .color-ram { color: #f5c2e7; }
 .color-disk { color: #94e2d5; }
 .color-temp { color: #fab387; }
+.color-proc { color: #cba6f7; }
 
 .temp-good { color: #a6e3a1; }
 .temp-warm { color: #fab387; }
 .temp-critical { color: #f38ba8; }
 
+/* Thermal Pill Badges */
+.temp-grid {
+    margin-top: 6px;
+    margin-bottom: 2px;
+}
+
+.temp-pill {
+    background-color: #181825;
+    border: 1px solid #313244;
+    border-radius: 8px;
+    padding: 3px 8px;
+    margin: 2px 3px;
+}
+
+.temp-pill-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #bac2de;
+    margin-right: 6px;
+}
+
+.temp-pill-val {
+    font-size: 11px;
+    font-weight: 800;
+}
+
+/* Top Process Rows */
+.proc-item {
+    background-color: #181825;
+    border: 1px solid #313244;
+    border-radius: 8px;
+    padding: 4px 10px;
+    margin-top: 4px;
+}
+
+.proc-item:hover {
+    border-color: #45475a;
+    background-color: #24253a;
+}
+
+.proc-name {
+    font-size: 12px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.proc-pid {
+    font-size: 10px;
+    font-weight: 500;
+    color: #6c7086;
+    margin-left: 6px;
+}
+
+.proc-cpu-badge {
+    font-size: 11px;
+    font-weight: 800;
+    color: #fab387;
+    background-color: #313244;
+    border-radius: 6px;
+    padding: 2px 7px;
+    margin-left: 6px;
+}
+
+.proc-mem-badge {
+    font-size: 11px;
+    font-weight: 800;
+    color: #f5c2e7;
+    background-color: #313244;
+    border-radius: 6px;
+    padding: 2px 7px;
+    margin-left: 4px;
+}
+
+/* Action Button */
 .action-btn {
     background-color: #313244;
     border: 1.5px solid rgba(203, 166, 247, 0.3);
     border-radius: 12px;
-    padding: 10px 14px;
+    padding: 9px 14px;
     margin-top: 4px;
     transition: all 0.15s ease-in-out;
 }
@@ -360,13 +542,13 @@ def launch_gtk_gui():
     gi.require_version('GtkLayerShell', '0.1')
     from gi.repository import Gtk, Gdk, GtkLayerShell
 
-    # Fetch stats
+    # Fetch system metrics
     cpu = get_cpu_info()
     mem = get_memory_info()
     disk = get_disk_info("/")
-    temp = get_temp_info()
+    thermals = get_all_temperatures()
     sys_sum = get_system_summary()
-    top_proc = get_top_processes()
+    top_procs = get_top_processes()
 
     # Apply CSS
     css_provider = Gtk.CssProvider()
@@ -377,7 +559,7 @@ def launch_gtk_gui():
         Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
     )
 
-    # 1. Transparent Backdrop for outside-click dismissal
+    # 1. Fullscreen Backdrop for outside click dismiss
     backdrop = Gtk.Window()
     backdrop.set_title("system-stats-backdrop")
     backdrop.set_decorated(False)
@@ -440,7 +622,7 @@ def launch_gtk_gui():
     # Main Card Container
     card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     card.get_style_context().add_class("main-card")
-    card.set_size_request(380, -1)
+    card.set_size_request(420, -1)
 
     # --- Header Box ---
     header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -460,7 +642,7 @@ def launch_gtk_gui():
     card.pack_start(sub_label, False, False, 0)
 
     # --- CPU Box ---
-    cpu_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+    cpu_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
     cpu_box.get_style_context().add_class("stat-box")
 
     cpu_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
@@ -478,7 +660,7 @@ def launch_gtk_gui():
     cpu_row.pack_end(cpu_val, False, False, 0)
 
     cpu_desc = Gtk.Label()
-    cpu_desc.set_markup(f"{cpu['model']} ({cpu['cores']} Cores) • Load: {cpu['load']}")
+    cpu_desc.set_markup(f"{cpu['model']} ({cpu['cores']} Cores) • Load: <b>{cpu['load']}</b>")
     cpu_desc.set_xalign(0)
     cpu_desc.get_style_context().add_class("stat-desc")
 
@@ -491,26 +673,30 @@ def launch_gtk_gui():
     cpu_box.pack_start(cpu_bar, False, False, 0)
     card.pack_start(cpu_box, False, False, 0)
 
-    # --- Memory Box ---
-    mem_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
-    mem_box.get_style_context().add_class("stat-box")
+    # --- Memory & Disk Row ---
+    mem_disk_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
 
-    mem_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+    # Memory Box (Left)
+    mem_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+    mem_box.get_style_context().add_class("stat-box")
+    mem_box.set_hexpand(True)
+
+    mem_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
     mem_icon = Gtk.Label(label="󰘚")
     mem_icon.get_style_context().add_class("stat-icon")
     mem_icon.get_style_context().add_class("color-ram")
-    mem_name = Gtk.Label(label="Memory (RAM & Swap)")
+    mem_name = Gtk.Label(label="Memory")
     mem_name.get_style_context().add_class("stat-name")
     mem_val = Gtk.Label(label=f"{mem['pct']}%")
     mem_val.get_style_context().add_class("stat-value")
     mem_val.get_style_context().add_class("color-ram")
 
-    mem_row.pack_start(mem_icon, False, False, 0)
-    mem_row.pack_start(mem_name, False, False, 0)
-    mem_row.pack_end(mem_val, False, False, 0)
+    mem_header.pack_start(mem_icon, False, False, 0)
+    mem_header.pack_start(mem_name, False, False, 0)
+    mem_header.pack_end(mem_val, False, False, 0)
 
     mem_desc = Gtk.Label()
-    mem_desc.set_markup(f"RAM: <b>{mem['used_gib']} GiB</b> / {mem['total_gib']} GiB • Swap: <b>{mem['swap_used_gib']} GiB</b> / {mem['swap_total_gib']} GiB")
+    mem_desc.set_markup(f"<b>{mem['used_gib']}</b>/{mem['total_gib']} GiB • Swap: <b>{mem['swap_used_gib']}</b> GiB")
     mem_desc.set_xalign(0)
     mem_desc.get_style_context().add_class("stat-desc")
 
@@ -518,16 +704,13 @@ def launch_gtk_gui():
     mem_bar.set_fraction(min(1.0, max(0.0, mem['pct'] / 100.0)))
     mem_bar.get_style_context().add_class("progress-ram")
 
-    mem_box.pack_start(mem_row, False, False, 0)
+    mem_box.pack_start(mem_header, False, False, 0)
     mem_box.pack_start(mem_desc, False, False, 0)
     mem_box.pack_start(mem_bar, False, False, 0)
-    card.pack_start(mem_box, False, False, 0)
+    mem_disk_row.pack_start(mem_box, True, True, 0)
 
-    # --- Storage & Temperature Dual Box ---
-    bottom_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-
-    # Disk Box (Left)
-    disk_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+    # Disk Box (Right)
+    disk_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
     disk_box.get_style_context().add_class("stat-box")
     disk_box.set_hexpand(True)
 
@@ -557,43 +740,94 @@ def launch_gtk_gui():
     disk_box.pack_start(disk_header, False, False, 0)
     disk_box.pack_start(disk_desc, False, False, 0)
     disk_box.pack_start(disk_bar, False, False, 0)
-    bottom_row.pack_start(disk_box, True, True, 0)
+    mem_disk_row.pack_start(disk_box, True, True, 0)
 
-    # Temperature Box (Right)
+    card.pack_start(mem_disk_row, False, False, 0)
+
+    # --- All Hardware Temperatures Box ---
     temp_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
     temp_box.get_style_context().add_class("stat-box")
-    temp_box.set_hexpand(True)
 
     temp_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
     temp_icon = Gtk.Label(label="󰔏")
     temp_icon.get_style_context().add_class("stat-icon")
     temp_icon.get_style_context().add_class("color-temp")
-    temp_title = Gtk.Label(label="Temperature")
+    temp_title = Gtk.Label(label="Hardware Temperatures")
     temp_title.get_style_context().add_class("stat-name")
-    temp_val = Gtk.Label(label=f"{temp['temp_c']}°C")
+    temp_val = Gtk.Label(label=f"{thermals['max_c']}°C • {thermals['status']}")
     temp_val.get_style_context().add_class("stat-value")
-    temp_val.get_style_context().add_class(temp["class"])
+    temp_val.get_style_context().add_class(thermals["class"])
 
     temp_header.pack_start(temp_icon, False, False, 0)
     temp_header.pack_start(temp_title, False, False, 0)
     temp_header.pack_end(temp_val, False, False, 0)
-
-    temp_desc = Gtk.Label()
-    temp_desc.set_markup(f"Thermal State: <b>{temp['status']}</b>")
-    temp_desc.set_xalign(0)
-    temp_desc.get_style_context().add_class("stat-desc")
-
-    top_label = Gtk.Label()
-    top_label.set_markup(f"Top: <small>{top_proc}</small>")
-    top_label.set_xalign(0)
-    top_label.get_style_context().add_class("stat-desc")
-
     temp_box.pack_start(temp_header, False, False, 0)
-    temp_box.pack_start(temp_desc, False, False, 0)
-    temp_box.pack_start(top_label, False, False, 0)
-    bottom_row.pack_start(temp_box, True, True, 0)
 
-    card.pack_start(bottom_row, False, False, 0)
+    # FlowBox of temperature pills
+    temp_flow = Gtk.FlowBox()
+    temp_flow.set_valign(Gtk.Align.START)
+    temp_flow.set_max_children_per_line(4)
+    temp_flow.set_selection_mode(Gtk.SelectionMode.NONE)
+    temp_flow.set_homogeneous(True)
+    temp_flow.get_style_context().add_class("temp-grid")
+
+    for sensor in thermals["sensors"]:
+        pill = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        pill.get_style_context().add_class("temp-pill")
+
+        s_lbl = Gtk.Label(label=sensor["label"])
+        s_lbl.get_style_context().add_class("temp-pill-label")
+        pill.pack_start(s_lbl, False, False, 0)
+
+        t_val = sensor["temp_c"]
+        color_cls = "temp-good" if t_val < 60 else ("temp-warm" if t_val < 80 else "temp-critical")
+        v_lbl = Gtk.Label(label=f"{t_val}°C")
+        v_lbl.get_style_context().add_class("temp-pill-val")
+        v_lbl.get_style_context().add_class(color_cls)
+        pill.pack_end(v_lbl, False, False, 0)
+
+        temp_flow.add(pill)
+
+    temp_box.pack_start(temp_flow, False, False, 0)
+    card.pack_start(temp_box, False, False, 0)
+
+    # --- Separate Top Processes Box ---
+    proc_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+    proc_box.get_style_context().add_class("stat-box")
+
+    proc_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+    p_icon = Gtk.Label(label="󰒋")
+    p_icon.get_style_context().add_class("stat-icon")
+    p_icon.get_style_context().add_class("color-proc")
+    p_title = Gtk.Label(label="Top Active Processes")
+    p_title.get_style_context().add_class("stat-name")
+    proc_header.pack_start(p_icon, False, False, 0)
+    proc_header.pack_start(p_title, False, False, 0)
+    proc_box.pack_start(proc_header, False, False, 0)
+
+    for proc in top_procs:
+        p_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        p_row.get_style_context().add_class("proc-item")
+
+        p_name = Gtk.Label(label=proc["name"])
+        p_name.get_style_context().add_class("proc-name")
+        p_pid = Gtk.Label(label=f"PID {proc['pid']}")
+        p_pid.get_style_context().add_class("proc-pid")
+
+        p_row.pack_start(p_name, False, False, 0)
+        p_row.pack_start(p_pid, False, False, 0)
+
+        mem_badge = Gtk.Label(label=f"{proc['mem']} RAM")
+        mem_badge.get_style_context().add_class("proc-mem-badge")
+        cpu_badge = Gtk.Label(label=f"{proc['cpu']} CPU")
+        cpu_badge.get_style_context().add_class("proc-cpu-badge")
+
+        p_row.pack_end(mem_badge, False, False, 0)
+        p_row.pack_end(cpu_badge, False, False, 0)
+
+        proc_box.pack_start(p_row, False, False, 0)
+
+    card.pack_start(proc_box, False, False, 0)
 
     # --- Footer / Btop Action Button ---
     btop_btn = Gtk.Button()
