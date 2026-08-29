@@ -4,7 +4,7 @@
 # Supports toggling, starting, or restarting Waybar and its Hyprland proxy
 # =============================================================================
 
-ACTION="toggle"
+ACTION="start"
 PASSTHROUGH_ARGS=()
 
 for arg in "$@"; do

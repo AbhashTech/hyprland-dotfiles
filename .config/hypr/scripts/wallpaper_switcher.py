@@ -161,13 +161,27 @@ def get_hyprland_monitors():
     if shutil.which("hyprctl"):
         try:
             res = subprocess.run(["hyprctl", "monitors", "-j"], capture_output=True, text=True, timeout=2)
-            if res.returncode == 0:
+            if res.returncode == 0 and res.stdout.strip():
                 data = json.loads(res.stdout)
                 for mon in data:
-                    if "name" in mon:
+                    if isinstance(mon, dict) and "name" in mon:
                         monitors.append(mon["name"])
         except Exception:
             pass
+
+    # Fallback to plain hyprctl monitors output parsing
+    if not monitors and shutil.which("hyprctl"):
+        try:
+            res = subprocess.run(["hyprctl", "monitors"], capture_output=True, text=True, timeout=2)
+            if res.returncode == 0:
+                for line in res.stdout.splitlines():
+                    if line.startswith("Monitor "):
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            monitors.append(parts[1])
+        except Exception:
+            pass
+
     return monitors
 
 
@@ -190,40 +204,54 @@ def apply_hyprpaper(image_path):
     if not is_process_running("hyprpaper"):
         try:
             subprocess.Popen(["hyprpaper"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            time.sleep(0.2)
+            time.sleep(0.3)
         except Exception:
             pass
 
     if not shutil.which("hyprctl"):
         return False
 
-    try:
-        # Preload wallpaper
-        subprocess.run(["hyprctl", "hyprpaper", "preload", abs_path], capture_output=True, text=True, timeout=3)
-        
-        monitors = get_hyprland_monitors()
+    monitors = get_hyprland_monitors()
+
+    # Retry loop to wait for hyprpaper socket to accept commands
+    applied = False
+    for _ in range(8):
+        if not is_process_running("hyprpaper"):
+            try:
+                subprocess.Popen(["hyprpaper"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                pass
+            time.sleep(0.2)
+
+        # Apply to all detected monitors
         if monitors:
             for mon in monitors:
-                subprocess.run(["hyprctl", "hyprpaper", "wallpaper", f"{mon},{abs_path}"], capture_output=True, text=True, timeout=3)
-        else:
-            # Fallback to wildcard / all monitors
-            subprocess.run(["hyprctl", "hyprpaper", "wallpaper", f",{abs_path}"], capture_output=True, text=True, timeout=3)
-        
-        # Unload unused wallpapers to free VRAM
-        subprocess.run(["hyprctl", "hyprpaper", "unload", "unused"], capture_output=True, text=True, timeout=3)
-        
-        # Update hyprpaper.conf so it persists
-        try:
-            HYPRPAPER_CONF.parent.mkdir(parents=True, exist_ok=True)
-            with open(HYPRPAPER_CONF, "w", encoding="utf-8") as f:
-                f.write(f"preload = {abs_path}\n")
-                f.write(f"wallpaper = ,{abs_path}\nsplash = false\n")
-        except Exception:
-            pass
-            
-        return True
+                res = subprocess.run(["hyprctl", "hyprpaper", "wallpaper", f"{mon},{abs_path}"], capture_output=True, text=True, timeout=3)
+                if res.returncode == 0:
+                    applied = True
+
+        # Also apply to wildcard / default monitor
+        res_wildcard = subprocess.run(["hyprctl", "hyprpaper", "wallpaper", f",{abs_path}"], capture_output=True, text=True, timeout=3)
+        if res_wildcard.returncode == 0:
+            applied = True
+
+        if applied:
+            break
+        time.sleep(0.25)
+
+    # Persist in hyprpaper.conf so it automatically loads on boot
+    try:
+        HYPRPAPER_CONF.parent.mkdir(parents=True, exist_ok=True)
+        with open(HYPRPAPER_CONF, "w", encoding="utf-8") as f:
+            if monitors:
+                for mon in monitors:
+                    f.write(f"wallpaper = {mon},{abs_path}\n")
+            f.write(f"wallpaper = ,{abs_path}\n")
+            f.write("splash = false\n")
     except Exception:
-        return False
+        pass
+
+    return applied
 
 
 def apply_swww(image_path):
@@ -296,7 +324,7 @@ def set_wallpaper(image_path, silent=False):
 
     applied = False
 
-    # 1. Try hyprpaper (default for this Hyprland environment)
+    # 1. Try hyprpaper (default for Hyprland)
     if shutil.which("hyprpaper") or is_process_running("hyprpaper"):
         applied = apply_hyprpaper(image_path)
 
@@ -369,8 +397,6 @@ def launch_menu(images):
         show_notification("Wallpaper Switcher", "No images found in ~/Wallpaper")
         return
 
-    # Prepare menu items
-    # Show formatted filename and directory hint
     menu_lines = []
     mapping = {}
     for img in images:
