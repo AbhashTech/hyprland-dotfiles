@@ -220,9 +220,9 @@ def format_cli_table(entries):
 
 def show_gui_menu(entries):
     """
-    Display keybindings with key combination and full description on every line.
-    Uses balanced column padding, wide modal width (84), and reduced font size (9.5)
-    to completely eliminate text clipping.
+    Display keybindings across 2 dedicated lines (Shortcut on top, full description below).
+    Includes the shortcut tag on the description line so searching keywords (e.g. 'volume')
+    always shows both the keyboard shortcut and the description without any text clipping.
     """
     if not entries:
         return
@@ -233,11 +233,19 @@ def show_gui_menu(entries):
     for item in entries:
         key = item["key"]
         desc = item["desc"]
+
+        # Line 1: Primary Keyboard Shortcut Header
+        key_line = f"󰌌 {key}"
         
-        # Format with compact key column (21 chars) so description starts earlier
-        display_line = f"󰌌 {key:<21} ❯  {desc}"
-        lines.append(display_line)
-        entry_map[display_line] = item
+        # Line 2: Full Description with shortcut indicator (ensures shortcut is visible during search)
+        desc_line = f"   ↳ [{key}] {desc}"
+
+        lines.append(key_line)
+        lines.append(desc_line)
+
+        # Map both lines to the entry item so clicking/pressing enter on either works
+        entry_map[key_line] = item
+        entry_map[desc_line] = item
 
     menu_input = "\n".join(lines)
     selected = None
@@ -248,10 +256,10 @@ def show_gui_menu(entries):
                 [
                     "fuzzel",
                     "--dmenu",
-                    "--font", "JetBrainsMono Nerd Font:weight=medium:size=9.5",  # Smaller, crisp font
+                    "--font", "JetBrainsMono Nerd Font:weight=medium:size=10",
                     "--prompt", " 󰌌 Shortcuts: ",
-                    "--width", "84",                                            # Wide enough for complete descriptions
-                    "--lines", "9",                                             # Compact height (9 items)
+                    "--width", "62",
+                    "--lines", "10",
                 ],
                 input=menu_input,
                 capture_output=True,
@@ -268,8 +276,8 @@ def show_gui_menu(entries):
                     "wofi",
                     "--dmenu",
                     "--prompt", "Search Shortcuts",
-                    "--width", "820",
-                    "--height", "340",
+                    "--width", "650",
+                    "--height", "360",
                     "--insensitive",
                 ],
                 input=menu_input,
