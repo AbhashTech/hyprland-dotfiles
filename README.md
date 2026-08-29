@@ -1,6 +1,6 @@
 # 🌌 Unified Hyprland & Wayland Dotfiles
 
-A modular, unified, and fully version-controlled dotfiles suite for **Hyprland** on Arch Linux. Features **Waybar**, **Fuzzel**, **Mako**, **Wofi**, **Btop**, **Kitty**, **Starship**, **Lazygit**, **Zellij**, **Swappy**, custom OSD overlays, Catppuccin Mocha themed SDDM greeter, clipboard management, media/audio switchers, and a comprehensive modern CLI productivity suite (100% official Pacman packages).
+A modular, unified, and fully version-controlled dotfiles suite for **Hyprland** on Arch Linux. Features **Waybar**, **Fuzzel**, **Mako**, **Wofi**, **Btop**, **Kitty**, **Starship**, **Lazygit**, **Zellij**, **Swappy**, custom OSD overlays, Catppuccin Mocha themed SDDM greeter, clipboard management, media/audio switchers, dynamic shortcut viewer, and a comprehensive modern CLI productivity suite (100% official Pacman packages).
 
 ---
 
@@ -25,7 +25,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     ├── hypr/                    # Hyprland Compositor Config & Scripts
     │   ├── hyprland.lua         # Main modular entrypoint
     │   ├── modules/             # Config modules (animations, keybinds, rules, monitors, etc.)
-    │   └── scripts/             # Python & Shell utilities (brightness, audio, screen capture, scaling)
+    │   └── scripts/             # Python & Shell utilities (keybinds viewer, brightness, audio, capture, scaling)
     ├── waybar/                  # Waybar Status Bar
     │   ├── config.jsonc         # Bar layout, modules, click actions & tooltips
     │   ├── style.css            # Styling, gradients, glassmorphism & padding
@@ -107,6 +107,16 @@ source ~/.config/shell/aliases.sh
 
 ---
 
+## ⚡ Dynamic Keybindings Viewer & Cheat Sheet
+
+The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewer.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/keybinds_viewer.py)) that parses doc-comments directly from [`keybinds.lua`](file:///home/kunal/.dotfiles/.config/hypr/modules/keybinds.lua):
+
+- **Desktop GUI**: Press **`SUPER + /`** or **`SUPER + F1`** to open an interactive, fuzzy-searchable Fuzzel overlay. Selecting any shortcut automatically copies the key combination to your clipboard.
+- **Terminal CLI**: Run `python3 ~/.config/hypr/scripts/keybinds_viewer.py --cli` for categorized, ANSI-colored tables.
+- **Export Formats**: Supports `--json` and `--markdown` for automated documentation generation.
+
+---
+
 ## ⌨️ Complete Keyboard Shortcuts Reference
 
 ### 🖥️ Applications, Navigation & System Control
@@ -128,7 +138,7 @@ source ~/.config/shell/aliases.sh
 | `SUPER + V` | **Toggle Floating** | Switch active window between tiled and floating mode |
 | `SUPER + P` | **Toggle Pseudo Tiling** | Toggle pseudo-tile on active window |
 | `SUPER + J` | **Toggle Layout Split** | Toggle horizontal/vertical split orientation (dwindle) |
-| `SUPER + SHIFT + W` | **Toggle Waybar** | Toggle Waybar status bar visibility (show/hide) |
+| `SUPER + SHIFT + W` | **Restart Waybar** | Reload and restart Waybar status bar |
 
 ---
 
