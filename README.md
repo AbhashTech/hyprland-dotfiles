@@ -48,13 +48,16 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │       ├── fuzzel_launcher.sh    # Fuzzel wrapper with outside-click dismissal
     │       ├── keybinds_viewer.py    # Dynamic keybinds parser & searchable overlay
     │       ├── keyboard_layout.py    # Dynamic keyboard layout switcher & installer
+    │       ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
     │       ├── nightlight.py         # Blue-light filter (3800K night / 6500K day)
     │       ├── ocr_grab.py           # Optical character recognition text grabber
     │       ├── quick_calc.py         # Interactive math expression evaluator
     │       ├── resolution_menu.py    # Display resolution & UI scaling switcher
     │       ├── scale_window.py       # Window resizing with on-screen dimensions overlay
     │       ├── screen_capture.py     # Screenshot & video recorder with Swappy annotation
+    │       ├── theme_switcher.py     # Universal desktop theme switcher & palette manager
     │       ├── volume_control.py     # Speaker/mic volume control, OSD & sink switcher
+    │       ├── wallpaper_switcher.py # Wallpaper randomizer & selector (~/Wallpaper)
     │       └── wofi_launcher.py      # Wofi wrapper with transparent backdrop layer
     ├── waybar/                  # Waybar Status Bar
     │   ├── config.jsonc         # Bar layout, modules, click actions & tooltips
@@ -161,7 +164,7 @@ The top status bar is divided into three functional zones:
 
 ### 1. Left Zone
 - **󰣇 Application Launcher (`custom/launcher`)**: Left-click launches **Fuzzel** with backdrop blur; right-click opens the **Wlogout** power menu.
-- **Workspaces (`hyprland/workspaces`)**: Persistent workspaces 1–5 with live active badges; mouse scroll cycles through workspaces.
+- **Workspaces (`hyprland/workspaces`)**: Persistent workspaces 1–4 with live active badges and automatic available workspace allocation when connecting external monitors; mouse scroll cycles through workspaces.
 - **Active Window (`hyprland/window`)**: Shows current focused window title with contextual application icons (Firefox, Kitty, Dolphin, VS Code).
 - **MPRIS Media Controller (`mpris`)**: Shows currently playing media (Spotify, Firefox, mpv) with play/pause click and scroll track skipping.
 
