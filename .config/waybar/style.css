@@ -1,5 +1,6 @@
 /* =============================================================================
  * Catppuccin Mocha Glassmorphic Waybar Stylesheet
+ * Featuring Masked Backdrop, Dual-Kawase Blur & Enhanced Readability
  * ============================================================================= */
 
 /* Catppuccin Mocha Color Palette */
@@ -40,10 +41,13 @@
     text-shadow: none;
 }
 
-/* Transparent Waybar Root Window */
+/* Glassmorphic Masking & Backdrop for Waybar Root Window */
 window#waybar {
-    background: transparent;
+    background: rgba(17, 17, 27, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
     color: @text;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 window#waybar.hidden {
@@ -52,11 +56,11 @@ window#waybar.hidden {
 
 /* Tooltips */
 tooltip {
-    background: rgba(24, 24, 37, 0.94);
-    border: 1px solid rgba(203, 166, 247, 0.35);
+    background: rgba(24, 24, 37, 0.95);
+    border: 1px solid rgba(203, 166, 247, 0.4);
     border-radius: 12px;
     padding: 8px 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
 
 tooltip label {
@@ -77,12 +81,12 @@ tooltip label {
 #custom-power,
 #custom-stats,
 #custom-quicksettings {
-    background-color: rgba(30, 30, 46, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: rgba(30, 30, 46, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 14px;
     padding: 3px 12px;
     margin: 3px 3px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -99,9 +103,9 @@ tooltip label {
 #custom-power:hover,
 #custom-stats:hover,
 #custom-quicksettings:hover {
-    background-color: rgba(49, 50, 68, 0.95);
-    border-color: rgba(203, 166, 247, 0.4);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    background-color: rgba(49, 50, 68, 0.96);
+    border-color: rgba(203, 166, 247, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 /* =============================================================================
@@ -128,12 +132,13 @@ tooltip label {
 }
 
 #workspaces button {
-    padding: 1px 4px;
-    margin: 1px 1px;
+    padding: 1px 6px;
+    margin: 1px 2px;
     border-radius: 8px;
-    min-width: 14px;
-    color: @subtext0;
-    background: transparent;
+    min-width: 18px;
+    color: @subtext1;
+    background-color: rgba(49, 50, 68, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     font-weight: bold;
     font-size: 12px;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -141,16 +146,18 @@ tooltip label {
 
 #workspaces button:hover {
     color: @text;
-    background-color: rgba(69, 71, 90, 0.6);
+    background-color: rgba(69, 71, 90, 0.8);
+    border-color: rgba(203, 166, 247, 0.4);
 }
 
 #workspaces button.active {
     color: @crust;
     background: linear-gradient(135deg, @mauve, @blue);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
-    min-width: 16px;
-    padding: 1px 5px;
-    box-shadow: 0 2px 6px rgba(203, 166, 247, 0.35);
+    min-width: 20px;
+    padding: 1px 7px;
+    box-shadow: 0 2px 8px rgba(203, 166, 247, 0.45);
 }
 
 #workspaces button.urgent {
@@ -178,7 +185,7 @@ window#waybar.empty #window {
 }
 
 #mpris.paused {
-    color: @subtext0;
+    color: @subtext1;
 }
 
 /* =============================================================================
@@ -261,11 +268,11 @@ window#waybar.empty #window {
 #group-status #bluetooth,
 #group-status #battery,
 #group-status #custom-battery {
-    background: transparent;
-    border: none;
+    background: rgba(49, 50, 68, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: none;
-    padding: 2px 6px;
-    margin: 0 1px;
+    padding: 2px 8px;
+    margin: 0 2px;
     border-radius: 8px;
     transition: all 0.2s ease;
 }
@@ -275,7 +282,8 @@ window#waybar.empty #window {
 #group-status #bluetooth:hover,
 #group-status #battery:hover,
 #group-status #custom-battery:hover {
-    background-color: rgba(69, 71, 90, 0.6);
+    background-color: rgba(69, 71, 90, 0.8);
+    border-color: rgba(203, 166, 247, 0.35);
 }
 
 /* Audio */
@@ -285,8 +293,8 @@ window#waybar.empty #window {
 }
 
 #pulseaudio.muted {
-    color: @overlay0;
-    background-color: rgba(30, 30, 46, 0.6);
+    color: @subtext0;
+    background-color: rgba(69, 71, 90, 0.55);
 }
 
 /* Bluetooth */
@@ -297,8 +305,8 @@ window#waybar.empty #window {
 
 #bluetooth.disabled,
 #bluetooth.off {
-    color: @overlay0;
-    background-color: rgba(30, 30, 46, 0.6);
+    color: @subtext0;
+    background-color: rgba(69, 71, 90, 0.55);
 }
 
 #bluetooth.connected {
@@ -313,6 +321,7 @@ window#waybar.empty #window {
 
 #network.disconnected {
     color: @red;
+    background-color: rgba(243, 139, 168, 0.2);
 }
 
 /* Battery & Power Profile Dynamic Colors */
@@ -323,15 +332,15 @@ window#waybar.empty #window {
 }
 
 #custom-battery.power-saver {
-    color: @green; /* Green */
+    color: @green;
 }
 
 #custom-battery.balanced {
-    color: @peach; /* Orange */
+    color: @peach;
 }
 
 #custom-battery.performance {
-    color: @red; /* Red */
+    color: @red;
 }
 
 #battery.warning:not(.charging),
@@ -342,7 +351,7 @@ window#waybar.empty #window {
 #battery.critical:not(.charging),
 #custom-battery.critical:not(.charging) {
     color: @red;
-    background-color: rgba(243, 139, 168, 0.2);
+    background-color: rgba(243, 139, 168, 0.3);
     border-color: @red;
     animation: blink-critical 0.8s ease infinite alternate;
 }
@@ -355,18 +364,19 @@ window#waybar.empty #window {
 #group-tray-notif #tray,
 #group-tray-notif #custom-clipboard,
 #group-tray-notif #custom-notification {
-    background: transparent;
-    border: none;
+    background: rgba(49, 50, 68, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: none;
-    padding: 2px 6px;
-    margin: 0 1px;
-    border-radius: 10px;
+    padding: 2px 8px;
+    margin: 0 2px;
+    border-radius: 8px;
     transition: all 0.2s ease;
 }
 
 #group-tray-notif #custom-clipboard:hover,
 #group-tray-notif #custom-notification:hover {
-    background-color: rgba(69, 71, 90, 0.6);
+    background-color: rgba(69, 71, 90, 0.8);
+    border-color: rgba(203, 166, 247, 0.35);
 }
 
 /* System Tray */
@@ -440,11 +450,12 @@ window#waybar.empty #window {
 }
 
 #custom-clipboard.empty {
-    color: @subtext0;
+    color: @subtext1;
 }
 
 #custom-clipboard.paused {
-    color: @overlay0;
+    color: @subtext0;
+    background-color: rgba(69, 71, 90, 0.55);
 }
 
 #custom-clipboard:hover {
@@ -464,7 +475,8 @@ window#waybar.empty #window {
 }
 
 #custom-notification.dnd {
-    color: @overlay0;
+    color: @subtext0;
+    background-color: rgba(69, 71, 90, 0.55);
 }
 
 #custom-notification:hover {

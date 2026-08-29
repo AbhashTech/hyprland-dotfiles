@@ -1,18 +1,32 @@
 #!/usr/bin/env python3
 """
-Waybar Hyprland IPC Compatibility Bridge
+Waybar Hyprland IPC Compatibility Bridge & Robust Launcher
 Fixes workspace on-click actions when running Hyprland with Lua configuration (v0.55+ / v0.56+).
 Translates legacy text-based IPC dispatch commands sent by Waybar into modern Lua dispatchers.
+Ensures Waybar reliably waits for Hyprland sockets during login autostart.
 """
 
 import os
 import sys
+import time
 import socket
 import select
 import signal
 import subprocess
 import re
 import shutil
+
+LOG_FILE = os.path.expanduser("~/.cache/waybar_proxy.log")
+
+def log(msg: str):
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    formatted = f"[{timestamp}] [Waybar Proxy] {msg}\n"
+    try:
+        os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+        with open(LOG_FILE, "a") as f:
+            f.write(formatted)
+    except Exception:
+        pass
 
 def daemonize():
     try:
@@ -39,25 +53,44 @@ def daemonize():
         os.dup2(devnull.fileno(), sys.stdout.fileno())
         os.dup2(devnull.fileno(), sys.stderr.fileno())
 
-def get_hypr_paths():
-    real_sig = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE")
-    xdg_runtime = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
-    if not real_sig:
+def get_hypr_paths(timeout_sec=10.0):
+    start_time = time.time()
+    xdg_runtime = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+    
+    real_sig = None
+    real_sock = None
+    real_sock2 = None
+
+    while (time.time() - start_time) < timeout_sec:
+        real_sig = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE")
         hypr_dir = os.path.join(xdg_runtime, "hypr")
-        if os.path.exists(hypr_dir):
-            instances = [d for d in os.listdir(hypr_dir) if os.path.isdir(os.path.join(hypr_dir, d)) and not d.endswith("_waybar") and not d.endswith("_test")]
+        
+        if not real_sig and os.path.exists(hypr_dir):
+            instances = [
+                d for d in os.listdir(hypr_dir)
+                if os.path.isdir(os.path.join(hypr_dir, d))
+                and not d.endswith("_waybar")
+                and not d.endswith("_test")
+            ]
             if instances:
                 real_sig = sorted(instances)[-1]
                 os.environ["HYPRLAND_INSTANCE_SIGNATURE"] = real_sig
 
-    if not real_sig:
-        print("[Waybar Proxy] HYPRLAND_INSTANCE_SIGNATURE not found. Launching waybar directly...", file=sys.stderr)
-        os.execvp("waybar", ["waybar"] + [arg for arg in sys.argv[1:] if arg != "--daemon"])
+        if real_sig:
+            real_dir = os.path.join(xdg_runtime, "hypr", real_sig)
+            sock1 = os.path.join(real_dir, ".socket.sock")
+            sock2 = os.path.join(real_dir, ".socket2.sock")
+            if os.path.exists(sock1) and os.path.exists(sock2):
+                real_sock = sock1
+                real_sock2 = sock2
+                break
 
-    real_dir = os.path.join(xdg_runtime, "hypr", real_sig)
-    real_sock = os.path.join(real_dir, ".socket.sock")
-    real_sock2 = os.path.join(real_dir, ".socket2.sock")
-    
+        time.sleep(0.1)
+
+    if not real_sig or not real_sock or not real_sock2:
+        log("Hyprland sockets not found within timeout. Launching Waybar directly.")
+        os.execvp("waybar", ["waybar"] + [arg for arg in sys.argv[1:] if arg not in ("--daemon", "-d")])
+
     proxy_sig = f"{real_sig}_waybar"
     proxy_dir = os.path.join(xdg_runtime, "hypr", proxy_sig)
     proxy_sock = os.path.join(proxy_dir, ".socket.sock")
@@ -72,7 +105,6 @@ def translate_command(data: bytes) -> bytes:
         return data
 
     # Translate workspace switching
-    # Matches: dispatch workspace 1, dispatch workspace name:work, dispatch focusworkspaceoncurrentmonitor 2, etc.
     m_ws = re.search(r"dispatch\s+(?:focusworkspaceoncurrentmonitor|workspace)\s+(name:)?(\S+)", text)
     if m_ws:
         is_name, ws = m_ws.groups()
@@ -96,8 +128,8 @@ def translate_command(data: bytes) -> bytes:
             return b"[[BATCH]]/dispatch hl.dsp.workspace.toggle_special()\n"
 
     # Translate window close / kill
-    if re.search(r"dispatch\s+closewindow\s+(\S+)", text):
-        m_win = re.search(r"dispatch\s+closewindow\s+(\S+)", text)
+    m_win = re.search(r"dispatch\s+closewindow\s+(\S+)", text)
+    if m_win:
         return f'[[BATCH]]/dispatch hl.dsp.window.close("{m_win.group(1)}")\n'.encode("utf-8")
 
     return data
@@ -110,7 +142,10 @@ def main():
     if is_daemon:
         daemonize()
 
+    log("Starting Waybar launcher bridge...")
+
     real_sig, real_sock, real_sock2, proxy_sig, proxy_dir, proxy_sock, proxy_sock2 = get_hypr_paths()
+    log(f"Hyprland signature detected: {real_sig}")
 
     os.makedirs(proxy_dir, exist_ok=True)
 
@@ -120,8 +155,10 @@ def main():
             os.remove(proxy_sock2)
         except OSError:
             pass
-    if os.path.exists(real_sock2):
+    try:
         os.symlink(real_sock2, proxy_sock2)
+    except Exception as e:
+        log(f"Error creating socket2 symlink: {e}")
 
     # Setup .socket.sock listener (command dispatcher)
     if os.path.exists(proxy_sock):
@@ -139,9 +176,11 @@ def main():
     env = dict(os.environ)
     env["HYPRLAND_INSTANCE_SIGNATURE"] = proxy_sig
 
+    log(f"Spawning waybar with args: {filtered_args}")
     waybar_proc = subprocess.Popen(["waybar"] + filtered_args, env=env)
 
     def cleanup(*args):
+        log("Cleaning up Waybar proxy bridge...")
         if waybar_proc.poll() is None:
             waybar_proc.terminate()
             try:
@@ -163,6 +202,7 @@ def main():
     while True:
         # Check if waybar exited
         if waybar_proc.poll() is not None:
+            log(f"Waybar process exited with code {waybar_proc.returncode}")
             break
 
         readable, _, exceptional = select.select(inputs, [], inputs, 0.5)
@@ -189,7 +229,7 @@ def main():
                         real_client.close()
                         client_sock.sendall(resp)
                     client_sock.close()
-                except Exception:
+                except Exception as e:
                     pass
 
     cleanup()
