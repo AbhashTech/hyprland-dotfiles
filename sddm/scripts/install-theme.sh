@@ -43,7 +43,17 @@ if [ ! -d "$THEME_SOURCE" ]; then
     exit 1
 fi
 
-# 1. Install Theme to /usr/share/sddm/themes
+# 1. Ensure Qt6 Greeter is used by SDDM daemon
+log_info "Configuring SDDM to use Qt6 greeter..."
+if [ -f "/usr/bin/sddm-greeter-qt6" ]; then
+    if [ ! -L "/usr/bin/sddm-greeter" ] || [ "$(readlink /usr/bin/sddm-greeter 2>/dev/null)" != "/usr/bin/sddm-greeter-qt6" ]; then
+        sudo mv /usr/bin/sddm-greeter /usr/bin/sddm-greeter.qt5 2>/dev/null || true
+        sudo ln -sf /usr/bin/sddm-greeter-qt6 /usr/bin/sddm-greeter
+        log_success "Linked /usr/bin/sddm-greeter -> /usr/bin/sddm-greeter-qt6"
+    fi
+fi
+
+# 2. Install Theme to /usr/share/sddm/themes
 log_info "Installing theme to ${THEME_DEST}..."
 sudo mkdir -p "/usr/share/sddm/themes"
 sudo rm -rf "$THEME_DEST"
@@ -51,7 +61,7 @@ sudo cp -r "$THEME_SOURCE" "$THEME_DEST"
 sudo chmod -R 755 "$THEME_DEST"
 log_success "Theme installed to ${THEME_DEST}"
 
-# 2. Configure SDDM to use the theme
+# 3. Configure SDDM to use the theme
 log_info "Configuring SDDM default theme in ${CONF_FILE}..."
 sudo mkdir -p "$CONF_DIR"
 
