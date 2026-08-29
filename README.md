@@ -41,6 +41,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   │   ├── programs.lua     # Default apps (terminal, browser, file manager, launcher)
     │   │   └── rules.lua        # Window rules, layer blur & workspace persistence
     │   └── scripts/             # Python & Shell utilities
+    │       ├── app_shortcut_creator.py # App menu shortcut (.desktop) creator & manager GUI/CLI
     │       ├── brightness_control.py # Panel & external DDC brightness with OSD & presets
     │       ├── clipboard_manager.py  # Image/text clipboard manager with previews & purge
     │       ├── emoji_picker.py       # Searchable emoji catalog with auto-typing
@@ -298,6 +299,8 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + ALT + N` | **Night Light** | Toggle warm blue-light filter (3800K night / 6500K day) |
 | `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator** | Interactive math expression evaluator via Fuzzel prompt |
 | `SUPER + .` (period) | **Emoji Picker** | Searchable emoji catalog with automatic clipboard copy & keystroke paste |
+| `SUPER + ALT + S` | **App Shortcut Creator** | Launch interactive GTK/CLI desktop shortcut (.desktop) creator & manager |
+
 
 ---
 

@@ -116,6 +116,10 @@ hl.bind(mainMod .. " + ALT + C",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME
 -- Search & Paste Emojis
 hl.bind(mainMod .. " + period",    hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/emoji_picker.py"))
 
+-- Application Shortcut & Menu Launcher Creator
+local appShortcutCreator = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/app_shortcut_creator.py"
+hl.bind(mainMod .. " + ALT + S",   hl.dsp.exec_cmd(appShortcutCreator))
+
 -- =============================================================================
 -- 🗂️ Workspaces & Window Focus Navigation
 -- =============================================================================

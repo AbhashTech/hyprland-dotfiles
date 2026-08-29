@@ -179,3 +179,13 @@ hl.window_rule({
     float  = true,
     center = true,
 })
+
+-- App Shortcut / Menu Entry Creator Dialog
+hl.window_rule({
+    name   = "float-app-shortcut-creator",
+    match  = { class = "app-shortcut-creator" },
+    float  = true,
+    size   = "820 680",
+    center = true,
+})
+

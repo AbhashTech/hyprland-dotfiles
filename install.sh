@@ -236,6 +236,18 @@ EOF
     fi
 fi
 
+# 8. User Desktop Shortcuts (App Menu)
+log_info "Deploying custom desktop application shortcuts..."
+mkdir -p "${HOME}/.local/share/applications"
+if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/app-shortcut-creator.desktop" ]; then
+    cp "${DOTFILES_DIR}/.config/hypr/scripts/app-shortcut-creator.desktop" "${HOME}/.local/share/applications/"
+    chmod +x "${HOME}/.local/share/applications/app-shortcut-creator.desktop"
+    if command -v update-desktop-database >/dev/null 2>&1; then
+        update-desktop-database "${HOME}/.local/share/applications" >/dev/null 2>&1 || true
+    fi
+    log_success "Application shortcut creator added to desktop menu."
+fi
+
 echo ""
 log_success "Unified dotfiles deployed successfully!"
 echo -e "To load the productivity shell suite in your terminal, add this to your ~/.bashrc or ~/.zshrc:"

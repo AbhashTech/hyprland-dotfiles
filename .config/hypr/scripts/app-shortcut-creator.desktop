@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=App Shortcut Creator
+GenericName=Desktop Entry Creator
+Comment=Create and manage application shortcuts for your App menu
+Exec=python3 ~/.config/hypr/scripts/app_shortcut_creator.py
+Icon=preferences-desktop-keyboard-shortcuts
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;Development;
+Keywords=shortcut;launcher;desktop;entry;application;menu;fuzzel;wofi;
+StartupWMClass=app-shortcut-creator
+StartupNotify=true

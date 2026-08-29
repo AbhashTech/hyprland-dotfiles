@@ -77,3 +77,9 @@ fi
 if command -v fastfetch >/dev/null 2>&1; then
     alias ff='fastfetch'
 fi
+
+# --- App Launcher & Shortcut Creator ---
+alias add-app="python3 ~/.config/hypr/scripts/app_shortcut_creator.py"
+alias create-shortcut="python3 ~/.config/hypr/scripts/app_shortcut_creator.py"
+alias app-creator="python3 ~/.config/hypr/scripts/app_shortcut_creator.py"
+
