@@ -221,9 +221,8 @@ def format_cli_table(entries):
 
 def show_gui_menu(entries):
     """
-    Display keybindings with automatic multi-line text wrapping for long descriptions.
-    Each entry shows the shortcut on line 1, and wraps long descriptions across lines 2, 3, etc.
-    Every continuation line retains the shortcut identifier and maps back to the same keybinding.
+    Display keybindings across clean wrapped lines without cluttering descriptions
+    with shortcut tags.
     """
     if not entries:
         return
@@ -231,14 +230,14 @@ def show_gui_menu(entries):
     lines = []
     entry_map = {}
 
-    # Wrap descriptions at 48 characters to guarantee no clipping in any window width
-    wrap_width = 48
+    # Wrap descriptions cleanly at 54 characters
+    wrap_width = 54
 
     for item in entries:
         key = item["key"]
         desc = item["desc"]
 
-        # Line 1: Main Keyboard Shortcut Header
+        # Line 1: Clean Shortcut Header
         key_line = f"󰌌 {key}"
         lines.append(key_line)
         entry_map[key_line] = item
@@ -250,11 +249,9 @@ def show_gui_menu(entries):
 
         for chunk_idx, chunk in enumerate(wrapped_chunks):
             if chunk_idx == 0:
-                # First line of description with shortcut tag for search matching
-                desc_line = f"   ↳ [{key}] {chunk}"
+                desc_line = f"   ↳ {chunk}"
             else:
-                # Continuation line(s) for long descriptions
-                desc_line = f"     [{key}] {chunk}"
+                desc_line = f"     {chunk}"
 
             lines.append(desc_line)
             entry_map[desc_line] = item
@@ -268,10 +265,10 @@ def show_gui_menu(entries):
                 [
                     "fuzzel",
                     "--dmenu",
-                    "--font", "JetBrainsMono Nerd Font:weight=medium:size=9.5",
+                    "--font", "JetBrainsMono Nerd Font:weight=medium:size=10",
                     "--prompt", " 󰌌 Shortcuts: ",
-                    "--width", "75",    # Generous modal width
-                    "--lines", "12",    # 12 lines visible for comfortable reading
+                    "--width", "65",
+                    "--lines", "12",
                 ],
                 input=menu_input,
                 capture_output=True,
@@ -288,8 +285,8 @@ def show_gui_menu(entries):
                     "wofi",
                     "--dmenu",
                     "--prompt", "Search Shortcuts",
-                    "--width", "780",
-                    "--height", "420",
+                    "--width", "700",
+                    "--height", "400",
                     "--insensitive",
                 ],
                 input=menu_input,
