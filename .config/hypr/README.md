@@ -30,7 +30,7 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
     ├── brightness_control.py    # Backlight & external DDC monitor brightness with OSD & GUI menu
     ├── clipboard_manager.py     # Image/text clipboard manager with thumbnails, pause & delete
     ├── emoji_picker.py          # Searchable emoji catalog with instant copy & auto-typing
-    ├── fuzzel_launcher.sh       # Fuzzel wrapper with outside-click dismissal
+    ├── fuzzel_launcher.sh       # Fuzzel application launcher toggle wrapper
     ├── keybinds_viewer.py       # Dynamic keybindings parser & interactive cheat sheet
     ├── keyboard_layout.py       # Dynamic keyboard layout switcher & installer
     ├── nightlight.py            # Warm blue-light filter (3800K night / 6500K day)
