@@ -221,8 +221,8 @@ def format_cli_table(entries):
 def show_gui_menu(entries):
     """
     Display keybindings across 2 dedicated lines (Shortcut on top, full description below).
-    Includes the shortcut tag on the description line so searching keywords (e.g. 'volume')
-    always shows both the keyboard shortcut and the description without any text clipping.
+    Uses width 92 and font size 9.2 so even the longest shortcut and description fit
+    with generous space and zero text clipping during search.
     """
     if not entries:
         return
@@ -237,13 +237,13 @@ def show_gui_menu(entries):
         # Line 1: Primary Keyboard Shortcut Header
         key_line = f"󰌌 {key}"
         
-        # Line 2: Full Description with shortcut indicator (ensures shortcut is visible during search)
+        # Line 2: Full Description with shortcut tag (for instant visibility during search)
         desc_line = f"   ↳ [{key}] {desc}"
 
         lines.append(key_line)
         lines.append(desc_line)
 
-        # Map both lines to the entry item so clicking/pressing enter on either works
+        # Map both lines to the entry item so selecting either works
         entry_map[key_line] = item
         entry_map[desc_line] = item
 
@@ -256,10 +256,10 @@ def show_gui_menu(entries):
                 [
                     "fuzzel",
                     "--dmenu",
-                    "--font", "JetBrainsMono Nerd Font:weight=medium:size=10",
+                    "--font", "JetBrainsMono Nerd Font:weight=medium:size=9.2",
                     "--prompt", " 󰌌 Shortcuts: ",
-                    "--width", "62",
-                    "--lines", "10",
+                    "--width", "92",   # Extra-wide horizontal space to prevent any clipping
+                    "--lines", "10",   # Compact height (10 items)
                 ],
                 input=menu_input,
                 capture_output=True,
@@ -276,7 +276,7 @@ def show_gui_menu(entries):
                     "wofi",
                     "--dmenu",
                     "--prompt", "Search Shortcuts",
-                    "--width", "650",
+                    "--width", "850",
                     "--height", "360",
                     "--insensitive",
                 ],
