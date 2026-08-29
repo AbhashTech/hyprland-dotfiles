@@ -7,7 +7,7 @@ A modern utility to create, manage, test, and edit application shortcuts (.deskt
 files) for Wayland/Hyprland app launchers (Fuzzel, Wofi, Rofi, App Menus).
 
 Features:
-- Full GTK3 GUI with Catppuccin Mocha styling, live preview & icon picker
+- Full GTK3 GUI with Catppuccin Mocha styling, high contrast, readable typography & live preview
 - Shortcut Manager tab to browse, edit, test-launch, and delete existing shortcuts
 - CLI interactive wizard and direct command-line arguments for automated scripts
 - Instant integration with XDG desktop menus and notifications
@@ -41,16 +41,21 @@ COMMON_CATEGORIES = [
     ("Science", "🔬 Science"),
 ]
 
-# Catppuccin Mocha CSS Stylesheet for GTK3
+# High-contrast, crystal-clear Catppuccin Mocha CSS Stylesheet for GTK3
 CATPPUCCIN_CSS = b"""
+* {
+    font-family: system-ui, -apple-system, 'Inter', 'Roboto', 'Noto Sans', 'Cantarell', 'Ubuntu', sans-serif;
+}
+
 window {
     background-color: #1e1e2e;
     color: #cdd6f4;
-    font-family: 'JetBrainsMono Nerd Font', 'Noto Sans', sans-serif;
+    font-size: 13px;
 }
 
 headerbar {
-    background: #181825;
+    background-color: #11111b;
+    background-image: none;
     border-bottom: 1px solid #313244;
     color: #cdd6f4;
     padding: 6px 12px;
@@ -58,12 +63,13 @@ headerbar {
 
 headerbar label.title {
     font-weight: bold;
+    font-size: 15px;
     color: #cba6f7;
 }
 
 headerbar label.subtitle {
-    color: #a6adc8;
-    font-size: 11px;
+    color: #bac2de;
+    font-size: 12px;
 }
 
 notebook stack {
@@ -71,12 +77,20 @@ notebook stack {
 }
 
 notebook tab {
-    padding: 8px 18px;
+    padding: 10px 22px;
     background-color: #181825;
+    background-image: none;
     color: #a6adc8;
     border: none;
     border-bottom: 2px solid transparent;
     font-weight: bold;
+    font-size: 13px;
+}
+
+notebook tab label {
+    color: #a6adc8;
+    font-weight: bold;
+    font-size: 13px;
 }
 
 notebook tab:checked {
@@ -85,111 +99,197 @@ notebook tab:checked {
     background-color: #1e1e2e;
 }
 
+notebook tab:checked label {
+    color: #cba6f7;
+}
+
 label {
     color: #cdd6f4;
+    font-size: 13px;
 }
 
 label.section-header {
     font-weight: bold;
     color: #89b4fa;
-    font-size: 13px;
-    margin-top: 6px;
+    font-size: 14px;
+    margin-top: 8px;
 }
 
 label.field-label {
     color: #bac2de;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
 }
 
-entry, textview, spinbutton {
-    background-color: #313244;
-    color: #cdd6f4;
+entry {
+    background-color: #181825;
+    background-image: none;
+    box-shadow: none;
+    color: #ffffff;
     border: 1px solid #45475a;
     border-radius: 8px;
-    padding: 6px 10px;
+    padding: 7px 12px;
+    font-size: 13px;
     caret-color: #cba6f7;
 }
 
-entry:focus, textview:focus {
+entry:focus {
+    background-color: #11111b;
     border-color: #cba6f7;
-    background-color: #181825;
+    box-shadow: 0 0 0 1px #cba6f7;
+    color: #ffffff;
+}
+
+entry placeholder,
+entry.placeholder {
+    color: #a6adc8;
+    font-style: italic;
+    font-size: 12px;
 }
 
 entry.error {
     border-color: #f38ba8;
+    background-color: #2a1b24;
 }
 
 button {
     background-color: #313244;
+    background-image: none;
+    box-shadow: none;
+    text-shadow: none;
     color: #cdd6f4;
-    border: 1px solid #45475a;
+    border: 1px solid #585b70;
     border-radius: 8px;
-    padding: 6px 14px;
-    font-weight: 500;
-    transition: all 150ms ease;
+    padding: 6px 16px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+button label {
+    color: #cdd6f4;
+    font-weight: 600;
+    font-size: 13px;
 }
 
 button:hover {
     background-color: #45475a;
-    border-color: #585b70;
+    background-image: none;
+    box-shadow: none;
+    border-color: #89b4fa;
+    color: #ffffff;
+}
+
+button:hover label {
     color: #ffffff;
 }
 
 button:active {
     background-color: #585b70;
+    background-image: none;
 }
 
 button.suggested-action {
-    background-color: #cba6f7;
+    background-color: #89b4fa;
+    background-image: none;
+    box-shadow: none;
     color: #11111b;
-    border: none;
+    border: 1px solid #74c7ec;
+}
+
+button.suggested-action label {
+    color: #11111b;
     font-weight: bold;
+    font-size: 13px;
 }
 
 button.suggested-action:hover {
     background-color: #b4befe;
+    background-image: none;
+    color: #11111b;
+}
+
+button.suggested-action:hover label {
+    color: #11111b;
+}
+
+button.secondary-action {
+    background-color: #cba6f7;
+    background-image: none;
+    box-shadow: none;
+    color: #11111b;
+    border: 1px solid #b4befe;
+}
+
+button.secondary-action label {
+    color: #11111b;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+button.secondary-action:hover {
+    background-color: #f5c2e7;
+    background-image: none;
+    color: #11111b;
+}
+
+button.secondary-action:hover label {
     color: #11111b;
 }
 
 button.destructive-action {
     background-color: #f38ba8;
+    background-image: none;
+    box-shadow: none;
     color: #11111b;
-    border: none;
+    border: 1px solid #eba0ac;
+}
+
+button.destructive-action label {
+    color: #11111b;
     font-weight: bold;
+    font-size: 13px;
 }
 
 button.destructive-action:hover {
     background-color: #eba0ac;
+    background-image: none;
     color: #11111b;
 }
 
-button.secondary-action {
-    background-color: #89b4fa;
+button.destructive-action:hover label {
     color: #11111b;
-    border: none;
-    font-weight: bold;
 }
 
-button.secondary-action:hover {
-    background-color: #74c7ec;
-    color: #11111b;
+checkbutton {
+    font-size: 13px;
 }
 
 checkbutton label {
     color: #cdd6f4;
+    font-size: 13px;
+    font-weight: 500;
 }
 
 checkbutton check {
     background-color: #313244;
-    border: 1px solid #45475a;
+    background-image: none;
+    border: 1px solid #585b70;
     border-radius: 4px;
+    min-width: 16px;
+    min-height: 16px;
     color: #cba6f7;
 }
 
 checkbutton check:checked {
-    background-color: #cba6f7;
-    border-color: #cba6f7;
+    background-color: #89b4fa;
+    background-image: none;
+    border-color: #89b4fa;
     color: #11111b;
+}
+
+frame > border {
+    border: 1px solid #313244;
+    border-radius: 8px;
 }
 
 scrolledwindow {
@@ -204,7 +304,7 @@ list {
 }
 
 row {
-    padding: 8px 12px;
+    padding: 10px 14px;
     border-bottom: 1px solid #313244;
 }
 
@@ -218,8 +318,9 @@ row:selected {
 }
 
 textview.preview {
-    font-family: 'JetBrainsMono Nerd Font', monospace;
-    font-size: 11px;
+    font-family: 'JetBrainsMono Nerd Font', 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.4;
     background-color: #11111b;
     color: #a6e3a1;
 }
@@ -415,7 +516,7 @@ def run_gtk_gui():
     class ShortcutCreatorApp(Gtk.Window):
         def __init__(self):
             super().__init__(title="Application Shortcut Creator")
-            self.set_default_size(820, 680)
+            self.set_default_size(840, 690)
             self.set_position(Gtk.WindowPosition.CENTER)
             self.set_wmclass("app-shortcut-creator", "app-shortcut-creator")
             self.set_role("app-shortcut-creator")
@@ -469,8 +570,8 @@ def run_gtk_gui():
             scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
 
             content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
-            content_box.set_margin_start(20)
-            content_box.set_margin_end(20)
+            content_box.set_margin_start(22)
+            content_box.set_margin_end(22)
             content_box.set_margin_top(16)
             content_box.set_margin_bottom(20)
             scroll.add(content_box)
@@ -482,7 +583,7 @@ def run_gtk_gui():
             content_box.pack_start(sec1_label, False, False, 0)
 
             grid1 = Gtk.Grid()
-            grid1.set_column_spacing(12)
+            grid1.set_column_spacing(14)
             grid1.set_row_spacing(10)
             content_box.pack_start(grid1, False, False, 0)
 
@@ -521,7 +622,7 @@ def run_gtk_gui():
             content_box.pack_start(sec2_label, False, False, 4)
 
             grid2 = Gtk.Grid()
-            grid2.set_column_spacing(12)
+            grid2.set_column_spacing(14)
             grid2.set_row_spacing(10)
             content_box.pack_start(grid2, False, False, 0)
 
@@ -540,7 +641,7 @@ def run_gtk_gui():
             btn_test_exec.get_style_context().add_class("secondary-action")
             btn_test_exec.connect("clicked", self._on_test_run)
 
-            exec_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            exec_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
             exec_box.pack_start(self.entry_exec, True, True, 0)
             exec_box.pack_start(btn_browse_exec, False, False, 0)
             exec_box.pack_start(btn_test_exec, False, False, 0)
@@ -558,7 +659,7 @@ def run_gtk_gui():
             btn_browse_cwd = Gtk.Button(label="📁 Browse...")
             btn_browse_cwd.connect("clicked", self._on_browse_cwd)
 
-            cwd_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            cwd_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
             cwd_box.pack_start(self.entry_cwd, True, True, 0)
             cwd_box.pack_start(btn_browse_cwd, False, False, 0)
 
@@ -572,7 +673,7 @@ def run_gtk_gui():
             content_box.pack_start(sec3_label, False, False, 4)
 
             grid3 = Gtk.Grid()
-            grid3.set_column_spacing(12)
+            grid3.set_column_spacing(14)
             grid3.set_row_spacing(10)
             content_box.pack_start(grid3, False, False, 0)
 
@@ -590,7 +691,7 @@ def run_gtk_gui():
             self.icon_preview = Gtk.Image.new_from_icon_name("application-x-executable", Gtk.IconSize.DND)
             self.icon_preview.set_pixel_size(36)
 
-            icon_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            icon_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
             icon_box.pack_start(self.icon_preview, False, False, 0)
             icon_box.pack_start(self.entry_icon, True, True, 0)
             icon_box.pack_start(btn_browse_icon, False, False, 0)
@@ -607,12 +708,12 @@ def run_gtk_gui():
             # Category Checkboxes Grid
             cat_frame = Gtk.Frame()
             cat_box = Gtk.Grid()
-            cat_box.set_column_spacing(16)
-            cat_box.set_row_spacing(6)
-            cat_box.set_margin_start(10)
-            cat_box.set_margin_end(10)
-            cat_box.set_margin_top(8)
-            cat_box.set_margin_bottom(8)
+            cat_box.set_column_spacing(20)
+            cat_box.set_row_spacing(8)
+            cat_box.set_margin_start(14)
+            cat_box.set_margin_end(14)
+            cat_box.set_margin_top(10)
+            cat_box.set_margin_bottom(10)
             cat_frame.add(cat_box)
             content_box.pack_start(cat_frame, False, False, 0)
 
@@ -628,7 +729,8 @@ def run_gtk_gui():
                 cat_box.attach(chk, col, row, 1, 1)
 
             # Toggles: Run in terminal & Startup Notify
-            toggles_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=24)
+            toggles_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=28)
+            toggles_box.set_margin_top(4)
             self.chk_terminal = Gtk.CheckButton(label="📟 Run in Terminal (CLI / TUI application)")
             self.chk_terminal.connect("toggled", lambda *args: self._update_preview())
 
@@ -642,7 +744,7 @@ def run_gtk_gui():
 
             # Optional WM Class & Filename
             grid_adv = Gtk.Grid()
-            grid_adv.set_column_spacing(12)
+            grid_adv.set_column_spacing(14)
             grid_adv.set_row_spacing(8)
             content_box.pack_start(grid_adv, False, False, 0)
 
@@ -673,17 +775,17 @@ def run_gtk_gui():
             self.preview_text = Gtk.TextView()
             self.preview_text.set_editable(False)
             self.preview_text.get_style_context().add_class("preview")
-            self.preview_text.set_left_margin(10)
-            self.preview_text.set_right_margin(10)
-            self.preview_text.set_top_margin(8)
-            self.preview_text.set_bottom_margin(8)
+            self.preview_text.set_left_margin(12)
+            self.preview_text.set_right_margin(12)
+            self.preview_text.set_top_margin(10)
+            self.preview_text.set_bottom_margin(10)
             preview_scroll.add(self.preview_text)
             expander.add(preview_scroll)
             content_box.pack_start(expander, False, False, 0)
 
             # Action Buttons Bar
-            actions_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-            actions_box.set_margin_top(10)
+            actions_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+            actions_box.set_margin_top(12)
 
             btn_reset = Gtk.Button(label="🧹 Reset Form")
             btn_reset.connect("clicked", lambda *args: self._reset_form())
@@ -701,14 +803,14 @@ def run_gtk_gui():
             self.notebook.append_page(scroll, tab_label)
 
         def _init_manage_tab(self):
-            manage_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-            manage_box.set_margin_start(16)
-            manage_box.set_margin_end(16)
-            manage_box.set_margin_top(12)
-            manage_box.set_margin_bottom(16)
+            manage_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+            manage_box.set_margin_start(18)
+            manage_box.set_margin_end(18)
+            manage_box.set_margin_top(14)
+            manage_box.set_margin_bottom(18)
 
             # Search bar
-            search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
             self.search_entry = Gtk.SearchEntry()
             self.search_entry.set_placeholder_text("Search custom shortcuts...")
             self.search_entry.connect("search-changed", self._on_search_changed)
@@ -729,7 +831,7 @@ def run_gtk_gui():
             manage_box.pack_start(list_scroll, True, True, 0)
 
             # Bottom Action Bar for Selected Item
-            self.manage_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            self.manage_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
             self.manage_actions.set_sensitive(False)
 
             self.btn_edit = Gtk.Button(label="✏️ Edit")
@@ -991,10 +1093,10 @@ def run_gtk_gui():
                 row.item_data = item
 
                 row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
-                row_box.set_margin_start(10)
-                row_box.set_margin_end(10)
-                row_box.set_margin_top(8)
-                row_box.set_margin_bottom(8)
+                row_box.set_margin_start(12)
+                row_box.set_margin_end(12)
+                row_box.set_margin_top(10)
+                row_box.set_margin_bottom(10)
 
                 # Icon
                 icon_img = Gtk.Image()
@@ -1013,26 +1115,25 @@ def run_gtk_gui():
                 # Details Box
                 detail_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
                 name_lbl = Gtk.Label(xalign=0)
-                name_lbl.set_markup(f"<b>{GLib.markup_escape_text(item['name'])}</b> <small>({GLib.markup_escape_text(item['filename'])})</small>")
+                name_lbl.set_markup(f"<span font_weight='bold' font_size='medium' color='#cdd6f4'>{GLib.markup_escape_text(item['name'])}</span> <small color='#a6adc8'>({GLib.markup_escape_text(item['filename'])})</small>")
 
                 exec_lbl = Gtk.Label(xalign=0)
-                exec_lbl.set_markup(f"<tt><small>{GLib.markup_escape_text(item['exec'])}</small></tt>")
-                exec_lbl.get_style_context().add_class("field-label")
+                exec_lbl.set_markup(f"<tt><small color='#89b4fa'>{GLib.markup_escape_text(item['exec'])}</small></tt>")
 
                 detail_box.pack_start(name_lbl, False, False, 0)
                 detail_box.pack_start(exec_lbl, False, False, 0)
 
                 if item["comment"]:
                     comment_lbl = Gtk.Label(xalign=0)
-                    comment_lbl.set_markup(f"<small><i>{GLib.markup_escape_text(item['comment'])}</i></small>")
+                    comment_lbl.set_markup(f"<small color='#bac2de'><i>{GLib.markup_escape_text(item['comment'])}</i></small>")
                     detail_box.pack_start(comment_lbl, False, False, 0)
 
                 row_box.pack_start(detail_box, True, True, 0)
 
                 # Terminal Badge
                 if item["terminal"]:
-                    term_badge = Gtk.Label(label="[TUI]")
-                    term_badge.get_style_context().add_class("field-label")
+                    term_badge = Gtk.Label()
+                    term_badge.set_markup("<span font_weight='bold' color='#fab387'>[TUI]</span>")
                     row_box.pack_end(term_badge, False, False, 0)
 
                 row.add(row_box)
