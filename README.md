@@ -128,7 +128,7 @@ source ~/.config/shell/aliases.sh
 | `SUPER + V` | **Toggle Floating** | Switch active window between tiled and floating mode |
 | `SUPER + P` | **Toggle Pseudo Tiling** | Toggle pseudo-tile on active window |
 | `SUPER + J` | **Toggle Layout Split** | Toggle horizontal/vertical split orientation (dwindle) |
-| `SUPER + SHIFT + W` | **Restart Waybar** | Reload and restart Waybar status bar |
+| `SUPER + SHIFT + W` | **Toggle Waybar** | Toggle Waybar status bar visibility (show/hide) |
 
 ---
 

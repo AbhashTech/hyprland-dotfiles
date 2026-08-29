@@ -164,10 +164,10 @@ sudo usermod -aG i2c $USER
   hyprctl reload
   ```
 - **Lock Screen**: Press `SUPER + L` or `SUPER + ALT + L`.
-- **Restarting Waybar**:
+- **Toggle Waybar**:
   Press `SUPER + SHIFT + W` or run:
   ```bash
-  killall waybar && waybar &
+  ~/.config/waybar/scripts/launch_waybar.sh --toggle
   ```
 
 ---
@@ -188,7 +188,7 @@ sudo usermod -aG i2c $USER
 | `SUPER + P` | Toggle Pseudo Tiling |
 | `SUPER + J` | Toggle Split (Dwindle layout) |
 | `SUPER + M` | Hyprland Exit / Power Menu |
-| `SUPER + SHIFT + W` | Restart Waybar |
+| `SUPER + SHIFT + W` | Toggle Waybar (Show / Hide) |
 | `SUPER + [1-9, 0]` | Switch to Workspace 1–10 |
 | `SUPER + SHIFT + [1-9, 0]` | Move Active Window to Workspace 1–10 |
 | `SUPER + S` / `grave (~)` | Toggle Special Scratchpad Workspace |
