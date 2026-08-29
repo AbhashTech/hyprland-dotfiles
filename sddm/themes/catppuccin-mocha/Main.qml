@@ -28,6 +28,16 @@ Rectangle {
     property bool showUserDropdown: false
 
     // Initialize User Data
+    function findUserIndex(username) {
+        if (typeof userModel !== "undefined" && userModel.count > 0) {
+            for (var i = 0; i < userModel.count; i++) {
+                var u = userModel.data(userModel.index(i, 0), Qt.UserRole + 1) || userModel.data(userModel.index(i, 0), Qt.DisplayRole) || ""
+                if (u === username) return i
+            }
+        }
+        return 0
+    }
+
     function updateSelectedUser(idx) {
         if (typeof userModel !== "undefined" && userModel.count > 0) {
             if (idx < 0 || idx >= userModel.count) idx = 0
@@ -43,7 +53,13 @@ Rectangle {
     }
 
     Component.onCompleted: {
-        updateSelectedUser(currentUserIdx)
+        var defaultIdx = 0
+        if (typeof userModel !== "undefined" && userModel.lastUser) {
+            defaultIdx = findUserIndex(userModel.lastUser)
+        } else if (typeof userModel !== "undefined" && userModel.lastIndex >= 0) {
+            defaultIdx = userModel.lastIndex
+        }
+        updateSelectedUser(defaultIdx)
         passwordBox.focusInput()
     }
 
