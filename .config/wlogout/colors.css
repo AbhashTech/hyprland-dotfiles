@@ -1,9 +1,9 @@
-/* Wlogout Colors: One Light Pro */
-@define-color base            #fafafa;
-@define-color mantle          #f0f0f0;
-@define-color crust           #e5e5e6;
-@define-color text            #383a42;
-@define-color surface0        #e0e0e0;
-@define-color surface1        #d0d0d0;
-@define-color accent          #4078f2;
-@define-color bg_overlay      rgba(229, 229, 230, 0.75);
+/* Wlogout Colors: Catppuccin Mocha */
+@define-color base            #1e1e2e;
+@define-color mantle          #181825;
+@define-color crust           #11111b;
+@define-color text            #cdd6f4;
+@define-color surface0        #313244;
+@define-color surface1        #45475a;
+@define-color accent          #cba6f7;
+@define-color bg_overlay      rgba(17, 17, 27, 0.75);
