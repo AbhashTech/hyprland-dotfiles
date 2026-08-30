@@ -35,300 +35,338 @@ COMMON_CATEGORIES = [
     ("AudioVideo", "🎬 Audio & Video"),
     ("Graphics", "🎨 Graphics"),
     ("Game", "🎮 Game"),
-    ("Settings", "🛠️ Settings"),
-    ("TerminalEmulator", "📟 Terminal"),
     ("Education", "📚 Education"),
     ("Science", "🔬 Science"),
 ]
 
-# High-contrast, crystal-clear Catppuccin Mocha CSS Stylesheet for GTK3
-CATPPUCCIN_CSS = b"""
-* {
+import json
+
+def get_active_theme_colors():
+    """Load colors from active theme JSON file with fallback."""
+    cache_state = Path.home() / ".cache" / "hypr_theme_state.json"
+    current_txt = Path.home() / ".cache" / "current_theme"
+    theme_id = "catppuccin-mocha"
+    
+    if cache_state.exists():
+        try:
+            with open(cache_state, "r") as f:
+                theme_id = json.load(f).get("current_theme", theme_id)
+        except Exception:
+            pass
+    elif current_txt.exists():
+        try:
+            theme_id = current_txt.read_text().strip() or theme_id
+        except Exception:
+            pass
+
+    for d in [Path.home() / ".config" / "theme", Path.home() / ".dotfiles" / ".config" / "theme"]:
+        tfile = d / f"{theme_id}.json"
+        if tfile.exists():
+            try:
+                with open(tfile, "r") as f:
+                    tdata = json.load(f)
+                    return tdata.get("colors", {}), tdata.get("type", "dark")
+            except Exception:
+                pass
+
+    return {
+        "base": "#1e1e2e", "mantle": "#181825", "crust": "#11111b",
+        "surface0": "#313244", "surface1": "#45475a", "surface2": "#585b70",
+        "text": "#cdd6f4", "subtext0": "#a6adc8", "subtext1": "#bac2de",
+        "accent": "#cba6f7", "blue": "#89b4fa", "green": "#a6e3a1",
+        "yellow": "#f9e2af", "peach": "#fab387", "red": "#f38ba8",
+        "mauve": "#cba6f7", "teal": "#94e2d5", "pink": "#f5c2e7",
+    }, "dark"
+
+def get_dynamic_gtk_css():
+    c, ttype = get_active_theme_colors()
+    return f"""
+* {{
     font-family: system-ui, -apple-system, 'Inter', 'Roboto', 'Noto Sans', 'Cantarell', 'Ubuntu', sans-serif;
-}
+}}
 
-window {
-    background-color: #1e1e2e;
-    color: #cdd6f4;
+window {{
+    background-color: {c.get("base", "#1e1e2e")};
+    color: {c.get("text", "#cdd6f4")};
     font-size: 13px;
-}
+}}
 
-headerbar {
-    background-color: #11111b;
+headerbar {{
+    background-color: {c.get("mantle", "#11111b")};
     background-image: none;
-    border-bottom: 1px solid #313244;
-    color: #cdd6f4;
+    border-bottom: 1px solid {c.get("surface0", "#313244")};
+    color: {c.get("text", "#cdd6f4")};
     padding: 6px 12px;
-}
+}}
 
-headerbar label.title {
+headerbar label.title {{
     font-weight: bold;
     font-size: 15px;
-    color: #cba6f7;
-}
+    color: {c.get("accent", "#cba6f7")};
+}}
 
-headerbar label.subtitle {
-    color: #bac2de;
+headerbar label.subtitle {{
+    color: {c.get("subtext1", "#bac2de")};
     font-size: 12px;
-}
+}}
 
-notebook stack {
-    background-color: #1e1e2e;
-}
+notebook stack {{
+    background-color: {c.get("base", "#1e1e2e")};
+}}
 
-notebook tab {
+notebook tab {{
     padding: 10px 22px;
-    background-color: #181825;
+    background-color: {c.get("mantle", "#181825")};
     background-image: none;
-    color: #a6adc8;
+    color: {c.get("subtext0", "#a6adc8")};
     border: none;
     border-bottom: 2px solid transparent;
     font-weight: bold;
     font-size: 13px;
-}
+}}
 
-notebook tab label {
-    color: #a6adc8;
+notebook tab label {{
+    color: {c.get("subtext0", "#a6adc8")};
     font-weight: bold;
     font-size: 13px;
-}
+}}
 
-notebook tab:checked {
-    color: #cba6f7;
-    border-bottom: 2px solid #cba6f7;
-    background-color: #1e1e2e;
-}
+notebook tab:checked {{
+    color: {c.get("accent", "#cba6f7")};
+    border-bottom: 2px solid {c.get("accent", "#cba6f7")};
+    background-color: {c.get("base", "#1e1e2e")};
+}}
 
-notebook tab:checked label {
-    color: #cba6f7;
-}
+notebook tab:checked label {{
+    color: {c.get("accent", "#cba6f7")};
+}}
 
-label {
-    color: #cdd6f4;
+label {{
+    color: {c.get("text", "#cdd6f4")};
     font-size: 13px;
-}
+}}
 
-label.section-header {
+label.section-header {{
     font-weight: bold;
-    color: #89b4fa;
+    color: {c.get("blue", "#89b4fa")};
     font-size: 14px;
     margin-top: 8px;
-}
+}}
 
-label.field-label {
-    color: #bac2de;
+label.field-label {{
+    color: {c.get("subtext1", "#bac2de")};
     font-size: 13px;
     font-weight: 600;
-}
+}}
 
-entry {
-    background-color: #181825;
+entry {{
+    background-color: {c.get("mantle", "#181825")};
     background-image: none;
     box-shadow: none;
-    color: #ffffff;
-    border: 1px solid #45475a;
+    color: {c.get("text", "#ffffff")};
+    border: 1px solid {c.get("surface1", "#45475a")};
     border-radius: 8px;
     padding: 7px 12px;
     font-size: 13px;
-    caret-color: #cba6f7;
-}
+    caret-color: {c.get("accent", "#cba6f7")};
+}}
 
-entry:focus {
-    background-color: #11111b;
-    border-color: #cba6f7;
-    box-shadow: 0 0 0 1px #cba6f7;
-    color: #ffffff;
-}
+entry:focus {{
+    background-color: {c.get("crust", "#11111b")};
+    border-color: {c.get("accent", "#cba6f7")};
+    box-shadow: 0 0 0 1px {c.get("accent", "#cba6f7")};
+    color: {c.get("text", "#ffffff")};
+}}
 
 entry placeholder,
-entry.placeholder {
-    color: #a6adc8;
+entry.placeholder {{
+    color: {c.get("overlay0", "#a6adc8")};
     font-style: italic;
     font-size: 12px;
-}
+}}
 
-entry.error {
-    border-color: #f38ba8;
-    background-color: #2a1b24;
-}
+entry.error {{
+    border-color: {c.get("red", "#f38ba8")};
+    background-color: rgba(243, 139, 168, 0.15);
+}}
 
-button {
-    background-color: #313244;
+button {{
+    background-color: {c.get("surface0", "#313244")};
     background-image: none;
     box-shadow: none;
     text-shadow: none;
-    color: #cdd6f4;
-    border: 1px solid #585b70;
+    color: {c.get("text", "#cdd6f4")};
+    border: 1px solid {c.get("surface2", "#585b70")};
     border-radius: 8px;
     padding: 6px 16px;
     font-weight: 600;
     font-size: 13px;
-}
+}}
 
-button label {
-    color: #cdd6f4;
+button label {{
+    color: {c.get("text", "#cdd6f4")};
     font-weight: 600;
     font-size: 13px;
-}
+}}
 
-button:hover {
-    background-color: #45475a;
+button:hover {{
+    background-color: {c.get("surface1", "#45475a")};
     background-image: none;
     box-shadow: none;
-    border-color: #89b4fa;
-    color: #ffffff;
-}
+    border-color: {c.get("blue", "#89b4fa")};
+    color: {c.get("text", "#ffffff")};
+}}
 
-button:hover label {
-    color: #ffffff;
-}
+button:hover label {{
+    color: {c.get("text", "#ffffff")};
+}}
 
-button:active {
-    background-color: #585b70;
+button:active {{
+    background-color: {c.get("surface2", "#585b70")};
     background-image: none;
-}
+}}
 
-button.suggested-action {
-    background-color: #89b4fa;
+button.suggested-action {{
+    background-color: {c.get("blue", "#89b4fa")};
     background-image: none;
     box-shadow: none;
     color: #11111b;
-    border: 1px solid #74c7ec;
-}
+    border: 1px solid {c.get("sapphire", "#74c7ec")};
+}}
 
-button.suggested-action label {
+button.suggested-action label {{
     color: #11111b;
     font-weight: bold;
     font-size: 13px;
-}
+}}
 
-button.suggested-action:hover {
-    background-color: #b4befe;
+button.suggested-action:hover {{
+    background-color: {c.get("lavender", "#b4befe")};
     background-image: none;
     color: #11111b;
-}
+}}
 
-button.suggested-action:hover label {
+button.suggested-action:hover label {{
     color: #11111b;
-}
+}}
 
-button.secondary-action {
-    background-color: #cba6f7;
-    background-image: none;
-    box-shadow: none;
-    color: #11111b;
-    border: 1px solid #b4befe;
-}
-
-button.secondary-action label {
-    color: #11111b;
-    font-weight: bold;
-    font-size: 13px;
-}
-
-button.secondary-action:hover {
-    background-color: #f5c2e7;
-    background-image: none;
-    color: #11111b;
-}
-
-button.secondary-action:hover label {
-    color: #11111b;
-}
-
-button.destructive-action {
-    background-color: #f38ba8;
+button.secondary-action {{
+    background-color: {c.get("accent", "#cba6f7")};
     background-image: none;
     box-shadow: none;
     color: #11111b;
-    border: 1px solid #eba0ac;
-}
+    border: 1px solid {c.get("lavender", "#b4befe")};
+}}
 
-button.destructive-action label {
+button.secondary-action label {{
     color: #11111b;
     font-weight: bold;
     font-size: 13px;
-}
+}}
 
-button.destructive-action:hover {
-    background-color: #eba0ac;
+button.secondary-action:hover {{
+    background-color: {c.get("pink", "#f5c2e7")};
     background-image: none;
     color: #11111b;
-}
+}}
 
-button.destructive-action:hover label {
+button.secondary-action:hover label {{
     color: #11111b;
-}
+}}
 
-checkbutton {
+button.destructive-action {{
+    background-color: {c.get("red", "#f38ba8")};
+    background-image: none;
+    box-shadow: none;
+    color: #11111b;
+    border: 1px solid {c.get("maroon", "#eba0ac")};
+}}
+
+button.destructive-action label {{
+    color: #11111b;
+    font-weight: bold;
     font-size: 13px;
-}
+}}
 
-checkbutton label {
-    color: #cdd6f4;
+button.destructive-action:hover {{
+    background-color: {c.get("maroon", "#eba0ac")};
+    background-image: none;
+    color: #11111b;
+}}
+
+button.destructive-action:hover label {{
+    color: #11111b;
+}}
+
+checkbutton {{
+    font-size: 13px;
+}}
+
+checkbutton label {{
+    color: {c.get("text", "#cdd6f4")};
     font-size: 13px;
     font-weight: 500;
-}
+}}
 
-checkbutton check {
-    background-color: #313244;
+checkbutton check {{
+    background-color: {c.get("surface0", "#313244")};
     background-image: none;
-    border: 1px solid #585b70;
+    border: 1px solid {c.get("surface2", "#585b70")};
     border-radius: 4px;
     min-width: 16px;
     min-height: 16px;
-    color: #cba6f7;
-}
+    color: {c.get("accent", "#cba6f7")};
+}}
 
-checkbutton check:checked {
-    background-color: #89b4fa;
+checkbutton check:checked {{
+    background-color: {c.get("blue", "#89b4fa")};
     background-image: none;
-    border-color: #89b4fa;
+    border-color: {c.get("blue", "#89b4fa")};
     color: #11111b;
-}
+}}
 
-frame > border {
-    border: 1px solid #313244;
+frame > border {{
+    border: 1px solid {c.get("surface0", "#313244")};
     border-radius: 8px;
-}
+}}
 
-scrolledwindow {
-    border: 1px solid #313244;
+scrolledwindow {{
+    border: 1px solid {c.get("surface0", "#313244")};
     border-radius: 8px;
-    background-color: #181825;
-}
+    background-color: {c.get("mantle", "#181825")};
+}}
 
-list {
-    background-color: #181825;
-    color: #cdd6f4;
-}
+list {{
+    background-color: {c.get("mantle", "#181825")};
+    color: {c.get("text", "#cdd6f4")};
+}}
 
-row {
+row {{
     padding: 10px 14px;
-    border-bottom: 1px solid #313244;
-}
+    border-bottom: 1px solid {c.get("surface0", "#313244")};
+}}
 
-row:hover {
-    background-color: #313244;
-}
+row:hover {{
+    background-color: {c.get("surface0", "#313244")};
+}}
 
-row:selected {
-    background-color: #45475a;
+row:selected {{
+    background-color: {c.get("surface1", "#45475a")};
     color: #ffffff;
-}
+}}
 
-textview.preview {
+textview.preview {{
     font-family: 'JetBrainsMono Nerd Font', 'Fira Code', monospace;
     font-size: 12px;
-    background-color: #11111b;
-    color: #a6e3a1;
-}
+    background-color: {c.get("crust", "#11111b")};
+    color: {c.get("green", "#a6e3a1")};
+}}
 
-infobar {
+infobar {{
     border-radius: 8px;
     margin-bottom: 8px;
-}
-"""
+}}
+""".encode('utf-8')
 
 
 def sanitize_filename(name: str) -> str:
@@ -501,12 +539,12 @@ def run_gtk_gui():
     gi.require_version("Gtk", "3.0")
     from gi.repository import Gtk, Gdk, GLib, Pango, GdkPixbuf
 
-    # Apply Catppuccin Dark Theme CSS safely
+    # Apply dynamic theme CSS safely
     screen = Gdk.Screen.get_default()
     if screen:
         try:
             css_provider = Gtk.CssProvider()
-            css_provider.load_from_data(CATPPUCCIN_CSS)
+            css_provider.load_from_data(get_dynamic_gtk_css())
             Gtk.StyleContext.add_provider_for_screen(
                 screen,
                 css_provider,

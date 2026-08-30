@@ -10,6 +10,7 @@
 
 import json
 import os
+from pathlib import Path
 import platform
 import re
 import shutil
@@ -343,276 +344,315 @@ def get_top_processes():
         return []
 
 
-CSS = """
-* {
-    font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", "RobotoMono Nerd Font", monospace;
-}
+def get_stats_theme_colors():
+    """Load colors from active theme JSON file with fallback."""
+    cache_state = Path.home() / ".cache" / "hypr_theme_state.json"
+    current_txt = Path.home() / ".cache" / "current_theme"
+    theme_id = "catppuccin-mocha"
+    
+    if cache_state.exists():
+        try:
+            with open(cache_state, "r") as f:
+                theme_id = json.load(f).get("current_theme", theme_id)
+        except Exception:
+            pass
+    elif current_txt.exists():
+        try:
+            theme_id = current_txt.read_text().strip() or theme_id
+        except Exception:
+            pass
 
-window {
+    for d in [Path.home() / ".config" / "theme", Path.home() / ".dotfiles" / ".config" / "theme"]:
+        tfile = d / f"{theme_id}.json"
+        if tfile.exists():
+            try:
+                with open(tfile, "r") as f:
+                    tdata = json.load(f)
+                    return tdata.get("colors", {}), tdata.get("type", "dark")
+            except Exception:
+                pass
+
+    return {
+        "base": "#1e1e2e", "mantle": "#181825", "crust": "#11111b",
+        "surface0": "#313244", "surface1": "#45475a", "surface2": "#585b70",
+        "text": "#cdd6f4", "subtext0": "#a6adc8", "subtext1": "#bac2de",
+        "accent": "#cba6f7", "blue": "#89b4fa", "green": "#a6e3a1",
+        "yellow": "#f9e2af", "peach": "#fab387", "red": "#f38ba8",
+        "mauve": "#cba6f7", "teal": "#94e2d5", "pink": "#f5c2e7",
+    }, "dark"
+
+def get_stats_gtk_css():
+    c, ttype = get_stats_theme_colors()
+    return f"""
+* {{
+    font-family: 'Inter', 'Noto Sans', 'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Ubuntu', sans-serif;
+}}
+
+window {{
     background-color: transparent;
-}
+}}
 
 scrolledwindow,
-.scrolled-window {
+.scrolled-window {{
     background-color: transparent;
     border: none;
     padding: 0;
     margin: 0;
-}
+}}
 
-scrollbar {
+scrollbar {{
     background-color: transparent;
     border: none;
     -GtkScrollbar-has-backward-stepper: false;
     -GtkScrollbar-has-forward-stepper: false;
     min-width: 6px;
-}
+}}
 
-scrollbar trough {
+scrollbar trough {{
     background-color: transparent;
     border: none;
-}
+}}
 
-scrollbar slider {
-    background-color: rgba(203, 166, 247, 0.4);
+scrollbar slider {{
+    background-color: {c.get("surface1", "#45475a")};
     border-radius: 6px;
     min-width: 5px;
     border: none;
-}
+}}
 
-scrollbar slider:hover {
-    background-color: #cba6f7;
-}
+scrollbar slider:hover {{
+    background-color: {c.get("accent", "#cba6f7")};
+}}
 
-button {
+button {{
     background-image: none;
     background-color: transparent;
     box-shadow: none;
     text-shadow: none;
     border: none;
     outline: none;
-}
+}}
 
-button:focus {
+button:focus {{
     box-shadow: none;
     outline: none;
-}
+}}
 
-.main-card {
-    background-color: #181825;
-    border: 1.5px solid rgba(203, 166, 247, 0.45);
+.main-card {{
+    background-color: {c.get("mantle", "#181825")};
+    border: 1.5px solid {c.get("accent", "#cba6f7")};
     border-radius: 18px;
     padding: 16px 20px;
     box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
-}
+}}
 
-.header-icon {
+.header-icon {{
     font-size: 20px;
-    color: #cba6f7;
+    color: {c.get("accent", "#cba6f7")};
     margin-right: 8px;
-}
+}}
 
-.header-title {
+.header-title {{
     font-size: 15px;
     font-weight: 800;
-    color: #ffffff;
-}
+    color: {c.get("text", "#ffffff")};
+}}
 
-.header-subtitle {
+.header-subtitle {{
     font-size: 11px;
     font-weight: 600;
-    color: #cdd6f4;
+    color: {c.get("subtext1", "#cdd6f4")};
     margin-top: 2px;
     margin-bottom: 10px;
-}
+}}
 
-.stat-box {
-    background-color: #1e1e2e;
-    border: 1.5px solid #313244;
+.stat-box {{
+    background-color: {c.get("base", "#1e1e2e")};
+    border: 1.5px solid {c.get("surface0", "#313244")};
     border-radius: 13px;
     padding: 9px 13px;
     margin-bottom: 7px;
-}
+}}
 
-.stat-box:hover {
-    border-color: rgba(203, 166, 247, 0.4);
-    background-color: #24253a;
-}
+.stat-box:hover {{
+    border-color: {c.get("accent", "#cba6f7")};
+    background-color: {c.get("surface0", "#313244")};
+}}
 
-.stat-icon {
+.stat-icon {{
     font-size: 16px;
     margin-right: 8px;
-}
+}}
 
-.stat-name {
+.stat-name {{
     font-size: 12.5px;
     font-weight: 800;
-    color: #ffffff;
-}
+    color: {c.get("text", "#ffffff")};
+}}
 
-.stat-value {
+.stat-value {{
     font-size: 12.5px;
     font-weight: 800;
-}
+}}
 
-.stat-desc {
+.stat-desc {{
     font-size: 10.5px;
     font-weight: 600;
-    color: #cdd6f4;
+    color: {c.get("subtext1", "#cdd6f4")};
     margin-top: 2px;
     margin-bottom: 5px;
-}
+}}
 
 /* Progress bar styling */
-progressbar {
+progressbar {{
     border-radius: 5px;
     min-height: 6px;
-}
+}}
 
-progressbar trough {
-    background-color: #313244;
+progressbar trough {{
+    background-color: {c.get("surface0", "#313244")};
     border-radius: 5px;
     min-height: 6px;
-}
+}}
 
-progressbar progress {
+progressbar progress {{
     border-radius: 5px;
     min-height: 6px;
-}
+}}
 
-.progress-cpu progress {
-    background: linear-gradient(90deg, #89b4fa, #74c7ec);
-}
+.progress-cpu progress {{
+    background: {c.get("blue", "#89b4fa")};
+}}
 
-.progress-ram progress {
-    background: linear-gradient(90deg, #f5c2e7, #cba6f7);
-}
+.progress-ram progress {{
+    background: {c.get("pink", "#f5c2e7")};
+}}
 
-.progress-disk progress {
-    background: linear-gradient(90deg, #94e2d5, #a6e3a1);
-}
+.progress-disk progress {{
+    background: {c.get("teal", "#94e2d5")};
+}}
 
-.color-cpu { color: #89b4fa; }
-.color-ram { color: #f5c2e7; }
-.color-disk { color: #94e2d5; }
-.color-temp { color: #fab387; }
-.color-proc { color: #cba6f7; }
+.color-cpu {{ color: {c.get("blue", "#89b4fa")}; }}
+.color-ram {{ color: {c.get("pink", "#f5c2e7")}; }}
+.color-disk {{ color: {c.get("teal", "#94e2d5")}; }}
+.color-temp {{ color: {c.get("peach", "#fab387")}; }}
+.color-proc {{ color: {c.get("accent", "#cba6f7")}; }}
 
-.temp-good { color: #a6e3a1; }
-.temp-warm { color: #fab387; }
-.temp-critical { color: #f38ba8; }
+.temp-good {{ color: {c.get("green", "#a6e3a1")}; }}
+.temp-warm {{ color: {c.get("peach", "#fab387")}; }}
+.temp-critical {{ color: {c.get("red", "#f38ba8")}; }}
 
 /* Thermal Pill Badges */
-.temp-grid {
+.temp-grid {{
     margin-top: 5px;
     margin-bottom: 2px;
-}
+}}
 
-.temp-pill {
-    background-color: #181825;
-    border: 1.5px solid #313244;
+.temp-pill {{
+    background-color: {c.get("mantle", "#181825")};
+    border: 1.5px solid {c.get("surface0", "#313244")};
     border-radius: 8px;
     padding: 3px 8px;
     margin: 2px 2px;
-}
+}}
 
-.temp-pill-label {
+.temp-pill-label {{
     font-size: 10.5px;
     font-weight: 600;
-    color: #cdd6f4;
+    color: {c.get("subtext1", "#cdd6f4")};
     margin-right: 5px;
-}
+}}
 
-.temp-pill-val {
+.temp-pill-val {{
     font-size: 10.5px;
     font-weight: 800;
-}
+}}
 
 /* Top Process Rows */
-.proc-item {
-    background-color: #181825;
-    border: 1.5px solid #313244;
+.proc-item {{
+    background-color: {c.get("mantle", "#181825")};
+    border: 1.5px solid {c.get("surface0", "#313244")};
     border-radius: 8px;
     padding: 4px 8px;
     margin-top: 3px;
-}
+}}
 
-.proc-item:hover {
-    border-color: #45475a;
-    background-color: #24253a;
-}
+.proc-item:hover {{
+    border-color: {c.get("surface1", "#45475a")};
+    background-color: {c.get("surface0", "#313244")};
+}}
 
-.proc-name {
+.proc-name {{
     font-size: 11.5px;
     font-weight: 800;
-    color: #ffffff;
-}
+    color: {c.get("text", "#ffffff")};
+}}
 
-.proc-pid {
+.proc-pid {{
     font-size: 9.5px;
     font-weight: 500;
-    color: #a6adc8;
+    color: {c.get("subtext0", "#a6adc8")};
     margin-left: 5px;
-}
+}}
 
-.proc-cpu-badge {
+.proc-cpu-badge {{
     font-size: 10.5px;
     font-weight: 800;
-    color: #fab387;
-    background-color: #313244;
+    color: {c.get("peach", "#fab387")};
+    background-color: {c.get("surface0", "#313244")};
     border-radius: 5px;
     padding: 1px 6px;
     margin-left: 5px;
-}
+}}
 
-.proc-mem-badge {
+.proc-mem-badge {{
     font-size: 10.5px;
     font-weight: 800;
-    color: #f5c2e7;
-    background-color: #313244;
+    color: {c.get("pink", "#f5c2e7")};
+    background-color: {c.get("surface0", "#313244")};
     border-radius: 5px;
     padding: 1px 6px;
     margin-left: 4px;
-}
+}}
 
 /* Action Button - High Contrast Styling */
-.action-btn {
-    background-color: #1e1e2e;
-    border: 1.5px solid #cba6f7;
+.action-btn {{
+    background-color: {c.get("base", "#1e1e2e")};
+    border: 1.5px solid {c.get("accent", "#cba6f7")};
     border-radius: 12px;
     padding: 9px 14px;
     margin-top: 5px;
     transition: all 0.15s ease-in-out;
-}
+}}
 
-.action-btn:focus {
-    background-color: #1e1e2e;
-    border: 1.5px solid #cba6f7;
-}
+.action-btn:focus {{
+    background-color: {c.get("base", "#1e1e2e")};
+    border: 1.5px solid {c.get("accent", "#cba6f7")};
+}}
 
-.action-btn:hover {
-    background-color: #cba6f7;
-    border-color: #cba6f7;
-}
+.action-btn:hover {{
+    background-color: {c.get("accent", "#cba6f7")};
+    border-color: {c.get("accent", "#cba6f7")};
+}}
 
-.action-btn .action-btn-text {
+.action-btn .action-btn-text {{
     font-size: 12.5px;
     font-weight: 800;
-    color: #ffffff;
-}
+    color: {c.get("text", "#ffffff")};
+}}
 
-.action-btn .action-btn-icon {
+.action-btn .action-btn-icon {{
     font-size: 15px;
     font-weight: 800;
-    color: #cba6f7;
+    color: {c.get("accent", "#cba6f7")};
     margin-right: 8px;
-}
+}}
 
 .action-btn:hover .action-btn-text,
-.action-btn:hover .action-btn-icon {
+.action-btn:hover .action-btn-icon {{
     color: #11111b;
-}
-"""
+}}
+""".encode('utf-8')
 
 
 def launch_gtk_gui():
@@ -636,7 +676,7 @@ def launch_gtk_gui():
 
     # Apply CSS
     css_provider = Gtk.CssProvider()
-    css_provider.load_from_data(CSS.encode('utf-8'))
+    css_provider.load_from_data(get_stats_gtk_css())
     Gtk.StyleContext.add_provider_for_screen(
         Gdk.Screen.get_default(),
         css_provider,

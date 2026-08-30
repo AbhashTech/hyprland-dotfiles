@@ -7,7 +7,9 @@
 =============================================================================
 """
 
+import json
 import os
+from pathlib import Path
 import re
 import shutil
 import signal
@@ -114,124 +116,163 @@ PROFILE_METADATA = {
 }
 
 
-CSS = """
-* {
-    font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", "RobotoMono Nerd Font", monospace;
-}
+def get_power_theme_colors():
+    """Load colors from active theme JSON file with fallback."""
+    cache_state = Path.home() / ".cache" / "hypr_theme_state.json"
+    current_txt = Path.home() / ".cache" / "current_theme"
+    theme_id = "catppuccin-mocha"
+    
+    if cache_state.exists():
+        try:
+            with open(cache_state, "r") as f:
+                theme_id = json.load(f).get("current_theme", theme_id)
+        except Exception:
+            pass
+    elif current_txt.exists():
+        try:
+            theme_id = current_txt.read_text().strip() or theme_id
+        except Exception:
+            pass
 
-window {
+    for d in [Path.home() / ".config" / "theme", Path.home() / ".dotfiles" / ".config" / "theme"]:
+        tfile = d / f"{theme_id}.json"
+        if tfile.exists():
+            try:
+                with open(tfile, "r") as f:
+                    tdata = json.load(f)
+                    return tdata.get("colors", {}), tdata.get("type", "dark")
+            except Exception:
+                pass
+
+    return {
+        "base": "#1e1e2e", "mantle": "#181825", "crust": "#11111b",
+        "surface0": "#313244", "surface1": "#45475a", "surface2": "#585b70",
+        "text": "#cdd6f4", "subtext0": "#a6adc8", "subtext1": "#bac2de",
+        "accent": "#cba6f7", "blue": "#89b4fa", "green": "#a6e3a1",
+        "yellow": "#f9e2af", "peach": "#fab387", "red": "#f38ba8",
+        "mauve": "#cba6f7", "teal": "#94e2d5", "pink": "#f5c2e7",
+    }, "dark"
+
+def get_power_gtk_css():
+    c, ttype = get_power_theme_colors()
+    return f"""
+* {{
+    font-family: 'Inter', 'Noto Sans', 'JetBrainsMono Nerd Font', 'JetBrains Mono', 'Ubuntu', sans-serif;
+}}
+
+window {{
     background-color: transparent;
-}
+}}
 
-.main-card {
-    background-color: #181825;
-    border: 1.5px solid rgba(203, 166, 247, 0.45);
+.main-card {{
+    background-color: {c.get("mantle", "#181825")};
+    border: 1.5px solid {c.get("accent", "#cba6f7")};
     border-radius: 18px;
     padding: 18px 20px;
     box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
-}
+}}
 
-.header-icon {
+.header-icon {{
     font-size: 20px;
-    color: #f9e2af;
+    color: {c.get("yellow", "#f9e2af")};
     margin-right: 8px;
-}
+}}
 
-.header-title {
+.header-title {{
     font-size: 15px;
     font-weight: 800;
-    color: #cdd6f4;
-}
+    color: {c.get("text", "#cdd6f4")};
+}}
 
-.header-subtitle {
+.header-subtitle {{
     font-size: 12px;
     font-weight: 600;
-    color: #bac2de;
+    color: {c.get("subtext1", "#bac2de")};
     margin-top: 4px;
     margin-bottom: 12px;
-}
+}}
 
-button {
+button {{
     background-image: none;
     box-shadow: none;
     text-shadow: none;
     border: none;
     outline: none;
-}
+}}
 
-.profile-btn {
-    background-color: #1e1e2e;
-    border: 1.5px solid #313244;
+.profile-btn {{
+    background-color: {c.get("base", "#1e1e2e")};
+    border: 1.5px solid {c.get("surface0", "#313244")};
     border-radius: 14px;
     padding: 12px 14px;
     margin-top: 8px;
     transition: all 0.15s ease-in-out;
-}
+}}
 
-.profile-btn:hover {
-    background-color: #313244;
-    border-color: #585b70;
-}
+.profile-btn:hover {{
+    background-color: {c.get("surface0", "#313244")};
+    border-color: {c.get("surface2", "#585b70")};
+}}
 
-.profile-btn.active-powersave {
-    background-color: #1c2b29;
-    border: 2px solid #a6e3a1;
-}
+.profile-btn.active-powersave {{
+    background-color: {c.get("surface0", "#313244")};
+    border: 2px solid {c.get("green", "#a6e3a1")};
+}}
 
-.profile-btn.active-balanced {
-    background-color: #1b253b;
-    border: 2px solid #89b4fa;
-}
+.profile-btn.active-balanced {{
+    background-color: {c.get("surface0", "#313244")};
+    border: 2px solid {c.get("blue", "#89b4fa")};
+}}
 
-.profile-btn.active-performance {
-    background-color: #32252b;
-    border: 2px solid #fab387;
-}
+.profile-btn.active-performance {{
+    background-color: {c.get("surface0", "#313244")};
+    border: 2px solid {c.get("peach", "#fab387")};
+}}
 
-.icon-label {
+.icon-label {{
     font-size: 24px;
     margin-right: 14px;
-}
+}}
 
-.icon-powersave { color: #a6e3a1; }
-.icon-balanced { color: #89b4fa; }
-.icon-performance { color: #fab387; }
+.icon-powersave {{ color: {c.get("green", "#a6e3a1")}; }}
+.icon-balanced {{ color: {c.get("blue", "#89b4fa")}; }}
+.icon-performance {{ color: {c.get("peach", "#fab387")}; }}
 
-.title-label {
+.title-label {{
     font-size: 14px;
     font-weight: 800;
-    color: #ffffff;
-}
+    color: {c.get("text", "#ffffff")};
+}}
 
-.desc-label {
+.desc-label {{
     font-size: 11px;
     font-weight: 500;
-    color: #cdd6f4;
+    color: {c.get("subtext1", "#cdd6f4")};
     margin-top: 3px;
-}
+}}
 
-.badge {
+.badge {{
     font-size: 11px;
     font-weight: 800;
     border-radius: 8px;
     padding: 4px 10px;
-}
+}}
 
-.badge-powersave {
-    background-color: #a6e3a1;
+.badge-powersave {{
+    background-color: {c.get("green", "#a6e3a1")};
     color: #11111b;
-}
+}}
 
-.badge-balanced {
-    background-color: #89b4fa;
+.badge-balanced {{
+    background-color: {c.get("blue", "#89b4fa")};
     color: #11111b;
-}
+}}
 
-.badge-performance {
-    background-color: #fab387;
+.badge-performance {{
+    background-color: {c.get("peach", "#fab387")};
     color: #11111b;
-}
-"""
+}}
+""".encode('utf-8')
 
 
 def check_and_kill_existing():
@@ -268,7 +309,7 @@ def launch_gtk_gui():
 
     # Apply CSS
     css_provider = Gtk.CssProvider()
-    css_provider.load_from_data(CSS.encode('utf-8'))
+    css_provider.load_from_data(get_power_gtk_css())
     Gtk.StyleContext.add_provider_for_screen(
         Gdk.Screen.get_default(),
         css_provider,

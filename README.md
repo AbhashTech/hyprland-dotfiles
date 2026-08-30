@@ -55,7 +55,8 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │       ├── resolution_menu.py    # Display resolution & UI scaling switcher
     │       ├── scale_window.py       # Window resizing with on-screen dimensions overlay
     │       ├── screen_capture.py     # Screenshot & video recorder with Swappy annotation
-    │       ├── theme_switcher.py     # Universal desktop theme switcher & palette manager
+    │       ├── theme-manager.desktop # Application menu entry for graphical Theme Manager
+    │       ├── theme_switcher.py     # Universal desktop theme switcher & palette manager (Fuzzel/GTK3)
     │       ├── volume_control.py     # Speaker/mic volume control, OSD & sink switcher
     │       ├── wallpaper_switcher.py # Wallpaper randomizer & selector (~/Wallpaper)
     │       └── wofi_launcher.py      # Wofi wrapper with transparent backdrop layer
@@ -399,11 +400,12 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 ### ⚡ Productivity & Workflow Utilities
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
-| `SUPER + T` | **Theme Switcher** | Open interactive **Fuzzel/Wofi** theme selector (12 curated themes, live reload) |
+| `SUPER + T` | **Theme Switcher Menu** | Open interactive **Fuzzel/Wofi** theme selector (19 curated themes, live reload) |
+| `SUPER + ALT + T` | **Theme Manager GUI** | Launch graphical **GTK3** theme & palette manager with live card previews |
 | `SUPER + CTRL + T` | **Cycle Theme** | Instantly cycle to the next color palette in the theme registry |
 | `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Shortcut Cheat Sheet** | Open interactive **Fuzzel/Wofi** dynamic keybindings viewer |
 | `SUPER + SHIFT + P` | **Hyprpicker** | Pick color from screen, copy hex code to clipboard & trigger notification |
-| `SUPER + SHIFT + T` / `SUPER + ALT + T` | **Screen OCR** | Select region with mouse, extract text via Tesseract & copy to clipboard |
+| `SUPER + SHIFT + T` | **Screen OCR** | Select region with mouse, extract text via Tesseract & copy to clipboard |
 | `SUPER + ALT + N` | **Night Light** | Toggle warm blue-light filter (3800K night / 6500K day) |
 | `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator** | Interactive math expression evaluator via Fuzzel prompt |
 | `SUPER + .` (period) | **Emoji Picker** | Searchable emoji catalog with automatic clipboard copy & keystroke paste |

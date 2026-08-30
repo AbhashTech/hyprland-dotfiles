@@ -231,12 +231,12 @@ sudo usermod -aG i2c $USER
 ### ⚡ Productivity & Workflow Utilities
 | Shortcut | Action |
 | :--- | :--- |
-| `SUPER + T` | **Theme Switcher**: Interactive graphical theme selector & live palette manager |
+| `SUPER + T` | **Theme Switcher Menu**: Interactive graphical theme selector & live palette manager (19 themes) |
+| `SUPER + ALT + T` | **Theme Manager GUI**: Full GTK3 desktop theme & palette manager with live preview cards |
 | `SUPER + CTRL + T` | **Cycle Theme**: Instantly cycle to next theme in palette registry |
 | `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Dynamic Keybindings Viewer**: Searchable shortcut cheat sheet |
 | `SUPER + SHIFT + P` | **Hyprpicker**: Pick color from screen, copy hex code & notify |
-| `SUPER + SHIFT + T` / `SUPER + ALT + T` | **Screen OCR**: Grab and extract text from any screen region to clipboard |
-
+| `SUPER + SHIFT + T` | **Screen OCR**: Grab and extract text from any screen region to clipboard |
 | `SUPER + ALT + N` | **Night Light**: Toggle warm blue light filter (3800K / 6500K) |
 | `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator**: Interactive math evaluator via Fuzzel |
 | `SUPER + .` (period) | **Emoji Picker**: Searchable emoji menu with instant copy & auto-typing |

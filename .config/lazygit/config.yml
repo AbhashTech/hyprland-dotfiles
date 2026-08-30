@@ -1,28 +1,28 @@
 # =============================================================================
-# Lazygit Configuration - Catppuccin Macchiato
+# Lazygit Configuration - One Light Pro
 # =============================================================================
 
 gui:
   theme:
     activeBorderColor:
-      - '#c6a0f6'
+      - '#4078f2'
       - bold
     inactiveBorderColor:
-      - '#5b6078'
+      - '#a0a1a7'
     optionsTextColor:
-      - '#8aadf4'
+      - '#4078f2'
     selectedLineBgColor:
-      - '#363a4f'
+      - '#e0e0e0'
     cherryPickedCommitBgColor:
-      - '#494d64'
+      - '#d0d0d0'
     cherryPickedCommitFgColor:
-      - '#c6a0f6'
+      - '#4078f2'
     unstagedChangesColor:
-      - '#ed8796'
+      - '#e45649'
     defaultFgColor:
-      - '#cad3f5'
+      - '#383a42'
     searchingActiveBorderColor:
-      - '#eed49f'
+      - '#c18401'
 
 git:
   paging:

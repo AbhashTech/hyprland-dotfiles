@@ -388,16 +388,17 @@ def update_fuzzel_colors(theme):
     if df_fuzzel.exists() and df_fuzzel not in target_files:
         target_files.append(df_fuzzel)
 
-    bg_rgba = hex_to_rgba_str(c["mantle"], "ea")
+    is_light = theme.get("type") == "light"
+    bg_rgba = hex_to_rgba_str(c["mantle"], "f0")
     text_rgba = hex_to_rgba_str(c["text"], "ff")
     prompt_rgba = hex_to_rgba_str(c["accent"], "ff")
     placeholder_rgba = hex_to_rgba_str(c["overlay0"], "ff")
     input_rgba = hex_to_rgba_str(c["text"], "ff")
     match_rgba = hex_to_rgba_str(c["accent"], "ff")
     selection_rgba = hex_to_rgba_str(c["surface0"], "ff")
-    sel_text_rgba = "ffffffef"
-    sel_match_rgba = hex_to_rgba_str(c["pink"], "ff")
-    border_rgba = hex_to_rgba_str(c["accent"], "88")
+    sel_text_rgba = hex_to_rgba_str(c["crust" if is_light else "text"], "ff") if is_light else "ffffffef"
+    sel_match_rgba = hex_to_rgba_str(c.get("accent", c.get("pink", "#cba6f7")), "ff")
+    border_rgba = hex_to_rgba_str(c["accent"], "aa")
 
     colors_section = f"""[colors]
 # {theme.get('name', theme['id'])} RGBA
@@ -1076,22 +1077,32 @@ def apply_theme(theme_id, themes=None, notify=True):
 
 
 # =============================================================================
-# Interactive GUI Menu (Fuzzel / Wofi)
+# Interactive GUI Menu (Fuzzel / Wofi / GTK3)
 # =============================================================================
 def run_interactive_menu(themes):
-    """Display an interactive Fuzzel or Wofi graphical menu to select a theme."""
+    """Display an interactive, beautifully formatted Fuzzel or Wofi graphical menu to select a theme."""
     current = get_current_theme(themes)
     menu_items = []
     
-    for tid, tdata in sorted(themes.items(), key=lambda x: x[1].get("name", x[0])):
+    # Top action: Launch Full Graphical Theme Manager GUI
+    gui_entry = "󰒓  Launch Visual Theme Manager (GUI)..."
+    menu_items.append((gui_entry, "__LAUNCH_GUI__"))
+
+    # Add all themes with razor-sharp column alignment
+    sorted_themes = sorted(themes.items(), key=lambda x: x[1].get("name", x[0]))
+    active_line_str = None
+
+    for tid, tdata in sorted_themes:
         is_active = (tid == current)
-        active_mark = "✔ " if is_active else "  "
-        icon = tdata.get("icon", "🎨")
+        bullet = "●" if is_active else "○"
+        ttype = "[Dark] " if tdata.get("type") == "dark" else "[Light]"
         name = tdata.get("name", tid)
-        ttype = tdata.get("type", "dark").capitalize()
         desc = tdata.get("desc", "")
-        display_line = f"{active_mark}{icon} {name:<22} │ {ttype:<5} │ {desc}"
+        
+        display_line = f"{bullet}  {name:<23}  {ttype}   {desc}"
         menu_items.append((display_line, tid))
+        if is_active:
+            active_line_str = display_line
 
     menu_input = "\n".join(item[0] for item in menu_items)
     selected_tid = None
@@ -1100,10 +1111,19 @@ def run_interactive_menu(themes):
         cmd = [
             "fuzzel",
             "--dmenu",
-            "--prompt", "🎨 Select Theme: ",
-            "--width", "52",
-            "--lines", str(len(themes) + 1),
+            "--prompt", " 󰏘 Theme ❯ ",
+            "--placeholder", "Filter 19 color themes (dark, light, pastel, vibrant)...",
+            "--width", "78",
+            "--lines", "14",
+            "--horizontal-pad", "26",
+            "--vertical-pad", "16",
+            "--inner-pad", "10",
+            "--line-height", "32",
+            "--border-radius", "16",
         ]
+        if active_line_str:
+            cmd.extend(["--select", active_line_str])
+
         try:
             res = subprocess.run(cmd, input=menu_input, text=True, capture_output=True)
             chosen_line = res.stdout.strip()
@@ -1119,9 +1139,9 @@ def run_interactive_menu(themes):
         cmd = [
             "wofi",
             "--dmenu",
-            "--prompt", "🎨 Select Theme",
-            "--width", "550",
-            "--lines", str(len(themes) + 1),
+            "--prompt", " 󰏘 Select Theme: ",
+            "--width", "720",
+            "--lines", "14",
         ]
         try:
             res = subprocess.run(cmd, input=menu_input, text=True, capture_output=True)
@@ -1134,8 +1154,546 @@ def run_interactive_menu(themes):
         except Exception as e:
             print(f"Error launching wofi: {e}", file=sys.stderr)
 
-    if selected_tid:
+    if selected_tid == "__LAUNCH_GUI__":
+        run_gui_theme_manager(themes)
+    elif selected_tid:
         apply_theme(selected_tid, themes=themes, notify=True)
+
+
+# =============================================================================
+# Modern GTK3 Graphical Theme Manager Window
+# =============================================================================
+def run_gui_theme_manager(themes=None):
+    """Launch the modern graphical GTK3 Theme Manager with cards, color palettes, and live preview."""
+    if themes is None:
+        themes = load_themes()
+
+    try:
+        import gi
+        gi.require_version("Gtk", "3.0")
+        from gi.repository import Gtk, Gdk, GLib, Pango
+    except Exception as e:
+        print(f"GTK3 not available ({e}), falling back to interactive menu.", file=sys.stderr)
+        run_interactive_menu(themes)
+        return
+
+    current_id = get_current_theme(themes)
+
+    class ThemeManagerWindow(Gtk.Window):
+        def __init__(self, theme_dict, cur_id):
+            super().__init__(title="Desktop Theme & Palette Manager")
+            self.themes = theme_dict
+            self.current_theme_id = cur_id
+            self.selected_theme_id = cur_id
+            self.filter_mode = "all"
+            self.search_query = ""
+
+            self.set_default_size(1040, 690)
+            self.set_position(Gtk.WindowPosition.CENTER)
+
+            self._setup_css()
+            self._build_ui()
+
+        def _setup_css(self):
+            css = b"""
+            * {
+                font-family: 'Inter', 'Noto Sans', 'Cantarell', 'Ubuntu', 'Roboto', 'Segoe UI', system-ui, sans-serif;
+            }
+            window {
+                background-color: #11111b;
+                color: #cdd6f4;
+            }
+            headerbar {
+                background-color: #181825;
+                background-image: none;
+                border-bottom: 1px solid #313244;
+                padding: 8px 14px;
+            }
+            entry.search-input {
+                background-color: #1e1e2e;
+                background-image: none;
+                color: #ffffff;
+                border: 1.5px solid #45475a;
+                border-radius: 10px;
+                padding: 10px 14px;
+                font-size: 13px;
+                font-weight: 500;
+            }
+            entry.search-input:focus {
+                border-color: #cba6f7;
+                background-color: #181825;
+                box-shadow: 0 0 0 2px rgba(203, 166, 247, 0.3);
+            }
+            button {
+                background-color: #1e1e2e;
+                background-image: none;
+                color: #cdd6f4;
+                border: 1.5px solid #313244;
+                border-radius: 9px;
+                padding: 7px 16px;
+                font-weight: 700;
+                font-size: 13px;
+                transition: all 120ms ease-in-out;
+            }
+            button:hover {
+                background-color: #313244;
+                border-color: #6c7086;
+                color: #ffffff;
+            }
+            button.filter-btn {
+                background-color: #1e1e2e;
+                background-image: none;
+                color: #bac2de;
+                border: 1.5px solid #313244;
+                border-radius: 20px;
+                padding: 6px 16px;
+                font-size: 12px;
+                font-weight: 700;
+            }
+            button.filter-btn:hover {
+                background-color: #313244;
+                border-color: #89b4fa;
+                color: #ffffff;
+            }
+            button.filter-btn.active-filter {
+                background-color: #cba6f7;
+                background-image: none;
+                color: #11111b;
+                border-color: #cba6f7;
+                font-weight: 800;
+            }
+            button.btn-random {
+                background-color: #1e1e2e;
+                background-image: none;
+                color: #cdd6f4;
+                border: 1.5px solid #313244;
+                border-radius: 9px;
+                padding: 6px 14px;
+                font-weight: 700;
+            }
+            button.btn-random:hover {
+                background-color: #313244;
+                border-color: #fab387;
+                color: #ffffff;
+            }
+            button.apply-btn {
+                background-color: #a6e3a1;
+                background-image: none;
+                color: #11111b;
+                border: none;
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: 800;
+                padding: 12px 20px;
+            }
+            button.apply-btn:hover {
+                background-color: #94e2d5;
+                color: #11111b;
+            }
+            .card-box {
+                background-color: #181825;
+                border: 1.5px solid #313244;
+                border-radius: 14px;
+                padding: 14px 16px;
+                transition: all 120ms ease;
+            }
+            .card-box:hover {
+                border-color: #6c7086;
+                background-color: #1e1e2e;
+            }
+            .card-box-selected {
+                border: 2px solid #cba6f7;
+                background-color: #1e1e2e;
+                box-shadow: 0 4px 16px rgba(203, 166, 247, 0.2);
+            }
+            .card-box-active {
+                border: 2px solid #a6e3a1;
+            }
+            .badge-dark {
+                background-color: #313244;
+                color: #ffffff;
+                border: 1px solid #585b70;
+                border-radius: 6px;
+                padding: 3px 8px;
+                font-size: 11px;
+                font-weight: 700;
+            }
+            .badge-light {
+                background-color: #fab387;
+                color: #11111b;
+                border: 1px solid #f9e2af;
+                border-radius: 6px;
+                padding: 3px 8px;
+                font-size: 11px;
+                font-weight: 800;
+            }
+            .badge-active {
+                background-color: #a6e3a1;
+                color: #11111b;
+                border: 1px solid #89dceb;
+                border-radius: 6px;
+                padding: 3px 8px;
+                font-size: 11px;
+                font-weight: 800;
+            }
+            .preview-pane {
+                background-color: #181825;
+                border-left: 1px solid #313244;
+                padding: 24px;
+            }
+            .matrix-box {
+                background-color: #11111b;
+                border: 1px solid #313244;
+                border-radius: 12px;
+                padding: 12px;
+            }
+            scrollbar slider {
+                background-color: #45475a;
+                border-radius: 8px;
+                min-width: 6px;
+            }
+            """
+            try:
+                provider = Gtk.CssProvider()
+                provider.load_from_data(css)
+                Gtk.StyleContext.add_provider_for_screen(
+                    Gdk.Screen.get_default(),
+                    provider,
+                    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+                )
+            except Exception as e:
+                print(f"Warning: Failed to load custom CSS: {e}", file=sys.stderr)
+
+        def _build_ui(self):
+            # HeaderBar
+            header = Gtk.HeaderBar()
+            header.set_show_close_button(True)
+            
+            title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            title_lbl = Gtk.Label()
+            title_lbl.set_markup("<span size='12000' weight='bold' color='#ffffff'>🎨 Desktop Theme Switcher &amp; Palette Manager</span>")
+            subtitle_lbl = Gtk.Label()
+            subtitle_lbl.set_markup(f"<span size='9500' color='#bac2de'>{len(self.themes)} Handcrafted Palettes • Hyprland, Waybar &amp; Apps</span>")
+            title_box.pack_start(title_lbl, False, False, 0)
+            title_box.pack_start(subtitle_lbl, False, False, 0)
+            header.set_custom_title(title_box)
+
+            # Random theme button
+            btn_random = Gtk.Button(label="🎲 Random")
+            btn_random.get_style_context().add_class("btn-random")
+            btn_random.connect("clicked", self._on_random_clicked)
+            header.pack_start(btn_random)
+
+            self.set_titlebar(header)
+
+            # Main Layout
+            main_paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+            main_paned.set_position(660)
+            self.add(main_paned)
+
+            # Left Column (Search + Filters + Theme Grid)
+            left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+            left_box.set_margin_top(14)
+            left_box.set_margin_bottom(14)
+            left_box.set_margin_start(16)
+            left_box.set_margin_end(12)
+            main_paned.pack1(left_box, resize=True, shrink=False)
+
+            # Top Bar: Search Entry & Filter Buttons
+            top_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            
+            self.search_entry = Gtk.SearchEntry()
+            self.search_entry.set_placeholder_text("🔍 Filter themes by name, mode, color or style...")
+            self.search_entry.get_style_context().add_class("search-input")
+            self.search_entry.connect("search-changed", self._on_search_changed)
+            top_bar.pack_start(self.search_entry, True, True, 0)
+
+            # Filter buttons
+            dark_count = sum(1 for t in self.themes.values() if t.get("type") == "dark")
+            light_count = len(self.themes) - dark_count
+
+            self.btn_filter_all = Gtk.Button(label=f"All ({len(self.themes)})")
+            self.btn_filter_all.get_style_context().add_class("filter-btn")
+            self.btn_filter_all.get_style_context().add_class("active-filter")
+            self.btn_filter_all.connect("clicked", lambda b: self._set_filter("all"))
+            top_bar.pack_start(self.btn_filter_all, False, False, 0)
+
+            self.btn_filter_dark = Gtk.Button(label=f"🌙 Dark ({dark_count})")
+            self.btn_filter_dark.get_style_context().add_class("filter-btn")
+            self.btn_filter_dark.connect("clicked", lambda b: self._set_filter("dark"))
+            top_bar.pack_start(self.btn_filter_dark, False, False, 0)
+
+            self.btn_filter_light = Gtk.Button(label=f"☀️ Light ({light_count})")
+            self.btn_filter_light.get_style_context().add_class("filter-btn")
+            self.btn_filter_light.connect("clicked", lambda b: self._set_filter("light"))
+            top_bar.pack_start(self.btn_filter_light, False, False, 0)
+
+            left_box.pack_start(top_bar, False, False, 0)
+
+            # Scrollable Theme Grid
+            scrolled = Gtk.ScrolledWindow()
+            scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+            left_box.pack_start(scrolled, True, True, 0)
+
+            self.grid = Gtk.Grid()
+            self.grid.set_column_spacing(12)
+            self.grid.set_row_spacing(12)
+            self.grid.set_column_homogeneous(True)
+            scrolled.add(self.grid)
+
+            # Right Column (Theme Preview & Details Inspector)
+            self.preview_pane = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+            self.preview_pane.get_style_context().add_class("preview-pane")
+            self.preview_pane.set_size_request(330, -1)
+            main_paned.pack2(self.preview_pane, resize=False, shrink=False)
+
+            self.card_widgets = {}
+            self._populate_grid()
+            self._update_preview()
+
+            # Keyboard navigation
+            self.connect("key-press-event", self._on_key_press)
+
+        def _create_color_chip(self, hex_val, tooltip=None, size=22):
+            rf, gf, bf = [c / 255.0 for c in hex_to_rgb_tuple(hex_val)]
+            area = Gtk.DrawingArea()
+            area.set_size_request(size, size)
+            if tooltip:
+                area.set_tooltip_text(f"{tooltip}: {hex_val}")
+
+            def on_draw(w, cr):
+                radius = 5
+                x, y, width, height = 0, 0, size, size
+                deg = 3.14159265 / 180.0
+                cr.new_sub_path()
+                cr.arc(x + width - radius, y + radius, radius, -90 * deg, 0 * deg)
+                cr.arc(x + width - radius, y + height - radius, radius, 0 * deg, 90 * deg)
+                cr.arc(x + radius, y + height - radius, radius, 90 * deg, 180 * deg)
+                cr.arc(x + radius, y + radius, radius, 180 * deg, 270 * deg)
+                cr.close_path()
+
+                cr.set_source_rgb(rf, gf, bf)
+                cr.fill_preserve()
+                cr.set_source_rgba(0, 0, 0, 0.3)
+                cr.set_line_width(1)
+                cr.stroke()
+                return False
+
+            area.connect("draw", on_draw)
+            return area
+
+        def _populate_grid(self):
+            for child in self.grid.get_children():
+                self.grid.remove(child)
+            self.card_widgets.clear()
+
+            row, col = 0, 0
+            sorted_themes = sorted(self.themes.items(), key=lambda x: x[1].get("name", x[0]))
+
+            for tid, tdata in sorted_themes:
+                ttype = tdata.get("type", "dark")
+                if self.filter_mode != "all" and ttype != self.filter_mode:
+                    continue
+
+                q = self.search_query.lower()
+                name = tdata.get("name", tid)
+                desc = tdata.get("desc", "")
+                if q and (q not in name.lower() and q not in desc.lower() and q not in tid.lower() and q not in ttype.lower()):
+                    continue
+
+                is_active = (tid == self.current_theme_id)
+                is_selected = (tid == self.selected_theme_id)
+
+                card = Gtk.EventBox()
+                card_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+                card_box.get_style_context().add_class("card-box")
+                if is_selected:
+                    card_box.get_style_context().add_class("card-box-selected")
+                if is_active:
+                    card_box.get_style_context().add_class("card-box-active")
+
+                card.add(card_box)
+
+                # Header row
+                h_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+                icon = tdata.get("icon", "🎨")
+                title_label = Gtk.Label()
+                title_label.set_markup(f"<span size='11000' weight='bold' color='#ffffff'>{icon}  {name}</span>")
+                title_label.set_xalign(0)
+                h_box.pack_start(title_label, True, True, 0)
+
+                badge = Gtk.Label(label="🌙 Dark" if ttype == "dark" else "☀️ Light")
+                badge.get_style_context().add_class("badge-dark" if ttype == "dark" else "badge-light")
+                h_box.pack_start(badge, False, False, 0)
+
+                if is_active:
+                    act_badge = Gtk.Label(label="✓ ACTIVE")
+                    act_badge.get_style_context().add_class("badge-active")
+                    h_box.pack_start(act_badge, False, False, 0)
+
+                card_box.pack_start(h_box, False, False, 0)
+
+                # Description
+                desc_lbl = Gtk.Label()
+                desc_lbl.set_markup(f"<span size='9500' color='#bac2de'>{desc}</span>")
+                desc_lbl.set_xalign(0)
+                desc_lbl.set_line_wrap(True)
+                desc_lbl.set_max_width_chars(34)
+                card_box.pack_start(desc_lbl, False, False, 0)
+
+                # Swatch Palette Strip
+                c = tdata["colors"]
+                swatch_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+                for k in ["base", "surface0", "accent", "blue", "green", "yellow", "red", "mauve", "teal"]:
+                    if k in c and isinstance(c[k], str) and c[k].startswith("#"):
+                        chip = self._create_color_chip(c[k], tooltip=k, size=18)
+                        swatch_box.pack_start(chip, False, False, 0)
+                card_box.pack_start(swatch_box, False, False, 0)
+
+                # Card click event handling
+                card.connect("button-press-event", self._on_card_clicked, tid)
+                self.card_widgets[tid] = (card, card_box)
+
+                self.grid.attach(card, col, row, 1, 1)
+                col += 1
+                if col >= 2:
+                    col = 0
+                    row += 1
+
+            self.grid.show_all()
+
+        def _on_card_clicked(self, widget, event, tid):
+            self.selected_theme_id = tid
+            self._update_card_styles()
+            self._update_preview()
+            if event.type == Gdk.EventType._2BUTTON_PRESS:
+                self._apply_selected_theme()
+
+        def _update_card_styles(self):
+            for tid, (card, card_box) in self.card_widgets.items():
+                ctx = card_box.get_style_context()
+                if tid == self.selected_theme_id:
+                    ctx.add_class("card-box-selected")
+                else:
+                    ctx.remove_class("card-box-selected")
+
+        def _update_preview(self):
+            for child in self.preview_pane.get_children():
+                self.preview_pane.remove(child)
+
+            tdata = self.themes.get(self.selected_theme_id)
+            if not tdata:
+                return
+
+            c = tdata["colors"]
+            name = tdata.get("name", self.selected_theme_id)
+            ttype = tdata.get("type", "dark").capitalize()
+            desc = tdata.get("desc", "")
+            accent = c.get("accent", "#cba6f7")
+
+            p_title = Gtk.Label()
+            p_title.set_markup(f"<span size='16000' weight='heavy' color='#ffffff'>{tdata.get('icon', '🎨')}  {name}</span>")
+            p_title.set_xalign(0)
+            self.preview_pane.pack_start(p_title, False, False, 0)
+
+            p_meta = Gtk.Label()
+            p_meta.set_markup(f"<span size='10500' color='#cdd6f4'>Mode: <b>{ttype}</b>   •   Accent: <span font_family='monospace' weight='bold'>{accent}</span></span>")
+            p_meta.set_xalign(0)
+            self.preview_pane.pack_start(p_meta, False, False, 0)
+
+            p_desc = Gtk.Label()
+            p_desc.set_markup(f"<span size='10500' color='#bac2de'>{desc}</span>")
+            p_desc.set_xalign(0)
+            p_desc.set_line_wrap(True)
+            self.preview_pane.pack_start(p_desc, False, False, 0)
+
+            self.preview_pane.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 4)
+
+            # Palette matrix box
+            pal_label = Gtk.Label()
+            pal_label.set_markup("<span size='11000' weight='bold' color='#ffffff'>🎨 Color Palette Matrix</span>")
+            pal_label.set_xalign(0)
+            self.preview_pane.pack_start(pal_label, False, False, 0)
+
+            matrix_frame = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+            matrix_frame.get_style_context().add_class("matrix-box")
+
+            pal_grid = Gtk.Grid()
+            pal_grid.set_column_spacing(10)
+            pal_grid.set_row_spacing(8)
+            r, c_idx = 0, 0
+            swatch_keys = ["base", "mantle", "surface0", "surface1", "accent", "blue", "green", "yellow", "peach", "red", "mauve", "teal"]
+            for k in swatch_keys:
+                if k in c and isinstance(c[k], str) and c[k].startswith("#"):
+                    chip = self._create_color_chip(c[k], tooltip=f"{k}: {c[k]}", size=22)
+                    lbl = Gtk.Label()
+                    lbl.set_markup(f"<span size='9500' color='#cdd6f4'><b>{k}:</b> <span font_family='monospace' weight='bold'>{c[k]}</span></span>")
+                    lbl.set_xalign(0)
+                    box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+                    box.pack_start(chip, False, False, 0)
+                    box.pack_start(lbl, False, False, 0)
+                    pal_grid.attach(box, c_idx, r, 1, 1)
+                    r += 1
+                    if r >= 6:
+                        r = 0
+                        c_idx += 1
+
+            matrix_frame.pack_start(pal_grid, True, True, 0)
+            self.preview_pane.pack_start(matrix_frame, False, False, 0)
+
+            self.preview_pane.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 4)
+
+            # Apply Button
+            btn_apply = Gtk.Button(label=f"✓  Apply Theme: {name}")
+            btn_apply.get_style_context().add_class("apply-btn")
+            btn_apply.set_size_request(-1, 44)
+            btn_apply.connect("clicked", lambda b: self._apply_selected_theme())
+            self.preview_pane.pack_start(btn_apply, False, False, 8)
+
+            self.preview_pane.show_all()
+
+        def _apply_selected_theme(self):
+            if self.selected_theme_id:
+                self.current_theme_id = self.selected_theme_id
+                apply_theme(self.selected_theme_id, themes=self.themes, notify=True)
+                self._populate_grid()
+                self._update_preview()
+
+        def _on_search_changed(self, entry):
+            self.search_query = entry.get_text().strip()
+            self._populate_grid()
+
+        def _set_filter(self, mode):
+            self.filter_mode = mode
+            for btn, m in [(self.btn_filter_all, "all"), (self.btn_filter_dark, "dark"), (self.btn_filter_light, "light")]:
+                ctx = btn.get_style_context()
+                if m == mode:
+                    ctx.add_class("active-filter")
+                else:
+                    ctx.remove_class("active-filter")
+            self._populate_grid()
+
+        def _on_random_clicked(self, btn):
+            import random
+            candidates = list(self.themes.keys())
+            if candidates:
+                self.selected_theme_id = random.choice(candidates)
+                self._apply_selected_theme()
+
+        def _on_key_press(self, widget, event):
+            if event.keyval == Gdk.KEY_Escape:
+                self.destroy()
+                return True
+            elif event.keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
+                self._apply_selected_theme()
+                return True
+            return False
+
+    win = ThemeManagerWindow(themes, current_id)
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
 
 # =============================================================================
 # CLI Commands & Entry Point
@@ -1194,6 +1752,7 @@ def main():
     parser.add_argument("-s", "--set", metavar="THEME_ID", help="Apply a specific theme by ID")
     parser.add_argument("-c", "--current", action="store_true", help="Display the active theme ID")
     parser.add_argument("-m", "--menu", action="store_true", help="Open interactive Fuzzel / Wofi GUI theme selector")
+    parser.add_argument("-g", "--gui", "--manager", action="store_true", help="Open modern GTK3 Theme Manager Window")
     parser.add_argument("-n", "--next", action="store_true", help="Cycle to the next theme")
     parser.add_argument("-p", "--prev", action="store_true", help="Cycle to the previous theme")
     parser.add_argument("-r", "--random", action="store_true", help="Apply a random theme")
@@ -1210,6 +1769,8 @@ def main():
         cur = get_current_theme(themes)
         name = themes.get(cur, {}).get("name", cur)
         print(f"Current theme: {name} ({cur})")
+    elif args.gui:
+        run_gui_theme_manager(themes)
     elif args.menu:
         run_interactive_menu(themes)
     elif args.next:
@@ -1223,3 +1784,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

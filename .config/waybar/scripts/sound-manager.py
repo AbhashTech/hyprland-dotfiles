@@ -21,6 +21,7 @@
 
 import json
 import os
+from pathlib import Path
 import re
 import shutil
 import signal
@@ -429,222 +430,261 @@ def check_and_kill_existing():
 # GTK3 LAYER SHELL GUI WITH DROPDOWNS & RANGE SLIDERS
 # =============================================================================
 
-GTK_CSS = """
-* {
+def get_sound_theme_colors():
+    """Load colors from active theme JSON file with fallback."""
+    cache_state = Path.home() / ".cache" / "hypr_theme_state.json"
+    current_txt = Path.home() / ".cache" / "current_theme"
+    theme_id = "catppuccin-mocha"
+    
+    if cache_state.exists():
+        try:
+            with open(cache_state, "r") as f:
+                theme_id = json.load(f).get("current_theme", theme_id)
+        except Exception:
+            pass
+    elif current_txt.exists():
+        try:
+            theme_id = current_txt.read_text().strip() or theme_id
+        except Exception:
+            pass
+
+    for d in [Path.home() / ".config" / "theme", Path.home() / ".dotfiles" / ".config" / "theme"]:
+        tfile = d / f"{theme_id}.json"
+        if tfile.exists():
+            try:
+                with open(tfile, "r") as f:
+                    tdata = json.load(f)
+                    return tdata.get("colors", {}), tdata.get("type", "dark")
+            except Exception:
+                pass
+
+    return {
+        "base": "#1e1e2e", "mantle": "#181825", "crust": "#11111b",
+        "surface0": "#313244", "surface1": "#45475a", "surface2": "#585b70",
+        "text": "#cdd6f4", "subtext0": "#a6adc8", "subtext1": "#bac2de",
+        "accent": "#cba6f7", "blue": "#89b4fa", "green": "#a6e3a1",
+        "yellow": "#f9e2af", "peach": "#fab387", "red": "#f38ba8",
+        "mauve": "#cba6f7", "teal": "#94e2d5", "pink": "#f5c2e7",
+    }, "dark"
+
+def get_sound_gtk_css():
+    c, ttype = get_sound_theme_colors()
+    return f"""
+* {{
     all: unset;
-    font-family: 'JetBrains Mono Nerd Font', 'JetBrains Mono', 'Inter', 'Ubuntu', sans-serif;
-}
+    font-family: 'Inter', 'Noto Sans', 'JetBrains Mono Nerd Font', 'JetBrains Mono', 'Ubuntu', sans-serif;
+}}
 
-window {
+window {{
     background-color: transparent;
-}
+}}
 
-.main-card {
-    background-color: rgba(30, 30, 46, 0.94);
-    border: 2px solid rgba(137, 180, 250, 0.35);
+.main-card {{
+    background-color: {c.get("mantle", "#181825")};
+    border: 2px solid {c.get("accent", "#89b4fa")};
     border-radius: 18px;
     padding: 18px 20px;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
-}
+}}
 
-.header-title {
+.header-title {{
     font-size: 16px;
     font-weight: 900;
-    color: #cdd6f4;
-}
+    color: {c.get("text", "#cdd6f4")};
+}}
 
-.header-icon {
+.header-icon {{
     font-size: 20px;
-    color: #89b4fa;
+    color: {c.get("blue", "#89b4fa")};
     margin-right: 8px;
-}
+}}
 
-.section-box {
-    background-color: rgba(24, 24, 37, 0.85);
-    border: 1px solid rgba(49, 50, 68, 0.9);
+.section-box {{
+    background-color: {c.get("base", "#1e1e2e")};
+    border: 1px solid {c.get("surface0", "#313244")};
     border-radius: 14px;
     padding: 12px 14px;
     margin-top: 10px;
-}
+}}
 
-.section-label {
+.section-label {{
     font-size: 12px;
     font-weight: 800;
-    color: #89b4fa;
+    color: {c.get("blue", "#89b4fa")};
     margin-bottom: 6px;
-}
+}}
 
-.section-label-mic {
-    color: #fab387;
-}
+.section-label-mic {{
+    color: {c.get("peach", "#fab387")};
+}}
 
-.section-label-apps {
-    color: #f5c2e7;
-}
+.section-label-apps {{
+    color: {c.get("pink", "#f5c2e7")};
+}}
 
 /* Dropdown ComboBox Styling */
-combobox {
-    background-color: #313244;
-    border: 1.5px solid #45475a;
+combobox {{
+    background-color: {c.get("surface0", "#313244")};
+    border: 1.5px solid {c.get("surface1", "#45475a")};
     border-radius: 10px;
     padding: 4px 10px;
-    color: #ffffff;
+    color: {c.get("text", "#ffffff")};
     font-size: 12px;
     font-weight: 700;
-}
+}}
 
-combobox:hover {
-    border-color: #89b4fa;
-    background-color: #3c3e56;
-}
+combobox:hover {{
+    border-color: {c.get("blue", "#89b4fa")};
+    background-color: {c.get("surface1", "#45475a")};
+}}
 
-combobox button {
+combobox button {{
     padding: 4px 6px;
-    color: #cdd6f4;
-}
+    color: {c.get("text", "#cdd6f4")};
+}}
 
-combobox window, combobox menu {
-    background-color: #1e1e2e;
-    border: 1.5px solid #89b4fa;
+combobox window, combobox menu {{
+    background-color: {c.get("mantle", "#181825")};
+    border: 1.5px solid {c.get("blue", "#89b4fa")};
     border-radius: 10px;
-    color: #cdd6f4;
+    color: {c.get("text", "#cdd6f4")};
     padding: 4px;
-}
+}}
 
-combobox menu menuitem {
+combobox menu menuitem {{
     padding: 6px 10px;
     border-radius: 6px;
-    color: #cdd6f4;
+    color: {c.get("text", "#cdd6f4")};
     font-size: 12px;
-}
+}}
 
-combobox menu menuitem:hover {
-    background-color: #89b4fa;
+combobox menu menuitem:hover {{
+    background-color: {c.get("blue", "#89b4fa")};
     color: #11111b;
     font-weight: 800;
-}
+}}
 
 /* Range Select Sliders (GtkScale) */
-scale {
+scale {{
     margin: 8px 0px 4px 0px;
-}
+}}
 
-scale trough {
-    background-color: #313244;
+scale trough {{
+    background-color: {c.get("surface0", "#313244")};
     border-radius: 8px;
     min-height: 10px;
     min-width: 220px;
-}
+}}
 
-scale highlight {
-    background: linear-gradient(90deg, #89b4fa, #74c7ec);
+scale highlight {{
+    background: {c.get("blue", "#89b4fa")};
     border-radius: 8px;
     min-height: 10px;
-}
+}}
 
-scale.mic-scale highlight {
-    background: linear-gradient(90deg, #fab387, #f9e2af);
-}
+scale.mic-scale highlight {{
+    background: {c.get("peach", "#fab387")};
+}}
 
-scale.app-scale highlight {
-    background: linear-gradient(90deg, #f5c2e7, #cba6f7);
-}
+scale.app-scale highlight {{
+    background: {c.get("accent", "#cba6f7")};
+}}
 
-scale slider {
-    background-color: #ffffff;
-    border: 2px solid #89b4fa;
+scale slider {{
+    background-color: {c.get("text", "#ffffff")};
+    border: 2px solid {c.get("blue", "#89b4fa")};
     border-radius: 12px;
     min-width: 18px;
     min-height: 18px;
     margin: -4px 0px;
-}
+}}
 
-scale slider:hover {
-    background-color: #b4befe;
-    border-color: #ffffff;
-}
+scale slider:hover {{
+    background-color: {c.get("accent", "#cba6f7")};
+    border-color: {c.get("text", "#ffffff")};
+}}
 
 /* Value Badge */
-.val-badge {
+.val-badge {{
     font-size: 13px;
     font-weight: 900;
-    color: #89b4fa;
+    color: {c.get("blue", "#89b4fa")};
     min-width: 48px;
-}
+}}
 
-.val-badge-mic {
-    color: #fab387;
-}
+.val-badge-mic {{
+    color: {c.get("peach", "#fab387")};
+}}
 
 /* Buttons */
-.btn-mute {
-    background-color: #313244;
-    border: 1.5px solid #45475a;
+.btn-mute {{
+    background-color: {c.get("surface0", "#313244")};
+    border: 1.5px solid {c.get("surface1", "#45475a")};
     border-radius: 10px;
     padding: 6px 12px;
-    color: #cdd6f4;
+    color: {c.get("text", "#cdd6f4")};
     font-size: 14px;
     font-weight: 800;
-}
+}}
 
-.btn-mute:hover {
-    background-color: #45475a;
-    border-color: #89b4fa;
-}
+.btn-mute:hover {{
+    background-color: {c.get("surface1", "#45475a")};
+    border-color: {c.get("blue", "#89b4fa")};
+}}
 
-.btn-mute.is-muted {
+.btn-mute.is-muted {{
     background-color: rgba(243, 139, 168, 0.2);
-    border: 1.5px solid #f38ba8;
-    color: #f38ba8;
-}
+    border: 1.5px solid {c.get("red", "#f38ba8")};
+    color: {c.get("red", "#f38ba8")};
+}}
 
 /* Preset Buttons */
-.btn-preset {
-    background-color: #1e1e2e;
-    border: 1px solid #45475a;
+.btn-preset {{
+    background-color: {c.get("base", "#1e1e2e")};
+    border: 1px solid {c.get("surface1", "#45475a")};
     border-radius: 8px;
     padding: 4px 8px;
-    color: #a6adc8;
+    color: {c.get("subtext0", "#a6adc8")};
     font-size: 11px;
     font-weight: 700;
     margin: 4px 2px 0px 2px;
-}
+}}
 
-.btn-preset:hover {
-    background-color: #89b4fa;
+.btn-preset:hover {{
+    background-color: {c.get("blue", "#89b4fa")};
     color: #11111b;
-    border-color: #89b4fa;
-}
+    border-color: {c.get("blue", "#89b4fa")};
+}}
 
 /* Action Toolbar Buttons */
-.btn-action {
-    background-color: #313244;
-    border: 1px solid #45475a;
+.btn-action {{
+    background-color: {c.get("surface0", "#313244")};
+    border: 1px solid {c.get("surface1", "#45475a")};
     border-radius: 10px;
     padding: 6px 12px;
-    color: #cdd6f4;
+    color: {c.get("text", "#cdd6f4")};
     font-size: 11.5px;
     font-weight: 700;
-}
+}}
 
-.btn-action:hover {
-    background-color: #45475a;
-    color: #ffffff;
-    border-color: #cba6f7;
-}
+.btn-action:hover {{
+    background-color: {c.get("surface1", "#45475a")};
+    color: {c.get("text", "#ffffff")};
+    border-color: {c.get("accent", "#cba6f7")};
+}}
 
-.app-row {
+.app-row {{
     margin-top: 6px;
     padding: 4px 0px;
-}
+}}
 
-.app-title {
+.app-title {{
     font-size: 11.5px;
     font-weight: 700;
-    color: #cdd6f4;
+    color: {c.get("text", "#cdd6f4")};
     min-width: 120px;
-}
-"""
+}}
+""".encode('utf-8')
 
 def launch_gtk_gui():
     import gi
@@ -653,7 +693,7 @@ def launch_gtk_gui():
     from gi.repository import Gtk, Gdk, GtkLayerShell, GLib
 
     css_provider = Gtk.CssProvider()
-    css_provider.load_from_data(GTK_CSS.encode('utf-8'))
+    css_provider.load_from_data(get_sound_gtk_css())
     Gtk.StyleContext.add_provider_for_screen(
         Gdk.Screen.get_default(),
         css_provider,

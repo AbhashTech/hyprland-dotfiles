@@ -1,15 +1,14 @@
 /* =============================================================================
- * Catppuccin Mocha Glassmorphic Wofi Stylesheet
- * Beautiful, modern, sleek popup styling
+ * Dynamic Glassmorphic Wofi Stylesheet
+ * Loads theme colors dynamically from colors.css
  * ============================================================================= */
 
 /* Load Dynamic Theme Color Variables */
 @import "colors.css";
 
-
 /* Global Base */
 * {
-    font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", "RobotoMono Nerd Font", sans-serif;
+    font-family: "Inter", "Noto Sans", "JetBrainsMono Nerd Font", "JetBrains Mono", sans-serif;
     font-size: 13px;
     font-weight: bold;
     border: none;
@@ -29,10 +28,10 @@ window {
 #outer-box {
     margin: 10px;
     padding: 16px;
-    background-color: rgba(24, 24, 37, 0.92);
-    border: 1.5px solid rgba(203, 166, 247, 0.35);
+    background-color: @mantle;
+    border: 1.5px solid @accent;
     border-radius: 18px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 0 16px rgba(203, 166, 247, 0.12);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
 }
 
 /* Search Bar Input */
@@ -40,23 +39,22 @@ window {
     margin: 0px 0px 12px 0px;
     padding: 10px 16px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    background-color: rgba(49, 50, 68, 0.65);
+    border: 1.5px solid @surface1;
+    background-color: @surface0;
     color: @text;
-    caret-color: @mauve;
+    caret-color: @accent;
     font-size: 14px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #input:focus {
-    border: 1px solid rgba(203, 166, 247, 0.80);
-    background-color: rgba(49, 50, 68, 0.85);
-    box-shadow: 0 0 14px rgba(203, 166, 247, 0.25);
+    border: 1.5px solid @accent;
+    background-color: @surface0;
 }
 
 #input image {
     border: none;
-    color: @mauve;
+    color: @accent;
     margin-right: 8px;
 }
 
@@ -83,29 +81,28 @@ window {
     border-radius: 10px;
     border: 1px solid transparent;
     background-color: transparent;
-    color: @subtext1;
+    color: @text;
     transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Hovered Item */
 #entry:hover {
-    background-color: rgba(49, 50, 68, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: @surface0;
+    border: 1px solid @surface1;
     color: @text;
 }
 
 /* Selected / Active Item */
 #entry:selected {
-    background: linear-gradient(90deg, rgba(203, 166, 247, 0.32) 0%, rgba(137, 180, 250, 0.20) 100%);
-    border: 1px solid rgba(203, 166, 247, 0.65);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), 0 0 8px rgba(203, 166, 247, 0.2);
+    background-color: @surface1;
+    border: 1.5px solid @accent;
 }
 
 /* Item Text */
 #text {
     margin: 0px;
     padding: 2px 0px;
-    color: @subtext1;
+    color: @text;
     font-size: 13px;
     font-weight: bold;
 }
@@ -115,7 +112,7 @@ window {
 }
 
 #entry:selected #text {
-    color: #ffffff;
+    color: @accent;
     font-weight: 800;
 }
 

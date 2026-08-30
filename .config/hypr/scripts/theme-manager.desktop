@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Theme Manager
+GenericName=Desktop Theme & Palette Switcher
+Comment=Select and apply custom color palettes across Hyprland, Waybar, and applications
+Exec=python3 /home/kunal/.config/hypr/scripts/theme_switcher.py --gui
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;Appearance;
+StartupWMClass=theme-manager
+StartupNotify=true
+Keywords=theme;palette;colorscheme;hyprland;catppuccin;dracula;nord;gruvbox;

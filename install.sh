@@ -243,17 +243,18 @@ fi
 # 8. User Desktop Shortcuts (App Menu)
 log_info "Deploying custom desktop application shortcuts..."
 mkdir -p "${HOME}/.local/share/applications"
-if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/app-shortcut-creator.desktop" ]; then
-    cp "${DOTFILES_DIR}/.config/hypr/scripts/app-shortcut-creator.desktop" "${HOME}/.local/share/applications/"
-    chmod +x "${HOME}/.local/share/applications/app-shortcut-creator.desktop"
-    if command -v update-desktop-database >/dev/null 2>&1; then
-        update-desktop-database "${HOME}/.local/share/applications" >/dev/null 2>&1 || true
+for desktop_file in app-shortcut-creator.desktop theme-manager.desktop; do
+    if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/${desktop_file}" ]; then
+        cp "${DOTFILES_DIR}/.config/hypr/scripts/${desktop_file}" "${HOME}/.local/share/applications/"
+        chmod +x "${HOME}/.local/share/applications/${desktop_file}"
     fi
-    log_success "Application shortcut creator added to desktop menu."
+done
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "${HOME}/.local/share/applications" >/dev/null 2>&1 || true
 fi
+log_success "Application shortcut creator and Theme Manager added to desktop menu."
 
 # 9. Initialize Theme & Color Variables
-
 log_info "Initializing desktop theme and dynamic color variables..."
 if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" ]; then
     python3 "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" --set catppuccin-mocha --silent 2>/dev/null || true
@@ -267,7 +268,8 @@ echo -e "  ${COLOR_BOLD}source ~/.config/shell/env.sh${COLOR_RESET}"
 echo -e "  ${COLOR_BOLD}source ~/.config/shell/aliases.sh${COLOR_RESET}"
 echo ""
 echo -e "To apply or reload desktop components:"
-echo -e "  • Theme Switcher:    ${COLOR_BOLD}SUPER + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --menu${COLOR_RESET})"
+echo -e "  • Theme Menu:        ${COLOR_BOLD}SUPER + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --menu${COLOR_RESET})"
+echo -e "  • Theme Manager GUI: ${COLOR_BOLD}SUPER + ALT + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --gui${COLOR_RESET})"
 echo -e "  • Hyprland Reload:   ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"
 echo -e "  • Waybar Toggle:     ${COLOR_BOLD}SUPER + SHIFT + W${COLOR_RESET} (or ${COLOR_BOLD}~/.config/waybar/scripts/launch_waybar.sh${COLOR_RESET})"
 echo -e "  • Power Menu:        ${COLOR_BOLD}SUPER + ESCAPE${COLOR_RESET} / ${COLOR_BOLD}SUPER + M${COLOR_RESET} (wlogout)"
