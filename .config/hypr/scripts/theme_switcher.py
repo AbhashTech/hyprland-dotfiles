@@ -1014,8 +1014,13 @@ def send_theme_notification(theme):
         return
     c = theme["colors"]
     icon = "preferences-desktop-theme"
-    title = f"🎨 Theme Applied: {theme.get('name', theme['id'])}"
-    body = f"<b>Accent:</b> <span foreground=\"{c['accent']}\">████ {c['accent']}</span>  |  <b>Type:</b> {theme.get('type', 'dark').capitalize()}\n{theme.get('desc', '')}"
+    theme_name = theme.get("name", theme["id"])
+    theme_type = theme.get("type", "dark").capitalize()
+    theme_desc = theme.get("desc", "")
+    accent = c.get("accent", "")
+    
+    title = f"🎨 Theme Applied: {theme_name}"
+    body = f"Mode: {theme_type}   •   Accent: {accent}\n{theme_desc}"
     try:
         subprocess.run(
             ["notify-send", "-a", "Theme Switcher", "-i", icon, "-r", "9944", title, body],
@@ -1023,6 +1028,7 @@ def send_theme_notification(theme):
         )
     except Exception:
         pass
+
 
 def apply_theme(theme_id, themes=None, notify=True):
     """Apply theme by ID across all desktop configs and trigger live reloads."""
