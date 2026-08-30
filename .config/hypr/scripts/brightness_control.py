@@ -94,15 +94,15 @@ def notify_brightness_osd(device_label=None):
 def change_brightness(delta):
     """Adjust laptop display brightness by delta percentage."""
     if delta > 0:
-        run_cmd(["brightnessctl", "-e4", "-n2", "set", f"{delta}%+"])
+        run_cmd(["brightnessctl", "set", f"{delta}%+"])
     else:
-        run_cmd(["brightnessctl", "-e4", "-n2", "set", f"{abs(delta)}%-"])
+        run_cmd(["brightnessctl", "set", f"{abs(delta)}%-"])
     notify_brightness_osd()
 
 def set_brightness(target_percent):
     """Set exact brightness percentage."""
     target_percent = max(1, min(100, target_percent))
-    run_cmd(["brightnessctl", "-e4", "-n2", "set", f"{target_percent}%"])
+    run_cmd(["brightnessctl", "set", f"{target_percent}%"])
     notify_brightness_osd()
 
 # ---------------------------------------------------------

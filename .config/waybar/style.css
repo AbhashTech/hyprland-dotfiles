@@ -52,6 +52,7 @@ tooltip label {
 #mpris,
 #clock,
 #language,
+#backlight,
 #group-hardware,
 #group-status,
 #group-tray-notif,
@@ -74,6 +75,7 @@ tooltip label {
 #mpris:hover,
 #clock:hover,
 #language:hover,
+#backlight:hover,
 #group-hardware:hover,
 #group-status:hover,
 #group-tray-notif:hover,
@@ -242,6 +244,7 @@ window#waybar.empty #window {
 }
 
 #group-status #pulseaudio,
+#group-status #backlight,
 #group-status #network,
 #group-status #bluetooth,
 #group-status #battery,
@@ -256,6 +259,7 @@ window#waybar.empty #window {
 }
 
 #group-status #pulseaudio:hover,
+#group-status #backlight:hover,
 #group-status #network:hover,
 #group-status #bluetooth:hover,
 #group-status #battery:hover,
@@ -273,6 +277,12 @@ window#waybar.empty #window {
 #pulseaudio.muted {
     color: @subtext0;
     background-color: @module_active_bg;
+}
+
+/* Backlight / Screen Brightness */
+#backlight {
+    color: @yellow;
+    padding: 3px 8px;
 }
 
 /* Bluetooth */

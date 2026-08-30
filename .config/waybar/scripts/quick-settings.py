@@ -183,7 +183,7 @@ def open_menu():
     if "Volume:" in chosen:
         volume_submenu()
     elif "Brightness:" in chosen:
-        brightness_submenu()
+        subprocess.Popen(["/home/kunal/.config/waybar/scripts/brightness-manager.py"])
     elif "Wi-Fi / Network:" in chosen:
         network_submenu()
     elif "Bluetooth:" in chosen:

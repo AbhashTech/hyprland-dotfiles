@@ -540,7 +540,7 @@ def waybar_status():
         tooltip_lines.append("<i>Clipboard history is empty</i>")
 
     tooltip_lines.append("────────────────────────")
-    tooltip_lines.append("<b>Left Click:</b> Browse & Search History / Screenshots")
+    tooltip_lines.append("<b>Left Click:</b> Browse &amp; Search History / Screenshots")
     tooltip_lines.append("<b>Right Click:</b> Delete Items / Manage History")
     tooltip_lines.append("<b>Middle Click:</b> Toggle Private Mode (Pause/Resume)")
 
