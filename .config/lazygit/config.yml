@@ -1,28 +1,28 @@
 # =============================================================================
-# Lazygit Configuration - Gruvbox Light
+# Lazygit Configuration - Nord Arctic
 # =============================================================================
 
 gui:
   theme:
     activeBorderColor:
-      - '#af3a03'
+      - '#88c0d0'
       - bold
     inactiveBorderColor:
-      - '#a89984'
+      - '#4c566a'
     optionsTextColor:
-      - '#076678'
+      - '#81a1c1'
     selectedLineBgColor:
-      - '#d5c4a1'
+      - '#3b4252'
     cherryPickedCommitBgColor:
-      - '#bdae93'
+      - '#434c5e'
     cherryPickedCommitFgColor:
-      - '#af3a03'
+      - '#88c0d0'
     unstagedChangesColor:
-      - '#9d0006'
+      - '#bf616a'
     defaultFgColor:
-      - '#3c3836'
+      - '#eceff4'
     searchingActiveBorderColor:
-      - '#b57614'
+      - '#ebcb8b'
 
 git:
   paging:
