@@ -19,9 +19,12 @@ Applies palettes across:
 - Btop++ System Monitor (Theme files & config)
 - Lazygit (TUI git theme)
 - Swappy (Annotation accent color)
+- Dolphin (KDE File Manager color palette & UI)
+- Kate & KWrite (Editor themes, syntax highlighting & UI)
 
 Provides CLI management and an interactive Fuzzel / Wofi GUI menu (SUPER + T).
 """
+
 
 import os
 import sys
@@ -147,6 +150,9 @@ def ensure_dirs():
     (CONFIG_DIR / "wlogout").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "btop" / "themes").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "zellij").mkdir(parents=True, exist_ok=True)
+    (HOME / ".local" / "share" / "color-schemes").mkdir(parents=True, exist_ok=True)
+    (HOME / ".local" / "share" / "org.kde.syntax-highlighting" / "themes").mkdir(parents=True, exist_ok=True)
+
 
 def get_current_theme(themes):
     """Get ID of currently active theme."""
@@ -703,6 +709,269 @@ def update_swappy_color(theme):
             except Exception:
                 pass
 
+def generate_kde_theme(theme):
+    """
+    Generate ~/.config/kdeglobals and ~/.local/share/color-schemes/<Theme>.colors
+    Applies colors for Dolphin, Kate, KWrite, and all KDE/Qt applications.
+    """
+    c = theme["colors"]
+    name = theme.get("name", theme["id"])
+    theme_id = theme["id"]
+    is_light = theme.get("type") == "light"
+
+    def to_rgb_str(hex_val, default="200,200,200"):
+        if not hex_val:
+            return default
+        r, g, b = hex_to_rgb_tuple(hex_val)
+        return f"{r},{g},{b}"
+
+    base_rgb = to_rgb_str(c.get("base"))
+    mantle_rgb = to_rgb_str(c.get("mantle"))
+    crust_rgb = to_rgb_str(c.get("crust"))
+    surf0_rgb = to_rgb_str(c.get("surface0"))
+    surf1_rgb = to_rgb_str(c.get("surface1"))
+    surf2_rgb = to_rgb_str(c.get("surface2"))
+    text_rgb = to_rgb_str(c.get("text"))
+    subtext0_rgb = to_rgb_str(c.get("subtext0"))
+    subtext1_rgb = to_rgb_str(c.get("subtext1"))
+    accent_rgb = to_rgb_str(c.get("accent"))
+    blue_rgb = to_rgb_str(c.get("blue"))
+    lavender_rgb = to_rgb_str(c.get("lavender"))
+    red_rgb = to_rgb_str(c.get("red"))
+    yellow_rgb = to_rgb_str(c.get("yellow"))
+    green_rgb = to_rgb_str(c.get("green"))
+
+    # Selection foreground color
+    sel_fg_rgb = crust_rgb if not is_light else "255,255,255"
+
+    kdeglobals_content = f"""[General]
+ColorScheme={name}
+Name={name}
+TerminalApplication=kitty
+TerminalService=kitty
+
+[KDE]
+ColorScheme={name}
+contrast=4
+
+[Colors:Window]
+BackgroundNormal={base_rgb}
+BackgroundAlternate={mantle_rgb}
+ForegroundNormal={text_rgb}
+ForegroundInactive={subtext0_rgb}
+ForegroundActive={accent_rgb}
+ForegroundLink={blue_rgb}
+ForegroundVisited={lavender_rgb}
+ForegroundNegative={red_rgb}
+ForegroundNeutral={yellow_rgb}
+ForegroundPositive={green_rgb}
+DecorationFocus={accent_rgb}
+DecorationHover={blue_rgb}
+
+[Colors:View]
+BackgroundNormal={base_rgb}
+BackgroundAlternate={mantle_rgb}
+ForegroundNormal={text_rgb}
+ForegroundInactive={subtext0_rgb}
+ForegroundActive={accent_rgb}
+ForegroundLink={blue_rgb}
+ForegroundVisited={lavender_rgb}
+ForegroundNegative={red_rgb}
+ForegroundNeutral={yellow_rgb}
+ForegroundPositive={green_rgb}
+DecorationFocus={accent_rgb}
+DecorationHover={blue_rgb}
+
+[Colors:Button]
+BackgroundNormal={surf0_rgb}
+BackgroundAlternate={surf1_rgb}
+ForegroundNormal={text_rgb}
+ForegroundInactive={subtext0_rgb}
+ForegroundActive={accent_rgb}
+ForegroundLink={blue_rgb}
+ForegroundVisited={lavender_rgb}
+ForegroundNegative={red_rgb}
+ForegroundNeutral={yellow_rgb}
+ForegroundPositive={green_rgb}
+DecorationFocus={accent_rgb}
+DecorationHover={blue_rgb}
+
+[Colors:Selection]
+BackgroundNormal={accent_rgb}
+BackgroundAlternate={surf2_rgb}
+ForegroundNormal={sel_fg_rgb}
+ForegroundInactive={text_rgb}
+ForegroundActive={sel_fg_rgb}
+ForegroundLink={blue_rgb}
+ForegroundVisited={lavender_rgb}
+ForegroundNegative={red_rgb}
+ForegroundNeutral={yellow_rgb}
+ForegroundPositive={green_rgb}
+DecorationFocus={accent_rgb}
+DecorationHover={blue_rgb}
+
+[Colors:Tooltip]
+BackgroundNormal={mantle_rgb}
+BackgroundAlternate={crust_rgb}
+ForegroundNormal={text_rgb}
+ForegroundInactive={subtext0_rgb}
+ForegroundActive={accent_rgb}
+ForegroundLink={blue_rgb}
+ForegroundVisited={lavender_rgb}
+ForegroundNegative={red_rgb}
+ForegroundNeutral={yellow_rgb}
+ForegroundPositive={green_rgb}
+DecorationFocus={accent_rgb}
+DecorationHover={blue_rgb}
+
+[Colors:Header]
+BackgroundNormal={mantle_rgb}
+BackgroundAlternate={crust_rgb}
+ForegroundNormal={text_rgb}
+ForegroundInactive={subtext0_rgb}
+ForegroundActive={accent_rgb}
+ForegroundLink={blue_rgb}
+ForegroundVisited={lavender_rgb}
+ForegroundNegative={red_rgb}
+ForegroundNeutral={yellow_rgb}
+ForegroundPositive={green_rgb}
+DecorationFocus={accent_rgb}
+DecorationHover={blue_rgb}
+
+[Colors:Complementary]
+BackgroundNormal={mantle_rgb}
+BackgroundAlternate={crust_rgb}
+ForegroundNormal={text_rgb}
+ForegroundInactive={subtext0_rgb}
+ForegroundActive={accent_rgb}
+ForegroundLink={blue_rgb}
+ForegroundVisited={lavender_rgb}
+ForegroundNegative={red_rgb}
+ForegroundNeutral={yellow_rgb}
+ForegroundPositive={green_rgb}
+DecorationFocus={accent_rgb}
+DecorationHover={blue_rgb}
+"""
+
+    kde_config = CONFIG_DIR / "kdeglobals"
+    kde_config.write_text(kdeglobals_content)
+    df_kde = DOTFILES_DIR / "kdeglobals"
+    if df_kde.parent.exists():
+        df_kde.write_text(kdeglobals_content)
+
+    color_schemes_dir = HOME / ".local" / "share" / "color-schemes"
+    color_schemes_dir.mkdir(parents=True, exist_ok=True)
+    scheme_file = color_schemes_dir / f"{theme_id}.colors"
+    scheme_file.write_text(kdeglobals_content)
+
+def generate_kate_theme(theme):
+    """
+    Generate Kate / KWrite syntax highlighting theme in:
+    ~/.local/share/org.kde.syntax-highlighting/themes/<theme_id>.theme
+    and update ~/.config/katerc and ~/.config/kwriterc.
+    """
+    c = theme["colors"]
+    name = theme.get("name", theme["id"])
+    theme_id = theme["id"]
+    is_light = theme.get("type") == "light"
+
+    syntax_dir = HOME / ".local" / "share" / "org.kde.syntax-highlighting" / "themes"
+    syntax_dir.mkdir(parents=True, exist_ok=True)
+    theme_json_file = syntax_dir / f"{theme_id}.theme"
+
+    theme_def = {
+        "_comments": f"Theme generated by theme_switcher.py for {name}",
+        "metadata": {
+            "name": name,
+            "revision": 1
+        },
+        "editor-colors": {
+            "BackgroundColor": c.get("base", "#1e1e2e"),
+            "CodeFolding": c.get("surface2", "#585b70"),
+            "CurrentLine": c.get("surface0", "#313244"),
+            "CurrentLineNumber": c.get("accent", "#cba6f7"),
+            "IconBorder": c.get("mantle", "#181825"),
+            "IndentationLine": c.get("surface1", "#45475a"),
+            "LineNumbers": c.get("overlay0", "#6c7086"),
+            "MarkBookmark": c.get("blue", "#89b4fa"),
+            "MarkBreakpointActive": c.get("red", "#f38ba8"),
+            "MarkBreakpointDisabled": c.get("overlay0", "#6c7086"),
+            "MarkBreakpointReached": c.get("yellow", "#f9e2af"),
+            "MarkError": c.get("red", "#f38ba8"),
+            "MarkExecution": c.get("teal", "#94e2d5"),
+            "MarkWarning": c.get("peach", "#fab387"),
+            "ModifiedLines": c.get("yellow", "#f9e2af"),
+            "ReplaceHighlight": c.get("green", "#a6e3a1"),
+            "SavedLines": c.get("green", "#a6e3a1"),
+            "SearchHighlight": c.get("yellow", "#f9e2af"),
+            "Separator": c.get("surface0", "#313244"),
+            "SpellChecking": c.get("red", "#f38ba8"),
+            "TabMarker": c.get("surface1", "#45475a"),
+            "TemplateBackground": c.get("surface0", "#313244"),
+            "TemplateFocusedEditablePlaceholder": c.get("surface1", "#45475a"),
+            "TemplateReadOnlyPlaceholder": c.get("mantle", "#181825"),
+            "TextSelection": c.get("surface2", "#585b70"),
+            "WordWrapMarker": c.get("surface1", "#45475a")
+        },
+        "text-styles": {
+            "Normal": { "text-color": c.get("text", "#cdd6f4"), "selected-text-color": "#ffffff" if not is_light else "#000000" },
+            "Keyword": { "text-color": c.get("mauve", c.get("accent", "#cba6f7")), "bold": True },
+            "Function": { "text-color": c.get("blue", "#89b4fa") },
+            "Variable": { "text-color": c.get("text", "#cdd6f4") },
+            "ControlFlow": { "text-color": c.get("mauve", c.get("accent", "#cba6f7")), "bold": True },
+            "String": { "text-color": c.get("green", "#a6e3a1") },
+            "Char": { "text-color": c.get("teal", "#94e2d5") },
+            "SpecialChar": { "text-color": c.get("pink", "#f5c2e7") },
+            "DecVal": { "text-color": c.get("peach", "#fab387") },
+            "BaseN": { "text-color": c.get("peach", "#fab387") },
+            "Float": { "text-color": c.get("peach", "#fab387") },
+            "Constant": { "text-color": c.get("peach", "#fab387") },
+            "Comment": { "text-color": c.get("overlay0", "#6c7086"), "italic": True },
+            "Documentation": { "text-color": c.get("overlay2", "#9399b2") },
+            "DataType": { "text-color": c.get("yellow", "#f9e2af") },
+            "Preprocessor": { "text-color": c.get("red", "#f38ba8") },
+            "Attribute": { "text-color": c.get("sky", "#89dceb") },
+            "RegionMarker": { "text-color": c.get("sapphire", "#74c7ec"), "background-color": c.get("surface0", "#313244") },
+            "Information": { "text-color": c.get("blue", "#89b4fa") },
+            "Warning": { "text-color": c.get("peach", "#fab387") },
+            "Alert": { "text-color": c.get("red", "#f38ba8"), "bold": True },
+            "Error": { "text-color": c.get("red", "#f38ba8"), "underline": True },
+            "Others": { "text-color": c.get("rosewater", "#f5e0dc") }
+        }
+    }
+
+    try:
+        with open(theme_json_file, "w", encoding="utf-8") as f:
+            json.dump(theme_def, f, indent=4)
+    except Exception as e:
+        print(f"Error saving syntax theme {theme_json_file}: {e}", file=sys.stderr)
+
+    # Update katerc & kwriterc
+    for app_rc in [CONFIG_DIR / "katerc", CONFIG_DIR / "kwriterc"]:
+        try:
+            content = app_rc.read_text() if app_rc.exists() else ""
+            if "[KTextEditor Renderer]" in content:
+                import re
+                content = re.sub(r"Color Theme=.*", f"Color Theme={name}", content)
+                content = re.sub(r"Auto Color Theme Selection=.*", "Auto Color Theme Selection=false", content)
+            else:
+                content += f"\n[KTextEditor Renderer]\nAuto Color Theme Selection=false\nColor Theme={name}\n"
+            app_rc.write_text(content.strip() + "\n")
+        except Exception as e:
+            print(f"Error updating {app_rc}: {e}", file=sys.stderr)
+
+def update_dolphin_theme(theme):
+    """Ensure dolphinrc exists and is synchronized with KDE global theme."""
+    dolphin_rc = CONFIG_DIR / "dolphinrc"
+    df_dolphin = DOTFILES_DIR / "dolphinrc"
+    try:
+        if not dolphin_rc.exists():
+            dolphin_rc.write_text("[General]\nVersion=202\n")
+        if df_dolphin.parent.exists() and not df_dolphin.exists():
+            df_dolphin.write_text(dolphin_rc.read_text())
+    except Exception:
+        pass
+
 # =============================================================================
 # Core Application & Live Reload
 # =============================================================================
@@ -731,6 +1000,13 @@ def reload_desktop():
         subprocess.run(["killall", "-SIGUSR1", "kitty"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception:
         pass
+
+    # 5. Reload KDE/Qt services if running
+    for bus in ["org.kde.kded6", "org.kde.kded5"]:
+        try:
+            subprocess.run(["qdbus", bus, "/kded", f"{bus}.reconfigure"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
 
 def send_theme_notification(theme):
     """Send visual desktop notification with theme information."""
@@ -776,6 +1052,9 @@ def apply_theme(theme_id, themes=None, notify=True):
     update_zellij_theme(theme)
     update_lazygit_theme(theme)
     update_swappy_color(theme)
+    generate_kde_theme(theme)
+    generate_kate_theme(theme)
+    update_dolphin_theme(theme)
 
     # Save state
     save_state(theme_id)
@@ -788,6 +1067,7 @@ def apply_theme(theme_id, themes=None, notify=True):
 
     print(f"{C_GREEN}✓ Successfully applied theme:{C_RESET} {C_BOLD}{theme.get('name', theme_id)}{C_RESET} ({theme_id})")
     return True
+
 
 # =============================================================================
 # Interactive GUI Menu (Fuzzel / Wofi)

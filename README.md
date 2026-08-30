@@ -253,10 +253,11 @@ The dotfiles include a centralized, modular **Theming System** ([`theme_switcher
 - **Dynamic Color Variables & Transparent Waybar Architecture**:
   - **Waybar Dynamic Backdrop**: Waybar's root glassmorphic background, shadow, module containers, borders, and tooltips automatically adjust their transparency, tint, and borders based on the active theme's palette and dark/light mode (`@waybar_bg`, `@waybar_border`, `@module_bg`, `@module_hover_bg`).
   - **Hyprland**: Border colors and shadows consume variables from [`modules/theme.lua`](file:///home/kunal/.dotfiles/.config/hypr/modules/theme.lua).
-  - **Kitty**: Automatically includes [`theme.conf`](file:///home/kunal/.dotfiles/.config/kitty/theme.conf) containing active 16-color ANSI terminal palette.
+  - **Dolphin, Kate & KWrite**: KDE color schemes ([`kdeglobals`](file:///home/kunal/.dotfiles/.config/kdeglobals)), editor syntax highlighting themes ([`org.kde.syntax-highlighting`](file:///home/kunal/.local/share/org.kde.syntax-highlighting/themes)), and UI configs ([`katerc`](file:///home/kunal/.config/katerc), [`kwriterc`](file:///home/kunal/.config/kwriterc)) synchronized live across all 19 themes.
   - **Fuzzel, Mako, Wofi, Wlogout & Hyprlock**: Color variables updated seamlessly.
   - **Starship, Zellij, Btop, Lazygit & Swappy**: Palettes and accents dynamically synchronized.
   - **Extensibility**: Add new themes at any time by dropping a single `.json` file into `~/.config/theme/<name>.json`.
+
 
 
 - **Usage**:
