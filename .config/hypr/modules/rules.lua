@@ -6,7 +6,7 @@
 -- and https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 
 -- Persistent workspaces (1 to 4)
--- Workspace 1 defaults to internal laptop display (eDP-1)
+-- Workspaces 1 & 3: Internal laptop display (eDP-1)
 hl.workspace_rule({
     workspace  = "1",
     monitor    = "eDP-1",
@@ -14,7 +14,13 @@ hl.workspace_rule({
     persistent = true,
 })
 
--- Workspace 2 defaults to external monitor (HDMI-A-1 or secondary display)
+hl.workspace_rule({
+    workspace  = "3",
+    monitor    = "eDP-1",
+    persistent = true,
+})
+
+-- Workspaces 2 & 4: External monitor (HDMI-A-1 or secondary display)
 hl.workspace_rule({
     workspace  = "2",
     monitor    = "HDMI-A-1",
@@ -22,14 +28,9 @@ hl.workspace_rule({
     persistent = true,
 })
 
--- Workspaces 3 and 4 are persistent
-hl.workspace_rule({
-    workspace  = "3",
-    persistent = true,
-})
-
 hl.workspace_rule({
     workspace  = "4",
+    monitor    = "HDMI-A-1",
     persistent = true,
 })
 

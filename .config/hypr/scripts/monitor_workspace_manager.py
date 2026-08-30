@@ -108,11 +108,13 @@ def get_clients():
 def find_available_workspace(target_monitor_name: str, monitors: list, clients: list) -> int:
     """
     Find the best available workspace to assign to target_monitor_name.
-    Prioritizes lowest numbered workspace in 1..DEFAULT_WORKSPACE_COUNT:
-    1. Not active on any other monitor AND has no windows
-    2. Not active on any other monitor
-    3. Next unused workspace ID
+    Internal display (eDP-1) prefers [1, 3], while external displays prefer [2, 4].
     """
+    if "eDP" in target_monitor_name:
+        candidate_order = [1, 3, 2, 4]
+    else:
+        candidate_order = [2, 4, 1, 3]
+
     # Active workspace IDs on other monitors
     other_monitors_active_ws = set()
     for m in monitors:
@@ -128,13 +130,13 @@ def find_available_workspace(target_monitor_name: str, monitors: list, clients: 
         if ws and isinstance(ws, dict) and "id" in ws:
             ws_with_windows.add(ws["id"])
 
-    # 1. Look for an empty workspace in 1..DEFAULT_WORKSPACE_COUNT not active on another monitor
-    for ws_id in range(1, DEFAULT_WORKSPACE_COUNT + 1):
+    # 1. Look for an empty preferred workspace not active on another monitor
+    for ws_id in candidate_order:
         if ws_id not in other_monitors_active_ws and ws_id not in ws_with_windows:
             return ws_id
 
-    # 2. Look for any workspace in 1..DEFAULT_WORKSPACE_COUNT not active on another monitor
-    for ws_id in range(1, DEFAULT_WORKSPACE_COUNT + 1):
+    # 2. Look for any preferred workspace not active on another monitor
+    for ws_id in candidate_order:
         if ws_id not in other_monitors_active_ws:
             return ws_id
 
