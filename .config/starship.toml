@@ -16,7 +16,7 @@ $cmd_duration\
 $line_break\
 $character"""
 
-palette = "nord"
+palette = "catppuccin_macchiato"
 
 [palettes.catppuccin_mocha]
 rosewater = "#f5e0dc"

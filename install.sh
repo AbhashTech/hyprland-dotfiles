@@ -119,7 +119,14 @@ if command -v pacman >/dev/null 2>&1; then
         python
         python-gobject
         gtk3
+        gtk4
         gtk-layer-shell
+        xdg-desktop-portal
+        xdg-desktop-portal-gtk
+        xdg-desktop-portal-hyprland
+        dconf
+        gsettings-desktop-schemas
+        xsettingsd
         ttf-jetbrains-mono-nerd
         papirus-icon-theme
 
@@ -158,6 +165,11 @@ DOT_CONFIG_DIRS=(
     "swappy"
     "shell"
     "theme"
+    "gtk-3.0"
+    "gtk-4.0"
+    "xdg-desktop-portal"
+    "xsettingsd"
+    "environment.d"
 )
 
 

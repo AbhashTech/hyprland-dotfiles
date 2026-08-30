@@ -150,6 +150,9 @@ def ensure_dirs():
     (CONFIG_DIR / "wlogout").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "btop" / "themes").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "zellij").mkdir(parents=True, exist_ok=True)
+    (CONFIG_DIR / "gtk-3.0").mkdir(parents=True, exist_ok=True)
+    (CONFIG_DIR / "gtk-4.0").mkdir(parents=True, exist_ok=True)
+    (CONFIG_DIR / "xsettingsd").mkdir(parents=True, exist_ok=True)
     (HOME / ".local" / "share" / "color-schemes").mkdir(parents=True, exist_ok=True)
     (HOME / ".local" / "share" / "org.kde.syntax-highlighting" / "themes").mkdir(parents=True, exist_ok=True)
 
@@ -973,6 +976,116 @@ def update_dolphin_theme(theme):
     except Exception:
         pass
 
+def update_systemwide_theme(theme):
+    """
+    Set systemwide light/dark theme across desktop environments and applications.
+    Synchronizes:
+    - XDG Desktop Portal & GSettings (org.gnome.desktop.interface color-scheme)
+    - Dconf keys (/org/gnome/desktop/interface/)
+    - GTK 3.0 & GTK 4.0 configuration (~/.config/gtk-3.0/settings.ini & ~/.config/gtk-4.0/settings.ini)
+    - XSettings daemon (~/.config/xsettingsd/xsettingsd.conf)
+    Ensures Web Browsers (Firefox, Chrome), Electron apps (VS Code, Discord, Obsidian),
+    Libadwaita/GTK4 apps, Flatpaks, and Qt/KDE apps switch between light and dark modes automatically.
+    """
+    is_dark = (theme.get("type", "dark").lower() != "light")
+    color_scheme = "prefer-dark" if is_dark else "default"
+    gtk_dark_val = "1" if is_dark else "0"
+    gtk_theme_name = "Adwaita-dark" if is_dark else "Adwaita"
+    icon_theme_name = "Papirus-Dark" if is_dark else "Papirus-Light"
+
+    # 1. Update GSettings (org.gnome.desktop.interface) - primary source for XDG Desktop Portal
+    if shutil.which("gsettings"):
+        for schema_key, val in [
+            ("color-scheme", color_scheme),
+            ("gtk-theme", gtk_theme_name),
+        ]:
+            try:
+                res = subprocess.run(
+                    ["gsettings", "set", "org.gnome.desktop.interface", schema_key, val],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                # Fallback to prefer-light if default was rejected or vice versa
+                if res.returncode != 0 and schema_key == "color-scheme" and not is_dark:
+                    subprocess.run(
+                        ["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "prefer-light"],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+            except Exception:
+                pass
+
+    # 2. Update DConf directly if available
+    if shutil.which("dconf"):
+        for key_path, val in [
+            ("/org/gnome/desktop/interface/color-scheme", f"'{color_scheme}'"),
+            ("/org/gnome/desktop/interface/gtk-theme", f"'{gtk_theme_name}'"),
+        ]:
+            try:
+                subprocess.run(
+                    ["dconf", "write", key_path, val],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            except Exception:
+                pass
+
+    # 3. Update GTK 3.0 and GTK 4.0 settings.ini
+    for gtk_ver in ["gtk-3.0", "gtk-4.0"]:
+        gtk_dir = CONFIG_DIR / gtk_ver
+        gtk_dir.mkdir(parents=True, exist_ok=True)
+        ini_file = gtk_dir / "settings.ini"
+
+        settings_dict = {}
+        if ini_file.exists():
+            try:
+                content = ini_file.read_text(encoding="utf-8")
+                for line in content.splitlines():
+                    line_str = line.strip()
+                    if "=" in line_str and not line_str.startswith(("#", ";", "[")):
+                        k, v = line_str.split("=", 1)
+                        settings_dict[k.strip()] = v.strip()
+            except Exception:
+                pass
+
+        settings_dict["gtk-application-prefer-dark-theme"] = gtk_dark_val
+        settings_dict["gtk-color-scheme"] = f'"{color_scheme}"'
+        if "gtk-theme-name" not in settings_dict or settings_dict["gtk-theme-name"] in ["Adwaita", "Adwaita-dark", "Breeze", "Breeze-Dark"]:
+            settings_dict["gtk-theme-name"] = gtk_theme_name
+        if "gtk-icon-theme-name" not in settings_dict or settings_dict["gtk-icon-theme-name"] in ["Papirus", "Papirus-Dark", "Papirus-Light"]:
+            settings_dict["gtk-icon-theme-name"] = icon_theme_name
+
+        new_lines = ["[Settings]"]
+        for k, v in sorted(settings_dict.items()):
+            new_lines.append(f"{k} = {v}")
+        new_lines.append("")
+
+        new_content = "\n".join(new_lines)
+        try:
+            ini_file.write_text(new_content, encoding="utf-8")
+            df_gtk_file = DOTFILES_DIR / gtk_ver / "settings.ini"
+            if df_gtk_file.parent.exists():
+                df_gtk_file.write_text(new_content, encoding="utf-8")
+        except Exception as e:
+            print(f"Error writing {ini_file}: {e}", file=sys.stderr)
+
+    # 4. Update XSettings daemon config (xsettingsd)
+    xsettings_dir = CONFIG_DIR / "xsettingsd"
+    xsettings_dir.mkdir(parents=True, exist_ok=True)
+    xsettings_file = xsettings_dir / "xsettingsd.conf"
+    xsettings_content = f"""Net/ThemeName "{gtk_theme_name}"
+Net/IconThemeName "{icon_theme_name}"
+Gtk/ApplicationPreferDarkTheme {gtk_dark_val}
+Gtk/ColorScheme "{color_scheme}"
+"""
+    try:
+        xsettings_file.write_text(xsettings_content, encoding="utf-8")
+        df_xsettings = DOTFILES_DIR / "xsettingsd" / "xsettingsd.conf"
+        if df_xsettings.parent.exists():
+            df_xsettings.write_text(xsettings_content, encoding="utf-8")
+    except Exception:
+        pass
+
 # =============================================================================
 # Core Application & Live Reload
 # =============================================================================
@@ -1006,6 +1119,15 @@ def reload_desktop():
     for bus in ["org.kde.kded6", "org.kde.kded5"]:
         try:
             subprocess.run(["qdbus", bus, "/kded", f"{bus}.reconfigure"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
+    # 6. Reload or spawn xsettingsd daemon
+    if shutil.which("xsettingsd"):
+        try:
+            res = subprocess.run(["killall", "-HUP", "xsettingsd"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if res.returncode != 0:
+                subprocess.Popen(["xsettingsd"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except Exception:
             pass
 
@@ -1062,6 +1184,7 @@ def apply_theme(theme_id, themes=None, notify=True):
     generate_kde_theme(theme)
     generate_kate_theme(theme)
     update_dolphin_theme(theme)
+    update_systemwide_theme(theme)
 
     # Save state
     save_state(theme_id)
@@ -2373,6 +2496,68 @@ def list_themes(themes):
     print(f"\n{C_BOLD}Tip:{C_RESET} Drop new theme JSON files in {C_YELLOW}~/.config/theme/<name>.json{C_RESET}")
     print(f"     Press {C_YELLOW}SUPER + T{C_RESET} to open the interactive theme menu.\n")
 
+THEME_PAIRS = {
+    "catppuccin-mocha": "catppuccin-latte",
+    "catppuccin-macchiato": "catppuccin-latte",
+    "catppuccin-frappe": "catppuccin-latte",
+    "catppuccin-latte": "catppuccin-mocha",
+    "everforest": "everforest-light",
+    "everforest-light": "everforest",
+    "gruvbox-dark": "gruvbox-light",
+    "gruvbox-light": "gruvbox-dark",
+    "nord": "nord-light",
+    "nord-light": "nord",
+    "one-dark": "one-light",
+    "one-light": "one-dark",
+    "rose-pine": "rose-pine-dawn",
+    "rose-pine-dawn": "rose-pine",
+    "tokyo-night": "tokyo-night-day",
+    "tokyo-night-day": "tokyo-night",
+    "solarized-dark": "solarized-light",
+    "solarized-light": "solarized-dark",
+    "cyberpunk": "catppuccin-latte",
+    "dracula": "catppuccin-latte",
+}
+
+def set_mode(mode="toggle", themes=None, notify=True):
+    """
+    Switch or toggle between dark and light themes systemwide.
+    mode can be 'dark', 'light', or 'toggle'.
+    """
+    if themes is None:
+        themes = load_themes()
+
+    current_id = get_current_theme(themes)
+    current_data = themes.get(current_id, {})
+    current_type = current_data.get("type", "dark").lower()
+
+    if mode == "toggle":
+        target_type = "light" if current_type == "dark" else "dark"
+    elif mode in ["dark", "light"]:
+        target_type = mode
+    else:
+        print(f"{C_RED}Invalid mode: {mode}. Use 'dark', 'light', or 'toggle'.{C_RESET}", file=sys.stderr)
+        return False
+
+    if current_type == target_type:
+        # Re-apply current theme to ensure all systemwide settings are synchronized
+        apply_theme(current_id, themes=themes, notify=notify)
+        return True
+
+    # Find paired theme if available
+    paired_id = THEME_PAIRS.get(current_id)
+    if paired_id and paired_id in themes and themes[paired_id].get("type", "").lower() == target_type:
+        target_id = paired_id
+    else:
+        # Fallback to first theme matching target_type or defaults
+        matching = [tid for tid, tdata in themes.items() if tdata.get("type", "").lower() == target_type]
+        if matching:
+            target_id = matching[0]
+        else:
+            target_id = "catppuccin-latte" if target_type == "light" else "catppuccin-mocha"
+
+    return apply_theme(target_id, themes=themes, notify=notify)
+
 def cycle_theme(themes, forward=True):
     """Cycle to next or previous theme in registry."""
     theme_keys = sorted(themes.keys())
@@ -2406,6 +2591,10 @@ def main():
     parser.add_argument("-n", "--next", action="store_true", help="Cycle to the next theme")
     parser.add_argument("-p", "--prev", action="store_true", help="Cycle to the previous theme")
     parser.add_argument("-r", "--random", action="store_true", help="Apply a random theme")
+    parser.add_argument("--dark", action="store_true", help="Set dark mode systemwide")
+    parser.add_argument("--light", action="store_true", help="Set light mode systemwide")
+    parser.add_argument("--toggle-mode", action="store_true", help="Toggle between dark and light mode systemwide")
+    parser.add_argument("--mode", choices=["dark", "light", "toggle"], help="Set or toggle theme mode systemwide")
     parser.add_argument("--silent", action="store_true", help="Suppress desktop notifications")
 
     args = parser.parse_args()
@@ -2413,6 +2602,12 @@ def main():
 
     if args.list:
         list_themes(themes)
+    elif args.dark or args.mode == "dark":
+        set_mode("dark", themes=themes, notify=not args.silent)
+    elif args.light or args.mode == "light":
+        set_mode("light", themes=themes, notify=not args.silent)
+    elif args.toggle_mode or args.mode == "toggle":
+        set_mode("toggle", themes=themes, notify=not args.silent)
     elif args.set:
         apply_theme(args.set, themes=themes, notify=not args.silent)
     elif args.current:

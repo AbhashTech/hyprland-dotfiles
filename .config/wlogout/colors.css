@@ -1,9 +1,9 @@
-/* Wlogout Colors: Nord Arctic */
-@define-color base            #2e3440;
-@define-color mantle          #242933;
-@define-color crust           #1e222a;
-@define-color text            #eceff4;
-@define-color surface0        #3b4252;
-@define-color surface1        #434c5e;
-@define-color accent          #88c0d0;
-@define-color bg_overlay      rgba(30, 34, 42, 0.75);
+/* Wlogout Colors: Catppuccin Macchiato */
+@define-color base            #24273a;
+@define-color mantle          #1e2030;
+@define-color crust           #181926;
+@define-color text            #cad3f5;
+@define-color surface0        #363a4f;
+@define-color surface1        #494d64;
+@define-color accent          #c6a0f6;
+@define-color bg_overlay      rgba(24, 25, 38, 0.75);

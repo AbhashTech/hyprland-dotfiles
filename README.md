@@ -308,19 +308,23 @@ The dotfiles include a centralized, modular **Theming System** ([`theme_switcher
   - **Waybar Dynamic Backdrop**: Waybar's root glassmorphic background, shadow, module containers, borders, and tooltips automatically adjust their transparency, tint, and borders based on the active theme's palette and dark/light mode (`@waybar_bg`, `@waybar_border`, `@module_bg`, `@module_hover_bg`).
   - **Hyprland**: Border colors and shadows consume variables from [`modules/theme.lua`](file:///home/kunal/.dotfiles/.config/hypr/modules/theme.lua).
   - **Dolphin, Kate & KWrite**: KDE color schemes ([`kdeglobals`](file:///home/kunal/.dotfiles/.config/kdeglobals)), editor syntax highlighting themes ([`org.kde.syntax-highlighting`](file:///home/kunal/.local/share/org.kde.syntax-highlighting/themes)), and UI configs ([`katerc`](file:///home/kunal/.config/katerc), [`kwriterc`](file:///home/kunal/.config/kwriterc)) synchronized live across all 19 themes.
-  - **Fuzzel, Mako, Wofi, Wlogout & Hyprlock**: Color variables updated seamlessly.
   - **Starship, Zellij, Btop, Lazygit & Swappy**: Palettes and accents dynamically synchronized.
+  - **Systemwide Light / Dark Mode & Portal Integration**: Sets `org.gnome.desktop.interface color-scheme` ('prefer-dark' / 'prefer-light') via GSettings and DConf, configures GTK 3.0 & GTK 4.0 `settings.ini`, and triggers XDG Desktop Portal updates so Web Browsers (Firefox, Chrome), Electron apps (VS Code, Discord, Obsidian), Libadwaita/GTK4 apps, Flatpaks, and Qt apps instantly switch between light and dark modes.
   - **Extensibility**: Add new themes at any time by dropping a single `.json` file into `~/.config/theme/<name>.json`.
 
 
 
 - **Usage**:
   - **Graphical Menu**: Press **`SUPER + T`** to open the interactive Fuzzel/Wofi theme picker with active indicator.
+  - **Theme Manager GUI**: Press **`SUPER + ALT + T`** to open the GTK3 Theme Manager & Studio.
   - **Cycle Themes**: Press **`SUPER + CTRL + T`** to instantly cycle forward through all available themes.
   - **Terminal CLI**:
     ```bash
     python3 ~/.config/hypr/scripts/theme_switcher.py --list
     python3 ~/.config/hypr/scripts/theme_switcher.py --set tokyo-night
+    python3 ~/.config/hypr/scripts/theme_switcher.py --dark         # Switch to dark mode systemwide
+    python3 ~/.config/hypr/scripts/theme_switcher.py --light        # Switch to light mode systemwide
+    python3 ~/.config/hypr/scripts/theme_switcher.py --toggle-mode  # Toggle between dark & light systemwide
     python3 ~/.config/hypr/scripts/theme_switcher.py --next
     ```
 
