@@ -92,6 +92,13 @@ hl.layer_rule({
     blur  = true,
 })
 
+hl.layer_rule({
+    name  = "sound-control-blur",
+    match = { namespace = "sound-control-popup" },
+    blur  = true,
+    ignore_alpha = 0.2,
+})
+
 -- Hyprland-run windowrule
 hl.window_rule({
     name  = "move-hyprland-run",
@@ -132,6 +139,15 @@ hl.window_rule({
     float  = true,
     size   = "850 560",
     center = true,
+})
+
+hl.window_rule({
+    name    = "float-soundctl",
+    match   = { class = "soundctl-floating" },
+    float   = true,
+    size    = "850 560",
+    center  = true,
+    opacity = "0.98 0.92",
 })
 
 -- Scratchpad Dropdown Terminal & TUI Overlays

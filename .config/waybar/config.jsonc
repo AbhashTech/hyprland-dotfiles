@@ -214,7 +214,8 @@
         },
         "scroll-step": 5,
         "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle || pactl set-sink-mute @DEFAULT_SINK@ toggle",
-        "on-click-right": "kitty --hold -e wpctl status",
+        "on-click-right": "/home/kunal/.config/waybar/scripts/sound-menu.sh",
+        "on-click-middle": "/home/kunal/.config/waybar/scripts/sound-menu.sh --tui",
         "tooltip-format": "{desc} | Volume: {volume}%"
     },
 
