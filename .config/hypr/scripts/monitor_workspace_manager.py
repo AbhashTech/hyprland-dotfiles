@@ -167,7 +167,14 @@ def assign_workspaces():
             best_ws = find_available_workspace(m_name, monitors, clients)
             log(f"Monitor {m_name} is on workspace {active_ws}. Reassigning to available workspace {best_ws}...")
             
-            run_hyprctl_eval(f'hl.dsp.focus({{ monitor = "{m_name}" }}); hl.dsp.focus({{ workspace = {best_ws} }})')
+            # Migrate any windows from the temporary workspace to target workspace
+            for c in clients:
+                if c.get("workspace", {}).get("id") == active_ws:
+                    c_addr = c.get("address")
+                    if c_addr:
+                        run_hyprctl_eval(f'hl.dispatch(hl.dsp.window.move({{ address = "{c_addr}", workspace = {best_ws} }}))')
+
+            run_hyprctl_eval(f'hl.dispatch(hl.dsp.focus({{ monitor = "{m_name}" }})); hl.dispatch(hl.dsp.focus({{ workspace = {best_ws} }}))')
             monitors = get_monitors()
 
 
@@ -175,7 +182,7 @@ def assign_monitor_workspace(monitor_name: str):
     """
     Assign an available workspace specifically to the newly added monitor_name.
     """
-    time.sleep(0.15)  # Allow Hyprland to finish monitor setup
+    time.sleep(0.25)  # Allow Hyprland to finish monitor setup
     monitors = get_monitors()
     clients = get_clients()
     
@@ -184,10 +191,18 @@ def assign_monitor_workspace(monitor_name: str):
         log(f"Monitor {monitor_name} not found in monitors list.")
         return
 
+    active_ws = target_mon.get("activeWorkspace", {}).get("id", 1)
     best_ws = find_available_workspace(monitor_name, monitors, clients)
-    log(f"New monitor {monitor_name} connected. Assigning available workspace {best_ws}...")
+    log(f"New monitor {monitor_name} connected on workspace {active_ws}. Assigning available workspace {best_ws}...")
     
-    run_hyprctl_eval(f'hl.dsp.focus({{ monitor = "{monitor_name}" }}); hl.dsp.focus({{ workspace = {best_ws} }})')
+    if active_ws > DEFAULT_WORKSPACE_COUNT:
+        for c in clients:
+            if c.get("workspace", {}).get("id") == active_ws:
+                c_addr = c.get("address")
+                if c_addr:
+                    run_hyprctl_eval(f'hl.dispatch(hl.dsp.window.move({{ address = "{c_addr}", workspace = {best_ws} }}))')
+
+    run_hyprctl_eval(f'hl.dispatch(hl.dsp.focus({{ monitor = "{monitor_name}" }})); hl.dispatch(hl.dsp.focus({{ workspace = {best_ws} }}))')
 
 
 def get_hypr_socket2(timeout_sec=15.0):

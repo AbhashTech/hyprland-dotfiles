@@ -14,9 +14,10 @@ hl.workspace_rule({
     persistent = true,
 })
 
--- Workspace 2 defaults to external monitor (or secondary display)
+-- Workspace 2 defaults to external monitor (HDMI-A-1 or secondary display)
 hl.workspace_rule({
     workspace  = "2",
+    monitor    = "HDMI-A-1",
     default    = true,
     persistent = true,
 })
