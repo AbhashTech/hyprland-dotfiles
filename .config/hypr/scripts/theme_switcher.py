@@ -1179,6 +1179,264 @@ def run_gui_theme_manager(themes=None):
 
     current_id = get_current_theme(themes)
 
+    def get_theme_manager_gtk_css(c, theme_type="dark"):
+        is_dark = (theme_type == "dark")
+        base = c.get("base", "#1e1e2e")
+        mantle = c.get("mantle", "#181825")
+        crust = c.get("crust", "#11111b")
+        s0 = c.get("surface0", "#313244")
+        s1 = c.get("surface1", "#45475a")
+        s2 = c.get("surface2", "#585b70")
+        text = c.get("text", "#cdd6f4")
+        sub1 = c.get("subtext1", "#bac2de")
+        sub0 = c.get("subtext0", "#a6adc8")
+        accent = c.get("accent", "#cba6f7")
+        blue = c.get("blue", "#89b4fa")
+        green = c.get("green", "#a6e3a1")
+        yellow = c.get("yellow", "#f9e2af")
+        peach = c.get("peach", "#fab387")
+        red = c.get("red", "#f38ba8")
+        teal = c.get("teal", "#94e2d5")
+
+        return f"""
+        * {{
+            font-family: 'Inter', 'Noto Sans', 'Segoe UI', 'Ubuntu', system-ui, sans-serif;
+        }}
+        window, dialog, .dialog-vbox {{
+            background-color: {base};
+            color: {text};
+        }}
+        headerbar {{
+            background-color: {mantle};
+            background-image: none;
+            border-bottom: 1.5px solid {s0};
+            padding: 8px 14px;
+            color: {text};
+        }}
+        headerbar .title, headerbar .subtitle {{
+            color: {text};
+        }}
+        entry, entry.search-input, .entry {{
+            background-color: {s0};
+            background-image: none;
+            color: {text};
+            border: 1.5px solid {s1};
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 500;
+        }}
+        entry:focus, entry.search-input:focus {{
+            border-color: {accent};
+            background-color: {mantle};
+            color: {text};
+            box-shadow: 0 0 0 2px {accent}44;
+        }}
+        combobox, combobox button, combobox textview, combobox cellview {{
+            background-color: {s0};
+            background-image: none;
+            color: {text};
+            border: 1.5px solid {s1};
+            border-radius: 8px;
+            padding: 4px 8px;
+        }}
+        combobox button:hover {{
+            background-color: {s1};
+            border-color: {accent};
+        }}
+        combobox window, combobox menu, combobox .menu, menu, .menu {{
+            background-color: {mantle};
+            color: {text};
+            border: 1px solid {s1};
+        }}
+        menuitem:hover, .menuitem:hover {{
+            background-color: {s1};
+            color: {text};
+        }}
+        button {{
+            background-color: {s0};
+            background-image: none;
+            color: {text};
+            border: 1.5px solid {s1};
+            border-radius: 8px;
+            padding: 7px 14px;
+            font-weight: 700;
+            font-size: 13px;
+            transition: all 120ms ease-in-out;
+        }}
+        button:hover {{
+            background-color: {s1};
+            border-color: {accent};
+            color: {text};
+        }}
+        button.btn-new {{
+            background-color: {accent};
+            background-image: none;
+            color: {crust};
+            border: none;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-weight: 800;
+            font-size: 13px;
+        }}
+        button.btn-new:hover {{
+            background-color: {blue};
+            color: {crust};
+        }}
+        button.btn-random {{
+            background-color: {s0};
+            background-image: none;
+            color: {text};
+            border: 1.5px solid {s1};
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-weight: 700;
+        }}
+        button.btn-random:hover {{
+            background-color: {s1};
+            border-color: {yellow};
+            color: {text};
+        }}
+        button.filter-btn {{
+            background-color: {mantle};
+            background-image: none;
+            color: {sub1};
+            border: 1.5px solid {s0};
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 12px;
+            font-weight: 700;
+        }}
+        button.filter-btn:hover {{
+            background-color: {s0};
+            border-color: {accent};
+            color: {text};
+        }}
+        button.filter-btn.active-filter {{
+            background-color: {accent};
+            background-image: none;
+            color: {crust};
+            border-color: {accent};
+            font-weight: 800;
+        }}
+        button.btn-action-small {{
+            background-color: {s0};
+            background-image: none;
+            color: {text};
+            border: 1.5px solid {s1};
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }}
+        button.btn-action-small:hover {{
+            background-color: {s1};
+            color: {text};
+            border-color: {accent};
+        }}
+        button.btn-delete {{
+            background-color: {s0};
+            background-image: none;
+            color: {red};
+            border: 1.5px solid {s1};
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }}
+        button.btn-delete:hover {{
+            background-color: {red};
+            color: {crust};
+            border-color: {red};
+        }}
+        button.apply-btn {{
+            background-color: {green};
+            background-image: none;
+            color: {crust};
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 800;
+            padding: 12px 20px;
+        }}
+        button.apply-btn:hover {{
+            background-color: {teal};
+            color: {crust};
+        }}
+        .card-box {{
+            background-color: {mantle};
+            border: 1.5px solid {s0};
+            border-radius: 14px;
+            padding: 12px 14px;
+            transition: all 120ms ease;
+        }}
+        .card-box:hover {{
+            border-color: {s2};
+            background-color: {s0};
+        }}
+        .card-box-selected {{
+            border: 2px solid {accent};
+            background-color: {s0};
+            box-shadow: 0 4px 16px {accent}33;
+        }}
+        .card-box-active {{
+            border: 2px solid {green};
+        }}
+        .preview-pane {{
+            background-color: {mantle};
+            border-left: 1.5px solid {s0};
+            padding: 20px;
+        }}
+        .matrix-box {{
+            background-color: {base};
+            border: 1.5px solid {s0};
+            border-radius: 12px;
+            padding: 12px;
+        }}
+        .editor-frame {{
+            background-color: {mantle};
+            border: 1.5px solid {s0};
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+        }}
+        .badge-dark {{
+            background-color: {s1};
+            color: {text};
+            border: 1px solid {s2};
+            border-radius: 6px;
+            padding: 2px 7px;
+            font-size: 11px;
+            font-weight: 700;
+        }}
+        .badge-light {{
+            background-color: {peach};
+            color: {crust};
+            border: 1px solid {yellow};
+            border-radius: 6px;
+            padding: 2px 7px;
+            font-size: 11px;
+            font-weight: 800;
+        }}
+        .badge-active {{
+            background-color: {green};
+            color: {crust};
+            border: 1px solid {green};
+            border-radius: 6px;
+            padding: 2px 7px;
+            font-size: 11px;
+            font-weight: 800;
+        }}
+        scrollbar slider {{
+            background-color: {s1};
+            border-radius: 8px;
+            min-width: 6px;
+        }}
+        scrollbar slider:hover {{
+            background-color: {accent};
+        }}
+        """
+
     class ThemeManagerWindow(Gtk.Window):
         def __init__(self, theme_dict, cur_id):
             super().__init__(title="Desktop Theme & Palette Manager")
@@ -1188,197 +1446,54 @@ def run_gui_theme_manager(themes=None):
             self.filter_mode = "all"
             self.search_query = ""
 
-            self.set_default_size(1040, 690)
+            self.set_default_size(1080, 720)
             self.set_position(Gtk.WindowPosition.CENTER)
+
+            self.css_provider = Gtk.CssProvider()
+            Gtk.StyleContext.add_provider_for_screen(
+                Gdk.Screen.get_default(),
+                self.css_provider,
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            )
 
             self._setup_css()
             self._build_ui()
 
         def _setup_css(self):
-            css = b"""
-            * {
-                font-family: 'Inter', 'Noto Sans', 'Cantarell', 'Ubuntu', 'Roboto', 'Segoe UI', system-ui, sans-serif;
-            }
-            window {
-                background-color: #11111b;
-                color: #cdd6f4;
-            }
-            headerbar {
-                background-color: #181825;
-                background-image: none;
-                border-bottom: 1px solid #313244;
-                padding: 8px 14px;
-            }
-            entry.search-input {
-                background-color: #1e1e2e;
-                background-image: none;
-                color: #ffffff;
-                border: 1.5px solid #45475a;
-                border-radius: 10px;
-                padding: 10px 14px;
-                font-size: 13px;
-                font-weight: 500;
-            }
-            entry.search-input:focus {
-                border-color: #cba6f7;
-                background-color: #181825;
-                box-shadow: 0 0 0 2px rgba(203, 166, 247, 0.3);
-            }
-            button {
-                background-color: #1e1e2e;
-                background-image: none;
-                color: #cdd6f4;
-                border: 1.5px solid #313244;
-                border-radius: 9px;
-                padding: 7px 16px;
-                font-weight: 700;
-                font-size: 13px;
-                transition: all 120ms ease-in-out;
-            }
-            button:hover {
-                background-color: #313244;
-                border-color: #6c7086;
-                color: #ffffff;
-            }
-            button.filter-btn {
-                background-color: #1e1e2e;
-                background-image: none;
-                color: #bac2de;
-                border: 1.5px solid #313244;
-                border-radius: 20px;
-                padding: 6px 16px;
-                font-size: 12px;
-                font-weight: 700;
-            }
-            button.filter-btn:hover {
-                background-color: #313244;
-                border-color: #89b4fa;
-                color: #ffffff;
-            }
-            button.filter-btn.active-filter {
-                background-color: #cba6f7;
-                background-image: none;
-                color: #11111b;
-                border-color: #cba6f7;
-                font-weight: 800;
-            }
-            button.btn-random {
-                background-color: #1e1e2e;
-                background-image: none;
-                color: #cdd6f4;
-                border: 1.5px solid #313244;
-                border-radius: 9px;
-                padding: 6px 14px;
-                font-weight: 700;
-            }
-            button.btn-random:hover {
-                background-color: #313244;
-                border-color: #fab387;
-                color: #ffffff;
-            }
-            button.apply-btn {
-                background-color: #a6e3a1;
-                background-image: none;
-                color: #11111b;
-                border: none;
-                border-radius: 10px;
-                font-size: 14px;
-                font-weight: 800;
-                padding: 12px 20px;
-            }
-            button.apply-btn:hover {
-                background-color: #94e2d5;
-                color: #11111b;
-            }
-            .card-box {
-                background-color: #181825;
-                border: 1.5px solid #313244;
-                border-radius: 14px;
-                padding: 14px 16px;
-                transition: all 120ms ease;
-            }
-            .card-box:hover {
-                border-color: #6c7086;
-                background-color: #1e1e2e;
-            }
-            .card-box-selected {
-                border: 2px solid #cba6f7;
-                background-color: #1e1e2e;
-                box-shadow: 0 4px 16px rgba(203, 166, 247, 0.2);
-            }
-            .card-box-active {
-                border: 2px solid #a6e3a1;
-            }
-            .badge-dark {
-                background-color: #313244;
-                color: #ffffff;
-                border: 1px solid #585b70;
-                border-radius: 6px;
-                padding: 3px 8px;
-                font-size: 11px;
-                font-weight: 700;
-            }
-            .badge-light {
-                background-color: #fab387;
-                color: #11111b;
-                border: 1px solid #f9e2af;
-                border-radius: 6px;
-                padding: 3px 8px;
-                font-size: 11px;
-                font-weight: 800;
-            }
-            .badge-active {
-                background-color: #a6e3a1;
-                color: #11111b;
-                border: 1px solid #89dceb;
-                border-radius: 6px;
-                padding: 3px 8px;
-                font-size: 11px;
-                font-weight: 800;
-            }
-            .preview-pane {
-                background-color: #181825;
-                border-left: 1px solid #313244;
-                padding: 24px;
-            }
-            .matrix-box {
-                background-color: #11111b;
-                border: 1px solid #313244;
-                border-radius: 12px;
-                padding: 12px;
-            }
-            scrollbar slider {
-                background-color: #45475a;
-                border-radius: 8px;
-                min-width: 6px;
-            }
-            """
+            tdata = self.themes.get(self.current_theme_id) or self.themes.get(DEFAULT_THEME, {})
+            colors = tdata.get("colors", {})
+            ttype = tdata.get("type", "dark")
+            css_str = get_theme_manager_gtk_css(colors, ttype)
             try:
-                provider = Gtk.CssProvider()
-                provider.load_from_data(css)
-                Gtk.StyleContext.add_provider_for_screen(
-                    Gdk.Screen.get_default(),
-                    provider,
-                    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-                )
+                self.css_provider.load_from_data(css_str.encode('utf-8'))
             except Exception as e:
                 print(f"Warning: Failed to load custom CSS: {e}", file=sys.stderr)
 
         def _build_ui(self):
+            tdata = self.themes.get(self.current_theme_id) or self.themes.get(DEFAULT_THEME, {})
+            c = tdata.get("colors", {})
+            txt_color = c.get("text", "#ffffff")
+            sub_color = c.get("subtext1", "#bac2de")
+
             # HeaderBar
             header = Gtk.HeaderBar()
             header.set_show_close_button(True)
             
             title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-            title_lbl = Gtk.Label()
-            title_lbl.set_markup("<span size='12000' weight='bold' color='#ffffff'>🎨 Desktop Theme Switcher &amp; Palette Manager</span>")
-            subtitle_lbl = Gtk.Label()
-            subtitle_lbl.set_markup(f"<span size='9500' color='#bac2de'>{len(self.themes)} Handcrafted Palettes • Hyprland, Waybar &amp; Apps</span>")
-            title_box.pack_start(title_lbl, False, False, 0)
-            title_box.pack_start(subtitle_lbl, False, False, 0)
+            self.title_lbl = Gtk.Label()
+            self.title_lbl.set_markup(f"<span size='12000' weight='bold'>🎨 Desktop Theme Switcher &amp; Palette Manager</span>")
+            self.subtitle_lbl = Gtk.Label()
+            self.subtitle_lbl.set_markup(f"<span size='9500'>{len(self.themes)} Handcrafted Palettes • Hyprland, Waybar &amp; Apps</span>")
+            title_box.pack_start(self.title_lbl, False, False, 0)
+            title_box.pack_start(self.subtitle_lbl, False, False, 0)
             header.set_custom_title(title_box)
 
-            # Random theme button
+            # Action Buttons in HeaderBar
+            btn_new = Gtk.Button(label="󰐕  New Theme")
+            btn_new.get_style_context().add_class("btn-new")
+            btn_new.connect("clicked", lambda b: self._open_theme_editor(create_new=True))
+            header.pack_start(btn_new)
+
             btn_random = Gtk.Button(label="🎲 Random")
             btn_random.get_style_context().add_class("btn-random")
             btn_random.connect("clicked", self._on_random_clicked)
@@ -1388,7 +1503,7 @@ def run_gui_theme_manager(themes=None):
 
             # Main Layout
             main_paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
-            main_paned.set_position(660)
+            main_paned.set_position(680)
             self.add(main_paned)
 
             # Left Column (Search + Filters + Theme Grid)
@@ -1442,9 +1557,9 @@ def run_gui_theme_manager(themes=None):
             scrolled.add(self.grid)
 
             # Right Column (Theme Preview & Details Inspector)
-            self.preview_pane = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+            self.preview_pane = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
             self.preview_pane.get_style_context().add_class("preview-pane")
-            self.preview_pane.set_size_request(330, -1)
+            self.preview_pane.set_size_request(360, -1)
             main_paned.pack2(self.preview_pane, resize=False, shrink=False)
 
             self.card_widgets = {}
@@ -1514,12 +1629,13 @@ def run_gui_theme_manager(themes=None):
 
                 card.add(card_box)
 
-                # Header row
-                h_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+                # Header row: Title + Badges
+                h_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
                 icon = tdata.get("icon", "🎨")
                 title_label = Gtk.Label()
-                title_label.set_markup(f"<span size='11000' weight='bold' color='#ffffff'>{icon}  {name}</span>")
+                title_label.set_markup(f"<span size='10500' weight='bold'>{icon}  {name}</span>")
                 title_label.set_xalign(0)
+                title_label.set_ellipsize(Pango.EllipsizeMode.END)
                 h_box.pack_start(title_label, True, True, 0)
 
                 badge = Gtk.Label(label="🌙 Dark" if ttype == "dark" else "☀️ Light")
@@ -1535,15 +1651,15 @@ def run_gui_theme_manager(themes=None):
 
                 # Description
                 desc_lbl = Gtk.Label()
-                desc_lbl.set_markup(f"<span size='9500' color='#bac2de'>{desc}</span>")
+                desc_lbl.set_markup(f"<span size='9000'>{desc}</span>")
                 desc_lbl.set_xalign(0)
-                desc_lbl.set_line_wrap(True)
-                desc_lbl.set_max_width_chars(34)
+                desc_lbl.set_ellipsize(Pango.EllipsizeMode.END)
+                desc_lbl.set_max_width_chars(32)
                 card_box.pack_start(desc_lbl, False, False, 0)
 
                 # Swatch Palette Strip
-                c = tdata["colors"]
-                swatch_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+                c = tdata.get("colors", {})
+                swatch_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
                 for k in ["base", "surface0", "accent", "blue", "green", "yellow", "red", "mauve", "teal"]:
                     if k in c and isinstance(c[k], str) and c[k].startswith("#"):
                         chip = self._create_color_chip(c[k], tooltip=k, size=18)
@@ -1585,33 +1701,55 @@ def run_gui_theme_manager(themes=None):
             if not tdata:
                 return
 
-            c = tdata["colors"]
+            c = tdata.get("colors", {})
             name = tdata.get("name", self.selected_theme_id)
             ttype = tdata.get("type", "dark").capitalize()
             desc = tdata.get("desc", "")
             accent = c.get("accent", "#cba6f7")
 
             p_title = Gtk.Label()
-            p_title.set_markup(f"<span size='16000' weight='heavy' color='#ffffff'>{tdata.get('icon', '🎨')}  {name}</span>")
+            p_title.set_markup(f"<span size='15000' weight='heavy'>{tdata.get('icon', '🎨')}  {name}</span>")
             p_title.set_xalign(0)
             self.preview_pane.pack_start(p_title, False, False, 0)
 
             p_meta = Gtk.Label()
-            p_meta.set_markup(f"<span size='10500' color='#cdd6f4'>Mode: <b>{ttype}</b>   •   Accent: <span font_family='monospace' weight='bold'>{accent}</span></span>")
+            p_meta.set_markup(f"<span size='10000'>Mode: <b>{ttype}</b>   •   Accent: <span font_family='monospace' weight='bold'>{accent}</span></span>")
             p_meta.set_xalign(0)
             self.preview_pane.pack_start(p_meta, False, False, 0)
 
             p_desc = Gtk.Label()
-            p_desc.set_markup(f"<span size='10500' color='#bac2de'>{desc}</span>")
+            p_desc.set_markup(f"<span size='9500'>{desc}</span>")
             p_desc.set_xalign(0)
             p_desc.set_line_wrap(True)
             self.preview_pane.pack_start(p_desc, False, False, 0)
 
-            self.preview_pane.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 4)
+            # Theme Management Action Bar (Duplicate / Copy, Edit, Delete)
+            action_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            
+            btn_copy = Gtk.Button(label="󰆏 Copy / Fork")
+            btn_copy.get_style_context().add_class("btn-action-small")
+            btn_copy.set_tooltip_text("Create a new theme based on this palette")
+            btn_copy.connect("clicked", lambda b: self._open_theme_editor(theme_data=tdata, is_copy=True))
+            action_bar.pack_start(btn_copy, True, True, 0)
+
+            btn_edit = Gtk.Button(label="✏️ Edit")
+            btn_edit.get_style_context().add_class("btn-action-small")
+            btn_edit.set_tooltip_text("Edit this theme definition")
+            btn_edit.connect("clicked", lambda b: self._open_theme_editor(theme_data=tdata, is_copy=False))
+            action_bar.pack_start(btn_edit, True, True, 0)
+
+            btn_del = Gtk.Button(label="🗑️ Delete")
+            btn_del.get_style_context().add_class("btn-delete")
+            btn_del.set_tooltip_text("Delete this custom theme")
+            btn_del.connect("clicked", lambda b: self._confirm_delete_theme(tdata))
+            action_bar.pack_start(btn_del, False, False, 0)
+
+            self.preview_pane.pack_start(action_bar, False, False, 2)
+            self.preview_pane.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 2)
 
             # Palette matrix box
             pal_label = Gtk.Label()
-            pal_label.set_markup("<span size='11000' weight='bold' color='#ffffff'>🎨 Color Palette Matrix</span>")
+            pal_label.set_markup("<span size='10500' weight='bold'>🎨 Color Palette Matrix</span>")
             pal_label.set_xalign(0)
             self.preview_pane.pack_start(pal_label, False, False, 0)
 
@@ -1625,11 +1763,11 @@ def run_gui_theme_manager(themes=None):
             swatch_keys = ["base", "mantle", "surface0", "surface1", "accent", "blue", "green", "yellow", "peach", "red", "mauve", "teal"]
             for k in swatch_keys:
                 if k in c and isinstance(c[k], str) and c[k].startswith("#"):
-                    chip = self._create_color_chip(c[k], tooltip=f"{k}: {c[k]}", size=22)
+                    chip = self._create_color_chip(c[k], tooltip=f"{k}: {c[k]}", size=20)
                     lbl = Gtk.Label()
-                    lbl.set_markup(f"<span size='9500' color='#cdd6f4'><b>{k}:</b> <span font_family='monospace' weight='bold'>{c[k]}</span></span>")
+                    lbl.set_markup(f"<span size='9000'><b>{k}:</b> <span font_family='monospace'>{c[k]}</span></span>")
                     lbl.set_xalign(0)
-                    box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+                    box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
                     box.pack_start(chip, False, False, 0)
                     box.pack_start(lbl, False, False, 0)
                     pal_grid.attach(box, c_idx, r, 1, 1)
@@ -1641,21 +1779,94 @@ def run_gui_theme_manager(themes=None):
             matrix_frame.pack_start(pal_grid, True, True, 0)
             self.preview_pane.pack_start(matrix_frame, False, False, 0)
 
-            self.preview_pane.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 4)
+            self.preview_pane.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 2)
 
             # Apply Button
             btn_apply = Gtk.Button(label=f"✓  Apply Theme: {name}")
             btn_apply.get_style_context().add_class("apply-btn")
-            btn_apply.set_size_request(-1, 44)
+            btn_apply.set_size_request(-1, 42)
             btn_apply.connect("clicked", lambda b: self._apply_selected_theme())
-            self.preview_pane.pack_start(btn_apply, False, False, 8)
+            self.preview_pane.pack_start(btn_apply, False, False, 4)
 
             self.preview_pane.show_all()
+
+        def _open_theme_editor(self, theme_data=None, is_copy=False, create_new=False):
+            dialog = ThemeEditorDialog(self, theme_to_edit=theme_data, is_copy=is_copy, all_themes=self.themes)
+            dialog.show_all()
+
+        def _confirm_delete_theme(self, theme_data):
+            tid = theme_data.get("id")
+            if not tid:
+                return
+
+            if tid == DEFAULT_THEME:
+                msg_dlg = Gtk.MessageDialog(
+                    transient_for=self,
+                    flags=Gtk.DialogFlags.MODAL,
+                    type=Gtk.MessageType.WARNING,
+                    buttons=Gtk.ButtonsType.OK,
+                    message_format=f"Cannot delete default fallback theme '{theme_data.get('name', tid)}'."
+                )
+                msg_dlg.run()
+                msg_dlg.destroy()
+                return
+
+            dialog = Gtk.MessageDialog(
+                transient_for=self,
+                flags=Gtk.DialogFlags.MODAL,
+                type=Gtk.MessageType.QUESTION,
+                buttons=Gtk.ButtonsType.YES_NO,
+                message_format=f"Delete Theme '{theme_data.get('name', tid)}'?"
+            )
+            dialog.format_secondary_text(f"This will permanently delete the JSON theme file for '{tid}'. This action cannot be undone.")
+            res = dialog.run()
+            dialog.destroy()
+
+            if res == Gtk.ResponseType.YES:
+                deleted = False
+                for d in [THEME_DIR, FALLBACK_THEME_DIR]:
+                    tfile = d / f"{tid}.json"
+                    if tfile.exists():
+                        try:
+                            tfile.unlink()
+                            deleted = True
+                        except Exception as e:
+                            print(f"Error deleting {tfile}: {e}", file=sys.stderr)
+                if deleted:
+                    print(f"{C_GREEN}✓ Deleted theme:{C_RESET} {tid}")
+                    self.themes = load_themes()
+                    if self.selected_theme_id == tid:
+                        self.selected_theme_id = DEFAULT_THEME
+                    if self.current_theme_id == tid:
+                        self.current_theme_id = DEFAULT_THEME
+                        apply_theme(DEFAULT_THEME, themes=self.themes, notify=True)
+                    self._update_filter_button_labels()
+                    self._setup_css()
+                    self._populate_grid()
+                    self._update_preview()
+
+        def _update_filter_button_labels(self):
+            dark_count = sum(1 for t in self.themes.values() if t.get("type") == "dark")
+            light_count = len(self.themes) - dark_count
+            self.btn_filter_all.set_label(f"All ({len(self.themes)})")
+            self.btn_filter_dark.set_label(f"🌙 Dark ({dark_count})")
+            self.btn_filter_light.set_label(f"☀️ Light ({light_count})")
+
+        def _reload_themes(self, select_id=None, apply_immediately=False):
+            self.themes = load_themes()
+            if select_id and select_id in self.themes:
+                self.selected_theme_id = select_id
+            self._update_filter_button_labels()
+            self._populate_grid()
+            self._update_preview()
+            if apply_immediately and select_id:
+                self._apply_selected_theme()
 
         def _apply_selected_theme(self):
             if self.selected_theme_id:
                 self.current_theme_id = self.selected_theme_id
                 apply_theme(self.selected_theme_id, themes=self.themes, notify=True)
+                self._setup_css()
                 self._populate_grid()
                 self._update_preview()
 
@@ -1688,6 +1899,445 @@ def run_gui_theme_manager(themes=None):
                 self._apply_selected_theme()
                 return True
             return False
+
+    # =========================================================================
+    # 🎨 Theme Editor & Creator Dialog Modal
+    # =========================================================================
+    class ThemeEditorDialog(Gtk.Dialog):
+        def __init__(self, parent_win, theme_to_edit=None, is_copy=False, all_themes=None):
+            title = "🎨 Create New Theme"
+            if theme_to_edit:
+                title = f"󰆏 Duplicate Theme: {theme_to_edit.get('name', '')}" if is_copy else f"✏️ Edit Theme: {theme_to_edit.get('name', '')}"
+
+            super().__init__(title=title, transient_for=parent_win, flags=Gtk.DialogFlags.MODAL)
+            self.set_default_size(820, 740)
+            self.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+            self.parent_win = parent_win
+            self.all_themes = all_themes or {}
+            self.theme_to_edit = theme_to_edit
+            self.is_copy = is_copy
+            self.color_widgets = {}  # {k: (color_button, hex_entry)}
+
+            self._build_editor_ui()
+
+        def _build_editor_ui(self):
+            # Header bar with Save & Cancel
+            header = Gtk.HeaderBar()
+            header.set_show_close_button(False)
+            
+            title_text = "Create New Theme"
+            if self.theme_to_edit:
+                title_text = "Duplicate Theme" if self.is_copy else "Edit Theme"
+
+            header.set_title(title_text)
+            header.set_subtitle("Customize color palette, metadata & live preview")
+
+            btn_cancel = Gtk.Button(label="Cancel")
+            btn_cancel.get_style_context().add_class("btn-action-small")
+            btn_cancel.connect("clicked", lambda b: self.destroy())
+            header.pack_start(btn_cancel)
+
+            btn_save = Gtk.Button(label="💾  Save & Apply")
+            btn_save.get_style_context().add_class("btn-new")
+            btn_save.connect("clicked", lambda b: self._save_theme(apply_now=True))
+            header.pack_end(btn_save)
+
+            self.set_titlebar(header)
+
+            content_area = self.get_content_area()
+            content_area.set_spacing(10)
+            content_area.set_margin_start(16)
+            content_area.set_margin_end(16)
+            content_area.set_margin_top(12)
+            content_area.set_margin_bottom(12)
+
+            scrolled = Gtk.ScrolledWindow()
+            scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+            content_area.pack_start(scrolled, True, True, 0)
+
+            main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+            scrolled.add(main_box)
+
+            # Determine initial values
+            default_tdata = self.all_themes.get(DEFAULT_THEME, {})
+            source_data = self.theme_to_edit if self.theme_to_edit else default_tdata
+            initial_colors = source_data.get("colors", {})
+
+            # -----------------------------------------------------------------
+            # 1. Template Seed Chooser
+            # -----------------------------------------------------------------
+            seed_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            seed_lbl = Gtk.Label()
+            seed_lbl.set_markup("<span size='10500' weight='bold'>🌱 Seed from Template:</span>")
+            seed_box.pack_start(seed_lbl, False, False, 0)
+
+            self.seed_combo = Gtk.ComboBoxText()
+            self.seed_combo.append_text("— Choose existing palette to seed colors —")
+            theme_names = sorted(self.all_themes.keys())
+            for tid in theme_names:
+                tname = self.all_themes[tid].get("name", tid)
+                self.seed_combo.append_text(f"{tname} ({tid})")
+            self.seed_combo.set_active(0)
+            self.seed_combo.connect("changed", self._on_seed_template_changed)
+            seed_box.pack_start(self.seed_combo, True, True, 0)
+            main_box.pack_start(seed_box, False, False, 0)
+
+            # -----------------------------------------------------------------
+            # 2. Metadata Section Frame
+            # -----------------------------------------------------------------
+            meta_frame = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+            meta_frame.get_style_context().add_class("editor-frame")
+            
+            meta_title = Gtk.Label()
+            meta_title.set_markup("<span size='11500' weight='bold'>📋 Theme Identity &amp; Metadata</span>")
+            meta_title.set_xalign(0)
+            meta_frame.pack_start(meta_title, False, False, 0)
+
+            meta_grid = Gtk.Grid()
+            meta_grid.set_column_spacing(14)
+            meta_grid.set_row_spacing(10)
+
+            # Name
+            lbl_name = Gtk.Label(label="Display Name:")
+            lbl_name.set_xalign(0)
+            self.entry_name = Gtk.Entry()
+            self.entry_name.get_style_context().add_class("entry")
+            init_name = source_data.get("name", "")
+            if self.is_copy:
+                init_name += " (Copy)"
+            self.entry_name.set_text(init_name if self.theme_to_edit else "My Custom Theme")
+            self.entry_name.connect("changed", self._on_meta_changed)
+            meta_grid.attach(lbl_name, 0, 0, 1, 1)
+            meta_grid.attach(self.entry_name, 1, 0, 1, 1)
+
+            # Slug / ID
+            lbl_id = Gtk.Label(label="Theme ID (Filename):")
+            lbl_id.set_xalign(0)
+            self.entry_id = Gtk.Entry()
+            self.entry_id.get_style_context().add_class("entry")
+            init_id = source_data.get("id", "")
+            if self.is_copy:
+                init_id += "-copy"
+            elif not self.theme_to_edit:
+                init_id = "my-custom-theme"
+            self.entry_id.set_text(init_id)
+            meta_grid.attach(lbl_id, 2, 0, 1, 1)
+            meta_grid.attach(self.entry_id, 3, 0, 1, 1)
+
+            # Icon
+            lbl_icon = Gtk.Label(label="Icon / Symbol:")
+            lbl_icon.set_xalign(0)
+            self.entry_icon = Gtk.Entry()
+            self.entry_icon.get_style_context().add_class("entry")
+            self.entry_icon.set_text(source_data.get("icon", "🎨"))
+            self.entry_icon.set_max_length(4)
+            meta_grid.attach(lbl_icon, 0, 1, 1, 1)
+            meta_grid.attach(self.entry_icon, 1, 1, 1, 1)
+
+            # Mode (Dark / Light)
+            lbl_type = Gtk.Label(label="Theme Mode:")
+            lbl_type.set_xalign(0)
+            self.combo_type = Gtk.ComboBoxText()
+            self.combo_type.append_text("🌙 Dark")
+            self.combo_type.append_text("☀️ Light")
+            self.combo_type.set_active(1 if source_data.get("type") == "light" else 0)
+            self.combo_type.connect("changed", self._on_meta_changed)
+            meta_grid.attach(lbl_type, 2, 1, 1, 1)
+            meta_grid.attach(self.combo_type, 3, 1, 1, 1)
+
+            # Description
+            lbl_desc = Gtk.Label(label="Description:")
+            lbl_desc.set_xalign(0)
+            self.entry_desc = Gtk.Entry()
+            self.entry_desc.get_style_context().add_class("entry")
+            self.entry_desc.set_text(source_data.get("desc", "A personalized desktop color theme"))
+            self.entry_desc.connect("changed", self._on_meta_changed)
+            meta_grid.attach(lbl_desc, 0, 2, 1, 1)
+            meta_grid.attach(self.entry_desc, 1, 2, 3, 1)
+
+            meta_frame.pack_start(meta_grid, False, False, 0)
+            main_box.pack_start(meta_frame, False, False, 0)
+
+            # -----------------------------------------------------------------
+            # 3. Palette Studio Section
+            # -----------------------------------------------------------------
+            pal_frame = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+            pal_frame.get_style_context().add_class("editor-frame")
+
+            pal_title = Gtk.Label()
+            pal_title.set_markup("<span size='11500' weight='bold'>🎨 Color Palette Studio</span>")
+            pal_title.set_xalign(0)
+            pal_frame.pack_start(pal_title, False, False, 0)
+
+            # Color Categories Definition
+            categories = [
+                ("1. Core Backgrounds", [
+                    ("base", "Base Background", "Main app & window background", "#1e1e2e"),
+                    ("mantle", "Mantle Surface", "Cards, sidebars, modals & drawers", "#181825"),
+                    ("crust", "Crust Contrast", "Headerbars, dock & deep contrast", "#11111b"),
+                ]),
+                ("2. Surfaces & Borders", [
+                    ("surface0", "Surface 0", "Card borders, inactive buttons", "#313244"),
+                    ("surface1", "Surface 1", "Hover states, active button bg", "#45475a"),
+                    ("surface2", "Surface 2", "Dividers, highlights & borders", "#585b70"),
+                    ("overlay0", "Overlay 0", "Placeholder & subtle elements", "#6c7086"),
+                ]),
+                ("3. Typography & Text", [
+                    ("text", "Primary Text", "Main titles, labels and icons", "#cdd6f4"),
+                    ("subtext1", "Subtext 1", "Secondary labels & subtitles", "#bac2de"),
+                    ("subtext0", "Subtext 0", "Muted comments & descriptions", "#a6adc8"),
+                ]),
+                ("4. Accent & Brand Colors", [
+                    ("accent", "Brand Accent", "Primary focus, glow & border highlights", "#cba6f7"),
+                    ("blue", "Blue", "Informational & primary status", "#89b4fa"),
+                    ("green", "Green", "Success, active state & confirm", "#a6e3a1"),
+                    ("yellow", "Yellow", "Warning, search highlight & tips", "#f9e2af"),
+                    ("peach", "Peach / Orange", "Special notifications & battery", "#fab387"),
+                    ("red", "Red / Danger", "Errors, critical warnings & destructive", "#f38ba8"),
+                    ("mauve", "Mauve / Purple", "Launcher highlights & keybind tags", "#cba6f7"),
+                    ("teal", "Teal / Cyan", "Terminal cyan, disk meter & metrics", "#94e2d5"),
+                    ("pink", "Pink / Magenta", "Special badges & audio mixer streams", "#f5c2e7"),
+                    ("lavender", "Lavender", "Clock, date labels & secondary glow", "#b4befe"),
+                ]),
+            ]
+
+            for cat_title, color_list in categories:
+                cat_lbl = Gtk.Label()
+                cat_lbl.set_markup(f"<span size='10500' weight='bold'>{cat_title}</span>")
+                cat_lbl.set_xalign(0)
+                pal_frame.pack_start(cat_lbl, False, False, 2)
+
+                c_grid = Gtk.Grid()
+                c_grid.set_column_spacing(16)
+                c_grid.set_row_spacing(8)
+
+                col, row = 0, 0
+                for c_key, c_label, c_desc, c_def in color_list:
+                    init_hex = initial_colors.get(c_key, c_def)
+                    
+                    row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+                    
+                    lbl = Gtk.Label()
+                    lbl.set_markup(f"<span size='9500' weight='bold'>{c_label}:</span>")
+                    lbl.set_xalign(0)
+                    lbl.set_size_request(130, -1)
+                    lbl.set_tooltip_text(c_desc)
+                    row_box.pack_start(lbl, False, False, 0)
+
+                    # Gtk.ColorButton
+                    rgba = Gdk.RGBA()
+                    rgba.parse(init_hex)
+                    c_btn = Gtk.ColorButton.new_with_rgba(rgba)
+                    c_btn.set_size_request(40, 26)
+                    row_box.pack_start(c_btn, False, False, 0)
+
+                    # Hex Entry
+                    hex_entry = Gtk.Entry()
+                    hex_entry.get_style_context().add_class("entry")
+                    hex_entry.set_text(init_hex)
+                    hex_entry.set_width_chars(9)
+                    hex_entry.set_max_length(7)
+                    row_box.pack_start(hex_entry, False, False, 0)
+
+                    # Connect synchronization
+                    c_btn.connect("color-set", self._on_color_button_set, c_key, hex_entry)
+                    hex_entry.connect("changed", self._on_hex_entry_changed, c_key, c_btn)
+
+                    self.color_widgets[c_key] = (c_btn, hex_entry)
+
+                    c_grid.attach(row_box, col, row, 1, 1)
+                    col += 1
+                    if col >= 2:
+                        col = 0
+                        row += 1
+
+                pal_frame.pack_start(c_grid, False, False, 4)
+
+            main_box.pack_start(pal_frame, False, False, 0)
+
+            # -----------------------------------------------------------------
+            # 4. Live Mini-Card Preview
+            # -----------------------------------------------------------------
+            self.live_preview_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+            self.live_preview_box.get_style_context().add_class("editor-frame")
+            main_box.pack_start(self.live_preview_box, False, False, 0)
+            self._update_live_preview()
+
+        def _on_seed_template_changed(self, combo):
+            idx = combo.get_active()
+            if idx <= 0:
+                return
+            theme_names = sorted(self.all_themes.keys())
+            if idx - 1 < len(theme_names):
+                seed_tid = theme_names[idx - 1]
+                seed_data = self.all_themes[seed_tid]
+                seed_colors = seed_data.get("colors", {})
+                for k, (c_btn, hex_entry) in self.color_widgets.items():
+                    if k in seed_colors and isinstance(seed_colors[k], str) and seed_colors[k].startswith("#"):
+                        val = seed_colors[k]
+                        hex_entry.set_text(val)
+                        rgba = Gdk.RGBA()
+                        if rgba.parse(val):
+                            c_btn.set_rgba(rgba)
+                self._update_live_preview()
+
+        def _on_color_button_set(self, btn, c_key, hex_entry):
+            rgba = btn.get_rgba()
+            r = int(rgba.red * 255)
+            g = int(rgba.green * 255)
+            b = int(rgba.blue * 255)
+            hex_str = f"#{r:02x}{g:02x}{b:02x}"
+            hex_entry.handler_block_by_func(self._on_hex_entry_changed)
+            hex_entry.set_text(hex_str)
+            hex_entry.handler_unblock_by_func(self._on_hex_entry_changed)
+            self._update_live_preview()
+
+        def _on_hex_entry_changed(self, hex_entry, c_key, c_btn):
+            txt = hex_entry.get_text().strip()
+            if len(txt) == 7 and txt.startswith("#"):
+                rgba = Gdk.RGBA()
+                if rgba.parse(txt):
+                    c_btn.set_rgba(rgba)
+                    self._update_live_preview()
+
+        def _on_meta_changed(self, widget):
+            self._update_live_preview()
+
+        def _get_current_colors(self):
+            res = {}
+            for k, (c_btn, hex_entry) in self.color_widgets.items():
+                val = hex_entry.get_text().strip()
+                if not val.startswith("#") or len(val) != 7:
+                    val = "#cba6f7"
+                res[k] = val
+            return res
+
+        def _update_live_preview(self):
+            for child in self.live_preview_box.get_children():
+                self.live_preview_box.remove(child)
+
+            c = self._get_current_colors()
+            name = self.entry_name.get_text().strip() or "Custom Theme"
+            icon = self.entry_icon.get_text().strip() or "🎨"
+            desc = self.entry_desc.get_text().strip() or "Theme Description"
+            is_dark = (self.combo_type.get_active() == 0)
+
+            title_lbl = Gtk.Label()
+            title_lbl.set_markup("<span size='11500' weight='bold'>👁️ Real-Time Live Preview</span>")
+            title_lbl.set_xalign(0)
+            self.live_preview_box.pack_start(title_lbl, False, False, 0)
+
+            # Simulated Card
+            card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+            card.get_style_context().add_class("card-box")
+
+            h_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            t_lbl = Gtk.Label()
+            t_lbl.set_markup(f"<span size='11000' weight='bold'>{icon}  {name}</span>")
+            t_lbl.set_xalign(0)
+            h_box.pack_start(t_lbl, True, True, 0)
+
+            badge = Gtk.Label(label="🌙 Dark" if is_dark else "☀️ Light")
+            badge.get_style_context().add_class("badge-dark" if is_dark else "badge-light")
+            h_box.pack_start(badge, False, False, 0)
+            card.pack_start(h_box, False, False, 0)
+
+            d_lbl = Gtk.Label()
+            d_lbl.set_markup(f"<span size='9500'>{desc}</span>")
+            d_lbl.set_xalign(0)
+            card.pack_start(d_lbl, False, False, 0)
+
+            swatches = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            for k in ["base", "surface0", "accent", "blue", "green", "yellow", "red", "mauve", "teal"]:
+                hex_v = c.get(k, "#cba6f7")
+                chip = self.parent_win._create_color_chip(hex_v, tooltip=k, size=20)
+                swatches.pack_start(chip, False, False, 0)
+            card.pack_start(swatches, False, False, 0)
+
+            self.live_preview_box.pack_start(card, False, False, 0)
+            self.live_preview_box.show_all()
+
+        def _save_theme(self, apply_now=True):
+            raw_id = self.entry_id.get_text().strip()
+            name = self.entry_name.get_text().strip()
+            icon = self.entry_icon.get_text().strip() or "🎨"
+            is_dark = (self.combo_type.get_active() == 0)
+            ttype = "dark" if is_dark else "light"
+            desc = self.entry_desc.get_text().strip()
+
+            # Sanitize Theme ID
+            cleaned_id = re.sub(r"[^\w-]", "-", raw_id.lower()).strip("-")
+            if not cleaned_id:
+                cleaned_id = re.sub(r"[^\w-]", "-", name.lower()).strip("-") or "custom-theme"
+
+            colors = self._get_current_colors()
+
+            # Add extended Catppuccin compatibility keys
+            for k in ["maroon", "flamingo", "rosewater", "sky", "sapphire"]:
+                if k not in colors:
+                    colors[k] = colors.get("peach" if k == "maroon" else ("pink" if k in ("flamingo", "rosewater") else "blue"), "#89b4fa")
+
+            # Border & Shadow calculated variables
+            acc = colors.get("accent", "#cba6f7")
+            blu = colors.get("blue", "#89b4fa")
+            s0 = colors.get("surface0", "#313244")
+            cr = colors.get("crust", "#11111b")
+            r, g, b = hex_to_rgb_tuple(cr)
+
+            colors["active_border_1"] = f"rgba({acc.lstrip('#')}ee)"
+            colors["active_border_2"] = f"rgba({blu.lstrip('#')}ee)"
+            colors["inactive_border"] = f"rgba({s0.lstrip('#')}aa)"
+            colors["shadow_hex"] = f"0xee{cr.lstrip('#')}"
+            colors["shadow_css"] = f"rgba({r}, {g}, {b}, 0.6)"
+
+            # Terminal palette colors
+            terminal = {
+                "color0": colors.get("surface1", "#45475a"),
+                "color8": colors.get("surface2", "#585b70"),
+                "color1": colors.get("red", "#f38ba8"),
+                "color9": colors.get("red", "#f38ba8"),
+                "color2": colors.get("green", "#a6e3a1"),
+                "color10": colors.get("green", "#a6e3a1"),
+                "color3": colors.get("yellow", "#f9e2af"),
+                "color11": colors.get("yellow", "#f9e2af"),
+                "color4": colors.get("blue", "#89b4fa"),
+                "color12": colors.get("blue", "#89b4fa"),
+                "color5": colors.get("mauve", colors.get("accent", "#cba6f7")),
+                "color13": colors.get("mauve", colors.get("accent", "#cba6f7")),
+                "color6": colors.get("teal", "#94e2d5"),
+                "color14": colors.get("teal", "#94e2d5"),
+                "color7": colors.get("subtext1", "#bac2de"),
+                "color15": colors.get("subtext0", "#a6adc8"),
+            }
+
+            theme_json_data = {
+                "id": cleaned_id,
+                "name": name or cleaned_id.title(),
+                "icon": icon,
+                "type": ttype,
+                "desc": desc or f"Custom {ttype} palette: {name}",
+                "starship_palette": cleaned_id.replace("-", "_"),
+                "colors": colors,
+                "terminal": terminal,
+            }
+
+            THEME_DIR.mkdir(parents=True, exist_ok=True)
+            target_files = [THEME_DIR / f"{cleaned_id}.json"]
+            if FALLBACK_THEME_DIR.exists() and FALLBACK_THEME_DIR != THEME_DIR:
+                target_files.append(FALLBACK_THEME_DIR / f"{cleaned_id}.json")
+
+            for tf in target_files:
+                try:
+                    with open(tf, "w", encoding="utf-8") as f:
+                        json.dump(theme_json_data, f, indent=2)
+                except Exception as e:
+                    print(f"Error saving theme to {tf}: {e}", file=sys.stderr)
+
+            print(f"{C_GREEN}✓ Successfully saved theme:{C_RESET} {name} ({cleaned_id})")
+            self.destroy()
+
+            # Refresh and apply
+            self.parent_win._reload_themes(select_id=cleaned_id, apply_immediately=apply_now)
 
     win = ThemeManagerWindow(themes, current_id)
     win.connect("destroy", Gtk.main_quit)
