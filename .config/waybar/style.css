@@ -1,11 +1,10 @@
 /* =============================================================================
- * Catppuccin Mocha Glassmorphic Waybar Stylesheet
- * Featuring Masked Backdrop, Dual-Kawase Blur & Enhanced Readability
+ * Glassmorphic Island Waybar Stylesheet
+ * Consistent Capsule Architecture, Soft Shadows & Enhanced Readability
  * ============================================================================= */
 
 /* Load Dynamic Theme Color Variables */
 @import "colors.css";
-
 
 /* Global Base */
 * {
@@ -45,7 +44,7 @@ tooltip label {
     padding: 2px;
 }
 
-/* Standard Pill Module Container */
+/* Standard Unified Pill Capsule Containers */
 #custom-launcher,
 #workspaces,
 #window,
@@ -54,39 +53,49 @@ tooltip label {
 #language,
 #backlight,
 #group-hardware,
+#hardware,
+.hardware,
 #group-status,
+#status,
+.status,
 #group-tray-notif,
+#tray-notif,
+.tray-notif,
 #custom-power,
 #custom-stats,
 #custom-quicksettings {
     background-color: @module_bg;
     border: 1px solid @module_border;
-    border-radius: 14px;
-    padding: 3px 12px;
-    margin: 3px 3px;
-    box-shadow: 0 2px 8px @waybar_shadow;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 12px;
+    padding: 3px 10px;
+    margin: 3px 2px;
+    box-shadow: 0 2px 6px @waybar_shadow;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Hover effect on modules */
+/* Hover Effect on Island Capsules */
 #custom-launcher:hover,
 #workspaces:hover,
 #window:hover,
 #mpris:hover,
 #clock:hover,
 #language:hover,
-#backlight:hover,
 #group-hardware:hover,
+#hardware:hover,
+.hardware:hover,
 #group-status:hover,
+#status:hover,
+.status:hover,
 #group-tray-notif:hover,
+#tray-notif:hover,
+.tray-notif:hover,
 #custom-power:hover,
 #custom-stats:hover,
 #custom-quicksettings:hover {
     background-color: @module_hover_bg;
     border-color: @module_hover_border;
-    box-shadow: 0 4px 12px @waybar_shadow;
+    box-shadow: 0 3px 10px @waybar_shadow;
 }
-
 
 /* =============================================================================
  * Left Modules
@@ -96,60 +105,64 @@ tooltip label {
 #custom-launcher {
     font-size: 16px;
     color: @mauve;
-    padding: 3px 13px;
-    margin-left: 4px;
+    padding: 3px 12px;
+    margin-left: 2px;
+    border-radius: 12px;
 }
 
 #custom-launcher:hover {
-    color: @text;
+    color: #ffffff;
     background: linear-gradient(135deg, @mauve, @blue);
+    border-color: @mauve;
+    box-shadow: 0 2px 10px @accent_glow;
 }
 
 /* Workspaces */
 #workspaces {
-    padding: 1px 3px;
+    padding: 2px 4px;
     margin: 3px 2px;
 }
 
 #workspaces button {
-    padding: 1px 6px;
-    margin: 1px 2px;
+    padding: 2px 8px;
+    margin: 0 2px;
     border-radius: 8px;
-    min-width: 18px;
+    min-width: 20px;
     color: @subtext1;
-    background-color: @module_subtle_bg;
-    border: 1px solid @module_subtle_border;
+    background: transparent;
+    border: 1px solid transparent;
     font-weight: bold;
     font-size: 12px;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 #workspaces button:hover {
     color: @text;
-    background-color: @module_hover_bg;
-    border-color: @module_hover_border;
+    background-color: @module_active_bg;
+    border-color: @module_subtle_border;
 }
 
 #workspaces button.active {
-    color: @crust;
-    background: linear-gradient(135deg, @accent, @blue);
-    border: 1px solid @module_border;
+    color: #ffffff;
+    background: linear-gradient(135deg, @blue, #2a5bd7);
+    border: 1px solid transparent;
     border-radius: 8px;
-    min-width: 20px;
-    padding: 1px 7px;
+    min-width: 22px;
+    padding: 2px 9px;
     box-shadow: 0 2px 8px @accent_glow;
 }
 
 #workspaces button.urgent {
-    color: @crust;
+    color: #ffffff;
     background: @red;
     animation: blink-urgent 0.8s ease infinite alternate;
 }
 
-/* Window Title */
+/* Active Window Title */
 #window {
     color: @lavender;
-    padding: 3px 14px;
+    padding: 3px 12px;
+    font-weight: 700;
 }
 
 window#waybar.empty #window {
@@ -168,44 +181,245 @@ window#waybar.empty #window {
     color: @subtext1;
 }
 
+#mpris:hover {
+    border-color: @teal;
+}
+
 /* =============================================================================
  * Center Modules
  * ============================================================================= */
 
-/* Clock */
+/* Clock & Calendar */
 #clock {
-    color: @rosewater;
+    color: @text;
     font-size: 13px;
-    padding: 3px 10px;
-    border-color: @module_subtle_border;
+    font-weight: 700;
+    padding: 3px 12px;
 }
 
 #clock:hover {
-    border-color: @accent;
+    border-color: @blue;
+    color: @blue;
+    box-shadow: 0 2px 8px @accent_glow;
 }
 
 /* Keyboard Layout / Language */
 #language {
-    color: @accent;
+    color: @blue;
     font-size: 13px;
-    font-weight: bold;
-    padding: 3px 11px;
-    border-color: @module_subtle_border;
+    font-weight: 700;
+    padding: 3px 10px;
     min-width: 32px;
 }
 
 #language:hover {
-    color: @crust;
-    background: linear-gradient(135deg, @accent, @blue);
-    border-color: @accent;
+    color: #ffffff;
+    background: linear-gradient(135deg, @blue, #2a5bd7);
+    border-color: @blue;
+    box-shadow: 0 2px 8px @accent_glow;
 }
 
 /* =============================================================================
- * Right Modules
+ * Right Modules & Groups
  * ============================================================================= */
 
-/* Hardware Group */
-#group-hardware {
+/* System Tray & Utility Capsule */
+#group-tray-notif,
+#tray-notif,
+.tray-notif {
+    padding: 2px 6px;
+}
+
+#tray {
+    padding: 2px 4px;
+    margin: 0 2px;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: @red;
+}
+
+#custom-clipboard,
+#custom-notification {
+    padding: 2px 6px;
+    margin: 0 1px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+#custom-clipboard {
+    color: @teal;
+    font-size: 13px;
+}
+
+#custom-clipboard:hover {
+    background-color: @module_active_bg;
+    color: @blue;
+}
+
+#custom-clipboard.has-items {
+    color: @teal;
+}
+
+#custom-clipboard.empty {
+    color: @subtext1;
+}
+
+#custom-clipboard.paused {
+    color: @subtext0;
+}
+
+#custom-notification {
+    color: @blue;
+    font-size: 13px;
+}
+
+#custom-notification.has-notifications {
+    color: @peach;
+}
+
+#custom-notification.dnd {
+    color: @subtext0;
+}
+
+#custom-notification:hover {
+    background-color: @module_active_bg;
+    color: @peach;
+}
+
+/* System Status Capsule */
+#group-status,
+#status,
+.status {
+    padding: 2px 6px;
+}
+
+#group-status #pulseaudio,
+#group-status #backlight,
+#group-status #network,
+#group-status #bluetooth,
+#group-status #battery,
+#group-status #custom-battery,
+#status #pulseaudio,
+#status #backlight,
+#status #network,
+#status #bluetooth,
+#status #battery,
+#status #custom-battery,
+.status #pulseaudio,
+.status #backlight,
+.status #network,
+.status #bluetooth,
+.status #battery,
+.status #custom-battery {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 2px 6px;
+    margin: 0 1px;
+    border-radius: 6px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#group-status #pulseaudio:hover,
+#group-status #backlight:hover,
+#group-status #network:hover,
+#group-status #bluetooth:hover,
+#group-status #battery:hover,
+#group-status #custom-battery:hover,
+#status #pulseaudio:hover,
+#status #backlight:hover,
+#status #network:hover,
+#status #bluetooth:hover,
+#status #battery:hover,
+#status #custom-battery:hover,
+.status #pulseaudio:hover,
+.status #backlight:hover,
+.status #network:hover,
+.status #bluetooth:hover,
+.status #battery:hover,
+.status #custom-battery:hover {
+    background-color: @module_active_bg;
+}
+
+/* Audio */
+#pulseaudio {
+    color: @blue;
+}
+
+#pulseaudio.muted {
+    color: @subtext0;
+    opacity: 0.6;
+}
+
+/* Backlight / Screen Brightness */
+#backlight {
+    color: @yellow;
+}
+
+/* Network */
+#network {
+    color: @teal;
+}
+
+#network.disconnected {
+    color: @red;
+}
+
+/* Bluetooth */
+#bluetooth {
+    color: @lavender;
+}
+
+#bluetooth.disabled,
+#bluetooth.off {
+    color: @subtext0;
+    opacity: 0.6;
+}
+
+#bluetooth.connected {
+    color: @blue;
+}
+
+/* Battery & Power Profile Dynamics */
+#battery,
+#custom-battery {
+    color: @green;
+    transition: color 0.3s ease;
+}
+
+#custom-battery.power-saver {
+    color: @green;
+}
+
+#custom-battery.balanced {
+    color: @peach;
+}
+
+#custom-battery.performance {
+    color: @red;
+}
+
+#battery.warning:not(.charging),
+#custom-battery.warning:not(.charging) {
+    color: @yellow;
+}
+
+#battery.critical:not(.charging),
+#custom-battery.critical:not(.charging) {
+    color: @red;
+    animation: blink-critical 0.8s ease infinite alternate;
+}
+
+/* Hardware Group (if used) */
+#group-hardware,
+#hardware,
+.hardware {
     padding: 2px 6px;
 }
 
@@ -213,7 +427,7 @@ window#waybar.empty #window {
 #memory,
 #temperature,
 #disk {
-    padding: 2px 8px;
+    padding: 2px 6px;
     margin: 0 1px;
 }
 
@@ -238,179 +452,35 @@ window#waybar.empty #window {
     color: @sapphire;
 }
 
-/* Status Indicators Group */
-#group-status {
-    padding: 2px 6px;
+/* Hardware Stats Chip Module */
+#custom-stats {
+    color: @sky;
+    font-size: 15px;
+    padding: 3px 11px;
+    border-radius: 12px;
 }
 
-#group-status #pulseaudio,
-#group-status #backlight,
-#group-status #network,
-#group-status #bluetooth,
-#group-status #battery,
-#group-status #custom-battery {
-    background: @module_subtle_bg;
-    border: 1px solid @module_subtle_border;
-    box-shadow: none;
-    padding: 2px 8px;
-    margin: 0 2px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
+#custom-stats:hover {
+    color: #ffffff;
+    background: linear-gradient(135deg, @sky, @blue);
+    border-color: @sky;
+    box-shadow: 0 2px 10px @accent_glow;
 }
 
-#group-status #pulseaudio:hover,
-#group-status #backlight:hover,
-#group-status #network:hover,
-#group-status #bluetooth:hover,
-#group-status #battery:hover,
-#group-status #custom-battery:hover {
-    background-color: @module_hover_bg;
-    border-color: @module_hover_border;
-}
-
-/* Audio */
-#pulseaudio {
-    color: @blue;
-    padding: 3px 8px;
-}
-
-#pulseaudio.muted {
-    color: @subtext0;
-    background-color: @module_active_bg;
-}
-
-/* Backlight / Screen Brightness */
-#backlight {
-    color: @yellow;
-    padding: 3px 8px;
-}
-
-/* Bluetooth */
-#bluetooth {
-    color: @lavender;
-    padding: 3px 8px;
-}
-
-#bluetooth.disabled,
-#bluetooth.off {
-    color: @subtext0;
-    background-color: @module_active_bg;
-}
-
-#bluetooth.connected {
-    color: @blue;
-}
-
-/* Network */
-#network {
-    color: @teal;
-    padding: 3px 8px;
-}
-
-#network.disconnected {
-    color: @red;
-    background-color: @module_active_bg;
-}
-
-/* Battery & Power Profile Dynamic Colors */
-#battery,
-#custom-battery {
-    padding: 3px 8px;
-    transition: color 0.3s ease;
-}
-
-#custom-battery.power-saver {
-    color: @green;
-}
-
-#custom-battery.balanced {
-    color: @peach;
-}
-
-#custom-battery.performance {
-    color: @red;
-}
-
-#battery.warning:not(.charging),
-#custom-battery.warning:not(.charging) {
-    color: @yellow;
-}
-
-#battery.critical:not(.charging),
-#custom-battery.critical:not(.charging) {
-    color: @red;
-    background-color: @module_active_bg;
-    border-color: @red;
-    animation: blink-critical 0.8s ease infinite alternate;
-}
-
-/* Tray & Notification Group */
-#group-tray-notif {
-    padding: 2px 6px;
-}
-
-#group-tray-notif #tray,
-#group-tray-notif #custom-clipboard,
-#group-tray-notif #custom-notification {
-    background: @module_subtle_bg;
-    border: 1px solid @module_subtle_border;
-    box-shadow: none;
-    padding: 2px 8px;
-    margin: 0 2px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-}
-
-#group-tray-notif #custom-clipboard:hover,
-#group-tray-notif #custom-notification:hover {
-    background-color: @module_hover_bg;
-    border-color: @module_hover_border;
-}
-
-
-/* System Tray */
-#tray {
-    padding: 3px 6px;
-}
-
-#tray > .passive {
-    -gtk-icon-effect: dim;
-}
-
-#tray > .needs-attention {
-    -gtk-icon-effect: highlight;
-    background-color: @red;
-}
-
-/* Power Button */
+/* Power Menu Button */
 #custom-power {
     color: @red;
     font-size: 15px;
     padding: 3px 12px;
-    margin-right: 4px;
+    margin-right: 2px;
+    border-radius: 12px;
 }
 
 #custom-power:hover {
-    color: @crust;
-    background: linear-gradient(135deg, @red, @peach);
+    color: #ffffff;
+    background: linear-gradient(135deg, @red, #f7768e);
     border-color: @red;
-}
-
-/* System Stats Chip Module */
-#custom-stats {
-    color: @sky;
-    font-size: 16px;
-    padding: 3px 12px;
-    margin: 3px 3px;
-    border-color: @module_subtle_border;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-#custom-stats:hover {
-    color: @crust;
-    background: linear-gradient(135deg, @sky, @accent);
-    border-color: @sky;
-    box-shadow: 0 4px 10px @accent_glow;
+    box-shadow: 0 2px 10px rgba(228, 86, 73, 0.45);
 }
 
 /* Quick Settings Trigger & Drawer */
@@ -418,63 +488,13 @@ window#waybar.empty #window {
     color: @accent;
     font-weight: 800;
     padding: 3px 14px;
-    margin-right: 4px;
+    margin-right: 2px;
 }
 
 #custom-quicksettings:hover {
-    color: @crust;
+    color: #ffffff;
     background: linear-gradient(135deg, @accent, @lavender);
     border-color: @accent;
-}
-
-/* Clipboard Module */
-#custom-clipboard {
-    color: @teal;
-    font-size: 14px;
-    padding: 3px 8px;
-}
-
-#custom-clipboard.has-items {
-    color: @teal;
-}
-
-#custom-clipboard.empty {
-    color: @subtext1;
-}
-
-#custom-clipboard.paused {
-    color: @subtext0;
-    background-color: @module_active_bg;
-}
-
-#custom-clipboard:hover {
-    color: @sky;
-}
-
-/* Notification Module */
-#custom-notification {
-    color: @accent;
-    font-size: 14px;
-    padding: 3px 8px;
-}
-
-#custom-notification.has-notifications {
-    color: @peach;
-    border-color: @peach;
-}
-
-#custom-notification.dnd {
-    color: @subtext0;
-    background-color: @module_active_bg;
-}
-
-#custom-notification:hover {
-    color: @peach;
-}
-
-
-#group-quickdrawer {
-    margin-right: 4px;
 }
 
 /* =============================================================================
@@ -498,3 +518,4 @@ window#waybar.empty #window {
         background-color: @maroon;
     }
 }
+
