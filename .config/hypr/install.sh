@@ -65,6 +65,8 @@ if command -v pacman >/dev/null 2>&1; then
         pipewire-pulse
         wireplumber
         libpulse
+        libcanberra
+        vorbis-tools
         playerctl
         brightnessctl
         ddcutil

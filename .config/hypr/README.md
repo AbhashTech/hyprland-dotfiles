@@ -77,8 +77,9 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
 
 ### 4. Audio & Media Controls
 - **pipewire**, **pipewire-pulse**, **wireplumber** — Audio server and subsystem.
-- **libpulse** (`pactl`) & `wpctl` — Device switching and volume control.
+- **libpulse** (`pactl`), `wpctl`, **libcanberra**, **vorbis-tools** — Device switching, channel tests, and volume control.
 - **playerctl** — Media control (Play/Pause, Next, Prev).
+- **sound-manager.py** — GTK LayerShell Sound Control Center with device dropdowns and range sliders.
 
 ### 5. Brightness & Night Light
 - **brightnessctl** — Internal laptop display backlight control.

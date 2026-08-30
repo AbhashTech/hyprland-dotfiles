@@ -127,7 +127,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | **Modern CLI Power Suite** | `eza`, `bat`, `ripgrep`, `fd`, `git-delta`, `duf`, `dust`, `tealdeer`, `trash-cli`, `xh`, `glow` | Daily replacements for ls, cat, grep, find, diff, du, df, man, rm, curl |
 | **TUIs & Multiplexing** | `lazygit`, `lazydocker`, `zellij` | Interactive terminal UIs for Git, Docker, and terminal multiplexing |
 | **Shell & Environment** | `starship`, `atuin`, `direnv`, `mise`, `zoxide`, `fzf`, `wtype` | Fast prompt, SQLite history search, per-directory env/venv, tool version manager |
-| **Audio Subsystem** | `pipewire`, `pipewire-pulse`, `wireplumber`, `libpulse`, `playerctl` | PipeWire audio, `wpctl`/`pactl` controls, and media playback keys |
+| **Audio Subsystem** | `pipewire`, `pipewire-pulse`, `wireplumber`, `libpulse`, `libcanberra`, `vorbis-tools`, `playerctl` | PipeWire audio, `wpctl`/`pactl` controls, test tones & media playback keys |
 | **Brightness & Night Light**| `brightnessctl`, `ddcutil`, `hyprsunset` / `wlsunset` | Backlight, external DDC brightness, and warm blue-light filter |
 | **Clipboard** | `wl-clipboard`, `cliphist` | Wayland clipboard manager with binary image and thumbnail support |
 | **Screen Capture & OCR** | `grim`, `slurp`, `swappy`, `wf-recorder`, `hyprpicker`, `tesseract`, `tesseract-data-eng` | Screenshots, annotation, video recording, color picker, OCR |
@@ -182,7 +182,7 @@ The top status bar is divided into three functional zones:
   - Clipboard indicator (`custom/clipboard`): Left-click browses history; right-click opens deletion menu; middle-click pauses/resumes daemon.
   - Notification center (`custom/notification`): Left-click shows history; right-click toggles Do-Not-Disturb (DND); middle-click clears all.
 - **Group Status (`group/status`)**:
-  - PipeWire Audio (`pulseaudio`): Volume level and mute state. Left-click toggles mute; right-click opens sound manager menu; middle-click opens TUI mixer; scroll adjusts volume.
+  - PipeWire Audio (`pulseaudio`): Volume level and mute state. Left-click toggles mute; right-click opens the **GTK LayerShell** Sound Control Center with device dropdowns and range sliders; middle-click opens TUI mixer in Kitty; scroll adjusts volume.
   - Screen Brightness (`backlight`): Live display brightness percentage and adaptive icon (`󰃞`, `󰃟`, `󰃠`). Left-click opens the Display & Brightness Control Center with range sliders; right-click toggles Night Light; middle-click launches floating TUI mixer; scroll adjusts brightness (±5%) with OSD.
   - Network (`network`): Wi-Fi signal strength and Ethernet link state. Left-click opens network manager menu.
   - Bluetooth (`bluetooth`): Connection status and battery percentage. Left-click opens device selector; right-click toggles RFKill.
@@ -192,6 +192,32 @@ The top status bar is divided into three functional zones:
   - **Left-Click**: Opens the **GTK LayerShell** System Hardware & Stats Dashboard with live metrics, gradient progress bars, and outside-click dismissal.
   - **Right-Click**: Directly opens **Btop** task monitor (`kitty --class btop -e btop`).
 - **󰐥 Power Menu (`custom/power`)**: Left-click launches **Wlogout** session modal.
+
+---
+
+## 🔊 Sound & Audio Management Control Center
+
+The dotfiles include a dedicated **Sound Control Center & Audio Hub** ([`sound-manager.py`](file:///home/kunal/.dotfiles/.config/waybar/scripts/sound-manager.py)):
+
+- **Waybar Right-Click Trigger**: Right-clicking the sound icon on Waybar opens a glassmorphic **GTK LayerShell** popup anchored directly beneath the bar (`sound-menu.sh`).
+- **Device Selection Dropdowns**:
+  - **Output Sinks Dropdown (`GtkComboBoxText`)**: Instant switching between connected output devices (HDMI/DisplayPort, Headphones, Built-in Speakers, Bluetooth headsets).
+  - **Input Sources Dropdown (`GtkComboBoxText`)**: Instant switching between microphones (Internal Laptop Mic, Headset Mic, USB Microphones).
+- **Smooth Range Sliders (`GtkScale`)**:
+  - **Master Output Volume**: Range slider supporting `0%` to `150%` (volume amplification boost beyond standard 100%) with a live percentage indicator badge.
+  - **Master Microphone Volume**: Range slider (`0% - 100%`) with gain indicator.
+  - **Quick Volume Presets**: One-click preset pills: `[20%]`, `[50%]`, `[80%]`, `[100%]`, `[150% 🚀]`.
+  - **Mute Controls**: Independent mute toggle buttons for output and microphone with active color badges.
+- **Per-Application Audio Stream Mixers**:
+  - Automatically discovers all running apps playing audio (e.g. Chromium, Spotify, Telegram, MPV, Discord).
+  - Dedicated individual volume range sliders (`0% - 150%`) and per-app mute toggles.
+- **Audio Tools & Server Recovery**:
+  - **󰋋 Test Audio**: Plays stereo left/right audio channel test tones.
+  - **🔄 Restart PipeWire**: Single-click restart and recovery of `pipewire`, `pipewire-pulse`, and `wireplumber` user services.
+  - **🎛️ Terminal TUI**: Launches the interactive curses mixer in a floating Kitty terminal.
+- **Alternative Access Modes**:
+  - **Terminal Curses TUI**: Run `~/.config/waybar/scripts/sound-manager.py --tui` or middle-click the Waybar sound icon.
+  - **CLI Flags**: `--toggle-mute`, `--toggle-mic`, `--up`, `--down`, `--test`, `--restart`.
 
 ---
 
