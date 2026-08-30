@@ -178,15 +178,19 @@ def interactive_menu():
         "☀️ 10% (Night / Low Power)",
         "☀️ 1% (Minimum)",
         "─── ACTIONS ───",
+        "🎛️ Open Display & Brightness Sliders (GUI)",
         "🖥️ Adjust External Monitor (+10%)",
         "🖥️ Adjust External Monitor (-10%)",
+        "🌙 Toggle Night Light",
     ]
 
     selected = open_dmenu("Screen Brightness", options)
     if not selected:
         return
 
-    if "100%" in selected:
+    if "Open Display & Brightness Sliders" in selected:
+        subprocess.Popen(["/home/kunal/.config/waybar/scripts/brightness-manager.py"])
+    elif "100%" in selected:
         set_brightness(100)
     elif "80%" in selected:
         set_brightness(80)
@@ -206,6 +210,8 @@ def interactive_menu():
         change_ddc_brightness(10)
     elif "Adjust External Monitor (-10%)" in selected:
         change_ddc_brightness(-10)
+    elif "Toggle Night Light" in selected:
+        subprocess.Popen(["/home/kunal/.config/hypr/scripts/nightlight.py", "toggle"])
 
 # ---------------------------------------------------------
 # CLI Entry Point

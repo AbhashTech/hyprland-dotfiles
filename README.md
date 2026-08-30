@@ -65,6 +65,8 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   └── scripts/             # Waybar helper scripts & TUI / popup menus
     │       ├── battery-status.py     # Battery health & power profile JSON provider
     │       ├── bluetooth-menu.sh     # Interactive Bluetooth device manager
+    │       ├── brightness-manager.py # GTK LayerShell Display Brightness & Contrast Control Center
+    │       ├── brightness-menu.sh    # Waybar brightness click/scroll launcher
     │       ├── clipboard.py          # Clipboard history Waybar status provider
     │       ├── connectivity.py       # Network & Internet connectivity tester
     │       ├── keyboard-layout.py    # Layout status & click switcher for Waybar
@@ -76,6 +78,8 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │       ├── power-menu.sh         # Wlogout & session power launcher
     │       ├── power-profile.py      # Interactive GTK LayerShell power profile selector
     │       ├── quick-settings.py     # Quick settings & hardware shortcuts menu
+    │       ├── sound-manager.py      # Interactive GTK LayerShell audio & volume hub
+    │       ├── sound-menu.sh         # Sound launcher for Waybar
     │       ├── system-stats.py       # Interactive GTK LayerShell hardware & stats dashboard
     │       └── toggle-stats.py       # Hardware stats drawer toggler
     ├── kitty/                   # Kitty Terminal Emulator
@@ -178,15 +182,38 @@ The top status bar is divided into three functional zones:
   - Clipboard indicator (`custom/clipboard`): Left-click browses history; right-click opens deletion menu; middle-click pauses/resumes daemon.
   - Notification center (`custom/notification`): Left-click shows history; right-click toggles Do-Not-Disturb (DND); middle-click clears all.
 - **Group Status (`group/status`)**:
-  - PipeWire Audio (`pulseaudio`): Volume level and mute state. Left-click toggles mute; right-click shows `wpctl status`; scroll adjusts volume.
+  - PipeWire Audio (`pulseaudio`): Volume level and mute state. Left-click toggles mute; right-click opens sound manager menu; middle-click opens TUI mixer; scroll adjusts volume.
+  - Screen Brightness (`backlight`): Live display brightness percentage and adaptive icon (`󰃞`, `󰃟`, `󰃠`). Left-click opens the Display & Brightness Control Center with range sliders; right-click toggles Night Light; middle-click launches floating TUI mixer; scroll adjusts brightness (±5%) with OSD.
   - Network (`network`): Wi-Fi signal strength and Ethernet link state. Left-click opens network manager menu.
   - Bluetooth (`bluetooth`): Connection status and battery percentage. Left-click opens device selector; right-click toggles RFKill.
-  - Battery & Power Profiles (`custom/battery`): Dynamic battery percentage and power profile color indicator.
+  - Battery & Power Profiles (`custom/battery`): Dynamic battery percentage and power profile color indicator. Left/right click opens power profile selector.
 - **󰍛 System Hardware & Stats Chip (`custom/stats`)**:
   - Displays a clean chip icon in Waybar.
   - **Left-Click**: Opens the **GTK LayerShell** System Hardware & Stats Dashboard with live metrics, gradient progress bars, and outside-click dismissal.
   - **Right-Click**: Directly opens **Btop** task monitor (`kitty --class btop -e btop`).
 - **󰐥 Power Menu (`custom/power`)**: Left-click launches **Wlogout** session modal.
+
+---
+
+## ☀️ Display Brightness & External Monitor Manager
+
+The dotfiles include a dedicated **Display & Brightness Control Center** ([`brightness-manager.py`](file:///home/kunal/.dotfiles/.config/waybar/scripts/brightness-manager.py)):
+
+- **Instant Launch (<30ms)**: Pre-caches display metadata and runs non-blocking background DDC/CI hardware synchronization so the window renders immediately on click.
+- **Built-in Laptop Display Controls**:
+  - Continuous range slider (1% – 100%) with live value badge.
+  - Quick preset buttons (`10%`, `25%`, `50%`, `75%`, `100%`).
+- **External Monitor(s) Brightness & Contrast (DDC/CI)**:
+  - Auto-detects connected external displays (e.g. HDMI, DisplayPort).
+  - Dedicated **Brightness Range Slider** (0% – 100%) with presets (`20%`, `40%`, `60%`, `80%`, `100%`).
+  - Dedicated **Contrast Range Slider** (0% – 100%) with presets (`30%`, `50%`, `70%`, `85%`, `100%`).
+  - Asynchronous debounced hardware writes for smooth 60fps slider drag without UI freeze.
+- **Night Light (Blue Light Filter)**:
+  - One-click toggle button with active state badge.
+  - Color temperature range slider (2500K – 6500K) and presets (`3000K Candle`, `3800K Warm`, `4500K Soft`, `6500K Daylight`).
+- **Alternative Modes**:
+  - **Terminal Curses TUI**: Launch via `~/.config/waybar/scripts/brightness-manager.py --tui` or middle-click Waybar brightness icon.
+  - **Fuzzel / Wofi Menu**: Launch via `~/.config/waybar/scripts/brightness-manager.py --menu`.
 
 ---
 
@@ -389,7 +416,7 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 
 ---
 
-### ☀️ Brightness Controls (`brightness_control.py`)
+### ☀️ Brightness Controls (`brightness_control.py` & `brightness-manager.py`)
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
 | `XF86MonBrightnessUp` | **Brightness Up (+5%)** | Increase laptop panel backlight with visual OSD |
@@ -398,7 +425,7 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SHIFT + XF86MonBrightnessDown` | **External DDC Down** | Decrease external monitor brightness via DDC/CI (`ddcutil`) |
 | `SUPER + XF86MonBrightnessUp` | **External DDC Up** | Alternate shortcut for external monitor brightness up |
 | `SUPER + XF86MonBrightnessDown` | **External DDC Down** | Alternate shortcut for external monitor brightness down |
-| `SUPER + SHIFT + B` / `SUPER + ALT + B` | **Brightness Presets Menu**| Select brightness presets (20%, 40%, 60%, 80%, 100%) |
+| `SUPER + SHIFT + B` / `SUPER + ALT + B` | **Display Control Center**| Open GTK LayerShell Display Brightness & Contrast Control Center with range sliders |
 
 ---
 
