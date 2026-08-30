@@ -401,8 +401,10 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
 | `SUPER + T` | **Theme Switcher Menu** | Open interactive **Fuzzel/Wofi** theme selector (19 curated themes, live reload) |
-| `SUPER + ALT + T` | **Theme Manager GUI** | Launch graphical **GTK3** theme & palette manager with live card previews |
+| `SUPER + ALT + T` | **Theme Manager & Studio GUI** | Launch graphical **GTK3** theme & palette manager with live card previews, Theme Creator & Fork Studio |
 | `SUPER + CTRL + T` | **Cycle Theme** | Instantly cycle to the next color palette in the theme registry |
+| `SUPER + W` | **Random Wallpaper** | Cycle to a random wallpaper from `~/Wallpaper` |
+| `SUPER + ALT + W` | **Wallpaper Selector Menu** | Interactive graphical wallpaper selector with live preview |
 | `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Shortcut Cheat Sheet** | Open interactive **Fuzzel/Wofi** dynamic keybindings viewer |
 | `SUPER + SHIFT + P` | **Hyprpicker** | Pick color from screen, copy hex code to clipboard & trigger notification |
 | `SUPER + SHIFT + T` | **Screen OCR** | Select region with mouse, extract text via Tesseract & copy to clipboard |

@@ -232,7 +232,7 @@ sudo usermod -aG i2c $USER
 | Shortcut | Action |
 | :--- | :--- |
 | `SUPER + T` | **Theme Switcher Menu**: Interactive graphical theme selector & live palette manager (19 themes) |
-| `SUPER + ALT + T` | **Theme Manager GUI**: Full GTK3 desktop theme & palette manager with live preview cards |
+| `SUPER + ALT + T` | **Theme Manager & Studio GUI**: Full GTK3 desktop theme & palette manager with live preview cards, Theme Creator & Fork Studio |
 | `SUPER + CTRL + T` | **Cycle Theme**: Instantly cycle to next theme in palette registry |
 | `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Dynamic Keybindings Viewer**: Searchable shortcut cheat sheet |
 | `SUPER + SHIFT + P` | **Hyprpicker**: Pick color from screen, copy hex code & notify |
@@ -240,6 +240,7 @@ sudo usermod -aG i2c $USER
 | `SUPER + ALT + N` | **Night Light**: Toggle warm blue light filter (3800K / 6500K) |
 | `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator**: Interactive math evaluator via Fuzzel |
 | `SUPER + .` (period) | **Emoji Picker**: Searchable emoji menu with instant copy & auto-typing |
+| `SUPER + ALT + S` | **App Shortcut Creator**: Launch interactive desktop shortcut (.desktop) creator & manager GUI |
 | `SUPER + W` | **Random Wallpaper**: Cycle through random wallpapers in `~/Wallpaper` |
 | `SUPER + ALT + W` | **Wallpaper Menu**: Interactive graphical wallpaper picker |
 
