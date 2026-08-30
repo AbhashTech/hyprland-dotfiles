@@ -988,7 +988,7 @@ def update_systemwide_theme(theme):
     Libadwaita/GTK4 apps, Flatpaks, and Qt/KDE apps switch between light and dark modes automatically.
     """
     is_dark = (theme.get("type", "dark").lower() != "light")
-    color_scheme = "prefer-dark" if is_dark else "default"
+    color_scheme = "prefer-dark" if is_dark else "prefer-light"
     gtk_dark_val = "1" if is_dark else "0"
     gtk_theme_name = "Adwaita-dark" if is_dark else "Adwaita"
     icon_theme_name = "Papirus-Dark" if is_dark else "Papirus-Light"
@@ -998,20 +998,14 @@ def update_systemwide_theme(theme):
         for schema_key, val in [
             ("color-scheme", color_scheme),
             ("gtk-theme", gtk_theme_name),
+            ("icon-theme", icon_theme_name),
         ]:
             try:
-                res = subprocess.run(
+                subprocess.run(
                     ["gsettings", "set", "org.gnome.desktop.interface", schema_key, val],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
-                # Fallback to prefer-light if default was rejected or vice versa
-                if res.returncode != 0 and schema_key == "color-scheme" and not is_dark:
-                    subprocess.run(
-                        ["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "prefer-light"],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                    )
             except Exception:
                 pass
 
@@ -1085,6 +1079,23 @@ Gtk/ColorScheme "{color_scheme}"
             df_xsettings.write_text(xsettings_content, encoding="utf-8")
     except Exception:
         pass
+
+    # 5. Trigger portal refresh so running apps receive the updated setting immediately
+    if shutil.which("gdbus"):
+        try:
+            subprocess.run(
+                [
+                    "gdbus", "call", "--session",
+                    "--dest", "org.freedesktop.portal.Desktop",
+                    "--object-path", "/org/freedesktop/portal/desktop",
+                    "--method", "org.freedesktop.portal.Settings.Read",
+                    "org.freedesktop.appearance", "color-scheme"
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except Exception:
+            pass
 
 # =============================================================================
 # Core Application & Live Reload
