@@ -142,7 +142,7 @@
         "orientation": "horizontal",
         "modules": [
             "pulseaudio",
-            "backlight",
+            "custom/backlight",
             "network",
             "bluetooth",
             "custom/battery"
@@ -220,17 +220,18 @@
         "tooltip-format": "{desc} | Volume: {volume}%"
     },
 
-    "backlight": {
-        "device": "intel_backlight",
-        "format": "{icon} {percent}%",
-        "format-icons": ["󰃞", "󰃟", "󰃠"],
-        "scroll-step": 5,
+    "custom/backlight": {
+        "format": "{}",
+        "return-type": "json",
+        "exec": "/home/kunal/.config/waybar/scripts/brightness-active.py",
+        "interval": 2,
+        "signal": 11,
         "on-scroll-up": "/home/kunal/.config/waybar/scripts/brightness-menu.sh --up 5",
         "on-scroll-down": "/home/kunal/.config/waybar/scripts/brightness-menu.sh --down 5",
         "on-click": "/home/kunal/.config/waybar/scripts/brightness-menu.sh",
         "on-click-right": "/home/kunal/.config/waybar/scripts/brightness-menu.sh --nightlight",
         "on-click-middle": "/home/kunal/.config/waybar/scripts/brightness-menu.sh --tui",
-        "tooltip-format": "Display Brightness: {percent}%\n\n• Scroll: Adjust Brightness (±5%)\n• Left Click: Display & Brightness Sliders\n• Right Click: Toggle Night Light\n• Middle Click: Interactive TUI Mixer"
+        "tooltip": true
     },
 
     "bluetooth": {

@@ -1117,6 +1117,38 @@ def launch_dmenu():
 
 
 # =============================================================================
+def get_active_monitor_info():
+    cache = load_cache()
+    laptop_pct, laptop_dev, ext_monitors = DisplayBackend.get_instant_displays()
+    raw = run_cmd(["hyprctl", "-j", "monitors"])
+    focused_name = None
+    if raw:
+        try:
+            for m in json.loads(raw):
+                if m.get("focused"):
+                    focused_name = m.get("name")
+                    break
+        except Exception:
+            pass
+
+    if not focused_name:
+        if ext_monitors:
+            focused_name = ext_monitors[0]["connector"]
+        else:
+            focused_name = "eDP-1"
+
+    if focused_name.startswith("eDP") or focused_name.startswith("LVDS"):
+        return "internal", 0, focused_name, "Built-in Display", (laptop_pct if laptop_pct is not None else 50)
+    else:
+        for mon in ext_monitors:
+            if mon["connector"] == focused_name:
+                return "external", mon["display_num"], mon["connector"], mon["name"], mon["brightness"]
+        if ext_monitors:
+            return "external", ext_monitors[0]["display_num"], ext_monitors[0]["connector"], ext_monitors[0]["name"], ext_monitors[0]["brightness"]
+        return "internal", 0, "eDP-1", "Built-in Display", (laptop_pct if laptop_pct is not None else 50)
+
+
+# =============================================================================
 # CLI ENTRY POINT
 # =============================================================================
 
@@ -1133,20 +1165,39 @@ def main():
         launch_dmenu()
     elif arg in ["up", "+"]:
         step = int(sys.argv[2]) if len(sys.argv) > 2 else 5
-        curr, _ = DisplayBackend.get_laptop_brightness()
-        new_val = min(100, (curr or 50) + step)
-        DisplayBackend.set_laptop_brightness(new_val)
-        show_notification(f"☀️ Brightness: {new_val}%", f"<b>Laptop Screen</b>\n{build_progress_bar(new_val)}", "display-brightness-high", percentage=new_val)
+        disp_type, disp_num, connector, disp_name, curr = get_active_monitor_info()
+        new_val = min(100, curr + step)
+        if disp_type == "internal":
+            DisplayBackend.set_laptop_brightness(new_val)
+            show_notification(f"☀️ Brightness: {new_val}%", f"<b>{disp_name}</b>\n{build_progress_bar(new_val)}", "display-brightness-high", percentage=new_val)
+        else:
+            ddc_worker.queue_vcp(disp_num, 10, new_val, connector)
+            # Give debounce thread a tiny fraction of a second to start
+            time.sleep(0.08)
+            show_notification(f"🖥️ Brightness: {new_val}%", f"<b>{disp_name}</b>\n{build_progress_bar(new_val)}", "video-display", percentage=new_val)
+        subprocess.run(["pkill", "-RTMIN+11", "waybar"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     elif arg in ["down", "-"]:
         step = int(sys.argv[2]) if len(sys.argv) > 2 else 5
-        curr, _ = DisplayBackend.get_laptop_brightness()
-        new_val = max(1, (curr or 50) - step)
-        DisplayBackend.set_laptop_brightness(new_val)
-        show_notification(f"☀️ Brightness: {new_val}%", f"<b>Laptop Screen</b>\n{build_progress_bar(new_val)}", "display-brightness-low", percentage=new_val)
+        disp_type, disp_num, connector, disp_name, curr = get_active_monitor_info()
+        new_val = max(1 if disp_type == "internal" else 0, curr - step)
+        if disp_type == "internal":
+            DisplayBackend.set_laptop_brightness(new_val)
+            show_notification(f"☀️ Brightness: {new_val}%", f"<b>{disp_name}</b>\n{build_progress_bar(new_val)}", "display-brightness-low", percentage=new_val)
+        else:
+            ddc_worker.queue_vcp(disp_num, 10, new_val, connector)
+            time.sleep(0.08)
+            show_notification(f"🖥️ Brightness: {new_val}%", f"<b>{disp_name}</b>\n{build_progress_bar(new_val)}", "video-display", percentage=new_val)
+        subprocess.run(["pkill", "-RTMIN+11", "waybar"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     elif arg in ["set"]:
         if len(sys.argv) > 2:
             val = int(sys.argv[2])
-            DisplayBackend.set_laptop_brightness(val)
+            disp_type, disp_num, connector, disp_name, _ = get_active_monitor_info()
+            if disp_type == "internal":
+                DisplayBackend.set_laptop_brightness(val)
+            else:
+                ddc_worker.queue_vcp(disp_num, 10, val, connector)
+                time.sleep(0.08)
+            subprocess.run(["pkill", "-RTMIN+11", "waybar"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     elif arg in ["nightlight", "night", "-n"]:
         NightLightBackend.toggle()
     else:

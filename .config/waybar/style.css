@@ -51,7 +51,6 @@ tooltip label {
 #mpris,
 #clock,
 #language,
-#backlight,
 #group-hardware,
 #hardware,
 .hardware,
@@ -301,18 +300,21 @@ window#waybar.empty #window {
 
 #group-status #pulseaudio,
 #group-status #backlight,
+#group-status #custom-backlight,
 #group-status #network,
 #group-status #bluetooth,
 #group-status #battery,
 #group-status #custom-battery,
 #status #pulseaudio,
 #status #backlight,
+#status #custom-backlight,
 #status #network,
 #status #bluetooth,
 #status #battery,
 #status #custom-battery,
 .status #pulseaudio,
 .status #backlight,
+.status #custom-backlight,
 .status #network,
 .status #bluetooth,
 .status #battery,
@@ -328,18 +330,21 @@ window#waybar.empty #window {
 
 #group-status #pulseaudio:hover,
 #group-status #backlight:hover,
+#group-status #custom-backlight:hover,
 #group-status #network:hover,
 #group-status #bluetooth:hover,
 #group-status #battery:hover,
 #group-status #custom-battery:hover,
 #status #pulseaudio:hover,
 #status #backlight:hover,
+#status #custom-backlight:hover,
 #status #network:hover,
 #status #bluetooth:hover,
 #status #battery:hover,
 #status #custom-battery:hover,
 .status #pulseaudio:hover,
 .status #backlight:hover,
+.status #custom-backlight:hover,
 .status #network:hover,
 .status #bluetooth:hover,
 .status #battery:hover,
@@ -358,7 +363,8 @@ window#waybar.empty #window {
 }
 
 /* Backlight / Screen Brightness */
-#backlight {
+#backlight,
+#custom-backlight {
     color: @yellow;
 }
 
