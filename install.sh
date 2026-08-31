@@ -157,6 +157,10 @@ if command -v pacman >/dev/null 2>&1; then
         gnome-keyring
         libsecret
         polkit-gnome
+        libfido2
+        ccid
+        pcsc-tools
+        yubikey-manager
 
         # Fonts, Emojis & CJK Characters
         ttf-jetbrains-mono-nerd
@@ -165,9 +169,16 @@ if command -v pacman >/dev/null 2>&1; then
         noto-fonts-cjk
         noto-fonts-emoji
 
-        # Desktop Apps & UI Libraries
+        # Desktop Apps, Viewers & Performance
         dolphin
         firefox
+        loupe
+        mpv
+        zathura
+        zathura-pdf-mupdf
+        file-roller
+        gamemode
+        thermald
         libnotify
         python
         python-gobject
@@ -236,16 +247,18 @@ for pkg in "${DOT_CONFIG_DIRS[@]}"; do
 done
 
 # Symlink standalone config files
-if [ -f "${DOTFILES_DIR}/.config/starship.toml" ]; then
-    STARSHIP_DEST="${CONFIG_TARGET}/starship.toml"
-    if [ -L "$STARSHIP_DEST" ]; then
-        rm "$STARSHIP_DEST"
-    elif [ -f "$STARSHIP_DEST" ]; then
-        mv "$STARSHIP_DEST" "${STARSHIP_DEST}.backup_$(date +%Y%m%d_%H%M%S)"
+for cfg_file in "starship.toml" "mimeapps.list"; do
+    if [ -f "${DOTFILES_DIR}/.config/${cfg_file}" ]; then
+        FILE_DEST="${CONFIG_TARGET}/${cfg_file}"
+        if [ -L "$FILE_DEST" ]; then
+            rm "$FILE_DEST"
+        elif [ -f "$FILE_DEST" ]; then
+            mv "$FILE_DEST" "${FILE_DEST}.backup_$(date +%Y%m%d_%H%M%S)"
+        fi
+        ln -s "${DOTFILES_DIR}/.config/${cfg_file}" "$FILE_DEST"
+        log_success "Symlinked ~/.config/${cfg_file} -> ${DOTFILES_DIR}/.config/${cfg_file}"
     fi
-    ln -s "${DOTFILES_DIR}/.config/starship.toml" "$STARSHIP_DEST"
-    log_success "Symlinked ~/.config/starship.toml -> ${DOTFILES_DIR}/.config/starship.toml"
-fi
+done
 
 # 3. Ensure Permissions
 log_info "Configuring executable permissions for all custom scripts..."

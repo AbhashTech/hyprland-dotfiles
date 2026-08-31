@@ -126,13 +126,15 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | **App Launchers & Theming** | `fuzzel`, `wofi`, `nwg-look`, `gsettings-desktop-schemas`, `dconf`, `xsettingsd` | Fast Wayland launcher, GTK dmenu, and GTK3/4 & DConf settings sync |
 | **Qt/GTK Unified Integration** | `qt5-wayland`, `qt6-wayland`, `qt5ct`, `qt6ct`, `kvantum`, `kvantum-qt5` | Native Wayland runtime and uniform theme/font/icon syncing across Qt5/Qt6 & GTK apps |
 | **File Pickers, Mounts & Thumbs** | `dolphin`, `yazi`, `gvfs`, `gvfs-mtp`, `gvfs-smb`, `tumbler`, `ffmpegthumbnailer`, `poppler-glib`, `webp-pixbuf-loader`, `trash-cli` | File managers, external drive mounting, trash bin support, and PDF/video/image thumbnail previews |
+| **Default Media & App Viewers** | `loupe`, `mpv`, `zathura`, `zathura-pdf-mupdf`, `file-roller` | Fast image viewer, media player, minimalist PDF reader, and archive manager |
 | **Modern CLI Power Suite** | `eza`, `bat`, `ripgrep`, `fd`, `git-delta`, `duf`, `dust`, `tealdeer`, `xh`, `glow`, `fzf`, `zoxide`, `wtype` | Daily replacements for ls, cat, grep, find, diff, du, df, man, curl |
 | **TUIs & Multiplexing** | `lazygit`, `lazydocker`, `zellij`, `btop`, `fastfetch` | Interactive terminal UIs for Git, Docker, terminal multiplexing, and system monitoring |
+| **Performance, Gaming & Thermals** | `gamemode`, `thermald`, `power-profiles-daemon`, `upower` | Process CPU/GPU optimizer, Intel thermal daemon, and hardware power profile metrics |
 | **Shell & Environment** | `starship`, `atuin`, `direnv`, `mise` | Fast prompt, SQLite history search, per-directory env/venv, tool version manager |
 | **Audio & Media Codecs** | `pipewire`, `pipewire-pulse`, `pipewire-alsa`, `pipewire-jack`, `wireplumber`, `libldac`, `libfreeaptx`, `gst-plugins-good`, `gst-plugins-bad`, `gst-plugins-ugly`, `gst-libav`, `playerctl`, `libva-utils` | PipeWire audio suite, LDAC/aptX Bluetooth HD codecs, GStreamer codecs, VA-API utils, and MPRIS playback keys |
 | **System Tuning & Cleanup** | `zram-generator`, `pacman-contrib` | Compressed in-memory ZRAM swap and automated pacman cache maintenance |
 | **Brightness & Night Light**| `brightnessctl`, `ddcutil`, `hyprsunset` / `wlsunset` | Backlight, external DDC brightness, and warm blue-light filter |
-| **Keyring & Authentication**| `gnome-keyring`, `libsecret`, `polkit-gnome` | Secrets/password storage and authentication agent for Git, browsers, and desktop apps |
+| **Authentication & Hardware 2FA**| `gnome-keyring`, `libsecret`, `polkit-gnome`, `libfido2`, `ccid`, `pcsc-tools`, `yubikey-manager` | Secrets/password storage, Polkit agent, and YubiKey / FIDO2 security key support |
 | **Clipboard** | `wl-clipboard`, `cliphist` | Wayland clipboard manager with binary image and thumbnail support |
 | **Screen Capture & OCR** | `grim`, `slurp`, `swappy`, `wf-recorder`, `hyprpicker`, `tesseract`, `tesseract-data-eng` | Screenshots, annotation, video recording, color picker, OCR |
 | **Python Runtime & UI** | `python`, `python-gobject`, `gtk3`, `gtk4`, `gtk-layer-shell` | Python 3, PyGObject, and Wayland layer-shell for popups |
@@ -151,9 +153,10 @@ sudo pacman -S --needed \
     papirus-icon-theme adwaita-icon-theme \
     xdg-desktop-portal-hyprland xdg-desktop-portal-gtk xdg-utils xdg-user-dirs \
     gvfs gvfs-mtp gvfs-smb tumbler ffmpegthumbnailer poppler-glib webp-pixbuf-loader trash-cli \
+    loupe mpv zathura zathura-pdf-mupdf file-roller gamemode thermald \
     pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber \
     libldac libfreeaptx gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav playerctl libva-utils \
-    gnome-keyring libsecret polkit-gnome \
+    gnome-keyring libsecret polkit-gnome libfido2 ccid pcsc-tools yubikey-manager \
     noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-liberation ttf-jetbrains-mono-nerd \
     wl-clipboard cliphist brightnessctl zram-generator pacman-contrib
 ```
