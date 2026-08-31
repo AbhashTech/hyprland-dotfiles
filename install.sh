@@ -319,10 +319,16 @@ for desktop_file in app-shortcut-creator.desktop theme-manager.desktop; do
         chmod +x "${HOME}/.local/share/applications/${desktop_file}"
     fi
 done
+
+# Hide technical / developer / internal background helper desktop entries
+if [ -f "${DOTFILES_DIR}/sddm/scripts/hide-unwanted-apps.sh" ]; then
+    bash "${DOTFILES_DIR}/sddm/scripts/hide-unwanted-apps.sh" >/dev/null 2>&1 || true
+fi
+
 if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database "${HOME}/.local/share/applications" >/dev/null 2>&1 || true
 fi
-log_success "Application shortcut creator and Theme Manager added to desktop menu."
+log_success "Application menus cleaned and customized."
 
 # 9. Initialize Theme & Color Variables
 log_info "Initializing desktop theme and dynamic color variables..."

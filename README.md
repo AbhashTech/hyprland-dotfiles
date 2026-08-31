@@ -171,6 +171,8 @@ chmod +x ~/.dotfiles/install.sh
 The installer will:
 - Install all official Arch Linux packages via `pacman`.
 - Symlink all `~/.dotfiles/.config/*` into `~/.config/` (safely backing up existing folders).
+- Deploy unified default MIME associations (`mimeapps.list`).
+- Hide internal, technical, and background helper apps from application launchers.
 - Set executable permissions on all Python and Shell scripts.
 - Initialize tealdeer cheatsheets, directories (`~/Pictures/Screenshots`, `~/Videos/Recordings`), and `i2c-dev`.
 - Deploy and activate the Catppuccin Mocha SDDM theme.
