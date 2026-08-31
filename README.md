@@ -129,7 +129,8 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | **Modern CLI Power Suite** | `eza`, `bat`, `ripgrep`, `fd`, `git-delta`, `duf`, `dust`, `tealdeer`, `xh`, `glow`, `fzf`, `zoxide`, `wtype` | Daily replacements for ls, cat, grep, find, diff, du, df, man, curl |
 | **TUIs & Multiplexing** | `lazygit`, `lazydocker`, `zellij`, `btop`, `fastfetch` | Interactive terminal UIs for Git, Docker, terminal multiplexing, and system monitoring |
 | **Shell & Environment** | `starship`, `atuin`, `direnv`, `mise` | Fast prompt, SQLite history search, per-directory env/venv, tool version manager |
-| **Audio & Media Codecs** | `pipewire`, `pipewire-pulse`, `pipewire-alsa`, `pipewire-jack`, `wireplumber`, `gst-plugins-good`, `gst-plugins-bad`, `gst-plugins-ugly`, `gst-libav`, `playerctl` | PipeWire audio suite, GStreamer web/media codecs, and MPRIS playback keys |
+| **Audio & Media Codecs** | `pipewire`, `pipewire-pulse`, `pipewire-alsa`, `pipewire-jack`, `wireplumber`, `libldac`, `libfreeaptx`, `gst-plugins-good`, `gst-plugins-bad`, `gst-plugins-ugly`, `gst-libav`, `playerctl`, `libva-utils` | PipeWire audio suite, LDAC/aptX Bluetooth HD codecs, GStreamer codecs, VA-API utils, and MPRIS playback keys |
+| **System Tuning & Cleanup** | `zram-generator`, `pacman-contrib` | Compressed in-memory ZRAM swap and automated pacman cache maintenance |
 | **Brightness & Night Light**| `brightnessctl`, `ddcutil`, `hyprsunset` / `wlsunset` | Backlight, external DDC brightness, and warm blue-light filter |
 | **Keyring & Authentication**| `gnome-keyring`, `libsecret`, `polkit-gnome` | Secrets/password storage and authentication agent for Git, browsers, and desktop apps |
 | **Clipboard** | `wl-clipboard`, `cliphist` | Wayland clipboard manager with binary image and thumbnail support |
@@ -151,10 +152,10 @@ sudo pacman -S --needed \
     xdg-desktop-portal-hyprland xdg-desktop-portal-gtk xdg-utils xdg-user-dirs \
     gvfs gvfs-mtp gvfs-smb tumbler ffmpegthumbnailer poppler-glib webp-pixbuf-loader trash-cli \
     pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber \
-    gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav playerctl \
+    libldac libfreeaptx gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav playerctl libva-utils \
     gnome-keyring libsecret polkit-gnome \
     noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-liberation ttf-jetbrains-mono-nerd \
-    wl-clipboard cliphist brightnessctl
+    wl-clipboard cliphist brightnessctl zram-generator pacman-contrib
 ```
 
 ### Automated Setup (Recommended)

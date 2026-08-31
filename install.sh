@@ -119,7 +119,7 @@ if command -v pacman >/dev/null 2>&1; then
         poppler-glib
         webp-pixbuf-loader
 
-        # Audio, Media Codecs & Brightness
+        # Audio, Media Codecs & Bluetooth High-Res
         pipewire
         pipewire-pulse
         pipewire-alsa
@@ -128,6 +128,8 @@ if command -v pacman >/dev/null 2>&1; then
         libpulse
         libcanberra
         vorbis-tools
+        libldac
+        libfreeaptx
         gst-plugins-good
         gst-plugins-bad
         gst-plugins-ugly
@@ -135,6 +137,11 @@ if command -v pacman >/dev/null 2>&1; then
         playerctl
         brightnessctl
         ddcutil
+        libva-utils
+
+        # System Optimization & Maintenance
+        zram-generator
+        pacman-contrib
 
         # Clipboard & Screen Capture (Official Repos)
         wl-clipboard
@@ -309,6 +316,37 @@ log_info "Initializing desktop theme and dynamic color variables..."
 if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" ]; then
     python3 "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" --set catppuccin-mocha --silent 2>/dev/null || true
     log_success "Catppuccin Mocha theme variables initialized."
+fi
+
+# 10. System Enhancements: Fontconfig, ZRAM, Pacman Cache & Bluetooth
+log_info "Configuring system enhancements (Subpixel Fonts, ZRAM, Pacman cache, Bluetooth)..."
+if command -v sudo >/dev/null 2>&1; then
+    # Subpixel LCD font rendering
+    sudo mkdir -p /etc/fonts/conf.d
+    sudo ln -sf /usr/share/fontconfig/conf.avail/10-sub-pixel-rgb.conf /etc/fonts/conf.d/ 2>/dev/null || true
+    sudo ln -sf /usr/share/fontconfig/conf.avail/11-lcdfilter-default.conf /etc/fonts/conf.d/ 2>/dev/null || true
+    sudo ln -sf /usr/share/fontconfig/conf.avail/70-no-bitmaps.conf /etc/fonts/conf.d/ 2>/dev/null || true
+    fc-cache -f 2>/dev/null || true
+
+    # ZRAM compressed swap
+    if [ ! -f /etc/systemd/zram-generator.conf ]; then
+        sudo bash -c 'cat << "EOF" > /etc/systemd/zram-generator.conf
+[zram0]
+zram-size = ram / 2
+compression-algorithm = zstd
+EOF' 2>/dev/null || true
+        sudo systemctl daemon-reload 2>/dev/null || true
+        sudo systemctl start /dev/zram0 2>/dev/null || true
+    fi
+
+    # Automated Pacman cache cleaning timer
+    sudo systemctl enable --now paccache.timer 2>/dev/null || true
+
+    # Bluetooth battery level reporting & fast connectable
+    if [ -f /etc/bluetooth/main.conf ] && ! grep -q "Experimental = true" /etc/bluetooth/main.conf; then
+        sudo sed -i '/^\[General\]/a Experimental = true\nFastConnectable = true' /etc/bluetooth/main.conf 2>/dev/null || true
+    fi
+    log_success "System enhancements configured."
 fi
 
 echo ""

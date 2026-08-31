@@ -15,4 +15,7 @@ hl.config({
     render = {
         direct_scanout = true,           -- Zero-latency direct scanout for fullscreen apps and games
     },
+    xwayland = {
+        force_zero_scaling = true,       -- Prevents blurry scaling in legacy X11 / XWayland apps
+    },
 })
