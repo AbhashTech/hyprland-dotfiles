@@ -377,9 +377,41 @@ class BluetoothManager:
 
         self.devices = devices
 
+    def ensure_agent(self):
+        try:
+            res = subprocess.run(['pgrep', '-f', 'bluetooth_agent.py'], capture_output=True)
+            if res.returncode != 0:
+                agent_script = os.path.expanduser('~/.config/hypr/scripts/bluetooth_agent.py')
+                if os.path.exists(agent_script):
+                    subprocess.Popen(['python3', agent_script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    time.sleep(0.3)
+        except Exception:
+            pass
+
     def connect_device(self, mac: str) -> tuple[bool, str]:
         if not self.check_service():
             return False, "bluetooth.service is inactive"
+        self.ensure_agent()
+        dev_obj_path = None
+        for dev in self.devices:
+            if dev['mac'].upper() == mac.upper():
+                dev_obj_path = dev.get('path')
+                break
+        try:
+            import dbus
+            bus = dbus.SystemBus()
+            if dev_obj_path:
+                dev_obj = bus.get_object('org.bluez', dev_obj_path)
+                dev_iface = dbus.Interface(dev_obj, 'org.bluez.Device1')
+                dev_props = dbus.Interface(dev_obj, 'org.freedesktop.DBus.Properties')
+                try:
+                    dev_props.Set('org.bluez.Device1', 'Trusted', True)
+                except Exception:
+                    pass
+                dev_iface.Connect(timeout=8)
+                return True, f"Connected to {mac}"
+        except Exception:
+            pass
         try:
             # Ensure device is trusted before connecting to prevent auto-disconnect
             subprocess.run(['bluetoothctl', '--timeout', '3', 'trust', mac], capture_output=True, text=True, timeout=4)
@@ -393,6 +425,21 @@ class BluetoothManager:
     def disconnect_device(self, mac: str) -> tuple[bool, str]:
         if not self.check_service():
             return False, "bluetooth.service is inactive"
+        dev_obj_path = None
+        for dev in self.devices:
+            if dev['mac'].upper() == mac.upper():
+                dev_obj_path = dev.get('path')
+                break
+        try:
+            import dbus
+            bus = dbus.SystemBus()
+            if dev_obj_path:
+                dev_obj = bus.get_object('org.bluez', dev_obj_path)
+                dev_iface = dbus.Interface(dev_obj, 'org.bluez.Device1')
+                dev_iface.Disconnect(timeout=5)
+                return True, f"Disconnected from {mac}"
+        except Exception:
+            pass
         try:
             res = subprocess.run(['bluetoothctl', '--timeout', '4', 'disconnect', mac], capture_output=True, text=True, timeout=5)
             if res.returncode == 0 or "Successful disconnected" in res.stdout:
@@ -433,14 +480,58 @@ class BluetoothManager:
     def pair_device(self, mac: str) -> tuple[bool, str]:
         if not self.check_service():
             return False, "bluetooth.service is inactive"
+        self.ensure_agent()
+        dev_obj_path = None
+        for dev in self.devices:
+            if dev['mac'].upper() == mac.upper():
+                dev_obj_path = dev.get('path')
+                break
         try:
-            # Ensure adapter is pairable
+            import dbus
+            bus = dbus.SystemBus()
+            if self.adapter_path:
+                try:
+                    adapter = bus.get_object('org.bluez', self.adapter_path)
+                    adapter_props = dbus.Interface(adapter, 'org.freedesktop.DBus.Properties')
+                    adapter_props.Set('org.bluez.Adapter1', 'Pairable', True)
+                except Exception:
+                    pass
+
+            if dev_obj_path:
+                dev_obj = bus.get_object('org.bluez', dev_obj_path)
+                dev_iface = dbus.Interface(dev_obj, 'org.bluez.Device1')
+                dev_props = dbus.Interface(dev_obj, 'org.freedesktop.DBus.Properties')
+                
+                try:
+                    dev_iface.Pair(timeout=25)
+                except dbus.exceptions.DBusException as e:
+                    err_name = e.get_dbus_name()
+                    if "AlreadyExists" not in err_name and "AlreadyConnected" not in err_name:
+                        # Fallback to bluetoothctl
+                        res = subprocess.run(['bluetoothctl', '--timeout', '15', 'pair', mac], capture_output=True, text=True)
+                        if res.returncode != 0 and "Pairing successful" not in res.stdout:
+                            return False, f"Pairing failed: {e.get_dbus_message() or res.stdout.strip()}"
+                
+                # Trust and connect
+                try:
+                    dev_props.Set('org.bluez.Device1', 'Trusted', True)
+                except Exception:
+                    subprocess.run(['bluetoothctl', '--timeout', '3', 'trust', mac], capture_output=True)
+                
+                try:
+                    dev_iface.Connect(timeout=10)
+                    return True, f"Paired, Trusted & Connected to {mac}"
+                except Exception:
+                    return True, f"Paired & Trusted {mac}"
+        except Exception:
+            pass
+
+        try:
+            # CLI Fallback
             subprocess.run(['bluetoothctl', '--timeout', '2', 'pairable', 'on'], capture_output=True, text=True, timeout=3)
-            res = subprocess.run(['bluetoothctl', '--timeout', '12', 'pair', mac], capture_output=True, text=True, timeout=13)
+            res = subprocess.run(['bluetoothctl', '--timeout', '15', 'pair', mac], capture_output=True, text=True, timeout=16)
             if res.returncode == 0 or "Pairing successful" in res.stdout:
-                # Automatically trust on pairing!
                 subprocess.run(['bluetoothctl', '--timeout', '3', 'trust', mac], capture_output=True, text=True, timeout=4)
-                # Auto connect after pairing and trusting
                 conn_res = self.connect_device(mac)
                 if conn_res[0]:
                     return True, f"Paired, Trusted & Connected to {mac}"
@@ -452,6 +543,21 @@ class BluetoothManager:
     def unpair_device(self, mac: str) -> tuple[bool, str]:
         if not self.check_service():
             return False, "bluetooth.service is inactive"
+        dev_obj_path = None
+        for dev in self.devices:
+            if dev['mac'].upper() == mac.upper():
+                dev_obj_path = dev.get('path')
+                break
+        try:
+            import dbus
+            bus = dbus.SystemBus()
+            if self.adapter_path and dev_obj_path:
+                adapter = bus.get_object('org.bluez', self.adapter_path)
+                adapter_iface = dbus.Interface(adapter, 'org.bluez.Adapter1')
+                adapter_iface.RemoveDevice(dev_obj_path)
+                return True, f"Removed {mac}"
+        except Exception:
+            pass
         try:
             res = subprocess.run(['bluetoothctl', '--timeout', '3', 'remove', mac], capture_output=True, text=True, timeout=4)
             if res.returncode == 0:
