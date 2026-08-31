@@ -91,13 +91,47 @@ if command -v pacman >/dev/null 2>&1; then
         direnv
         mise
 
-        # Audio, Media & Brightness
+        # Unified Theming, Portals & Runtimes (Qt + GTK)
+        qt5-wayland
+        qt6-wayland
+        qt5ct
+        qt6ct
+        kvantum
+        kvantum-qt5
+        nwg-look
+        dconf
+        gsettings-desktop-schemas
+        xsettingsd
+        papirus-icon-theme
+        adwaita-icon-theme
+        xdg-desktop-portal
+        xdg-desktop-portal-gtk
+        xdg-desktop-portal-hyprland
+        xdg-utils
+        xdg-user-dirs
+
+        # File Choosers, Thumbnails & Storage Integration
+        gvfs
+        gvfs-mtp
+        gvfs-smb
+        tumbler
+        ffmpegthumbnailer
+        poppler-glib
+        webp-pixbuf-loader
+
+        # Audio, Media Codecs & Brightness
         pipewire
         pipewire-pulse
+        pipewire-alsa
+        pipewire-jack
         wireplumber
         libpulse
         libcanberra
         vorbis-tools
+        gst-plugins-good
+        gst-plugins-bad
+        gst-plugins-ugly
+        gst-libav
         playerctl
         brightnessctl
         ddcutil
@@ -112,7 +146,19 @@ if command -v pacman >/dev/null 2>&1; then
         tesseract
         tesseract-data-eng
 
-        # Desktop Apps & Theming
+        # Authentication, Keyring & Security
+        gnome-keyring
+        libsecret
+        polkit-gnome
+
+        # Fonts, Emojis & CJK Characters
+        ttf-jetbrains-mono-nerd
+        ttf-liberation
+        noto-fonts
+        noto-fonts-cjk
+        noto-fonts-emoji
+
+        # Desktop Apps & UI Libraries
         dolphin
         firefox
         libnotify
@@ -121,14 +167,6 @@ if command -v pacman >/dev/null 2>&1; then
         gtk3
         gtk4
         gtk-layer-shell
-        xdg-desktop-portal
-        xdg-desktop-portal-gtk
-        xdg-desktop-portal-hyprland
-        dconf
-        gsettings-desktop-schemas
-        xsettingsd
-        ttf-jetbrains-mono-nerd
-        papirus-icon-theme
 
         # SDDM Display Manager
         sddm

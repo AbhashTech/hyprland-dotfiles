@@ -118,26 +118,44 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | Component | Packages / Tools | Description |
 | :--- | :--- | :--- |
 | **Display Manager (SDDM)**| `sddm`, `qt6-declarative`, `qt6-svg`, `qt6-5compat` | Qt6 display manager & Catppuccin Mocha glassmorphic greeter |
-| **Compositor & Portals** | `hyprland`, `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk`, `hyprpolkitagent` | Wayland compositor, screen sharing portals, and Polkit authentication agent |
+| **Compositor & Portals** | `hyprland`, `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk`, `xdg-utils`, `xdg-user-dirs`, `hyprpolkitagent` | Wayland compositor, XDG portals for screen sharing & file dialogs, and Polkit agent |
 | **Session, Lock & Logout** | `hyprlock`, `hypridle`, `wlogout` | Catppuccin Mocha lockscreen, idle management, and Wayland power modal |
 | **Status Bar & Power** | `waybar`, `power-profiles-daemon`, `upower` | Status bar with hardware stats, power profile selector & battery metrics |
 | **Notifications** | `mako`, `libnotify` | Notification daemon & `notify-send` for OSDs (with click-to-focus) |
 | **Wallpaper** | `hyprpaper` | Fast Wayland wallpaper daemon |
-| **App Launchers & Theming** | `fuzzel`, `wofi`, `nwg-look` | Fast Wayland launcher, GTK dmenu, and GTK3/4 theme switcher |
-| **Terminal & Apps** | `kitty`, `yazi`, `dolphin`, `firefox`, `btop` | Terminal, CLI file manager, KDE file manager, browser, and monitor |
-| **Modern CLI Power Suite** | `eza`, `bat`, `ripgrep`, `fd`, `git-delta`, `duf`, `dust`, `tealdeer`, `trash-cli`, `xh`, `glow` | Daily replacements for ls, cat, grep, find, diff, du, df, man, rm, curl |
-| **TUIs & Multiplexing** | `lazygit`, `lazydocker`, `zellij` | Interactive terminal UIs for Git, Docker, and terminal multiplexing |
-| **Shell & Environment** | `starship`, `atuin`, `direnv`, `mise`, `zoxide`, `fzf`, `wtype` | Fast prompt, SQLite history search, per-directory env/venv, tool version manager |
-| **Audio Subsystem** | `pipewire`, `pipewire-pulse`, `wireplumber`, `libpulse`, `libcanberra`, `vorbis-tools`, `playerctl` | PipeWire audio, `wpctl`/`pactl` controls, test tones & media playback keys |
+| **App Launchers & Theming** | `fuzzel`, `wofi`, `nwg-look`, `gsettings-desktop-schemas`, `dconf`, `xsettingsd` | Fast Wayland launcher, GTK dmenu, and GTK3/4 & DConf settings sync |
+| **Qt/GTK Unified Integration** | `qt5-wayland`, `qt6-wayland`, `qt5ct`, `qt6ct`, `kvantum`, `kvantum-qt5` | Native Wayland runtime and uniform theme/font/icon syncing across Qt5/Qt6 & GTK apps |
+| **File Pickers, Mounts & Thumbs** | `dolphin`, `yazi`, `gvfs`, `gvfs-mtp`, `gvfs-smb`, `tumbler`, `ffmpegthumbnailer`, `poppler-glib`, `webp-pixbuf-loader`, `trash-cli` | File managers, external drive mounting, trash bin support, and PDF/video/image thumbnail previews |
+| **Modern CLI Power Suite** | `eza`, `bat`, `ripgrep`, `fd`, `git-delta`, `duf`, `dust`, `tealdeer`, `xh`, `glow`, `fzf`, `zoxide`, `wtype` | Daily replacements for ls, cat, grep, find, diff, du, df, man, curl |
+| **TUIs & Multiplexing** | `lazygit`, `lazydocker`, `zellij`, `btop`, `fastfetch` | Interactive terminal UIs for Git, Docker, terminal multiplexing, and system monitoring |
+| **Shell & Environment** | `starship`, `atuin`, `direnv`, `mise` | Fast prompt, SQLite history search, per-directory env/venv, tool version manager |
+| **Audio & Media Codecs** | `pipewire`, `pipewire-pulse`, `pipewire-alsa`, `pipewire-jack`, `wireplumber`, `gst-plugins-good`, `gst-plugins-bad`, `gst-plugins-ugly`, `gst-libav`, `playerctl` | PipeWire audio suite, GStreamer web/media codecs, and MPRIS playback keys |
 | **Brightness & Night Light**| `brightnessctl`, `ddcutil`, `hyprsunset` / `wlsunset` | Backlight, external DDC brightness, and warm blue-light filter |
+| **Keyring & Authentication**| `gnome-keyring`, `libsecret`, `polkit-gnome` | Secrets/password storage and authentication agent for Git, browsers, and desktop apps |
 | **Clipboard** | `wl-clipboard`, `cliphist` | Wayland clipboard manager with binary image and thumbnail support |
 | **Screen Capture & OCR** | `grim`, `slurp`, `swappy`, `wf-recorder`, `hyprpicker`, `tesseract`, `tesseract-data-eng` | Screenshots, annotation, video recording, color picker, OCR |
-| **Python Runtime & UI** | `python`, `python-gobject`, `gtk3`, `gtk-layer-shell` | Python 3, PyGObject, and Wayland layer-shell for popups |
-| **Fonts & Icons** | `ttf-jetbrains-mono-nerd`, `papirus-icon-theme` | Nerd font glyphs and system icon theme |
+| **Python Runtime & UI** | `python`, `python-gobject`, `gtk3`, `gtk4`, `gtk-layer-shell` | Python 3, PyGObject, and Wayland layer-shell for popups |
+| **Fonts & Icons** | `ttf-jetbrains-mono-nerd`, `ttf-liberation`, `noto-fonts`, `noto-fonts-cjk`, `noto-fonts-emoji`, `papirus-icon-theme`, `adwaita-icon-theme` | Nerd font glyphs, CJK characters, emojis, and complete icon themes |
 
 ---
 
 ## 🛠️ How to Install
+
+### All-in-One Pacman Command
+
+```bash
+sudo pacman -S --needed \
+    qt5-wayland qt6-wayland qt5ct qt6ct kvantum kvantum-qt5 \
+    nwg-look gsettings-desktop-schemas dconf \
+    papirus-icon-theme adwaita-icon-theme \
+    xdg-desktop-portal-hyprland xdg-desktop-portal-gtk xdg-utils xdg-user-dirs \
+    gvfs gvfs-mtp gvfs-smb tumbler ffmpegthumbnailer poppler-glib webp-pixbuf-loader trash-cli \
+    pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber \
+    gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav playerctl \
+    gnome-keyring libsecret polkit-gnome \
+    noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-liberation ttf-jetbrains-mono-nerd \
+    wl-clipboard cliphist brightnessctl
+```
 
 ### Automated Setup (Recommended)
 
