@@ -417,6 +417,7 @@ def open_interactive_menu():
         "🪟 Screenshot: Active Window",
         "🎨 Screenshot: Area & Annotate",
         "📱 Read QR Code from Screen",
+        "🌐 OCR Language Manager",
         "⏱️  Screenshot: 5s Timer (Area)",
         "⏱️  Screenshot: 5s Timer (Full Screen)",
         "🎥 Record: Area (No Audio)",
@@ -453,6 +454,9 @@ def open_interactive_menu():
         elif "Read QR Code from Screen" in choice:
             qr_script = Path.home() / ".config" / "hypr" / "scripts" / "qr_reader.py"
             subprocess.Popen(["python3", str(qr_script)])
+        elif "OCR Language Manager" in choice:
+            ocr_lang_script = Path.home() / ".config" / "hypr" / "scripts" / "ocr_language_manager.py"
+            subprocess.Popen(["python3", str(ocr_lang_script), "--gui"])
         elif "Screenshot: Area" in choice:
             capture_screenshot(mode="area")
         elif "Screenshot: Full Screen" in choice:

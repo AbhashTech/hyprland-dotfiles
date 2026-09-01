@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OCR Language Manager
+GenericName=Tesseract OCR Language Manager & Model Installer
+Comment=Install language models, manage active OCR recognition languages, and test capture
+Exec=python3 /home/kunal/.config/hypr/scripts/ocr_language_manager.py --gui
+Icon=character-set
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;Office;
+StartupWMClass=ocr-language-manager
+StartupNotify=true
+Keywords=ocr;tesseract;language;text;grab;scanner;translate;

@@ -314,7 +314,7 @@ fi
 # 8. User Desktop Shortcuts (App Menu)
 log_info "Deploying custom desktop application shortcuts..."
 mkdir -p "${HOME}/.local/share/applications"
-for desktop_file in app-shortcut-creator.desktop theme-manager.desktop; do
+for desktop_file in app-shortcut-creator.desktop theme-manager.desktop ocr-language-manager.desktop; do
     if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/${desktop_file}" ]; then
         cp "${DOTFILES_DIR}/.config/hypr/scripts/${desktop_file}" "${HOME}/.local/share/applications/"
         chmod +x "${HOME}/.local/share/applications/${desktop_file}"

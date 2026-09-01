@@ -50,7 +50,9 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │       ├── keyboard_layout.py    # Dynamic keyboard layout switcher & installer
     │       ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
     │       ├── nightlight.py         # Blue-light filter (3800K night / 6500K day)
+    │       ├── ocr-language-manager.desktop # Application menu entry for OCR Language Manager
     │       ├── ocr_grab.py           # Optical character recognition text grabber
+    │       ├── ocr_language_manager.py # Tesseract OCR language model downloader, manager & selector (GTK3/CLI)
     │       ├── qr_reader.py          # Screen QR / 2D barcode scanner & decoder
     │       ├── quick_calc.py         # Interactive math expression evaluator
     │       ├── resolution_menu.py    # Display resolution & UI scaling switcher
@@ -437,6 +439,8 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Shortcut Cheat Sheet** | Open interactive **Fuzzel/Wofi** dynamic keybindings viewer |
 | `SUPER + SHIFT + P` | **Hyprpicker** | Pick color from screen, copy hex code to clipboard & trigger notification |
 | `SUPER + SHIFT + T` | **Screen OCR** | Select region with mouse, extract text via Tesseract & copy to clipboard |
+| `SUPER + ALT + O` | **OCR Language Manager GUI** | Launch graphical GTK3 language downloader, multi-language selector & manager |
+| `SUPER + CTRL + O` | **OCR Language Selector Menu** | Fast interactive Fuzzel/Wofi OCR language switcher |
 | `SUPER + ALT + Q` | **Screen QR Reader** | Select region with mouse, decode QR/2D barcodes to clipboard & open URLs |
 | `SUPER + ALT + N` | **Night Light** | Toggle warm blue-light filter (3800K night / 6500K day) |
 | `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator** | Interactive math expression evaluator via Fuzzel prompt |
