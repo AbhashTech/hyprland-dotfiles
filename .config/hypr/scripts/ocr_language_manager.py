@@ -8,12 +8,13 @@ A comprehensive graphical (GTK3) and CLI/Fuzzel utility to:
 - Browse, download, and install Tesseract language models without sudo
 - Manage installed language packages and delete user-downloaded models
 - Instantly trigger and test screen OCR with the active multi-language combination
-- Full Catppuccin / Dynamic Theme support and App Menu integration
+- Full high-contrast Catppuccin theme styling and App Menu integration
 """
 
 import os
 import sys
 import json
+import html
 import shutil
 import urllib.request
 import argparse
@@ -122,8 +123,8 @@ LANGUAGE_CATALOG = {
 
     # Special / Mathematical
     "lat": {"name": "Latin", "native": "Latina", "group": "Classical"},
-    "equ": {"name": "Math / Equations", "native": "∑ dx/dt", "group": "Special"},
-    "osd": {"name": "Orientation & Script Detection", "native": "OSD", "group": "Special"},
+    "equ": {"name": "Math & Equations", "native": "∑ dx/dt", "group": "Special"},
+    "osd": {"name": "Orientation and Script Detection", "native": "OSD", "group": "Special"},
 }
 
 CATEGORIES = [
@@ -184,7 +185,7 @@ def get_installed_languages():
                 cat = LANGUAGE_CATALOG.get(code, {
                     "name": code.upper(),
                     "native": code,
-                    "group": "System"
+                    "group": "Special" if code in ("osd", "equ") else "System"
                 })
                 installed[code] = {
                     "code": code,
@@ -213,7 +214,6 @@ def load_ocr_config():
         except Exception:
             pass
 
-    # Ensure synchronization between active_language string and active_languages list
     if "active_languages" not in default_config or not default_config["active_languages"]:
         raw = default_config.get("active_language", "eng")
         default_config["active_languages"] = [l.strip() for l in raw.split("+") if l.strip()]
@@ -410,7 +410,7 @@ def run_fuzzel_menu():
         print(f"Error running menu: {e}", file=sys.stderr)
 
 # =============================================================================
-# GTK3 Graphical User Interface (Multi-Select & Modern Catppuccin Theme)
+# GTK3 Graphical User Interface (High Contrast Catppuccin Theme)
 # =============================================================================
 
 def get_theme_colors():
@@ -448,7 +448,7 @@ def get_theme_colors():
         "accent": "#cba6f7", "blue": "#89b4fa", "green": "#a6e3a1",
         "yellow": "#f9e2af", "peach": "#fab387", "red": "#f38ba8",
         "mauve": "#cba6f7", "teal": "#94e2d5", "pink": "#f5c2e7",
-        "sapphire": "#74c7ec"
+        "sapphire": "#74c7ec", "lavender": "#b4befe"
     }
 
 def launch_gtk_gui():
@@ -460,183 +460,307 @@ def launch_gtk_gui():
 
     colors = get_theme_colors()
 
+    c_base = colors.get("base", "#1e1e2e")
+    c_mantle = colors.get("mantle", "#181825")
+    c_crust = colors.get("crust", "#11111b")
+    c_surface0 = colors.get("surface0", "#313244")
+    c_surface1 = colors.get("surface1", "#45475a")
+    c_surface2 = colors.get("surface2", "#585b70")
+    c_text = colors.get("text", "#cdd6f4")
+    c_subtext1 = colors.get("subtext1", "#bac2de")
+    c_accent = colors.get("accent", "#cba6f7")
+    c_green = colors.get("green", "#a6e3a1")
+    c_red = colors.get("red", "#f38ba8")
+    c_blue = colors.get("blue", "#89b4fa")
+    c_sapphire = colors.get("sapphire", "#74c7ec")
+
     css_provider = Gtk.CssProvider()
     css_data = f"""
     * {{
         font-family: 'JetBrainsMono Nerd Font', 'Noto Sans', sans-serif;
     }}
-    window {{
-        background-color: {colors.get("base", "#1e1e2e")};
-        color: {colors.get("text", "#cdd6f4")};
+    
+    /* Ensure entire window, viewports, and background remain dark */
+    window, viewport, scrolledwindow, box, notebook, notebook > stack, notebook > stack > * {{
+        background-color: {c_base};
+        color: {c_text};
     }}
+
     .header-box {{
-        background-color: {colors.get("mantle", "#181825")};
-        border-bottom: 2px solid {colors.get("surface0", "#313244")};
+        background-color: {c_mantle};
+        border-bottom: 2px solid {c_surface0};
         padding: 16px 22px;
     }}
+    
     .title-label {{
         font-size: 19px;
         font-weight: 800;
-        color: {colors.get("accent", "#cba6f7")};
+        color: {c_accent};
     }}
+    
     .subtitle-label {{
         font-size: 12px;
-        color: {colors.get("subtext0", "#a6adc8")};
+        color: {c_subtext1};
     }}
+
     .active-combo-bar {{
-        background-color: {colors.get("mantle", "#181825")};
-        border: 1px solid {colors.get("surface0", "#313244")};
+        background-color: {c_mantle};
+        border: 1px solid {c_surface0};
         border-radius: 12px;
-        padding: 10px 16px;
+        padding: 12px 16px;
         margin: 12px 18px 4px 18px;
     }}
-    .active-chip {{
-        background-color: {colors.get("surface1", "#45475a")};
-        border: 1px solid {colors.get("accent", "#cba6f7")};
-        border-radius: 16px;
-        padding: 4px 10px;
-        color: {colors.get("text", "#cdd6f4")};
+
+    /* Global button override to fix system theme bleed */
+    button {{
+        background-image: none;
+        box-shadow: none;
+        text-shadow: none;
+        border-radius: 8px;
+        font-weight: bold;
         font-size: 12px;
+        transition: all 120ms ease-in-out;
+    }}
+
+    /* Reset button in active combo bar */
+    button.btn-reset {{
+        background-color: {c_surface0};
+        background-image: none;
+        border: 1px solid {c_surface2};
+        color: {c_text};
+        padding: 6px 14px;
+    }}
+    button.btn-reset label {{
+        color: {c_text};
         font-weight: bold;
     }}
-    .active-chip:hover {{
-        background-color: {colors.get("surface2", "#585b70")};
+    button.btn-reset:hover {{
+        background-color: {c_surface1};
+        border-color: {c_accent};
+        color: #ffffff;
     }}
-    .chip-close-btn {{
-        background: transparent;
-        border: none;
-        color: {colors.get("red", "#f38ba8")};
-        font-size: 11px;
+    button.btn-reset:hover label {{
+        color: #ffffff;
+    }}
+
+    /* Action buttons on cards (Select Solo, Only This) */
+    button.btn-solo {{
+        background-color: {c_surface0};
+        background-image: none;
+        border: 1px solid {c_surface2};
+        color: {c_text};
+        padding: 6px 14px;
+    }}
+    button.btn-solo label {{
+        color: {c_text};
         font-weight: bold;
-        padding: 0 4px;
-        margin-left: 4px;
     }}
-    .chip-close-btn:hover {{
-        color: {colors.get("peach", "#fab387")};
+    button.btn-solo:hover {{
+        background-color: {c_surface1};
+        border-color: {c_accent};
+        color: #ffffff;
     }}
-    .search-entry {{
-        background-color: {colors.get("surface0", "#313244")};
-        color: {colors.get("text", "#cdd6f4")};
-        border: 1px solid {colors.get("surface1", "#45475a")};
-        border-radius: 10px;
-        padding: 8px 14px;
-        font-size: 13px;
+    button.btn-solo:hover label {{
+        color: #ffffff;
     }}
-    .search-entry:focus {{
-        border-color: {colors.get("accent", "#cba6f7")};
-    }}
-    .card-item {{
-        background-color: {colors.get("mantle", "#181825")};
-        border: 1px solid {colors.get("surface0", "#313244")};
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin: 5px 14px;
-        transition: all 150ms ease-in-out;
-    }}
-    .card-item:hover {{
-        background-color: {colors.get("surface0", "#313244")};
-        border-color: {colors.get("surface1", "#45475a")};
-    }}
-    .card-active {{
-        background-color: {colors.get("surface0", "#313244")};
-        border: 2px solid {colors.get("accent", "#cba6f7")};
-    }}
-    .btn-capture {{
-        background-color: {colors.get("accent", "#cba6f7")};
-        color: {colors.get("base", "#1e1e2e")};
+
+    /* Capture & Test OCR Button */
+    button.btn-capture {{
+        background-color: {c_accent};
+        background-image: none;
+        border: 1px solid {c_accent};
+        color: {c_crust};
         font-weight: 800;
         font-size: 13px;
         border-radius: 10px;
-        padding: 8px 16px;
-        border: none;
+        padding: 8px 18px;
     }}
-    .btn-capture:hover {{
+    button.btn-capture label {{
+        color: {c_crust};
+        font-weight: 800;
+    }}
+    button.btn-capture:hover {{
         background-color: {colors.get("mauve", "#cba6f7")};
+        color: #000000;
     }}
-    .btn-action {{
-        background-color: {colors.get("surface0", "#313244")};
-        color: {colors.get("text", "#cdd6f4")};
-        border: 1px solid {colors.get("surface1", "#45475a")};
-        border-radius: 8px;
+    button.btn-capture:hover label {{
+        color: #000000;
+    }}
+
+    /* Delete Button */
+    button.btn-danger {{
+        background-color: rgba(243, 139, 168, 0.12);
+        background-image: none;
+        border: 1px solid {c_red};
+        color: {c_red};
         padding: 6px 12px;
-        font-size: 12px;
+    }}
+    button.btn-danger label {{
+        color: {c_red};
         font-weight: bold;
     }}
-    .btn-action:hover {{
-        background-color: {colors.get("surface1", "#45475a")};
-        border-color: {colors.get("accent", "#cba6f7")};
+    button.btn-danger:hover {{
+        background-color: {c_red};
+        color: {c_crust};
     }}
-    .btn-danger {{
-        background-color: transparent;
-        color: {colors.get("red", "#f38ba8")};
-        border: 1px solid {colors.get("red", "#f38ba8")};
-        border-radius: 8px;
-        padding: 5px 10px;
-        font-size: 12px;
-        font-weight: bold;
+    button.btn-danger:hover label {{
+        color: {c_crust};
     }}
-    .btn-danger:hover {{
-        background-color: {colors.get("red", "#f38ba8")};
-        color: {colors.get("base", "#1e1e2e")};
-    }}
-    .btn-download {{
-        background-color: {colors.get("sapphire", "#74c7ec")};
-        color: {colors.get("base", "#1e1e2e")};
-        font-weight: bold;
-        border-radius: 8px;
+
+    /* Download Button */
+    button.btn-download {{
+        background-color: {c_sapphire};
+        background-image: none;
+        border: 1px solid {c_blue};
+        color: {c_crust};
         padding: 6px 14px;
+    }}
+    button.btn-download label {{
+        color: {c_crust};
+        font-weight: 800;
+    }}
+    button.btn-download:hover {{
+        background-color: {c_blue};
+        color: #000000;
+    }}
+    button.btn-download:hover label {{
+        color: #000000;
+    }}
+
+    /* Active Multi-Select Chips */
+    .active-chip {{
+        background-color: {c_surface0};
+        border: 1.5px solid {c_accent};
+        border-radius: 16px;
+        padding: 5px 12px;
+        color: {c_text};
+        font-size: 12px;
+        font-weight: bold;
+    }}
+    .active-chip label {{
+        color: {c_text};
+        font-weight: bold;
+    }}
+    .active-chip:hover {{
+        background-color: {c_surface1};
+    }}
+
+    /* Close button on chips */
+    button.chip-close-btn {{
+        background: transparent;
+        background-image: none;
         border: none;
+        color: {c_red};
+        font-size: 13px;
+        font-weight: 800;
+        padding: 0 4px;
+        margin-left: 6px;
     }}
-    .btn-download:hover {{
-        background-color: {colors.get("blue", "#89b4fa")};
+    button.chip-close-btn label {{
+        color: {c_red};
+        font-weight: 800;
     }}
+    button.chip-close-btn:hover label {{
+        color: {colors.get("peach", "#fab387")};
+    }}
+
+    /* Search Bar */
+    entry.search-entry {{
+        background-color: {c_mantle};
+        color: {c_text};
+        border: 1px solid {c_surface1};
+        border-radius: 10px;
+        padding: 9px 14px;
+        font-size: 13px;
+    }}
+    entry.search-entry:focus {{
+        border-color: {c_accent};
+        background-color: {c_crust};
+        color: #ffffff;
+    }}
+
+    /* Language Cards */
+    .card-item {{
+        background-color: {c_mantle};
+        border: 1px solid {c_surface0};
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin: 5px 14px;
+    }}
+    .card-item:hover {{
+        background-color: {c_surface0};
+        border-color: {c_surface1};
+    }}
+    .card-active {{
+        background-color: {c_surface0};
+        border: 2px solid {c_accent};
+    }}
+
+    /* Category Filter Pills */
     .filter-pill {{
-        background-color: {colors.get("mantle", "#181825")};
-        color: {colors.get("subtext0", "#a6adc8")};
-        border: 1px solid {colors.get("surface0", "#313244")};
+        background-color: {c_mantle};
+        color: {c_subtext1};
+        border: 1px solid {c_surface0};
         border-radius: 14px;
-        padding: 4px 10px;
+        padding: 5px 12px;
         font-size: 11px;
         font-weight: bold;
     }}
     .filter-pill:checked {{
-        background-color: {colors.get("accent", "#cba6f7")};
-        color: {colors.get("base", "#1e1e2e")};
-        border-color: {colors.get("accent", "#cba6f7")};
+        background-color: {c_accent};
+        color: {c_crust};
+        border-color: {c_accent};
     }}
-    notebook {{
-        background: transparent;
+    .filter-pill label {{
+        color: {c_subtext1};
+        font-weight: bold;
     }}
+    .filter-pill:checked label {{
+        color: {c_crust};
+        font-weight: 800;
+    }}
+
+    /* Notebook Tabs */
     notebook header {{
-        background-color: {colors.get("mantle", "#181825")};
-        border-bottom: 1px solid {colors.get("surface0", "#313244")};
+        background-color: {c_mantle};
+        border-bottom: 1px solid {c_surface0};
         padding: 4px 12px;
     }}
     notebook tab {{
         background-color: transparent;
-        color: {colors.get("subtext0", "#a6adc8")};
-        padding: 10px 20px;
+        color: {c_subtext1};
+        padding: 10px 22px;
         font-size: 13px;
         font-weight: bold;
         border-radius: 8px 8px 0 0;
         border: none;
     }}
-    notebook tab:checked {{
-        background-color: {colors.get("base", "#1e1e2e")};
-        color: {colors.get("accent", "#cba6f7")};
-        border-bottom: 3px solid {colors.get("accent", "#cba6f7")};
+    notebook tab label {{
+        color: {c_subtext1};
+        font-weight: bold;
     }}
+    notebook tab:checked {{
+        background-color: {c_base};
+        color: {c_accent};
+        border-bottom: 3px solid {c_accent};
+    }}
+    notebook tab:checked label {{
+        color: {c_accent};
+        font-weight: 800;
+    }}
+
+    /* Checkbuttons */
     checkbutton check {{
         min-width: 20px;
         min-height: 20px;
         border-radius: 6px;
-        border: 2px solid {colors.get("surface2", "#585b70")};
-        background-color: {colors.get("surface0", "#313244")};
+        border: 2px solid {c_surface2};
+        background-color: {c_surface0};
     }}
     checkbutton check:checked {{
-        background-color: {colors.get("accent", "#cba6f7")};
-        border-color: {colors.get("accent", "#cba6f7")};
-        color: {colors.get("base", "#1e1e2e")};
+        background-color: {c_accent};
+        border-color: {c_accent};
+        color: {c_crust};
     }}
     """
     css_provider.load_from_data(css_data.encode("utf-8"))
@@ -647,8 +771,8 @@ def launch_gtk_gui():
 
     class OCRLangWindow(Gtk.Window):
         def __init__(self):
-            super().__init__(title="Tesseract OCR Language Manager")
-            self.set_default_size(780, 720)
+            super().__init__(title="Tesseract OCR Language Hub")
+            self.set_default_size(800, 740)
             self.set_position(Gtk.WindowPosition.CENTER)
             self.set_icon_name("character-set")
 
@@ -685,18 +809,18 @@ def launch_gtk_gui():
             header_box.pack_start(test_btn, False, False, 0)
 
             # --- 2. Active Multi-Language Combination Bar ---
-            self.combo_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            self.combo_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
             self.combo_box.get_style_context().add_class("active-combo-bar")
             main_vbox.pack_start(self.combo_box, False, False, 0)
 
             combo_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
             combo_title = Gtk.Label(xalign=0)
-            combo_title.set_markup("<b>⚡ Active OCR Languages (Simultaneous Recognition):</b>")
+            combo_title.set_markup(f"<span color='{c_text}'><b>⚡ Active OCR Languages (Simultaneous Recognition):</b></span>")
             combo_header.pack_start(combo_title, True, True, 0)
 
             # Quick reset button
             reset_en_btn = Gtk.Button(label="Reset to English (eng)")
-            reset_en_btn.get_style_context().add_class("btn-action")
+            reset_en_btn.get_style_context().add_class("btn-reset")
             reset_en_btn.connect("clicked", self.on_reset_english)
             combo_header.pack_start(reset_en_btn, False, False, 0)
             self.combo_box.pack_start(combo_header, False, False, 0)
@@ -712,15 +836,15 @@ def launch_gtk_gui():
             self.cmd_preview_lbl = Gtk.Label(xalign=0)
             self.combo_box.pack_start(self.cmd_preview_lbl, False, False, 0)
 
-            # --- 3. Search & Filter Bar ---
+            # --- 3. Search Bar ---
             search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-            search_box.set_margin_top(10)
-            search_box.set_margin_bottom(6)
-            search_box.set_margin_start(16)
-            search_box.set_margin_end(16)
+            search_box.set_margin_top(12)
+            search_box.set_margin_bottom(8)
+            search_box.set_margin_start(18)
+            search_box.set_margin_end(18)
 
             self.search_entry = Gtk.Entry()
-            self.search_entry.set_placeholder_text("🔍 Search language name, native script, or code (e.g. Marathi, मराठी, mar, Hindi, Japanese)...")
+            self.search_entry.set_placeholder_text("🔍 Search language name, native script, or code (e.g. Marathi, मराठी, mar, Hindi, Sanskrit)...")
             self.search_entry.get_style_context().add_class("search-entry")
             self.search_entry.connect("changed", self.on_search_changed)
             search_box.pack_start(self.search_entry, True, True, 0)
@@ -744,11 +868,11 @@ def launch_gtk_gui():
             # Category filter pills
             filter_scroll = Gtk.ScrolledWindow()
             filter_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)
-            filter_scroll.set_min_content_height(42)
+            filter_scroll.set_min_content_height(46)
             filter_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-            filter_box.set_margin_start(14)
-            filter_box.set_margin_end(14)
-            filter_box.set_margin_top(6)
+            filter_box.set_margin_start(16)
+            filter_box.set_margin_end(16)
+            filter_box.set_margin_top(8)
             filter_scroll.add(filter_box)
             available_wrapper.pack_start(filter_scroll, False, False, 0)
 
@@ -790,7 +914,7 @@ def launch_gtk_gui():
                 info = self.installed_langs.get(code, LANGUAGE_CATALOG.get(code, {"name": code.upper()}))
                 name = info.get("name", code)
                 
-                chip_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+                chip_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
                 chip_box.get_style_context().add_class("active-chip")
                 
                 chip_lbl = Gtk.Label(label=f"✓ {name} ({code})")
@@ -809,8 +933,8 @@ def launch_gtk_gui():
 
             combo_str = "+".join(self.active_langs)
             self.cmd_preview_lbl.set_markup(
-                f"<span foreground='{colors.get('subtext0', '#a6adc8')}' size='small'>"
-                f"Active Tesseract Argument: <tt><span foreground='{colors.get('green', '#a6e3a1')}'>-l {combo_str}</span></tt></span>"
+                f"<span foreground='{c_subtext1}' size='small'>"
+                f"Active Tesseract Recognition Command: <tt><span foreground='{c_green}' weight='bold'>tesseract -l {combo_str}</span></tt></span>"
             )
             self.tab1_label.set_text(f"📦 Installed ({len(self.installed_langs)})")
             self.tab2_label.set_text(f"➕ Download Models ({len(LANGUAGE_CATALOG) - len(self.installed_langs)})")
@@ -838,7 +962,6 @@ def launch_gtk_gui():
                     if len(self.active_langs) > 1:
                         self.active_langs.remove(code)
                     else:
-                        # Don't allow unchecking the last remaining language
                         checkbutton.set_active(True)
                         notify("⚠️ Info", "At least one language must remain active.", "dialog-information")
                         return
@@ -865,7 +988,6 @@ def launch_gtk_gui():
             query = query.lower().strip()
             count = 0
 
-            # Sort: active first, then alphabetical by name
             for code, info in sorted(self.installed_langs.items(), key=lambda x: (x[0] not in self.active_langs, x[1]["name"])):
                 name = info["name"]
                 native = info["native"]
@@ -890,21 +1012,25 @@ def launch_gtk_gui():
                 # Info column
                 info_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
                 
-                title_txt = f"<b>{name}</b>  <span foreground='{colors.get('subtext0', '#a6adc8')}'>({code})</span>"
+                esc_name = html.escape(name)
+                esc_native = html.escape(native)
+                esc_group = html.escape(info['group'])
+
+                title_txt = f"<span color='{c_text}' weight='bold' size='large'>{esc_name}</span>  <span foreground='{c_subtext1}'>({code})</span>"
                 if is_active:
-                    title_txt += f"  <span foreground='{colors.get('green', '#a6e3a1')}'>● Active (In OCR Combo)</span>"
+                    title_txt += f"  <span foreground='{c_green}' weight='bold'>● Active (In OCR Combo)</span>"
                 
                 title_lbl = Gtk.Label(xalign=0)
                 title_lbl.set_markup(title_txt)
                 
-                sub_txt = f"Native: <b>{native}</b> • Category: {info['group']} • Size: {info['size_mb']:.1f} MB"
+                sub_txt = f"Native: <b>{esc_native}</b> • Category: {esc_group} • Size: {info['size_mb']:.1f} MB"
                 if info["is_system"]:
-                    sub_txt += " • [System Pacman]"
+                    sub_txt += " • [System Package]"
                 else:
-                    sub_txt += " • [User Model]"
+                    sub_txt += " • [User Downloaded]"
 
                 sub_lbl = Gtk.Label(xalign=0)
-                sub_lbl.set_markup(f"<span foreground='{colors.get('subtext0', '#a6adc8')}' size='small'>{sub_txt}</span>")
+                sub_lbl.set_markup(f"<span foreground='{c_subtext1}'>{sub_txt}</span>")
                 
                 info_vbox.pack_start(title_lbl, False, False, 0)
                 info_vbox.pack_start(sub_lbl, False, False, 0)
@@ -914,7 +1040,7 @@ def launch_gtk_gui():
                 btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
 
                 solo_btn = Gtk.Button(label="Only This" if is_active else "Select Solo")
-                solo_btn.get_style_context().add_class("btn-action")
+                solo_btn.get_style_context().add_class("btn-solo")
                 solo_btn.set_tooltip_text(f"Use {name} as the sole OCR language")
                 solo_btn.connect("clicked", lambda b, c=code: self.on_solo_language(c))
                 btn_box.pack_start(solo_btn, False, False, 0)
@@ -962,11 +1088,15 @@ def launch_gtk_gui():
                 card.get_style_context().add_class("card-item")
 
                 info_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+                esc_name = html.escape(name)
+                esc_native = html.escape(native)
+                esc_group = html.escape(group)
+
                 title_lbl = Gtk.Label(xalign=0)
-                title_lbl.set_markup(f"<b>{name}</b> <span foreground='{colors.get('subtext0', '#a6adc8')}'>({code})</span>")
+                title_lbl.set_markup(f"<span color='{c_text}' weight='bold' size='large'>{esc_name}</span> <span foreground='{c_subtext1}'>({code})</span>")
                 
                 sub_lbl = Gtk.Label(xalign=0)
-                sub_lbl.set_markup(f"<span foreground='{colors.get('subtext0', '#a6adc8')}' size='small'>Native: <b>{native}</b> • Category: {group}</span>")
+                sub_lbl.set_markup(f"<span foreground='{c_subtext1}'>Native: <b>{esc_native}</b> • Category: {esc_group}</span>")
                 
                 info_vbox.pack_start(title_lbl, False, False, 0)
                 info_vbox.pack_start(sub_lbl, False, False, 0)
