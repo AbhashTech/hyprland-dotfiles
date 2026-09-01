@@ -183,66 +183,40 @@ sudo usermod -aG i2c $USER
 
 ## ⌨️ Keybindings Cheat Sheet
 
-### 🖥️ Applications & Navigation
+### 🖥️ Core Applications & Essential Controls
 | Shortcut | Action |
 | :--- | :--- |
-| `SUPER + Q` | Open Kitty Terminal |
+| `SUPER + Q` / `SUPER + Return` | Open Kitty Terminal |
 | `SUPER + grave (~)` | Toggle Dropdown Scratchpad Terminal (`dropdown-terminal`) |
-| `SUPER + G` | Open Floating Lazygit TUI |
-| `SUPER + D` | Open Floating Lazydocker TUI |
-| `SUPER + SHIFT + Z` | Open Floating Zellij Session |
+| `SUPER + R` / `SUPER + Space` | Open Fuzzel Application Launcher (with outside click-dismiss) |
+| `SUPER + B` | Open Firefox Browser |
 | `SUPER + E` | Open Dolphin File Manager |
 | `SUPER + SHIFT + E` | Open Yazi Terminal File Manager |
-| `SUPER + B` | Open Firefox Browser |
-| `SUPER + R` | Open Fuzzel Application Launcher (with outside click-dismiss) |
-| `SUPER + ESCAPE` / `SUPER + M` | Open Power & Session Menu (`wlogout`) |
-| `SUPER + L` / `SUPER + ALT + L` | Lock Screen immediately (`hyprlock`) |
-| `SUPER + C` | Close Active Window |
+| `SUPER + C` / `SUPER + SHIFT + Q` / `ALT + F4` | Close Active Focused Window |
+| `SUPER + F` | Toggle Window Fullscreen Mode |
 | `SUPER + V` | Toggle Window Floating Mode |
-| `SUPER + P` | Toggle Pseudo Tiling |
-| `SUPER + J` | Toggle Split (Dwindle layout) |
-| `SUPER + SHIFT + W` | Toggle Waybar (Show / Hide) |
+| `SUPER + P` | Toggle Pseudo Tiling Mode |
+| `SUPER + J` | Toggle Layout Split Orientation (Dwindle) |
+| `SUPER + L` / `SUPER + ALT + L` | Lock Screen immediately (`hyprlock`) |
+| `SUPER + Escape` / `SUPER + M` | Open Power & Session Menu (`wlogout`) |
+| `SUPER + SHIFT + W` | Toggle Waybar Status Bar (Show / Hide) |
+| `SUPER + /` / `SUPER + ?` / `SUPER + F1` | Open Dynamic Keybindings Cheat Sheet Viewer |
+
+---
+
+### 🗂️ Workspaces & Window Navigation
+| Shortcut | Action |
+| :--- | :--- |
+| `SUPER + Left / Right / Up / Down` | Focus Window directionally |
+| `ALT + Tab` / `SUPER + Tab` | Cycle focus to next window |
 | `SUPER + [1-9, 0]` | Switch to Workspace 1–10 |
 | `SUPER + SHIFT + [1-9, 0]` | Move Active Window to Workspace 1–10 |
 | `SUPER + S` | Toggle Magic Scratchpad Workspace |
 | `SUPER + SHIFT + S` | Move Active Window to Special Scratchpad |
-
----
-
-### 🌐 Keyboard Layout & Input Switching
-| Shortcut | Action |
-| :--- | :--- |
-| `SUPER + Space` | Cycle to next active keyboard layout |
-| `SUPER + SHIFT + K` | Open interactive active layout menu |
-| `SUPER + ALT + K` | Open add new keyboard layout menu |
-
----
-
-### 🔔 Notifications & Quick Settings
-| Shortcut | Action |
-| :--- | :--- |
-| `SUPER + N` | Open Notification History Center |
-| `SUPER + SHIFT + N` | Toggle Do-Not-Disturb (DND) Mode |
-| `SUPER + SHIFT + V` / `SUPER + ALT + V` / `SUPER + SHIFT + C` | Open Clipboard History Browser |
-| `SUPER + ALT + D` | Open Delete Item / Wipe Clipboard History Menu |
-
----
-
-### ⚡ Productivity & Workflow Utilities
-| Shortcut | Action |
-| :--- | :--- |
-| `SUPER + T` | **Theme Switcher Menu**: Interactive graphical theme selector & live palette manager (19 themes) |
-| `SUPER + ALT + T` | **Theme Manager & Studio GUI**: Full GTK3 desktop theme & palette manager with live preview cards, Theme Creator & Fork Studio |
-| `SUPER + CTRL + T` | **Cycle Theme**: Instantly cycle to next theme in palette registry |
-| `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Dynamic Keybindings Viewer**: Searchable shortcut cheat sheet |
-| `SUPER + SHIFT + P` | **Hyprpicker**: Pick color from screen, copy hex code & notify |
-| `SUPER + SHIFT + T` | **Screen OCR**: Grab and extract text from any screen region to clipboard |
-| `SUPER + ALT + N` | **Night Light**: Toggle warm blue light filter (3800K / 6500K) |
-| `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator**: Interactive math evaluator via Fuzzel |
-| `SUPER + .` (period) | **Emoji Picker**: Searchable emoji menu with instant copy & auto-typing |
-| `SUPER + ALT + S` | **App Shortcut Creator**: Launch interactive desktop shortcut (.desktop) creator & manager GUI |
-| `SUPER + W` | **Random Wallpaper**: Cycle through random wallpapers in `~/Wallpaper` |
-| `SUPER + ALT + W` | **Wallpaper Menu**: Interactive graphical wallpaper picker |
+| `SUPER + Mouse Scroll Down` | Scroll to next workspace |
+| `SUPER + Mouse Scroll Up` | Scroll to previous workspace |
+| `SUPER + Left Mouse Drag` | Drag & move window |
+| `SUPER + Right Mouse Drag` | Drag & resize window |
 
 ---
 
@@ -252,13 +226,49 @@ sudo usermod -aG i2c $USER
 | `SUPER + CTRL + =` / `+` / `KP_Add` | Scale Window Up (+40px) with live dimension OSD |
 | `SUPER + CTRL + -` / `KP_Subtract` | Scale Window Down (-40px) with live dimension OSD |
 | `SUPER + CTRL + Arrow / HJKL` | Directional Window Resize (Left / Right / Up / Down) |
-| `SUPER + CTRL + I` / `0` | Display active window dimensions & screen % |
+| `SUPER + CTRL + I` / `0` | Display active window dimensions & screen coverage % |
 | `SUPER + SHIFT + R` / `SUPER + SHIFT + D` | Open Interactive Screen Resolution & Display Scaling Menu |
 | `SUPER + ALT + =` / `+` | Increment Display Scale (+0.1) |
 | `SUPER + ALT + -` | Decrement Display Scale (-0.1) |
-| `SUPER + ALT + 0` | Display Active Screen Scale Factor |
+| `SUPER + ALT + 0` | Display Active Screen Scale Factor OSD |
 | `SUPER + ALT + 1` to `5` | Switch display scaling (1.0x, 1.25x, 1.5x, 1.75x, 2.0x) |
 | `SUPER + ALT + BackSpace` | Reset display scale to 1.0x (100%) |
+
+---
+
+### ⚡ Productivity, Development & System Utilities
+| Shortcut | Action |
+| :--- | :--- |
+| `SUPER + G` | Open Floating Lazygit TUI |
+| `SUPER + D` | Open Floating Lazydocker TUI |
+| `SUPER + SHIFT + Z` | Open Floating Zellij Session |
+| `SUPER + SHIFT + P` / `SUPER + ALT + P` | **Hyprpicker**: Pick color from screen, copy hex code & notify |
+| `SUPER + T` | **Theme Switcher Menu**: Interactive graphical theme selector (19 themes) |
+| `SUPER + ALT + T` | **Theme Manager & Studio GUI**: Full GTK3 desktop theme & palette manager |
+| `SUPER + CTRL + T` | **Cycle Theme**: Instantly cycle to next theme in palette registry |
+| `SUPER + SHIFT + T` | **Screen OCR**: Grab and extract text from any screen region to clipboard |
+| `SUPER + ALT + O` | **OCR Language Manager GUI**: Launch GTK3 language downloader & manager |
+| `SUPER + CTRL + O` | **OCR Language Selector Menu**: Fast interactive Fuzzel OCR language switcher |
+| `SUPER + ALT + Q` | **Screen QR Reader**: Select region & decode QR / 2D barcodes to clipboard |
+| `SUPER + ALT + N` | **Night Light**: Toggle warm blue-light eye comfort filter (3800K / 6500K) |
+| `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator**: Interactive math evaluator via Fuzzel prompt |
+| `SUPER + .` (period) | **Emoji Picker**: Searchable emoji menu with instant copy & auto-typing |
+| `SUPER + ALT + S` | **App Shortcut Creator**: Launch desktop shortcut (.desktop) creator GUI |
+| `SUPER + W` | **Random Wallpaper**: Cycle through random wallpapers in `~/Wallpaper` |
+| `SUPER + ALT + W` | **Wallpaper Menu**: Interactive graphical wallpaper picker |
+| `SUPER + ALT + Space` | **Next Keyboard Layout**: Cycle to next active keyboard layout |
+| `SUPER + SHIFT + K` | **Keyboard Layout Menu**: Open interactive active layout menu |
+| `SUPER + ALT + K` | **Add Keyboard Layout**: Open add new regional keyboard layout menu |
+
+---
+
+### 🔔 Notifications & Clipboard History
+| Shortcut | Action |
+| :--- | :--- |
+| `SUPER + N` | Open Notification History Center |
+| `SUPER + SHIFT + N` | Toggle Do-Not-Disturb (DND) Mode |
+| `SUPER + SHIFT + V` / `ALT + V` / `SHIFT + C` | Open Searchable Clipboard History Browser |
+| `SUPER + ALT + D` / `SUPER + CTRL + V` | Open Delete Item / Wipe Clipboard History Menu |
 
 ---
 
@@ -267,14 +277,14 @@ sudo usermod -aG i2c $USER
 | :--- | :--- |
 | `XF86AudioRaiseVolume` | Increase Speaker Volume (+5%) with OSD |
 | `XF86AudioLowerVolume` | Decrease Speaker Volume (-5%) with OSD |
-| `XF86AudioMute` | Toggle Speaker Mute |
-| `XF86AudioMicMute` | Toggle Microphone Mute |
-| `SHIFT + XF86AudioRaiseVolume` / `LowerVolume` | Adjust Microphone Volume |
-| `SUPER + SHIFT + A` / `SUPER + ALT + A` | Open Audio Control & Device Switcher Menu |
+| `XF86AudioMute` | Toggle Speaker Mute with OSD |
+| `XF86AudioMicMute` | Toggle Microphone Mute with OSD |
+| `SHIFT + XF86AudioRaiseVolume` / `LowerVolume` | Adjust Microphone Gain (±5%) |
+| `SUPER + SHIFT + A` / `SUPER + ALT + A` | Open Sound Control Center & Device Switcher Menu |
 | `XF86AudioPlay` / `Pause` / `Next` / `Prev` | Media playback controls via `playerctl` |
 | `XF86MonBrightnessUp` / `Down` | Adjust Laptop Screen Brightness with OSD |
 | `SUPER / SHIFT + XF86MonBrightnessUp` / `Down` | Adjust External Monitor Brightness (DDC/CI) |
-| `SUPER + SHIFT + B` / `SUPER + ALT + B` | Open Interactive Brightness Presets Menu |
+| `SUPER + SHIFT + B` / `SUPER + ALT + B` | Open Display Brightness & Contrast Control Center |
 
 ---
 
@@ -282,12 +292,12 @@ sudo usermod -aG i2c $USER
 | Shortcut | Action |
 | :--- | :--- |
 | `Print` | Capture Area / Selection to clipboard & file |
-| `SHIFT + Print` | Capture Full Screen |
-| `ALT + Print` | Capture Active Window |
+| `SHIFT + Print` | Capture Full Screen to clipboard & file |
+| `ALT + Print` | Capture Active Window to clipboard & file |
 | `CTRL + Print` | Capture Area & Open in Annotation Tool (Swappy) |
-| `SUPER + Print` | Open Interactive Capture Menu (5s delay, full/area) |
+| `SUPER + Print` | Open Interactive Capture Hub (Delay, Area, Full) |
 | `SUPER + ALT + R` | Toggle Area Video Screen Recording |
-| `SUPER + SHIFT + R` | Stop Active Video Screen Recording |
+| `SUPER + CTRL + R` | Stop Active Video Screen Recording |
 
 ---
 

@@ -131,7 +131,8 @@ log_info "Ensuring cache and user directories exist..."
 mkdir -p "${HOME}/.cache/cliphist_thumbs"
 mkdir -p "${HOME}/Pictures/Screenshots"
 mkdir -p "${HOME}/Videos/Recordings"
-log_success "Directories created: Screenshots, Recordings, and Cliphist thumbnail cache."
+mkdir -p "${HOME}/.local/share/tessdata"
+log_success "Directories created: Screenshots, Recordings, Cliphist thumbnail cache, and Tessdata models."
 
 # 4. Kernel i2c-dev module for DDC external monitor brightness
 if ! lsmod | grep -q "i2c_dev"; then
@@ -142,7 +143,7 @@ fi
 # 5. Desktop Shortcuts & Initialize Theme Variables
 log_info "Deploying custom desktop application shortcuts..."
 mkdir -p "${HOME}/.local/share/applications"
-for desktop_file in app-shortcut-creator.desktop theme-manager.desktop; do
+for desktop_file in app-shortcut-creator.desktop theme-manager.desktop ocr-language-manager.desktop; do
     if [ -f "${SCRIPTS_DIR}/${desktop_file}" ]; then
         cp "${SCRIPTS_DIR}/${desktop_file}" "${HOME}/.local/share/applications/"
         chmod +x "${HOME}/.local/share/applications/${desktop_file}"
@@ -163,6 +164,7 @@ echo ""
 log_success "Installation and environment setup completed!"
 echo -e "To launch or apply the configuration:"
 echo -e "  • Start Hyprland:    ${COLOR_BOLD}Hyprland${COLOR_RESET}"
+echo -e "  • Shortcuts Cheat:   ${COLOR_BOLD}SUPER + /${COLOR_RESET} or ${COLOR_BOLD}SUPER + F1${COLOR_RESET} (interactive search)"
 echo -e "  • Theme Menu:        ${COLOR_BOLD}SUPER + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --menu${COLOR_RESET})"
 echo -e "  • Theme Manager GUI: ${COLOR_BOLD}SUPER + ALT + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --gui${COLOR_RESET})"
 echo -e "  • If already in Hyprland, reload with: ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"

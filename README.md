@@ -357,6 +357,43 @@ The dotfiles include a centralized, modular **Theming System** ([`theme_switcher
 
 ---
 
+## 🌐 Screen OCR Text Grabber, Multi-Language Hub & QR Scanner
+
+The dotfiles include a comprehensive, native Wayland suite for extracting text and reading 2D codes from any region of the screen:
+
+### 1. Tesseract OCR Multi-Language Hub ([`ocr_language_manager.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/ocr_language_manager.py))
+- **Simultaneous Multi-Language Recognition**: Select and combine multiple OCR recognition languages at once (e.g. `English (eng) + Marathi (mar) + Hindi (hin)` or `English + Japanese`).
+- **Sudo-Free Model Downloads**: Browse and install from a catalog of 80+ worldwide languages (Indic, East Asian, European, Cyrillic, Middle Eastern, math equations). Downloads `.traineddata` files directly into `~/.local/share/tessdata` without requiring root/sudo privileges.
+- **Interactive Multi-Select GUI (GTK3)**: High-contrast Catppuccin themed manager with multi-select checkboxes, category filter pills, real-time search across scripts (*मराठी*, *हिन्दी*, *日本語*), instant solo selection, and model removal.
+- **Fast Fuzzel Dmenu Switcher**: Press **`SUPER + CTRL + O`** for quick keyboard-driven language toggling on the fly.
+- **Usage & Shortcuts**:
+  - **`SUPER + SHIFT + T`**: Drag cursor with mouse to grab text from screen area (auto-copies to clipboard).
+  - **`SUPER + ALT + O`**: Open OCR Language Hub GUI.
+  - **`SUPER + CTRL + O`**: Open interactive Fuzzel/Wofi OCR language toggle menu.
+  - **CLI Commands**:
+    ```bash
+    python3 ~/.config/hypr/scripts/ocr_language_manager.py --list          # View installed models & active combo
+    python3 ~/.config/hypr/scripts/ocr_language_manager.py --set "eng+mar" # Set simultaneous recognition languages
+    python3 ~/.config/hypr/scripts/ocr_language_manager.py --install hin   # Download and activate Hindi model
+    python3 ~/.config/hypr/scripts/ocr_grab.py --lang "eng+mar"           # Trigger OCR with specific language combo
+    ```
+
+### 2. Screen QR Code & 2D Barcode Scanner ([`qr_reader.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/qr_reader.py))
+- **Screen Area & Window Capture**: Select any screen region with `slurp` + `grim` to decode QR codes, DataMatrix, and 2D barcodes via `zbar` / Python fallbacks.
+- **Clipboard & Actionable Notifications**: Decoded content is automatically copied to the Wayland clipboard (`wl-copy`), with interactive desktop notifications featuring a 1-click **"Open Link"** button for URLs.
+- **Usage & Shortcuts**:
+  - **`SUPER + ALT + Q`**: Drag cursor to scan any QR code on screen.
+  - **`SUPER + Print`**: Screen Capture Dashboard -> select **"📱 Read QR Code from Screen"**.
+  - **CLI Commands**:
+    ```bash
+    python3 ~/.config/hypr/scripts/qr_reader.py --area        # Scan screen region (default)
+    python3 ~/.config/hypr/scripts/qr_reader.py --window      # Scan active focused window
+    python3 ~/.config/hypr/scripts/qr_reader.py --clipboard   # Scan image currently in clipboard
+    python3 ~/.config/hypr/scripts/qr_reader.py --image <file># Scan local image file
+    ```
+
+---
+
 ## ⚡ Dynamic Keybindings Viewer & Cheat Sheet
 
 
@@ -370,57 +407,36 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 
 ## ⌨️ Complete Keyboard Shortcuts Reference
 
-### 🖥️ Applications, Navigation & System Control
+### 🖥️ Core Applications & Essential Controls
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
-| `SUPER + Q` | **Open Kitty Terminal** | Launch main terminal emulator |
+| `SUPER + Q` / `SUPER + Return` | **Open Terminal** | Launch Kitty GPU-accelerated terminal emulator |
 | `SUPER + grave (~)` | **Dropdown Terminal** | Fast floating scratchpad terminal (`dropdown-terminal`) |
-| `SUPER + G` | **Lazygit Overlay** | Open floating full-featured Git TUI |
-| `SUPER + D` | **Lazydocker Overlay** | Open floating Docker/Podman container manager TUI |
-| `SUPER + SHIFT + Z` | **Zellij Workspace** | Open floating terminal multiplexer session |
+| `SUPER + R` / `SUPER + Space` | **App Launcher** | Open **Fuzzel** application launcher (with outside-click dismissal) |
+| `SUPER + B` | **Web Browser** | Launch default web browser (Firefox) |
 | `SUPER + E` | **Dolphin File Manager** | Launch KDE GUI file manager |
 | `SUPER + SHIFT + E` | **Yazi File Manager** | Launch terminal file manager in Kitty |
-| `SUPER + B` | **Firefox Web Browser** | Launch default web browser |
-| `SUPER + R` | **Fuzzel App Launcher** | Open application search menu (with outside-click dismissal) |
-| `SUPER + ESCAPE` | **Power & Session Menu** | Open power menu (Lock, Logout, Suspend, Reboot, Shutdown) |
-| `SUPER + M` | **Power & Session Menu** | Alternate shortcut for session & power menu |
-| `SUPER + L` / `ALT + L` | **Lock Screen** | Immediately trigger `hyprlock` lockscreen |
-| `SUPER + C` | **Close Window** | Close active focused window |
+| `SUPER + C` / `SUPER + SHIFT + Q` / `ALT + F4` | **Close Window** | Close active focused window |
+| `SUPER + F` | **Toggle Fullscreen** | Toggle active window between normal and true fullscreen mode |
 | `SUPER + V` | **Toggle Floating** | Switch active window between tiled and floating mode |
-| `SUPER + P` | **Toggle Pseudo Tiling** | Toggle pseudo-tile on active window |
-| `SUPER + J` | **Toggle Layout Split** | Toggle horizontal/vertical split orientation (dwindle) |
+| `SUPER + P` | **Toggle Pseudo Tiling** | Toggle pseudo-tile mode on active window |
+| `SUPER + J` | **Toggle Layout Split** | Toggle horizontal/vertical split orientation (Dwindle layout) |
+| `SUPER + L` / `SUPER + ALT + L` | **Lock Screen** | Immediately trigger `hyprlock` lockscreen |
+| `SUPER + Escape` / `SUPER + M` | **Power & Session Menu** | Open **Wlogout** session modal (Lock, Logout, Suspend, Reboot, Shutdown) |
 | `SUPER + SHIFT + W` | **Toggle Waybar** | Toggle Waybar status bar on/off with state persistence |
+| `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Shortcut Cheat Sheet** | Open interactive **Fuzzel/Wofi** dynamic keybindings viewer |
 
 ---
 
-### 🌐 Keyboard Layout & Input Switching
+### 🗂️ Workspaces & Window Navigation
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
-| `SUPER + Space` | **Next Keyboard Layout** | Cycle to next active keyboard layout |
-| `SUPER + SHIFT + K` | **Keyboard Layout Menu** | Open interactive selector for active layouts |
-| `SUPER + ALT + K` | **Add Keyboard Layout** | Search and add regional layout variants (including Indian languages) |
-
----
-
-### 🔔 Notifications & Quick Settings
-| Shortcut | Action | Description |
-| :--- | :--- | :--- |
-| `SUPER + N` | **Notifications Center** | Open notification history and management center |
-| `SUPER + SHIFT + N` | **Toggle DND** | Toggle Do-Not-Disturb notification silencing mode |
-| `SUPER + SHIFT + V` | **Clipboard Browser** | Open searchable clipboard history with images and snippets |
-| `SUPER + ALT + V` / `SUPER + SHIFT + C` | **Clipboard Browser** | Alternate shortcuts for clipboard history |
-| `SUPER + ALT + D` | **Clipboard Cleaner** | Open menu to delete individual entries or wipe clipboard cache |
-
----
-
-### 🗂️ Workspaces & Scratchpad Navigation
-| Shortcut | Action | Description |
-| :--- | :--- | :--- |
+| `SUPER + Left / Right / Up / Down` | **Focus Window** | Move focus directionally between windows |
+| `ALT + Tab` / `SUPER + Tab` | **Cycle Focus** | Cycle focus forward to next window |
 | `SUPER + [1-9, 0]` | **Switch Workspace** | Jump directly to workspace 1 through 10 |
 | `SUPER + SHIFT + [1-9, 0]` | **Move Window to Workspace** | Move focused window to workspace 1 through 10 |
 | `SUPER + S` | **Toggle Special Workspace** | Toggle magic scratchpad workspace |
 | `SUPER + SHIFT + S` | **Move to Special Workspace** | Send focused window into magic scratchpad |
-| `SUPER + Left / Right / Up / Down` | **Focus Window** | Move focus directionally between windows |
 | `SUPER + Mouse Scroll Down` | **Next Workspace** | Switch to next workspace |
 | `SUPER + Mouse Scroll Up` | **Previous Workspace** | Switch to previous workspace |
 | `SUPER + Left Mouse Drag` | **Move Window** | Drag and move floating or tiled window |
@@ -428,39 +444,58 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 
 ---
 
-### ⚡ Productivity & Workflow Utilities
+### 📐 Window Resizing & Screen Scaling (`scale_window.py` & `resolution_menu.py`)
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
-| `SUPER + T` | **Theme Switcher Menu** | Open interactive **Fuzzel/Wofi** theme selector (19 curated themes, live reload) |
-| `SUPER + ALT + T` | **Theme Manager & Studio GUI** | Launch graphical **GTK3** theme & palette manager with live card previews, Theme Creator & Fork Studio |
-| `SUPER + CTRL + T` | **Cycle Theme** | Instantly cycle to the next color palette in the theme registry |
-| `SUPER + W` | **Random Wallpaper** | Cycle to a random wallpaper from `~/Wallpaper` |
-| `SUPER + ALT + W` | **Wallpaper Selector Menu** | Interactive graphical wallpaper selector with live preview |
-| `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Shortcut Cheat Sheet** | Open interactive **Fuzzel/Wofi** dynamic keybindings viewer |
-| `SUPER + SHIFT + P` | **Hyprpicker** | Pick color from screen, copy hex code to clipboard & trigger notification |
-| `SUPER + SHIFT + T` | **Screen OCR** | Select region with mouse, extract text via Tesseract & copy to clipboard |
-| `SUPER + ALT + O` | **OCR Language Manager GUI** | Launch graphical GTK3 language downloader, multi-language selector & manager |
-| `SUPER + CTRL + O` | **OCR Language Selector Menu** | Fast interactive Fuzzel/Wofi OCR language switcher |
-| `SUPER + ALT + Q` | **Screen QR Reader** | Select region with mouse, decode QR/2D barcodes to clipboard & open URLs |
-| `SUPER + ALT + N` | **Night Light** | Toggle warm blue-light filter (3800K night / 6500K day) |
-| `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator** | Interactive math expression evaluator via Fuzzel prompt |
-| `SUPER + .` (period) | **Emoji Picker** | Searchable emoji catalog with automatic clipboard copy & keystroke paste |
-| `SUPER + ALT + S` | **App Shortcut Creator** | Launch interactive GTK/CLI desktop shortcut (.desktop) creator & manager |
-
-
+| `SUPER + CTRL + =` / `+` / `KP_Add` | **Scale Window Up** | Increase active window size by +40px with live dimension OSD |
+| `SUPER + CTRL + -` / `KP_Subtract` | **Scale Window Down** | Decrease active window size by -40px with live dimension OSD |
+| `SUPER + CTRL + Right / L` | **Resize Width Right** | Grow window horizontally to the right (+40px) |
+| `SUPER + CTRL + Left / H` | **Resize Width Left** | Shrink window horizontally from the left (-40px) |
+| `SUPER + CTRL + Up / K` | **Resize Height Up** | Shrink window vertically from the top (-40px) |
+| `SUPER + CTRL + Down / J` | **Resize Height Down** | Grow window vertically to the bottom (+40px) |
+| `SUPER + CTRL + I` / `0` | **Show Window Size** | Display active window dimensions & screen coverage percentage OSD |
+| `SUPER + SHIFT + R` / `SUPER + SHIFT + D` | **Resolution & Scaling Menu** | Interactive menu to set monitor resolution and DPI scaling |
+| `SUPER + ALT + =` / `+` | **Display Scale Up** | Increment display scaling (+0.1) |
+| `SUPER + ALT + -` | **Display Scale Down** | Decrement display scaling (-0.1) |
+| `SUPER + ALT + 0` | **Show Display Scale** | Display active monitor resolution & scale factor OSD |
+| `SUPER + ALT + 1` to `5` | **Direct Scale Presets** | Set display scale: `1`=1.0x, `2`=1.25x, `3`=1.5x, `4`=1.75x, `5`=2.0x |
+| `SUPER + ALT + BackSpace` | **Reset Display Scale** | Instantly reset display scale to default 1.0x (100%) |
 
 ---
 
-### 📸 Screenshots & Screen Recording (`screen_capture.py`)
+### ⚡ Productivity, Development & System Utilities
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
-| `Print` | **Area Screenshot** | Select screen region with mouse, copy image to clipboard & save file |
-| `SHIFT + Print` | **Full Screen Screenshot** | Capture all displays immediately to clipboard and file |
-| `ALT + Print` | **Active Window Screenshot**| Capture only the currently focused window |
-| `CTRL + Print` | **Annotate Screenshot** | Select region and open in **Swappy** editor to draw arrows, crop, or blur |
-| `SUPER + Print` | **Capture Menu** | Open interactive capture dashboard with timer and area options |
-| `SUPER + ALT + R` | **Toggle Screen Recording** | Start / stop video recording with `wf-recorder` for selected region |
-| `SUPER + SHIFT + R` | **Stop Screen Recording** | Stop active video recording cleanly and save MP4/MKV container |
+| `SUPER + G` | **Lazygit Overlay** | Open floating full-featured Git TUI |
+| `SUPER + D` | **Lazydocker Overlay** | Open floating Docker/Podman container manager TUI |
+| `SUPER + SHIFT + Z` | **Zellij Workspace** | Open floating terminal multiplexer session |
+| `SUPER + SHIFT + P` / `SUPER + ALT + P` | **Hyprpicker** | Pick color from screen, copy hex code to clipboard & trigger notification |
+| `SUPER + T` | **Theme Switcher Menu** | Open interactive **Fuzzel/Wofi** theme selector (19 curated themes, live reload) |
+| `SUPER + ALT + T` | **Theme Manager & Studio GUI** | Launch graphical **GTK3** theme & palette manager with live card previews |
+| `SUPER + CTRL + T` | **Cycle Theme** | Instantly cycle to the next color palette in the theme registry |
+| `SUPER + SHIFT + T` | **Screen OCR** | Select region with mouse, extract text via Tesseract & copy to clipboard |
+| `SUPER + ALT + O` | **OCR Language Manager GUI** | Launch graphical GTK3 language downloader & multi-language manager |
+| `SUPER + CTRL + O` | **OCR Language Selector Menu** | Fast interactive Fuzzel/Wofi OCR language switcher |
+| `SUPER + ALT + Q` | **Screen QR Reader** | Select region with mouse, decode QR/2D barcodes to clipboard & open URLs |
+| `SUPER + ALT + N` | **Night Light** | Toggle warm blue-light eye comfort filter (3800K night / 6500K day) |
+| `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator** | Interactive math expression evaluator via Fuzzel prompt |
+| `SUPER + .` (period) | **Emoji Picker** | Searchable emoji catalog with automatic clipboard copy & auto-typing |
+| `SUPER + ALT + S` | **App Shortcut Creator** | Launch interactive desktop shortcut (.desktop) creator & manager GUI |
+| `SUPER + W` | **Random Wallpaper** | Cycle to a random wallpaper from `~/Wallpaper` |
+| `SUPER + ALT + W` | **Wallpaper Selector Menu** | Interactive graphical wallpaper selector with live preview |
+| `SUPER + ALT + Space` | **Next Keyboard Layout** | Cycle to next active keyboard layout |
+| `SUPER + SHIFT + K` | **Keyboard Layout Menu** | Open interactive selector for active keyboard layouts |
+| `SUPER + ALT + K` | **Add Keyboard Layout** | Search and add regional layout variants (including Indian languages) |
+
+---
+
+### 🔔 Notifications & Clipboard History
+| Shortcut | Action | Description |
+| :--- | :--- | :--- |
+| `SUPER + N` | **Notifications Center** | Open notification history and management center |
+| `SUPER + SHIFT + N` | **Toggle DND** | Toggle Do-Not-Disturb notification silencing mode |
+| `SUPER + SHIFT + V` / `ALT + V` / `SHIFT + C` | **Clipboard Browser** | Open searchable clipboard history with images and snippets |
+| `SUPER + ALT + D` / `SUPER + CTRL + V` | **Clipboard Cleaner** | Open menu to delete individual entries or wipe clipboard cache |
 
 ---
 
@@ -471,44 +506,36 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `XF86AudioLowerVolume` | **Volume Down (-5%)** | Decrease output volume with visual OSD |
 | `XF86AudioMute` | **Toggle Mute** | Mute / unmute speaker audio output |
 | `XF86AudioMicMute` | **Toggle Mic Mute** | Mute / unmute microphone input |
-| `SHIFT + XF86AudioRaiseVolume` | **Mic Volume Up** | Increase microphone input gain |
-| `SHIFT + XF86AudioLowerVolume` | **Mic Volume Down** | Decrease microphone input gain |
-| `SUPER + SHIFT + A` / `SUPER + ALT + A` | **Audio Device Switcher** | Interactive menu to switch sinks (headphones, speakers, Bluetooth) |
+| `SHIFT + XF86AudioRaiseVolume` | **Mic Volume Up** | Increase microphone input gain (+5%) |
+| `SHIFT + XF86AudioLowerVolume` | **Mic Volume Down** | Decrease microphone input gain (-5%) |
+| `SUPER + SHIFT + A` / `SUPER + ALT + A` | **Audio Control Center** | Open Sound Control Center & audio sink/source device switcher |
 | `XF86AudioPlay` / `XF86AudioPause` | **Play / Pause** | Toggle media playback (Spotify, browser, playerctl) |
 | `XF86AudioNext` | **Next Track** | Skip to next track in active media player |
 | `XF86AudioPrev` | **Previous Track** | Skip to previous track in active media player |
 
 ---
 
-### ☀️ Brightness Controls (`brightness_control.py` & `brightness-manager.py`)
+### ☀️ Brightness & External Monitor DDC Controls (`brightness_control.py` & `brightness-manager.py`)
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
 | `XF86MonBrightnessUp` | **Brightness Up (+5%)** | Increase laptop panel backlight with visual OSD |
 | `XF86MonBrightnessDown` | **Brightness Down (-5%)** | Decrease laptop panel backlight with visual OSD |
-| `SHIFT + XF86MonBrightnessUp` | **External DDC Up** | Increase external monitor brightness via DDC/CI (`ddcutil`) |
-| `SHIFT + XF86MonBrightnessDown` | **External DDC Down** | Decrease external monitor brightness via DDC/CI (`ddcutil`) |
-| `SUPER + XF86MonBrightnessUp` | **External DDC Up** | Alternate shortcut for external monitor brightness up |
-| `SUPER + XF86MonBrightnessDown` | **External DDC Down** | Alternate shortcut for external monitor brightness down |
-| `SUPER + SHIFT + B` / `SUPER + ALT + B` | **Display Control Center**| Open GTK LayerShell Display Brightness & Contrast Control Center with range sliders |
+| `SHIFT + XF86MonBrightnessUp` / `SUPER + Up` | **External DDC Up** | Increase external monitor brightness via DDC/CI (`ddcutil`) |
+| `SHIFT + XF86MonBrightnessDown` / `SUPER + Down` | **External DDC Down** | Decrease external monitor brightness via DDC/CI (`ddcutil`) |
+| `SUPER + SHIFT + B` / `SUPER + ALT + B` | **Display Control Center** | Open GTK LayerShell Display Brightness & Contrast Control Center |
 
 ---
 
-### 📐 Window Resizing & Screen Scaling (`scale_window.py` & `resolution_menu.py`)
+### 📸 Screenshots & Screen Recording (`screen_capture.py`)
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
-| `SUPER + CTRL + =` / `+` / `KP_Add` | **Scale Window Up** | Increase active window size by +40px with live dimension OSD |
-| `SUPER + CTRL + -` / `KP_Subtract` | **Scale Window Down** | Decrease active window size by -40px with live dimension OSD |
-| `SUPER + CTRL + Right / L` | **Resize Width Right** | Grow window horizontally to the right |
-| `SUPER + CTRL + Left / H` | **Resize Width Left** | Shrink window horizontally from the left |
-| `SUPER + CTRL + Up / K` | **Resize Height Up** | Shrink window vertically from the top |
-| `SUPER + CTRL + Down / J` | **Resize Height Down** | Grow window vertically to the bottom |
-| `SUPER + CTRL + I` / `0` | **Show Window Size** | Display active window dimensions & screen coverage percentage |
-| `SUPER + SHIFT + R` / `SUPER + SHIFT + D` | **Resolution & Scaling Menu**| Interactive menu to set monitor resolution and DPI scaling |
-| `SUPER + ALT + =` / `+` | **Display Scale Up** | Increment display scaling (+0.1) |
-| `SUPER + ALT + -` | **Display Scale Down** | Decrement display scaling (-0.1) |
-| `SUPER + ALT + 0` | **Show Display Scale** | Display active monitor resolution & scale factor |
-| `SUPER + ALT + 1` to `5` | **Direct Scale Presets** | Set display scale: `1`=1.0x, `2`=1.25x, `3`=1.5x, `4`=1.75x, `5`=2.0x |
-| `SUPER + ALT + BackSpace` | **Reset Display Scale** | Instantly reset display scale to default 1.0x (100%) |
+| `Print` | **Area Screenshot** | Select screen region with mouse, copy image to clipboard & save file |
+| `SHIFT + Print` | **Full Screen Screenshot** | Capture all displays immediately to clipboard and file |
+| `ALT + Print` | **Active Window Screenshot** | Capture only the currently focused window |
+| `CTRL + Print` | **Annotate Screenshot** | Select region and open in **Swappy** editor to draw arrows, crop, or blur |
+| `SUPER + Print` | **Capture Hub** | Open interactive capture dashboard with timer and area options |
+| `SUPER + ALT + R` | **Toggle Screen Recording** | Start / stop video recording with `wf-recorder` for selected region |
+| `SUPER + CTRL + R` | **Stop Screen Recording** | Stop active video recording cleanly and save MP4/MKV container |
 
 ---
 

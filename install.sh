@@ -269,11 +269,12 @@ chmod +x "${DOTFILES_DIR}/install.sh" 2>/dev/null || true
 log_success "Script permissions configured."
 
 # 4. Create Cache & User Directories
-log_info "Ensuring user media and cache directories exist..."
+log_info "Ensuring user media, cache, and tessdata directories exist..."
 mkdir -p "${HOME}/.cache/cliphist_thumbs"
 mkdir -p "${HOME}/Pictures/Screenshots"
 mkdir -p "${HOME}/Videos/Recordings"
-log_success "Media directories initialized."
+mkdir -p "${HOME}/.local/share/tessdata"
+log_success "Media, cache, and OCR model directories initialized."
 
 # 5. Kernel DDC Permissions
 if ! lsmod | grep -q "i2c_dev"; then
@@ -376,6 +377,7 @@ echo -e "  ${COLOR_BOLD}source ~/.config/shell/env.sh${COLOR_RESET}"
 echo -e "  ${COLOR_BOLD}source ~/.config/shell/aliases.sh${COLOR_RESET}"
 echo ""
 echo -e "To apply or reload desktop components:"
+echo -e "  • Shortcuts Cheat:   ${COLOR_BOLD}SUPER + /${COLOR_RESET} or ${COLOR_BOLD}SUPER + F1${COLOR_RESET} (interactive search)"
 echo -e "  • Theme Menu:        ${COLOR_BOLD}SUPER + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --menu${COLOR_RESET})"
 echo -e "  • Theme Manager GUI: ${COLOR_BOLD}SUPER + ALT + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --gui${COLOR_RESET})"
 echo -e "  • Hyprland Reload:   ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"
