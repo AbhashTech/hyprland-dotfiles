@@ -96,7 +96,7 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
 ### 7. Screenshots & Screen Recording
 - **grim** — Wayland screenshot capture.
 - **slurp** — Interactive region/area selector.
-- **wf-recorder** — Wayland video screen recorder with audio.
+- **wf-recorder** — Wayland video screen recorder with audio and live Waybar indicator (`󰻃 REC 00:12`) with 1-click stop.
 - **swappy** / **satty** — Screenshot annotation tools.
 
 ### 8. Python Runtime & Libraries

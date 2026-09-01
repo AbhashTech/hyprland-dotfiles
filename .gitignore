@@ -16,3 +16,4 @@ __pycache__/
 
 # User local runtime state
 .config/hypr/ocr_config.json
+.config/hypr/recorder_settings.json

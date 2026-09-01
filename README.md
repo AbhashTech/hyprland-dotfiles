@@ -205,6 +205,11 @@ The top status bar is divided into three functional zones:
 - **󰌌 Keyboard Layout (`hyprland/language`)**: Live keyboard layout indicator (e.g. US). Left-click cycles layout; right-click opens layout menu; middle-click opens layout installer.
 
 ### 3. Right Zone
+- **Live Screen Recording Indicator (`custom/recording`)**:
+  - Automatically appears when video screen recording (`wf-recorder`) is active with a pulsating red capsule and live duration counter (`󰻃 REC 00:15`).
+  - **Left-Click**: Instantly stops recording, finalizes the video container, and triggers desktop save notification.
+  - **Right-Click**: Toggles Waybar indicator visibility on/off.
+  - **Middle-Click**: Opens the full Screen Capture & Recording menu.
 - **Group Tray & Notifications (`group/tray-notif`)**:
   - System tray (`tray`) for background application indicators.
   - Clipboard indicator (`custom/clipboard`): Left-click browses history; right-click opens deletion menu; middle-click pauses/resumes daemon.
@@ -384,12 +389,24 @@ The dotfiles include a comprehensive, native Wayland suite for extracting text a
 - **Usage & Shortcuts**:
   - **`SUPER + ALT + Q`**: Drag cursor to scan any QR code on screen.
   - **`SUPER + Print`**: Screen Capture Dashboard -> select **"📱 Read QR Code from Screen"**.
+### 3. Screen Recording & Live Waybar Indicator Hub ([`screen_capture.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/screen_capture.py))
+- **Live Waybar Recording Indicator**: When screen recording begins, a glowing red badge (`󰻃 REC 00:12`) appears in Waybar showing the real-time recording timer.
+- **1-Click Stop**: Left-clicking the Waybar recording capsule immediately stops the recording, finalizes the MP4/MKV video container, and sends a notification with instant Play / Folder actions.
+- **Configurable Visibility**: Toggle the Waybar indicator on or off at any time:
+  - **Fuzzel/Wofi GUI**: Press **`SUPER + Print`** and select **`⚙️  Waybar Recording Icon: [Enabled/Disabled]`**.
+  - **Right-Click**: Right-clicking the Waybar recording badge toggles its visibility.
+  - **CLI Command**: `python3 ~/.config/hypr/scripts/screen_capture.py --toggle-indicator` or `screen_capture.py --indicator on|off`.
+- **Usage & Shortcuts**:
+  - **`SUPER + ALT + R`**: Toggle video screen recording for selected region.
+  - **`SUPER + CTRL + R`**: Stop active video screen recording cleanly.
+  - **`SUPER + Print`**: Open interactive capture & recording hub.
   - **CLI Commands**:
     ```bash
-    python3 ~/.config/hypr/scripts/qr_reader.py --area        # Scan screen region (default)
-    python3 ~/.config/hypr/scripts/qr_reader.py --window      # Scan active focused window
-    python3 ~/.config/hypr/scripts/qr_reader.py --clipboard   # Scan image currently in clipboard
-    python3 ~/.config/hypr/scripts/qr_reader.py --image <file># Scan local image file
+    python3 ~/.config/hypr/scripts/screen_capture.py record --area            # Record region (default)
+    python3 ~/.config/hypr/scripts/screen_capture.py record --full --mic      # Full screen + microphone
+    python3 ~/.config/hypr/scripts/screen_capture.py record --desktop         # Region + desktop audio
+    python3 ~/.config/hypr/scripts/screen_capture.py stop                     # Stop recording
+    python3 ~/.config/hypr/scripts/screen_capture.py --toggle-indicator       # Toggle Waybar icon
     ```
 
 ---

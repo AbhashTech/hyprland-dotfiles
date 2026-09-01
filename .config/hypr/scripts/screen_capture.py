@@ -21,6 +21,11 @@ SCREENSHOT_DIR = Path.home() / "Pictures" / "Screenshots"
 RECORDING_DIR = Path.home() / "Videos" / "Recordings"
 PID_FILE = Path("/tmp/hypr_screen_recorder.pid")
 INFO_FILE = Path("/tmp/hypr_screen_recorder.json")
+SETTINGS_FILE = Path.home() / ".config" / "hypr" / "recorder_settings.json"
+
+DEFAULT_SETTINGS = {
+    "show_waybar_indicator": True,
+}
 
 # Colors for slurp (Hyprland style: accent border, semi-transparent selection)
 SLURP_ARGS = ["-b", "00000044", "-c", "5e81acee", "-s", "00000000", "-w", "2"]
@@ -28,14 +33,107 @@ SLURP_ARGS = ["-b", "00000044", "-c", "5e81acee", "-s", "00000000", "-w", "2"]
 def ensure_dirs():
     SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
     RECORDING_DIR.mkdir(parents=True, exist_ok=True)
+    SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-def run_cmd(cmd, check=False):
-    """Execute a command and return stdout as string."""
+def load_settings():
+    ensure_dirs()
+    if SETTINGS_FILE.exists():
+        try:
+            return json.loads(SETTINGS_FILE.read_text())
+        except Exception:
+            pass
+    return DEFAULT_SETTINGS.copy()
+
+def save_settings(settings):
+    ensure_dirs()
     try:
-        res = subprocess.run(cmd, capture_output=True, text=True, check=check)
-        return res.stdout.strip()
+        SETTINGS_FILE.write_text(json.dumps(settings, indent=2))
     except Exception:
-        return None
+        pass
+
+def is_waybar_indicator_enabled():
+    settings = load_settings()
+    return settings.get("show_waybar_indicator", True)
+
+def toggle_waybar_indicator(silent=False):
+    settings = load_settings()
+    current = settings.get("show_waybar_indicator", True)
+    settings["show_waybar_indicator"] = not current
+    save_settings(settings)
+    status_str = "Enabled" if settings["show_waybar_indicator"] else "Disabled"
+    if not silent:
+        show_notification(
+            "🎥 Waybar Recording Icon",
+            f"Waybar recording indicator is now <b>{status_str}</b>.",
+            "video-x-generic"
+        )
+    update_waybar_signal()
+    return settings["show_waybar_indicator"]
+
+def set_waybar_indicator(enabled, silent=False):
+    settings = load_settings()
+    settings["show_waybar_indicator"] = bool(enabled)
+    save_settings(settings)
+    status_str = "Enabled" if settings["show_waybar_indicator"] else "Disabled"
+    if not silent:
+        show_notification(
+            "🎥 Waybar Recording Icon",
+            f"Waybar recording indicator set to <b>{status_str}</b>.",
+            "video-x-generic"
+        )
+    update_waybar_signal()
+    return settings["show_waybar_indicator"]
+
+def update_waybar_signal():
+    """Send RTMIN+12 signal to Waybar to trigger immediate reload of custom/recording module."""
+    try:
+        subprocess.run(["pkill", "-RTMIN+12", "waybar"], check=False)
+    except Exception:
+        pass
+
+def get_waybar_status():
+    """Output JSON string for Waybar custom/recording module."""
+    if not is_waybar_indicator_enabled():
+        return json.dumps({"text": "", "alt": "disabled", "tooltip": "", "class": "hidden"})
+
+    pid = is_recording()
+    if not pid:
+        return json.dumps({"text": "", "alt": "idle", "tooltip": "", "class": "hidden"})
+
+    elapsed_sec = 0
+    mode = "area"
+    audio = "none"
+    if INFO_FILE.exists():
+        try:
+            info = json.loads(INFO_FILE.read_text())
+            start_time = info.get("start_time", time.time())
+            elapsed_sec = max(0, int(time.time() - start_time))
+            mode = info.get("mode", "area")
+            audio = info.get("audio", "none")
+        except Exception:
+            pass
+
+    mins = elapsed_sec // 60
+    secs = elapsed_sec % 60
+    duration_str = f"{mins:02d}:{secs:02d}"
+
+    text = f"󰻃 REC {duration_str}"
+    audio_info = f" (Audio: {audio})" if audio != "none" else ""
+    tooltip = (
+        f"<b>🎥 Screen Recording in Progress</b>\n"
+        f"• Mode: {mode}{audio_info}\n"
+        f"• Duration: {duration_str}\n\n"
+        f"👉 <b>Click to Stop Recording</b>\n"
+        f"👉 <b>Right-Click: Toggle Waybar Icon</b>\n"
+        f"👉 <b>Middle-Click: Capture Menu</b>"
+    )
+
+    return json.dumps({
+        "text": text,
+        "alt": "recording",
+        "tooltip": tooltip,
+        "class": "recording"
+    })
 
 def show_notification(title, body, icon="camera-photo", actions=None, timeout=4000):
     """Send desktop notification with optional actions."""
@@ -295,6 +393,7 @@ def stop_recording():
 
     PID_FILE.unlink(missing_ok=True)
     INFO_FILE.unlink(missing_ok=True)
+    update_waybar_signal()
 
     if filepath and Path(filepath).exists():
         target_path = Path(filepath)
@@ -378,13 +477,15 @@ def start_recording(mode="area", audio="none", delay=0):
             "audio": audio
         }))
 
+        update_waybar_signal()
+
         def action_stop():
             stop_recording()
 
         audio_desc = f" (Audio: {audio})" if audio != "none" else ""
         show_notification(
             "🎥 Recording Started",
-            f"Recording {mode}{audio_desc}...\nClick 'Stop' or re-run utility to finish.",
+            f"Recording {mode}{audio_desc}...\nClick Waybar icon or 'Stop' to finish.",
             icon="media-record",
             actions=[("stop", action_stop)],
             timeout=8000
@@ -406,6 +507,8 @@ def toggle_recording(mode="area", audio="none"):
 def open_interactive_menu():
     """Display an interactive launcher menu using Fuzzel or Wofi."""
     recording_active = is_recording() is not None
+    waybar_ind_on = is_waybar_indicator_enabled()
+    ind_label = "Enabled" if waybar_ind_on else "Disabled"
 
     options = []
     if recording_active:
@@ -426,14 +529,15 @@ def open_interactive_menu():
         "🖥️  Record: Full Screen (No Audio)",
         "🎙️ Record: Full Screen (Microphone)",
         "🔊 Record: Full Screen (Desktop Audio)",
+        f"⚙️  Waybar Recording Icon: [{ind_label}] (Click to toggle)",
     ])
 
     input_str = "\n".join(options)
 
     if shutil.which("fuzzel"):
-        cmd = ["fuzzel", "--dmenu", "--prompt", "Capture: ", "--width", "36", "--lines", str(len(options) + 1)]
+        cmd = ["fuzzel", "--dmenu", "--prompt", "Capture: ", "--width", "42", "--lines", str(len(options) + 1)]
     elif shutil.which("wofi"):
-        cmd = ["wofi", "--dmenu", "--prompt", "Screen Capture", "--width", "400", "--height", "380", "--hide-scroll", "--insensitive"]
+        cmd = ["wofi", "--dmenu", "--prompt", "Screen Capture", "--width", "440", "--height", "420", "--hide-scroll", "--insensitive"]
     elif shutil.which("rofi"):
         cmd = ["rofi", "-dmenu", "-p", "Screen Capture"]
     else:
@@ -449,6 +553,8 @@ def open_interactive_menu():
 
         if "Stop Active Recording" in choice:
             stop_recording()
+        elif "Waybar Recording Icon" in choice:
+            toggle_waybar_indicator()
         elif "Screenshot: Area & Annotate" in choice:
             capture_screenshot(mode="area", edit=True)
         elif "Read QR Code from Screen" in choice:
@@ -503,8 +609,14 @@ Examples:
   screen_capture.py stop                      # Stop recording
   screen_capture.py toggle                    # Toggle recording on/off
   screen_capture.py menu                      # Open interactive GUI menu
+  screen_capture.py --status                  # Output JSON status for Waybar module
+  screen_capture.py --toggle-indicator        # Toggle Waybar recording icon on/off
         """
     )
+
+    parser.add_argument("--status", action="store_true", help="Print JSON status formatted for Waybar")
+    parser.add_argument("--toggle-indicator", action="store_true", help="Toggle Waybar recording indicator icon")
+    parser.add_argument("--indicator", choices=["on", "off", "status", "toggle"], help="Configure Waybar recording indicator")
 
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
@@ -529,7 +641,7 @@ Examples:
     rec_audio.add_argument("--both", action="store_true", help="Record both mic and desktop audio")
     rec_parser.add_argument("-d", "--delay", type=int, default=0, help="Countdown delay in seconds")
 
-    # Stop, Toggle & Menu
+    # Stop, Toggle, Status & Menu
     subparsers.add_parser("stop", help="Stop any active screen recording")
     tog_parser = subparsers.add_parser("toggle", help="Toggle screen recording")
     tog_parser.add_argument("-f", "--full", action="store_true", help="Record full screen instead of area when toggling on")
@@ -537,8 +649,29 @@ Examples:
     tog_parser.add_argument("--desktop", action="store_true", help="Include desktop audio")
 
     subparsers.add_parser("menu", help="Open interactive capture menu (default if no args given)")
+    subparsers.add_parser("status", help="Output JSON status for Waybar module")
+    subparsers.add_parser("toggle-indicator", help="Toggle Waybar recording indicator icon")
 
     args = parser.parse_args()
+
+    if args.status or args.command == "status":
+        print(get_waybar_status())
+        return
+
+    if args.toggle_indicator or args.command == "toggle-indicator":
+        toggle_waybar_indicator()
+        return
+
+    if args.indicator:
+        if args.indicator == "on":
+            set_waybar_indicator(True)
+        elif args.indicator == "off":
+            set_waybar_indicator(False)
+        elif args.indicator == "toggle":
+            toggle_waybar_indicator()
+        elif args.indicator == "status":
+            print("enabled" if is_waybar_indicator_enabled() else "disabled")
+        return
 
     if not args.command or args.command == "menu":
         open_interactive_menu()

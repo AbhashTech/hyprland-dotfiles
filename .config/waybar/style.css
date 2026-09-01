@@ -503,6 +503,28 @@ window#waybar.empty #window {
     border-color: @accent;
 }
 
+/* Screen Recording Live Indicator Badge */
+#custom-recording {
+    background: linear-gradient(135deg, @red, #d20f39);
+    color: #ffffff;
+    border: 1px solid @red;
+    border-radius: 12px;
+    padding: 3px 12px;
+    margin: 3px 2px;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 2px 10px rgba(243, 139, 168, 0.5);
+    animation: blink-recording 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+    transition: all 0.2s ease;
+}
+
+#custom-recording:hover {
+    color: #ffffff;
+    background: linear-gradient(135deg, #d20f39, #b3092b);
+    border-color: #ffffff;
+    box-shadow: 0 2px 14px rgba(243, 139, 168, 0.85);
+}
+
 /* =============================================================================
  * Animations
  * ============================================================================= */
@@ -522,6 +544,15 @@ window#waybar.empty #window {
     }
     100% {
         background-color: @maroon;
+    }
+}
+
+@keyframes blink-recording {
+    0% {
+        box-shadow: 0 2px 6px rgba(243, 139, 168, 0.35);
+    }
+    100% {
+        box-shadow: 0 2px 16px rgba(243, 139, 168, 0.85);
     }
 }
 

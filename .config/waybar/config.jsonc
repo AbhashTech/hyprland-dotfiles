@@ -23,6 +23,7 @@
         "hyprland/language"
     ],
     "modules-right": [
+        "custom/recording",
         "group/tray-notif",
         "group/status",
         "custom/stats",
@@ -129,6 +130,18 @@
     // ==========================================
     // Right Modules
     // ==========================================
+    "custom/recording": {
+        "format": "{}",
+        "return-type": "json",
+        "exec": "python3 /home/kunal/.config/hypr/scripts/screen_capture.py --status",
+        "on-click": "python3 /home/kunal/.config/hypr/scripts/screen_capture.py stop",
+        "on-click-right": "python3 /home/kunal/.config/hypr/scripts/screen_capture.py --toggle-indicator",
+        "on-click-middle": "python3 /home/kunal/.config/hypr/scripts/screen_capture.py menu",
+        "interval": 1,
+        "signal": 12,
+        "tooltip": true
+    },
+
     "group/tray-notif": {
         "orientation": "horizontal",
         "modules": [
