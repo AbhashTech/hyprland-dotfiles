@@ -13,3 +13,6 @@ __pycache__/
 # Backups created during installation
 *.bak
 *.backup
+
+# User local runtime state
+.config/hypr/ocr_config.json

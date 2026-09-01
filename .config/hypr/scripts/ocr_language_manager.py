@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
 =============================================================================
-Tesseract OCR Language Manager & Selector
+Tesseract OCR Language Manager & Multi-Language Selector
 =============================================================================
 A comprehensive graphical (GTK3) and CLI/Fuzzel utility to:
+- Select and combine multiple simultaneous OCR languages (e.g. English + Marathi + Hindi)
 - Browse, download, and install Tesseract language models without sudo
-- View and select active OCR language(s) (including multi-language e.g. eng+hin)
 - Manage installed language packages and delete user-downloaded models
-- Instantly trigger and test screen OCR with the active language
+- Instantly trigger and test screen OCR with the active multi-language combination
 - Full Catppuccin / Dynamic Theme support and App Menu integration
 """
 
@@ -36,6 +36,7 @@ LANGUAGE_CATALOG = {
     # Popular
     "eng": {"name": "English", "native": "English", "group": "Popular"},
     "hin": {"name": "Hindi", "native": "हिन्दी", "group": "Indic / South Asian"},
+    "mar": {"name": "Marathi", "native": "मराठी", "group": "Indic / South Asian"},
     "spa": {"name": "Spanish", "native": "Español", "group": "Popular"},
     "fra": {"name": "French", "native": "Français", "group": "Popular"},
     "deu": {"name": "German", "native": "Deutsch", "group": "Popular"},
@@ -55,7 +56,6 @@ LANGUAGE_CATALOG = {
     "kan": {"name": "Kannada", "native": "ಕನ್ನಡ", "group": "Indic / South Asian"},
     "mal": {"name": "Malayalam", "native": "മലയാളം", "group": "Indic / South Asian"},
     "guj": {"name": "Gujarati", "native": "ગુજરાતી", "group": "Indic / South Asian"},
-    "mar": {"name": "Marathi", "native": "मराठी", "group": "Indic / South Asian"},
     "pan": {"name": "Punjabi / Gurmukhi", "native": "ਪੰਜਾਬੀ", "group": "Indic / South Asian"},
     "san": {"name": "Sanskrit", "native": "संस्कृतम्", "group": "Indic / South Asian"},
     "ori": {"name": "Odia / Oriya", "native": "ଓଡ଼ିଆ", "group": "Indic / South Asian"},
@@ -125,6 +125,19 @@ LANGUAGE_CATALOG = {
     "equ": {"name": "Math / Equations", "native": "∑ dx/dt", "group": "Special"},
     "osd": {"name": "Orientation & Script Detection", "native": "OSD", "group": "Special"},
 }
+
+CATEGORIES = [
+    "All",
+    "Popular",
+    "Indic / South Asian",
+    "European",
+    "East Asian",
+    "Southeast Asian",
+    "Middle Eastern",
+    "Nordic",
+    "African",
+    "Special"
+]
 
 def ensure_tessdata_dirs():
     """Ensure user tessdata directory exists and sync system models."""
@@ -199,6 +212,14 @@ def load_ocr_config():
                 default_config.update(data)
         except Exception:
             pass
+
+    # Ensure synchronization between active_language string and active_languages list
+    if "active_languages" not in default_config or not default_config["active_languages"]:
+        raw = default_config.get("active_language", "eng")
+        default_config["active_languages"] = [l.strip() for l in raw.split("+") if l.strip()]
+    else:
+        default_config["active_language"] = "+".join(default_config["active_languages"])
+
     return default_config
 
 def save_ocr_config(config):
@@ -212,20 +233,21 @@ def save_ocr_config(config):
         print(f"Error saving config: {e}", file=sys.stderr)
         return False
 
-def set_active_language(lang_code: str):
-    """Set active OCR language code (e.g. 'eng' or 'eng+hin')."""
+def set_active_languages(lang_codes: list):
+    """Set active OCR languages list (e.g. ['eng', 'mar'])."""
+    clean_codes = [c.strip() for c in lang_codes if c.strip()]
+    if not clean_codes:
+        clean_codes = ["eng"]
+
     config = load_ocr_config()
-    config["active_language"] = lang_code
-    if "+" in lang_code:
-        config["active_languages"] = [l.strip() for l in lang_code.split("+") if l.strip()]
-    else:
-        config["active_languages"] = [lang_code]
+    config["active_languages"] = clean_codes
+    config["active_language"] = "+".join(clean_codes)
     save_ocr_config(config)
 
     # Send notification
     installed = get_installed_languages()
     names = []
-    for l in config["active_languages"]:
+    for l in clean_codes:
         if l in installed:
             names.append(f"{installed[l]['name']} ({l})")
         else:
@@ -233,17 +255,17 @@ def set_active_language(lang_code: str):
     
     display_str = " + ".join(names)
     notify(
-        "🌐 OCR Language Set",
-        f"Active OCR Language:\n<b>{display_str}</b>",
+        "🌐 OCR Languages Updated",
+        f"Active OCR Recognition:\n<b>{display_str}</b>",
         icon="character-set"
     )
+    return config["active_language"]
 
 def download_language(lang_code: str, progress_callback=None):
     """Download .traineddata file from official GitHub repository."""
     ensure_tessdata_dirs()
     target_file = USER_TESSDATA_DIR / f"{lang_code}.traineddata"
     
-    # If it's currently a broken symlink, remove it
     if target_file.is_symlink() and not target_file.exists():
         target_file.unlink()
 
@@ -274,6 +296,15 @@ def delete_user_language(lang_code: str):
         if target_file.is_symlink():
             return False, "Cannot delete system-provided language package."
         target_file.unlink()
+        
+        # Remove from active if present
+        config = load_ocr_config()
+        if lang_code in config.get("active_languages", []):
+            remaining = [l for l in config["active_languages"] if l != lang_code]
+            if not remaining:
+                remaining = ["eng"]
+            set_active_languages(remaining)
+
         return True, "Language model deleted."
     return False, "File not found."
 
@@ -306,27 +337,23 @@ def run_ocr_grab():
 # =============================================================================
 
 def run_fuzzel_menu():
-    """Interactive Fuzzel / Wofi language selector."""
+    """Interactive Fuzzel / Wofi multi-language toggle selector."""
     installed = get_installed_languages()
     config = load_ocr_config()
-    active_lang = config.get("active_language", "eng")
+    active_list = set(config.get("active_languages", ["eng"]))
+    active_str = "+".join(sorted(active_list))
 
     menu_lines = []
-    # Active indicator header
-    active_display = active_lang
-    if active_lang in installed:
-        active_display = f"{installed[active_lang]['name']} ({active_lang})"
-    menu_lines.append(f"⭐ Active Language: {active_display}")
+    menu_lines.append(f"⭐ Active OCR Combo: {active_str}")
     menu_lines.append("📸 Capture & OCR Screen Now")
-    menu_lines.append("⚙️  Open Full OCR Language Manager GUI")
-    menu_lines.append("--- [ INSTALLED LANGUAGES ] ---")
+    menu_lines.append("⚙️  Open Full OCR Manager GUI")
+    menu_lines.append("--- [ TOGGLE INSTALLED LANGUAGES ] ---")
 
-    for code, info in sorted(installed.items(), key=lambda x: x[1]["name"]):
-        badge = "✓ " if code == active_lang else "  "
-        menu_lines.append(f"{badge}{info['name']} ({code}) - {info['native']}")
+    for code, info in sorted(installed.items(), key=lambda x: (x[0] not in active_list, x[1]["name"])):
+        checked = "[✓]" if code in active_list else "[ ]"
+        menu_lines.append(f"{checked} {info['name']} ({code}) - {info['native']}")
 
     menu_lines.append("--- [ DOWNLOAD MORE LANGUAGES ] ---")
-    # Add uninstalled languages from catalog
     for code, cat in sorted(LANGUAGE_CATALOG.items(), key=lambda x: x[1]["name"]):
         if code not in installed:
             menu_lines.append(f"  + Download {cat['name']} ({code}) - {cat['native']}")
@@ -334,13 +361,13 @@ def run_fuzzel_menu():
     input_str = "\n".join(menu_lines)
 
     if shutil.which("fuzzel"):
-        cmd = ["fuzzel", "--dmenu", "--prompt", "OCR Lang: ", "--width", "42", "--lines", "16"]
+        cmd = ["fuzzel", "--dmenu", "--prompt", "OCR Languages: ", "--width", "46", "--lines", "18"]
     elif shutil.which("wofi"):
-        cmd = ["wofi", "--dmenu", "--prompt", "OCR Languages", "--width", "450", "--height", "450"]
+        cmd = ["wofi", "--dmenu", "--prompt", "OCR Languages", "--width", "480", "--height", "480"]
     elif shutil.which("rofi"):
         cmd = ["rofi", "-dmenu", "-p", "OCR Languages"]
     else:
-        print("No launcher (fuzzel/wofi/rofi) available.", file=sys.stderr)
+        print("No launcher available.", file=sys.stderr)
         return
 
     try:
@@ -352,10 +379,9 @@ def run_fuzzel_menu():
 
         if "Capture & OCR Screen Now" in choice:
             run_ocr_grab()
-        elif "Open Full OCR Language Manager GUI" in choice:
+        elif "Open Full OCR Manager GUI" in choice:
             subprocess.Popen(["python3", str(Path(__file__).resolve()), "--gui"])
         elif "+ Download" in choice:
-            # Extract code inside parentheses
             import re
             m = re.search(r"\(([a-z0-9_]+)\)", choice)
             if m:
@@ -363,8 +389,9 @@ def run_fuzzel_menu():
                 notify("⏳ Downloading Language", f"Downloading Tesseract model for <b>{code}</b>...", "network-idle")
                 ok, msg = download_language(code)
                 if ok:
-                    set_active_language(code)
-                    notify("✅ Language Installed", f"Successfully installed and activated <b>{code}</b>!", "dialog-information")
+                    active_list.add(code)
+                    set_active_languages(list(active_list))
+                    notify("✅ Language Installed", f"Installed and added <b>{code}</b> to active OCR!", "dialog-information")
                 else:
                     notify("❌ Download Failed", f"Could not download {code}: {msg}", "dialog-error")
         elif "(" in choice and ")" in choice:
@@ -373,12 +400,17 @@ def run_fuzzel_menu():
             if m:
                 code = m.group(1)
                 if code in installed:
-                    set_active_language(code)
+                    if code in active_list:
+                        if len(active_list) > 1:
+                            active_list.remove(code)
+                    else:
+                        active_list.add(code)
+                    set_active_languages(list(active_list))
     except Exception as e:
         print(f"Error running menu: {e}", file=sys.stderr)
 
 # =============================================================================
-# GTK3 Graphical User Interface
+# GTK3 Graphical User Interface (Multi-Select & Modern Catppuccin Theme)
 # =============================================================================
 
 def get_theme_colors():
@@ -415,11 +447,12 @@ def get_theme_colors():
         "text": "#cdd6f4", "subtext0": "#a6adc8", "subtext1": "#bac2de",
         "accent": "#cba6f7", "blue": "#89b4fa", "green": "#a6e3a1",
         "yellow": "#f9e2af", "peach": "#fab387", "red": "#f38ba8",
-        "mauve": "#cba6f7", "teal": "#94e2d5", "pink": "#f5c2e7"
+        "mauve": "#cba6f7", "teal": "#94e2d5", "pink": "#f5c2e7",
+        "sapphire": "#74c7ec"
     }
 
 def launch_gtk_gui():
-    """Launch full GTK3 graphical language manager."""
+    """Launch full GTK3 graphical language manager with multi-language selector."""
     import gi
     gi.require_version("Gtk", "3.0")
     gi.require_version("Gdk", "3.0")
@@ -439,32 +472,55 @@ def launch_gtk_gui():
     .header-box {{
         background-color: {colors.get("mantle", "#181825")};
         border-bottom: 2px solid {colors.get("surface0", "#313244")};
-        padding: 16px 20px;
+        padding: 16px 22px;
     }}
     .title-label {{
-        font-size: 18px;
-        font-weight: bold;
+        font-size: 19px;
+        font-weight: 800;
         color: {colors.get("accent", "#cba6f7")};
     }}
     .subtitle-label {{
         font-size: 12px;
         color: {colors.get("subtext0", "#a6adc8")};
     }}
-    .active-badge {{
-        background-color: {colors.get("surface0", "#313244")};
-        border: 1px solid {colors.get("accent", "#cba6f7")};
+    .active-combo-bar {{
+        background-color: {colors.get("mantle", "#181825")};
+        border: 1px solid {colors.get("surface0", "#313244")};
         border-radius: 12px;
-        padding: 4px 12px;
+        padding: 10px 16px;
+        margin: 12px 18px 4px 18px;
+    }}
+    .active-chip {{
+        background-color: {colors.get("surface1", "#45475a")};
+        border: 1px solid {colors.get("accent", "#cba6f7")};
+        border-radius: 16px;
+        padding: 4px 10px;
+        color: {colors.get("text", "#cdd6f4")};
         font-size: 12px;
         font-weight: bold;
-        color: {colors.get("accent", "#cba6f7")};
+    }}
+    .active-chip:hover {{
+        background-color: {colors.get("surface2", "#585b70")};
+    }}
+    .chip-close-btn {{
+        background: transparent;
+        border: none;
+        color: {colors.get("red", "#f38ba8")};
+        font-size: 11px;
+        font-weight: bold;
+        padding: 0 4px;
+        margin-left: 4px;
+    }}
+    .chip-close-btn:hover {{
+        color: {colors.get("peach", "#fab387")};
     }}
     .search-entry {{
         background-color: {colors.get("surface0", "#313244")};
         color: {colors.get("text", "#cdd6f4")};
         border: 1px solid {colors.get("surface1", "#45475a")};
-        border-radius: 8px;
-        padding: 8px 12px;
+        border-radius: 10px;
+        padding: 8px 14px;
+        font-size: 13px;
     }}
     .search-entry:focus {{
         border-color: {colors.get("accent", "#cba6f7")};
@@ -472,9 +528,10 @@ def launch_gtk_gui():
     .card-item {{
         background-color: {colors.get("mantle", "#181825")};
         border: 1px solid {colors.get("surface0", "#313244")};
-        border-radius: 10px;
-        padding: 12px 16px;
-        margin: 4px 8px;
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin: 5px 14px;
+        transition: all 150ms ease-in-out;
     }}
     .card-item:hover {{
         background-color: {colors.get("surface0", "#313244")};
@@ -482,51 +539,104 @@ def launch_gtk_gui():
     }}
     .card-active {{
         background-color: {colors.get("surface0", "#313244")};
-        border: 1px solid {colors.get("accent", "#cba6f7")};
+        border: 2px solid {colors.get("accent", "#cba6f7")};
     }}
-    .btn-primary {{
+    .btn-capture {{
         background-color: {colors.get("accent", "#cba6f7")};
         color: {colors.get("base", "#1e1e2e")};
-        font-weight: bold;
-        border-radius: 8px;
-        padding: 6px 14px;
+        font-weight: 800;
+        font-size: 13px;
+        border-radius: 10px;
+        padding: 8px 16px;
         border: none;
     }}
-    .btn-primary:hover {{
+    .btn-capture:hover {{
         background-color: {colors.get("mauve", "#cba6f7")};
     }}
-    .btn-secondary {{
+    .btn-action {{
         background-color: {colors.get("surface0", "#313244")};
         color: {colors.get("text", "#cdd6f4")};
         border: 1px solid {colors.get("surface1", "#45475a")};
         border-radius: 8px;
         padding: 6px 12px;
+        font-size: 12px;
+        font-weight: bold;
     }}
-    .btn-secondary:hover {{
+    .btn-action:hover {{
         background-color: {colors.get("surface1", "#45475a")};
+        border-color: {colors.get("accent", "#cba6f7")};
     }}
     .btn-danger {{
         background-color: transparent;
         color: {colors.get("red", "#f38ba8")};
         border: 1px solid {colors.get("red", "#f38ba8")};
         border-radius: 8px;
-        padding: 4px 10px;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: bold;
     }}
     .btn-danger:hover {{
         background-color: {colors.get("red", "#f38ba8")};
         color: {colors.get("base", "#1e1e2e")};
     }}
-    notebook tab {{
+    .btn-download {{
+        background-color: {colors.get("sapphire", "#74c7ec")};
+        color: {colors.get("base", "#1e1e2e")};
+        font-weight: bold;
+        border-radius: 8px;
+        padding: 6px 14px;
+        border: none;
+    }}
+    .btn-download:hover {{
+        background-color: {colors.get("blue", "#89b4fa")};
+    }}
+    .filter-pill {{
         background-color: {colors.get("mantle", "#181825")};
         color: {colors.get("subtext0", "#a6adc8")};
-        padding: 8px 16px;
+        border: 1px solid {colors.get("surface0", "#313244")};
+        border-radius: 14px;
+        padding: 4px 10px;
+        font-size: 11px;
         font-weight: bold;
+    }}
+    .filter-pill:checked {{
+        background-color: {colors.get("accent", "#cba6f7")};
+        color: {colors.get("base", "#1e1e2e")};
+        border-color: {colors.get("accent", "#cba6f7")};
+    }}
+    notebook {{
+        background: transparent;
+    }}
+    notebook header {{
+        background-color: {colors.get("mantle", "#181825")};
+        border-bottom: 1px solid {colors.get("surface0", "#313244")};
+        padding: 4px 12px;
+    }}
+    notebook tab {{
+        background-color: transparent;
+        color: {colors.get("subtext0", "#a6adc8")};
+        padding: 10px 20px;
+        font-size: 13px;
+        font-weight: bold;
+        border-radius: 8px 8px 0 0;
         border: none;
     }}
     notebook tab:checked {{
         background-color: {colors.get("base", "#1e1e2e")};
         color: {colors.get("accent", "#cba6f7")};
-        border-bottom: 2px solid {colors.get("accent", "#cba6f7")};
+        border-bottom: 3px solid {colors.get("accent", "#cba6f7")};
+    }}
+    checkbutton check {{
+        min-width: 20px;
+        min-height: 20px;
+        border-radius: 6px;
+        border: 2px solid {colors.get("surface2", "#585b70")};
+        background-color: {colors.get("surface0", "#313244")};
+    }}
+    checkbutton check:checked {{
+        background-color: {colors.get("accent", "#cba6f7")};
+        border-color: {colors.get("accent", "#cba6f7")};
+        color: {colors.get("base", "#1e1e2e")};
     }}
     """
     css_provider.load_from_data(css_data.encode("utf-8"))
@@ -538,86 +648,211 @@ def launch_gtk_gui():
     class OCRLangWindow(Gtk.Window):
         def __init__(self):
             super().__init__(title="Tesseract OCR Language Manager")
-            self.set_default_size(720, 680)
+            self.set_default_size(780, 720)
             self.set_position(Gtk.WindowPosition.CENTER)
             self.set_icon_name("character-set")
 
             self.installed_langs = get_installed_languages()
             self.config = load_ocr_config()
-            self.active_lang = self.config.get("active_language", "eng")
+            self.active_langs = list(self.config.get("active_languages", ["eng"]))
             self.downloading_codes = set()
+            self.selected_category = "All"
 
             main_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
             self.add(main_vbox)
 
-            # --- Header Bar ---
-            header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+            # --- 1. Top Header Bar ---
+            header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
             header_box.get_style_context().add_class("header-box")
             main_vbox.pack_start(header_box, False, False, 0)
 
-            title_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-            title_label = Gtk.Label(label="🌐 Tesseract OCR Language Manager", xalign=0)
+            title_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+            title_label = Gtk.Label(label="🌐 Tesseract OCR Language Hub", xalign=0)
             title_label.get_style_context().add_class("title-label")
-            subtitle_label = Gtk.Label(label="Install language models, manage multi-lingual OCR, and test capture", xalign=0)
+            subtitle_label = Gtk.Label(
+                label="Select single or multiple simultaneous recognition languages (e.g. English + Marathi)",
+                xalign=0
+            )
             subtitle_label.get_style_context().add_class("subtitle-label")
             title_vbox.pack_start(title_label, False, False, 0)
             title_vbox.pack_start(subtitle_label, False, False, 0)
             header_box.pack_start(title_vbox, True, True, 0)
 
-            # Active badge
-            self.active_badge = Gtk.Label()
-            self.active_badge.get_style_context().add_class("active-badge")
-            self.update_active_badge()
-            header_box.pack_start(self.active_badge, False, False, 0)
-
-            # Quick Test Button
+            # Prominent Capture & Test OCR Button
             test_btn = Gtk.Button(label="📸 Capture & Test OCR")
-            test_btn.get_style_context().add_class("btn-primary")
+            test_btn.get_style_context().add_class("btn-capture")
             test_btn.connect("clicked", lambda b: run_ocr_grab())
             header_box.pack_start(test_btn, False, False, 0)
 
-            # --- Search Entry ---
+            # --- 2. Active Multi-Language Combination Bar ---
+            self.combo_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            self.combo_box.get_style_context().add_class("active-combo-bar")
+            main_vbox.pack_start(self.combo_box, False, False, 0)
+
+            combo_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            combo_title = Gtk.Label(xalign=0)
+            combo_title.set_markup("<b>⚡ Active OCR Languages (Simultaneous Recognition):</b>")
+            combo_header.pack_start(combo_title, True, True, 0)
+
+            # Quick reset button
+            reset_en_btn = Gtk.Button(label="Reset to English (eng)")
+            reset_en_btn.get_style_context().add_class("btn-action")
+            reset_en_btn.connect("clicked", self.on_reset_english)
+            combo_header.pack_start(reset_en_btn, False, False, 0)
+            self.combo_box.pack_start(combo_header, False, False, 0)
+
+            # Chips flow row
+            self.chips_flow = Gtk.FlowBox()
+            self.chips_flow.set_valign(Gtk.Align.START)
+            self.chips_flow.set_max_children_per_line(10)
+            self.chips_flow.set_selection_mode(Gtk.SelectionMode.NONE)
+            self.combo_box.pack_start(self.chips_flow, False, False, 0)
+
+            # Command string preview
+            self.cmd_preview_lbl = Gtk.Label(xalign=0)
+            self.combo_box.pack_start(self.cmd_preview_lbl, False, False, 0)
+
+            # --- 3. Search & Filter Bar ---
             search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-            search_box.set_margin_top(12)
-            search_box.set_margin_bottom(8)
+            search_box.set_margin_top(10)
+            search_box.set_margin_bottom(6)
             search_box.set_margin_start(16)
             search_box.set_margin_end(16)
 
             self.search_entry = Gtk.Entry()
-            self.search_entry.set_placeholder_text("🔍 Search language name, native script, or code (e.g. Hindi, 日本語, fra)...")
+            self.search_entry.set_placeholder_text("🔍 Search language name, native script, or code (e.g. Marathi, मराठी, mar, Hindi, Japanese)...")
             self.search_entry.get_style_context().add_class("search-entry")
             self.search_entry.connect("changed", self.on_search_changed)
             search_box.pack_start(self.search_entry, True, True, 0)
             main_vbox.pack_start(search_box, False, False, 0)
 
-            # --- Notebook (Tabs) ---
+            # --- 4. Notebook (Tabs) ---
             self.notebook = Gtk.Notebook()
             main_vbox.pack_start(self.notebook, True, True, 0)
 
-            # Tab 1: Installed
+            # Tab 1: Installed Languages
             self.installed_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
             scroll_installed = Gtk.ScrolledWindow()
             scroll_installed.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
             scroll_installed.add(self.installed_container)
-            tab1_label = Gtk.Label(label="📦 Installed Languages")
-            self.notebook.append_page(scroll_installed, tab1_label)
+            self.tab1_label = Gtk.Label()
+            self.notebook.append_page(scroll_installed, self.tab1_label)
 
             # Tab 2: Available Catalog
+            available_wrapper = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+
+            # Category filter pills
+            filter_scroll = Gtk.ScrolledWindow()
+            filter_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)
+            filter_scroll.set_min_content_height(42)
+            filter_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            filter_box.set_margin_start(14)
+            filter_box.set_margin_end(14)
+            filter_box.set_margin_top(6)
+            filter_scroll.add(filter_box)
+            available_wrapper.pack_start(filter_scroll, False, False, 0)
+
+            group_btn = None
+            for cat in CATEGORIES:
+                radio = Gtk.RadioButton.new_with_label_from_widget(group_btn, cat)
+                radio.set_mode(False)
+                radio.get_style_context().add_class("filter-pill")
+                radio.connect("toggled", self.on_category_toggled, cat)
+                if cat == "All":
+                    radio.set_active(True)
+                filter_box.pack_start(radio, False, False, 0)
+                if not group_btn:
+                    group_btn = radio
+
             self.available_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
             scroll_available = Gtk.ScrolledWindow()
             scroll_available.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
             scroll_available.add(self.available_container)
-            tab2_label = Gtk.Label(label="➕ Download Languages")
-            self.notebook.append_page(scroll_available, tab2_label)
+            available_wrapper.pack_start(scroll_available, True, True, 0)
 
-            # Populate Lists
+            self.tab2_label = Gtk.Label()
+            self.notebook.append_page(available_wrapper, self.tab2_label)
+
+            # Populate initial data
+            self.update_chips_and_header()
             self.refresh_installed_list()
             self.refresh_available_list()
 
-        def update_active_badge(self):
-            info = self.installed_langs.get(self.active_lang, {})
-            name = info.get("name", self.active_lang)
-            self.active_badge.set_markup(f"Active: <b>{name} ({self.active_lang})</b>")
+        def update_chips_and_header(self):
+            """Update active languages chips and command line preview."""
+            for child in self.chips_flow.get_children():
+                self.chips_flow.remove(child)
+
+            if not self.active_langs:
+                self.active_langs = ["eng"]
+
+            for code in self.active_langs:
+                info = self.installed_langs.get(code, LANGUAGE_CATALOG.get(code, {"name": code.upper()}))
+                name = info.get("name", code)
+                
+                chip_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+                chip_box.get_style_context().add_class("active-chip")
+                
+                chip_lbl = Gtk.Label(label=f"✓ {name} ({code})")
+                chip_box.pack_start(chip_lbl, False, False, 0)
+
+                # Close button (if more than 1 language)
+                if len(self.active_langs) > 1:
+                    close_btn = Gtk.Button(label="✕")
+                    close_btn.get_style_context().add_class("chip-close-btn")
+                    close_btn.connect("clicked", lambda b, c=code: self.on_remove_from_active(c))
+                    chip_box.pack_start(close_btn, False, False, 0)
+
+                self.chips_flow.add(chip_box)
+
+            self.chips_flow.show_all()
+
+            combo_str = "+".join(self.active_langs)
+            self.cmd_preview_lbl.set_markup(
+                f"<span foreground='{colors.get('subtext0', '#a6adc8')}' size='small'>"
+                f"Active Tesseract Argument: <tt><span foreground='{colors.get('green', '#a6e3a1')}'>-l {combo_str}</span></tt></span>"
+            )
+            self.tab1_label.set_text(f"📦 Installed ({len(self.installed_langs)})")
+            self.tab2_label.set_text(f"➕ Download Models ({len(LANGUAGE_CATALOG) - len(self.installed_langs)})")
+
+        def on_remove_from_active(self, code):
+            if code in self.active_langs and len(self.active_langs) > 1:
+                self.active_langs.remove(code)
+                set_active_languages(self.active_langs)
+                self.update_chips_and_header()
+                self.refresh_installed_list(self.search_entry.get_text())
+
+        def on_reset_english(self, button):
+            self.active_langs = ["eng"]
+            set_active_languages(self.active_langs)
+            self.update_chips_and_header()
+            self.refresh_installed_list(self.search_entry.get_text())
+
+        def on_toggle_language(self, checkbutton, code):
+            is_checked = checkbutton.get_active()
+            if is_checked:
+                if code not in self.active_langs:
+                    self.active_langs.append(code)
+            else:
+                if code in self.active_langs:
+                    if len(self.active_langs) > 1:
+                        self.active_langs.remove(code)
+                    else:
+                        # Don't allow unchecking the last remaining language
+                        checkbutton.set_active(True)
+                        notify("⚠️ Info", "At least one language must remain active.", "dialog-information")
+                        return
+
+            set_active_languages(self.active_langs)
+            self.update_chips_and_header()
+            self.refresh_installed_list(self.search_entry.get_text())
+
+        def on_solo_language(self, code):
+            """Make this language the ONLY active recognition language."""
+            self.active_langs = [code]
+            set_active_languages(self.active_langs)
+            self.update_chips_and_header()
+            self.refresh_installed_list(self.search_entry.get_text())
 
         def refresh_installed_list(self, query=""):
             for child in self.installed_container.get_children():
@@ -625,40 +860,48 @@ def launch_gtk_gui():
 
             self.installed_langs = get_installed_languages()
             self.config = load_ocr_config()
-            self.active_lang = self.config.get("active_language", "eng")
-            self.update_active_badge()
+            self.active_langs = list(self.config.get("active_languages", ["eng"]))
 
             query = query.lower().strip()
             count = 0
 
-            for code, info in sorted(self.installed_langs.items(), key=lambda x: (x[0] != self.active_lang, x[1]["name"])):
+            # Sort: active first, then alphabetical by name
+            for code, info in sorted(self.installed_langs.items(), key=lambda x: (x[0] not in self.active_langs, x[1]["name"])):
                 name = info["name"]
                 native = info["native"]
                 if query and not (query in name.lower() or query in native.lower() or query in code.lower()):
                     continue
 
                 count += 1
-                is_active = (code == self.active_lang)
+                is_active = (code in self.active_langs)
 
-                card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+                card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
                 card.get_style_context().add_class("card-item")
                 if is_active:
                     card.get_style_context().add_class("card-active")
 
-                # Info label
-                info_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                # Multi-select Checkbox
+                chk = Gtk.CheckButton()
+                chk.set_active(is_active)
+                chk.set_tooltip_text(f"Include {name} in active OCR recognition combo")
+                chk.connect("toggled", self.on_toggle_language, code)
+                card.pack_start(chk, False, False, 0)
+
+                # Info column
+                info_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+                
                 title_txt = f"<b>{name}</b>  <span foreground='{colors.get('subtext0', '#a6adc8')}'>({code})</span>"
                 if is_active:
-                    title_txt += f"  <span foreground='{colors.get('green', '#a6e3a1')}'>● Active</span>"
+                    title_txt += f"  <span foreground='{colors.get('green', '#a6e3a1')}'>● Active (In OCR Combo)</span>"
                 
                 title_lbl = Gtk.Label(xalign=0)
                 title_lbl.set_markup(title_txt)
                 
-                sub_txt = f"{native} • Group: {info['group']} • Size: {info['size_mb']:.1f} MB"
+                sub_txt = f"Native: <b>{native}</b> • Category: {info['group']} • Size: {info['size_mb']:.1f} MB"
                 if info["is_system"]:
-                    sub_txt += " • [System Package]"
+                    sub_txt += " • [System Pacman]"
                 else:
-                    sub_txt += " • [User Downloaded]"
+                    sub_txt += " • [User Model]"
 
                 sub_lbl = Gtk.Label(xalign=0)
                 sub_lbl.set_markup(f"<span foreground='{colors.get('subtext0', '#a6adc8')}' size='small'>{sub_txt}</span>")
@@ -667,29 +910,27 @@ def launch_gtk_gui():
                 info_vbox.pack_start(sub_lbl, False, False, 0)
                 card.pack_start(info_vbox, True, True, 0)
 
-                # Actions
-                if is_active:
-                    active_btn = Gtk.Button(label="✓ Current Active")
-                    active_btn.set_sensitive(False)
-                    active_btn.get_style_context().add_class("btn-secondary")
-                    card.pack_start(active_btn, False, False, 0)
-                else:
-                    set_btn = Gtk.Button(label="Select as Active")
-                    set_btn.get_style_context().add_class("btn-primary")
-                    set_btn.connect("clicked", lambda b, c=code: self.on_set_active(c))
-                    card.pack_start(set_btn, False, False, 0)
+                # Action buttons
+                btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+
+                solo_btn = Gtk.Button(label="Only This" if is_active else "Select Solo")
+                solo_btn.get_style_context().add_class("btn-action")
+                solo_btn.set_tooltip_text(f"Use {name} as the sole OCR language")
+                solo_btn.connect("clicked", lambda b, c=code: self.on_solo_language(c))
+                btn_box.pack_start(solo_btn, False, False, 0)
 
                 if not info["is_system"]:
                     del_btn = Gtk.Button(label="🗑️ Delete")
                     del_btn.get_style_context().add_class("btn-danger")
                     del_btn.connect("clicked", lambda b, c=code: self.on_delete_lang(c))
-                    card.pack_start(del_btn, False, False, 0)
+                    btn_box.pack_start(del_btn, False, False, 0)
 
-                self.installed_container.pack_start(card, False, False, 2)
+                card.pack_start(btn_box, False, False, 0)
+                self.installed_container.pack_start(card, False, False, 3)
 
             if count == 0:
-                empty_lbl = Gtk.Label(label="No installed languages match the search query.")
-                empty_lbl.set_margin_top(20)
+                empty_lbl = Gtk.Label(label="No installed languages match your search.")
+                empty_lbl.set_margin_top(25)
                 self.installed_container.pack_start(empty_lbl, False, False, 0)
 
             self.installed_container.show_all()
@@ -705,43 +946,47 @@ def launch_gtk_gui():
                 if code in self.installed_langs:
                     continue
 
+                group = cat["group"]
+                if self.selected_category != "All" and self.selected_category != group:
+                    if not (self.selected_category == "Special" and group == "Special"):
+                        continue
+
                 name = cat["name"]
                 native = cat["native"]
-                group = cat["group"]
                 if query and not (query in name.lower() or query in native.lower() or query in code.lower() or query in group.lower()):
                     continue
 
                 count += 1
 
-                card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+                card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
                 card.get_style_context().add_class("card-item")
 
-                info_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                info_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
                 title_lbl = Gtk.Label(xalign=0)
                 title_lbl.set_markup(f"<b>{name}</b> <span foreground='{colors.get('subtext0', '#a6adc8')}'>({code})</span>")
                 
                 sub_lbl = Gtk.Label(xalign=0)
-                sub_lbl.set_markup(f"<span foreground='{colors.get('subtext0', '#a6adc8')}' size='small'>{native} • Category: {group}</span>")
+                sub_lbl.set_markup(f"<span foreground='{colors.get('subtext0', '#a6adc8')}' size='small'>Native: <b>{native}</b> • Category: {group}</span>")
                 
                 info_vbox.pack_start(title_lbl, False, False, 0)
                 info_vbox.pack_start(sub_lbl, False, False, 0)
                 card.pack_start(info_vbox, True, True, 0)
 
-                # Download button
+                # Download button with state
                 if code in self.downloading_codes:
                     dl_btn = Gtk.Button(label="⏳ Downloading...")
                     dl_btn.set_sensitive(False)
                 else:
-                    dl_btn = Gtk.Button(label="⬇️ Download Model")
-                    dl_btn.get_style_context().add_class("btn-primary")
+                    dl_btn = Gtk.Button(label="⬇️ Download & Add")
+                    dl_btn.get_style_context().add_class("btn-download")
                     dl_btn.connect("clicked", lambda b, c=code: self.on_download_clicked(c))
 
                 card.pack_start(dl_btn, False, False, 0)
-                self.available_container.pack_start(card, False, False, 2)
+                self.available_container.pack_start(card, False, False, 3)
 
             if count == 0:
-                empty_lbl = Gtk.Label(label="All catalog languages are already installed or no match found.")
-                empty_lbl.set_margin_top(20)
+                empty_lbl = Gtk.Label(label="All languages in this category are installed or no match found.")
+                empty_lbl.set_margin_top(25)
                 self.available_container.pack_start(empty_lbl, False, False, 0)
 
             self.available_container.show_all()
@@ -751,18 +996,17 @@ def launch_gtk_gui():
             self.refresh_installed_list(text)
             self.refresh_available_list(text)
 
-        def on_set_active(self, code):
-            set_active_language(code)
-            self.active_lang = code
-            self.refresh_installed_list(self.search_entry.get_text())
+        def on_category_toggled(self, button, category):
+            if button.get_active():
+                self.selected_category = category
+                self.refresh_available_list(self.search_entry.get_text())
 
         def on_delete_lang(self, code):
             ok, msg = delete_user_language(code)
             if ok:
-                if self.active_lang == code:
-                    set_active_language("eng")
                 self.refresh_installed_list(self.search_entry.get_text())
                 self.refresh_available_list(self.search_entry.get_text())
+                self.update_chips_and_header()
                 notify("🗑️ Language Removed", f"Model <b>{code}</b> has been deleted.", "dialog-information")
             else:
                 notify("❌ Error", msg, "dialog-error")
@@ -777,10 +1021,13 @@ def launch_gtk_gui():
                 def on_done():
                     self.downloading_codes.discard(code)
                     if ok:
-                        set_active_language(code)
-                        notify("✅ Language Ready", f"Successfully installed and activated <b>{code}</b>!", "dialog-information")
+                        if code not in self.active_langs:
+                            self.active_langs.append(code)
+                            set_active_languages(self.active_langs)
+                        notify("✅ Language Ready", f"Installed and added <b>{code}</b> to active OCR combo!", "dialog-information")
                     else:
                         notify("❌ Download Failed", f"Failed to download {code}: {msg}", "dialog-error")
+                    self.update_chips_and_header()
                     self.refresh_installed_list(self.search_entry.get_text())
                     self.refresh_available_list(self.search_entry.get_text())
                 GLib.idle_add(on_done)
@@ -797,11 +1044,11 @@ def launch_gtk_gui():
 # =============================================================================
 
 def main():
-    parser = argparse.ArgumentParser(description="Tesseract OCR Language Manager & Selector")
+    parser = argparse.ArgumentParser(description="Tesseract OCR Language Manager & Multi-Language Selector")
     parser.add_argument("-g", "--gui", action="store_true", help="Open graphical GTK3 interface (default if no args)")
-    parser.add_argument("-m", "--menu", action="store_true", help="Open interactive Fuzzel / Wofi language selector")
-    parser.add_argument("-l", "--list", action="store_true", help="List installed Tesseract languages")
-    parser.add_argument("-s", "--set", type=str, metavar="CODE", help="Set active OCR language (e.g. 'hin' or 'eng+hin')")
+    parser.add_argument("-m", "--menu", action="store_true", help="Open interactive Fuzzel / Wofi multi-language toggle menu")
+    parser.add_argument("-l", "--list", action="store_true", help="List installed Tesseract languages and active combination")
+    parser.add_argument("-s", "--set", type=str, metavar="CODES", help="Set active OCR languages (e.g. 'mar', 'eng+mar', 'eng+hin+san')")
     parser.add_argument("-i", "--install", type=str, metavar="CODE", help="Download and install language model without sudo")
     parser.add_argument("-d", "--delete", type=str, metavar="CODE", help="Delete user-downloaded language model")
     parser.add_argument("-t", "--test", action="store_true", help="Trigger screen OCR grab immediately")
@@ -811,19 +1058,21 @@ def main():
     if args.list:
         installed = get_installed_languages()
         config = load_ocr_config()
-        active = config.get("active_language", "eng")
-        print(f"\nActive Language: \033[1;32m{active}\033[0m\n")
+        active_list = set(config.get("active_languages", ["eng"]))
+        active_combo = "+".join(config.get("active_languages", ["eng"]))
+        print(f"\nActive OCR Combination: \033[1;32m{active_combo}\033[0m\n")
         print("Installed Tesseract Languages:")
-        for code, info in sorted(installed.items(), key=lambda x: x[1]["name"]):
-            mark = "● (Active)" if code == active else " "
+        for code, info in sorted(installed.items(), key=lambda x: (x[0] not in active_list, x[1]["name"])):
+            mark = "● [ACTIVE]" if code in active_list else "  [      ]"
             loc = "[System]" if info["is_system"] else "[User]"
-            print(f"  {mark:10} {code:8} {info['name']:25} {info['native']:15} {loc}")
+            print(f"  {mark:12} {code:8} {info['name']:25} {info['native']:15} {loc}")
         print("")
         sys.exit(0)
 
     if args.set:
-        set_active_language(args.set)
-        print(f"Active OCR language set to: {args.set}")
+        codes = [c.strip() for c in args.set.split("+") if c.strip()]
+        result = set_active_languages(codes)
+        print(f"Active OCR language combination set to: {result}")
         sys.exit(0)
 
     if args.install:
@@ -831,8 +1080,12 @@ def main():
         print(f"Downloading Tesseract model for '{code}'...")
         ok, msg = download_language(code)
         if ok:
-            set_active_language(code)
-            print(f"Successfully installed and activated '{code}'!")
+            config = load_ocr_config()
+            active = config.get("active_languages", ["eng"])
+            if code not in active:
+                active.append(code)
+                set_active_languages(active)
+            print(f"Successfully installed and activated '{code}' in OCR combo!")
         else:
             print(f"Error: {msg}", file=sys.stderr)
             sys.exit(1)
