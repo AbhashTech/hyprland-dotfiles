@@ -416,6 +416,7 @@ def open_interactive_menu():
         "🖥️  Screenshot: Full Screen",
         "🪟 Screenshot: Active Window",
         "🎨 Screenshot: Area & Annotate",
+        "📱 Read QR Code from Screen",
         "⏱️  Screenshot: 5s Timer (Area)",
         "⏱️  Screenshot: 5s Timer (Full Screen)",
         "🎥 Record: Area (No Audio)",
@@ -449,6 +450,9 @@ def open_interactive_menu():
             stop_recording()
         elif "Screenshot: Area & Annotate" in choice:
             capture_screenshot(mode="area", edit=True)
+        elif "Read QR Code from Screen" in choice:
+            qr_script = Path.home() / ".config" / "hypr" / "scripts" / "qr_reader.py"
+            subprocess.Popen(["python3", str(qr_script)])
         elif "Screenshot: Area" in choice:
             capture_screenshot(mode="area")
         elif "Screenshot: Full Screen" in choice:

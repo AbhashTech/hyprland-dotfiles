@@ -111,6 +111,9 @@ hl.bind(mainMod .. " + CTRL + T",  hl.dsp.exec_cmd(themeScript .. " --next"))
 -- Screen OCR: Grab Text to Clipboard
 hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/ocr_grab.py"))
 
+-- Screen QR Code: Read & Decode QR to Clipboard
+hl.bind(mainMod .. " + ALT + Q",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/qr_reader.py"))
+
 
 -- Night Light: Toggle Blue-Light Filter
 hl.bind(mainMod .. " + ALT + N",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/nightlight.py toggle"))

@@ -223,6 +223,9 @@ def apply_hyprpaper(image_path):
                 pass
             time.sleep(0.2)
 
+        # Preload wallpaper first (required by hyprpaper)
+        subprocess.run(["hyprctl", "hyprpaper", "preload", abs_path], capture_output=True, text=True, timeout=3)
+
         # Apply to all detected monitors
         if monitors:
             for mon in monitors:
@@ -235,6 +238,9 @@ def apply_hyprpaper(image_path):
         if res_wildcard.returncode == 0:
             applied = True
 
+        # Unload unused wallpapers from memory to prevent memory leak
+        subprocess.run(["hyprctl", "hyprpaper", "unload", "unused"], capture_output=True, text=True, timeout=3)
+
         if applied:
             break
         time.sleep(0.25)
@@ -243,6 +249,7 @@ def apply_hyprpaper(image_path):
     try:
         HYPRPAPER_CONF.parent.mkdir(parents=True, exist_ok=True)
         with open(HYPRPAPER_CONF, "w", encoding="utf-8") as f:
+            f.write(f"preload = {abs_path}\n")
             if monitors:
                 for mon in monitors:
                     f.write(f"wallpaper = {mon},{abs_path}\n")

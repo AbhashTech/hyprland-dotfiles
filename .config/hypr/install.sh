@@ -76,6 +76,7 @@ if command -v pacman >/dev/null 2>&1; then
         slurp
         tesseract
         tesseract-data-eng
+        zbar
         wf-recorder
         libnotify
         python

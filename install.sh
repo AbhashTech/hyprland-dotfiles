@@ -152,6 +152,7 @@ if command -v pacman >/dev/null 2>&1; then
         wf-recorder
         tesseract
         tesseract-data-eng
+        zbar
 
         # Authentication, Keyring & Security
         gnome-keyring

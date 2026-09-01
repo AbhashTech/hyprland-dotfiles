@@ -51,6 +51,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │       ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
     │       ├── nightlight.py         # Blue-light filter (3800K night / 6500K day)
     │       ├── ocr_grab.py           # Optical character recognition text grabber
+    │       ├── qr_reader.py          # Screen QR / 2D barcode scanner & decoder
     │       ├── quick_calc.py         # Interactive math expression evaluator
     │       ├── resolution_menu.py    # Display resolution & UI scaling switcher
     │       ├── scale_window.py       # Window resizing with on-screen dimensions overlay
@@ -136,7 +137,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | **Brightness & Night Light**| `brightnessctl`, `ddcutil`, `hyprsunset` / `wlsunset` | Backlight, external DDC brightness, and warm blue-light filter |
 | **Authentication & Hardware 2FA**| `gnome-keyring`, `libsecret`, `polkit-gnome`, `libfido2`, `ccid`, `pcsc-tools`, `yubikey-manager` | Secrets/password storage, Polkit agent, and YubiKey / FIDO2 security key support |
 | **Clipboard** | `wl-clipboard`, `cliphist` | Wayland clipboard manager with binary image and thumbnail support |
-| **Screen Capture & OCR** | `grim`, `slurp`, `swappy`, `wf-recorder`, `hyprpicker`, `tesseract`, `tesseract-data-eng` | Screenshots, annotation, video recording, color picker, OCR |
+| **Screen Capture & OCR** | `grim`, `slurp`, `swappy`, `wf-recorder`, `hyprpicker`, `tesseract`, `tesseract-data-eng`, `zbar` | Screenshots, annotation, video recording, color picker, OCR & QR scanner |
 | **Python Runtime & UI** | `python`, `python-gobject`, `gtk3`, `gtk4`, `gtk-layer-shell` | Python 3, PyGObject, and Wayland layer-shell for popups |
 | **Fonts & Icons** | `ttf-jetbrains-mono-nerd`, `ttf-liberation`, `noto-fonts`, `noto-fonts-cjk`, `noto-fonts-emoji`, `papirus-icon-theme`, `adwaita-icon-theme` | Nerd font glyphs, CJK characters, emojis, and complete icon themes |
 
@@ -158,7 +159,7 @@ sudo pacman -S --needed \
     libldac libfreeaptx gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav playerctl libva-utils \
     gnome-keyring libsecret polkit-gnome libfido2 ccid pcsc-tools yubikey-manager \
     noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-liberation ttf-jetbrains-mono-nerd \
-    wl-clipboard cliphist brightnessctl zram-generator pacman-contrib
+    wl-clipboard cliphist brightnessctl zram-generator pacman-contrib zbar
 ```
 
 ### Automated Setup (Recommended)
@@ -436,6 +437,7 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Shortcut Cheat Sheet** | Open interactive **Fuzzel/Wofi** dynamic keybindings viewer |
 | `SUPER + SHIFT + P` | **Hyprpicker** | Pick color from screen, copy hex code to clipboard & trigger notification |
 | `SUPER + SHIFT + T` | **Screen OCR** | Select region with mouse, extract text via Tesseract & copy to clipboard |
+| `SUPER + ALT + Q` | **Screen QR Reader** | Select region with mouse, decode QR/2D barcodes to clipboard & open URLs |
 | `SUPER + ALT + N` | **Night Light** | Toggle warm blue-light filter (3800K night / 6500K day) |
 | `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator** | Interactive math expression evaluator via Fuzzel prompt |
 | `SUPER + .` (period) | **Emoji Picker** | Searchable emoji catalog with automatic clipboard copy & keystroke paste |
