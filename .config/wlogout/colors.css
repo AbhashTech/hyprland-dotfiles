@@ -1,9 +1,9 @@
-/* Wlogout Colors: Gruvbox Light */
-@define-color base            #fbf1c7;
-@define-color mantle          #f2e5bc;
-@define-color crust           #ebdbb2;
-@define-color text            #3c3836;
-@define-color surface0        #d5c4a1;
-@define-color surface1        #bdae93;
-@define-color accent          #af3a03;
-@define-color bg_overlay      rgba(235, 219, 178, 0.75);
+/* Wlogout Colors: Catppuccin Mocha */
+@define-color base            #1e1e2e;
+@define-color mantle          #181825;
+@define-color crust           #11111b;
+@define-color text            #cdd6f4;
+@define-color surface0        #313244;
+@define-color surface1        #45475a;
+@define-color accent          #cba6f7;
+@define-color bg_overlay      rgba(17, 17, 27, 0.75);

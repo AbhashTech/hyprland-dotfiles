@@ -62,6 +62,7 @@ if command -v pacman >/dev/null 2>&1; then
 
         # Terminal & Modern CLI Power Suite
         kitty
+        neovim
         yazi
         zoxide
         fzf
@@ -215,6 +216,7 @@ DOT_CONFIG_DIRS=(
     "wofi"
     "btop"
     "kitty"
+    "nvim"
     "wlogout"
     "zellij"
     "fastfetch"
