@@ -1,28 +1,28 @@
 # =============================================================================
-# Lazygit Configuration - Catppuccin Mocha
+# Lazygit Configuration - Dracula
 # =============================================================================
 
 gui:
   theme:
     activeBorderColor:
-      - '#cba6f7'
+      - '#bd93f9'
       - bold
     inactiveBorderColor:
-      - '#585b70'
+      - '#6272a4'
     optionsTextColor:
-      - '#89b4fa'
+      - '#6272a4'
     selectedLineBgColor:
-      - '#313244'
+      - '#343746'
     cherryPickedCommitBgColor:
-      - '#45475a'
+      - '#44475a'
     cherryPickedCommitFgColor:
-      - '#cba6f7'
+      - '#bd93f9'
     unstagedChangesColor:
-      - '#f38ba8'
+      - '#ff5555'
     defaultFgColor:
-      - '#cdd6f4'
+      - '#f8f8f2'
     searchingActiveBorderColor:
-      - '#f9e2af'
+      - '#f1fa8c'
 
 git:
   paging:

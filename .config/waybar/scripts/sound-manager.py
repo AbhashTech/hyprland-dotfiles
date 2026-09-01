@@ -153,15 +153,44 @@ class SoundBackend:
     @staticmethod
     def get_sinks():
         default_sink = run_cmd(["pactl", "get-default-sink"])
+        wp_status = run_cmd(["wpctl", "status"])
+        default_wp_id = None
+        if wp_status:
+            in_sinks = False
+            for line in wp_status.splitlines():
+                if "Sinks:" in line:
+                    in_sinks = True
+                    continue
+                elif "Sources:" in line or "Filters:" in line:
+                    in_sinks = False
+                if in_sinks and "*" in line:
+                    m = re.search(r'\*\s+(\d+)\.', line)
+                    if m:
+                        try:
+                            default_wp_id = int(m.group(1))
+                        except ValueError:
+                            pass
+                        break
+
         raw = run_cmd(["pactl", "-f", "json", "list", "sinks"])
         results = []
+        seen_names = set()
         if raw:
             try:
                 sinks = json.loads(raw)
-                for s in sinks:
+                # Check if friendly HiFi sinks exist
+                has_hifi = any(".HiFi__" in s.get("name", "") for s in sinks)
+                for s in reversed(sinks):
                     name = s.get("name", "")
-                    desc = SoundBackend.clean_device_name(s.get("description", name))
+                    if has_hifi and (".pro-output-" in name or "pro_output" in name):
+                        continue
                     idx = s.get("index")
+                    desc = SoundBackend.clean_device_name(s.get("description", name))
+                    is_def = (idx == default_wp_id) or (name == default_sink and default_wp_id is None)
+                    if desc in seen_names and not is_def:
+                        continue
+                    seen_names.add(desc)
+
                     muted = s.get("mute", False)
                     vol = 0
                     vol_dict = s.get("volume", {})
@@ -176,10 +205,11 @@ class SoundBackend:
                         "index": idx,
                         "name": name,
                         "description": desc,
-                        "is_default": (name == default_sink),
+                        "is_default": is_def,
                         "mute": muted,
                         "volume": vol
                     })
+                results.reverse()
             except Exception:
                 pass
         return results
@@ -187,17 +217,45 @@ class SoundBackend:
     @staticmethod
     def get_sources():
         default_src = run_cmd(["pactl", "get-default-source"])
+        wp_status = run_cmd(["wpctl", "status"])
+        default_wp_src_id = None
+        if wp_status:
+            in_sources = False
+            for line in wp_status.splitlines():
+                if "Sources:" in line:
+                    in_sources = True
+                    continue
+                elif "Filters:" in line or "Streams:" in line:
+                    in_sources = False
+                if in_sources and "*" in line:
+                    m = re.search(r'\*\s+(\d+)\.', line)
+                    if m:
+                        try:
+                            default_wp_src_id = int(m.group(1))
+                        except ValueError:
+                            pass
+                        break
+
         raw = run_cmd(["pactl", "-f", "json", "list", "sources"])
         results = []
+        seen_names = set()
         if raw:
             try:
                 srcs = json.loads(raw)
-                for s in srcs:
+                has_hifi = any(".HiFi__" in s.get("name", "") for s in srcs)
+                for s in reversed(srcs):
                     name = s.get("name", "")
                     if name.endswith(".monitor"):
                         continue
-                    desc = SoundBackend.clean_device_name(s.get("description", name), is_source=True)
+                    if has_hifi and (".pro-input-" in name or "pro_input" in name):
+                        continue
                     idx = s.get("index")
+                    desc = SoundBackend.clean_device_name(s.get("description", name), is_source=True)
+                    is_def = (idx == default_wp_src_id) or (name == default_src and default_wp_src_id is None)
+                    if desc in seen_names and not is_def:
+                        continue
+                    seen_names.add(desc)
+
                     muted = s.get("mute", False)
                     vol = 0
                     vol_dict = s.get("volume", {})
@@ -212,10 +270,11 @@ class SoundBackend:
                         "index": idx,
                         "name": name,
                         "description": desc,
-                        "is_default": (name == default_src),
+                        "is_default": is_def,
                         "mute": muted,
                         "volume": vol
                     })
+                results.reverse()
             except Exception:
                 pass
         return results
@@ -261,10 +320,30 @@ class SoundBackend:
         return results
 
     @staticmethod
-    def set_sink_volume(target_percent, notify=True):
+    def set_sink_volume(target_percent, target_sink=None, notify=True):
         target = max(0, min(BOOST_MAX_VOLUME, target_percent))
         val_float = round(target / 100.0, 2)
         run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", str(val_float)])
+        if target_sink:
+            run_cmd(["wpctl", "set-volume", str(target_sink), str(val_float)])
+            run_cmd(["pactl", "set-sink-volume", str(target_sink), f"{target}%"])
+        run_cmd(["pactl", "set-sink-volume", "@DEFAULT_SINK@", f"{target}%"])
+        
+        # Synchronize all sink instances asynchronously to keep GUI smooth
+        def _sync_sinks():
+            raw = run_cmd(["pactl", "-f", "json", "list", "sinks"])
+            if raw:
+                try:
+                    sinks = json.loads(raw)
+                    for s in sinks:
+                        idx = s.get("index")
+                        if idx is not None:
+                            run_cmd(["wpctl", "set-volume", str(idx), str(val_float)])
+                            run_cmd(["pactl", "set-sink-volume", str(idx), f"{target}%"])
+                except Exception:
+                    pass
+        threading.Thread(target=_sync_sinks, daemon=True).start()
+
         if notify:
             SoundBackend.notify_sink()
 
@@ -272,24 +351,65 @@ class SoundBackend:
     def change_sink_volume(delta, allow_boost=True):
         vol, muted, _ = SoundBackend.get_default_sink_info()
         if muted and delta > 0:
-            run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "0"])
+            SoundBackend.toggle_sink_mute(notify=False)
+            vol, muted, _ = SoundBackend.get_default_sink_info()
         max_limit = BOOST_MAX_VOLUME if allow_boost else 100
         new_vol = max(0, min(max_limit, vol + delta))
-        val_float = round(new_vol / 100.0, 2)
-        run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", str(val_float)])
-        SoundBackend.notify_sink()
+        SoundBackend.set_sink_volume(new_vol, notify=True)
 
     @staticmethod
-    def toggle_sink_mute(notify=True):
-        run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
+    def toggle_sink_mute(target_sink=None, notify=True):
+        _, muted, _ = SoundBackend.get_default_sink_info()
+        new_mute = "0" if muted else "1"
+        new_mute_bool = not muted
+        
+        run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", new_mute])
+        run_cmd(["pactl", "set-sink-mute", "@DEFAULT_SINK@", "1" if new_mute_bool else "0"])
+        if target_sink:
+            run_cmd(["wpctl", "set-mute", str(target_sink), new_mute])
+            run_cmd(["pactl", "set-sink-mute", str(target_sink), "1" if new_mute_bool else "0"])
+
+        def _sync_mute():
+            raw = run_cmd(["pactl", "-f", "json", "list", "sinks"])
+            if raw:
+                try:
+                    sinks = json.loads(raw)
+                    for s in sinks:
+                        idx = s.get("index")
+                        if idx is not None:
+                            run_cmd(["wpctl", "set-mute", str(idx), new_mute])
+                            run_cmd(["pactl", "set-sink-mute", str(idx), "1" if new_mute_bool else "0"])
+                except Exception:
+                    pass
+        threading.Thread(target=_sync_mute, daemon=True).start()
+
         if notify:
             SoundBackend.notify_sink()
 
     @staticmethod
-    def set_source_volume(target_percent, notify=True):
+    def set_source_volume(target_percent, target_source=None, notify=True):
         target = max(0, min(100, target_percent))
         val_float = round(target / 100.0, 2)
         run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SOURCE@", str(val_float)])
+        if target_source:
+            run_cmd(["wpctl", "set-volume", str(target_source), str(val_float)])
+            run_cmd(["pactl", "set-source-volume", str(target_source), f"{target}%"])
+        run_cmd(["pactl", "set-source-volume", "@DEFAULT_SOURCE@", f"{target}%"])
+        
+        def _sync_srcs():
+            raw = run_cmd(["pactl", "-f", "json", "list", "sources"])
+            if raw:
+                try:
+                    sources = json.loads(raw)
+                    for s in sources:
+                        idx = s.get("index")
+                        if idx is not None:
+                            run_cmd(["wpctl", "set-volume", str(idx), str(val_float)])
+                            run_cmd(["pactl", "set-source-volume", str(idx), f"{target}%"])
+                except Exception:
+                    pass
+        threading.Thread(target=_sync_srcs, daemon=True).start()
+
         if notify:
             SoundBackend.notify_source()
 
@@ -297,26 +417,95 @@ class SoundBackend:
     def change_source_volume(delta):
         vol, muted, _ = SoundBackend.get_default_source_info()
         if muted and delta > 0:
-            run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "0"])
+            SoundBackend.toggle_source_mute(notify=False)
+            vol, muted, _ = SoundBackend.get_default_source_info()
         new_vol = max(0, min(100, vol + delta))
-        val_float = round(new_vol / 100.0, 2)
-        run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SOURCE@", str(val_float)])
-        SoundBackend.notify_source()
+        SoundBackend.set_source_volume(new_vol, notify=True)
 
     @staticmethod
-    def toggle_source_mute(notify=True):
-        run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"])
+    def toggle_source_mute(target_source=None, notify=True):
+        _, muted, _ = SoundBackend.get_default_source_info()
+        new_mute = "0" if muted else "1"
+        new_mute_bool = not muted
+        
+        run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", new_mute])
+        run_cmd(["pactl", "set-source-mute", "@DEFAULT_SOURCE@", "1" if new_mute_bool else "0"])
+        if target_source:
+            run_cmd(["wpctl", "set-mute", str(target_source), new_mute])
+            run_cmd(["pactl", "set-source-mute", str(target_source), "1" if new_mute_bool else "0"])
+
+        def _sync_src_mute():
+            raw = run_cmd(["pactl", "-f", "json", "list", "sources"])
+            if raw:
+                try:
+                    sources = json.loads(raw)
+                    for s in sources:
+                        idx = s.get("index")
+                        if idx is not None:
+                            run_cmd(["wpctl", "set-mute", str(idx), new_mute])
+                            run_cmd(["pactl", "set-source-mute", str(idx), "1" if new_mute_bool else "0"])
+                except Exception:
+                    pass
+        threading.Thread(target=_sync_src_mute, daemon=True).start()
+
         if notify:
             SoundBackend.notify_source()
 
     @staticmethod
     def set_default_sink(sink_name_or_id):
+        # 1. Set default sink in PulseAudio server
         run_cmd(["pactl", "set-default-sink", str(sink_name_or_id)])
+        
+        # 2. Find wireplumber node id and set default in WirePlumber
+        sinks = SoundBackend.get_sinks()
+        target_idx = None
+        for s in sinks:
+            if s.get("name") == str(sink_name_or_id) or str(s.get("index")) == str(sink_name_or_id):
+                target_idx = s.get("index")
+                break
+        if target_idx is not None:
+            run_cmd(["wpctl", "set-default", str(target_idx)])
+        elif str(sink_name_or_id).isdigit():
+            run_cmd(["wpctl", "set-default", str(sink_name_or_id)])
+
+        # 3. Move all active playback streams to the newly selected sink
+        sink_inputs = SoundBackend.get_sink_inputs()
+        for inp in sink_inputs:
+            stream_idx = inp.get("index")
+            if stream_idx is not None:
+                run_cmd(["pactl", "move-sink-input", str(stream_idx), str(sink_name_or_id)])
+                
         SoundBackend.notify_sink(title="🎧 Output Device Switched")
 
     @staticmethod
     def set_default_source(source_name_or_id):
+        # 1. Set default source in PulseAudio server
         run_cmd(["pactl", "set-default-source", str(source_name_or_id)])
+        
+        # 2. Find wireplumber node id and set default in WirePlumber
+        sources = SoundBackend.get_sources()
+        target_idx = None
+        for s in sources:
+            if s.get("name") == str(source_name_or_id) or str(s.get("index")) == str(source_name_or_id):
+                target_idx = s.get("index")
+                break
+        if target_idx is not None:
+            run_cmd(["wpctl", "set-default", str(target_idx)])
+        elif str(source_name_or_id).isdigit():
+            run_cmd(["wpctl", "set-default", str(source_name_or_id)])
+
+        # 3. Move all active recording streams to the new source
+        raw_outputs = run_cmd(["pactl", "-f", "json", "list", "source-outputs"])
+        if raw_outputs:
+            try:
+                outputs = json.loads(raw_outputs)
+                for out_item in outputs:
+                    s_idx = out_item.get("index")
+                    if s_idx is not None:
+                        run_cmd(["pactl", "move-source-output", str(s_idx), str(source_name_or_id)])
+            except Exception:
+                pass
+
         SoundBackend.notify_source(title="🎤 Input Device Switched")
 
     @staticmethod
@@ -792,7 +981,7 @@ def launch_gtk_gui():
     sink_combo = Gtk.ComboBoxText()
     active_sink_idx = 0
     for i, s in enumerate(sinks):
-        sink_combo.append(s["name"], f"🎧 {s['description']}")
+        sink_combo.append(str(s["index"]), f"🎧 {s['description']}")
         if s["is_default"]:
             active_sink_idx = i
 
@@ -837,12 +1026,14 @@ def launch_gtk_gui():
             return
         val = int(scale.get_value())
         sink_val_lbl.set_text(f"{val}%")
-        SoundBackend.set_sink_volume(val, notify=False)
+        target_sink = sink_combo.get_active_id()
+        SoundBackend.set_sink_volume(val, target_sink=target_sink, notify=False)
 
     sink_scale.connect("value-changed", on_sink_scale_changed)
 
     def on_sink_mute_clicked(btn):
-        SoundBackend.toggle_sink_mute(notify=False)
+        target_sink = sink_combo.get_active_id()
+        SoundBackend.toggle_sink_mute(target_sink=target_sink, notify=False)
         v, m, _ = SoundBackend.get_default_sink_info()
         update_sink_ui(v, m)
 
@@ -873,7 +1064,7 @@ def launch_gtk_gui():
         p_btn.get_style_context().add_class("btn-preset")
         p_btn.set_hexpand(True)
         def make_preset_cb(v):
-            return lambda b: (SoundBackend.set_sink_volume(v, notify=False), update_sink_ui(v, False))
+            return lambda b: (SoundBackend.set_sink_volume(v, target_sink=sink_combo.get_active_id(), notify=False), update_sink_ui(v, False))
         p_btn.connect("clicked", make_preset_cb(p_val))
         presets_row.pack_start(p_btn, True, True, 0)
 
@@ -898,7 +1089,7 @@ def launch_gtk_gui():
     src_combo = Gtk.ComboBoxText()
     active_src_idx = 0
     for i, s in enumerate(sources):
-        src_combo.append(s["name"], f"🎙️ {s['description']}")
+        src_combo.append(str(s["index"]), f"🎙️ {s['description']}")
         if s["is_default"]:
             active_src_idx = i
 
@@ -944,12 +1135,14 @@ def launch_gtk_gui():
             return
         val = int(scale.get_value())
         src_val_lbl.set_text(f"{val}%")
-        SoundBackend.set_source_volume(val, notify=False)
+        target_src = src_combo.get_active_id()
+        SoundBackend.set_source_volume(val, target_source=target_src, notify=False)
 
     src_scale.connect("value-changed", on_src_scale_changed)
 
     def on_src_mute_clicked(btn):
-        SoundBackend.toggle_source_mute(notify=False)
+        target_src = src_combo.get_active_id()
+        SoundBackend.toggle_source_mute(target_source=target_src, notify=False)
         v, m, _ = SoundBackend.get_default_source_info()
         update_source_ui(v, m)
 

@@ -56,6 +56,8 @@ def show_notification(title, body, icon, percentage=None, notif_id=SINK_NOTIF_ID
 # Audio Sink (Speaker / Headphones) Operations
 # ---------------------------------------------------------
 
+import threading
+
 def get_sink_info():
     """Retrieve volume, mute status, and device name for the default sink."""
     out = run_cmd(["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"])
@@ -71,36 +73,13 @@ def get_sink_info():
         if "[MUTED]" in out:
             muted = True
 
-    # Get device description
     sink_name = "Speakers / Output"
-    default_sink = run_cmd(["pactl", "get-default-sink"])
-    raw_sinks = run_cmd(["pactl", "-f", "json", "list", "sinks"])
-    if raw_sinks and default_sink:
-        try:
-            sinks = json.loads(raw_sinks)
-            for s in sinks:
-                if s.get("name") == default_sink:
-                    # Simplify verbose names
-                    desc = s.get("description", "")
-                    if desc:
-                        # Extract friendly name
-                        if "Speaker" in desc:
-                            sink_name = "Speaker"
-                        elif "Headphone" in desc or "Headset" in desc:
-                            sink_name = "Headphones"
-                        elif "HDMI" in desc or "DisplayPort" in desc:
-                            sink_name = desc.split("Family")[-1].strip() if "Family" in desc else desc
-                        else:
-                            sink_name = desc
-                    break
-        except Exception:
-            pass
-
     return vol_pct, muted, sink_name
 
-def notify_sink_osd():
+def notify_sink_osd(vol=None, muted=None, name="Speakers / Output"):
     """Show OSD notification for sink volume status."""
-    vol, muted, name = get_sink_info()
+    if vol is None or muted is None:
+        vol, muted, name = get_sink_info()
     bar = build_progress_bar(vol)
     
     if muted:
@@ -124,32 +103,70 @@ def notify_sink_osd():
         body = f"<b>{name}</b>\n{bar}"
         show_notification(title, body, icon, percentage=vol, notif_id=SINK_NOTIF_ID, tag="volume_osd")
 
+def _sync_all_sinks_async(val_float, target_percent):
+    def _worker():
+        raw_sinks = run_cmd(["pactl", "-f", "json", "list", "sinks"])
+        if raw_sinks:
+            try:
+                sinks = json.loads(raw_sinks)
+                for s in sinks:
+                    idx = s.get("index")
+                    if idx is not None:
+                        run_cmd(["wpctl", "set-volume", str(idx), str(val_float)])
+                        run_cmd(["pactl", "set-sink-volume", str(idx), f"{target_percent}%"])
+            except Exception:
+                pass
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+
+def _sync_all_mute_async(new_mute, new_mute_bool):
+    def _worker():
+        raw_sinks = run_cmd(["pactl", "-f", "json", "list", "sinks"])
+        if raw_sinks:
+            try:
+                sinks = json.loads(raw_sinks)
+                for s in sinks:
+                    idx = s.get("index")
+                    if idx is not None:
+                        run_cmd(["wpctl", "set-mute", str(idx), new_mute])
+                        run_cmd(["pactl", "set-sink-mute", str(idx), "1" if new_mute_bool else "0"])
+            except Exception:
+                pass
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+
 def change_sink_volume(delta, allow_boost=False):
     """Adjust sink volume by delta percentage."""
     curr_vol, muted, _ = get_sink_info()
     if muted and delta > 0:
-        # Unmute when raising volume
         run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "0"])
+        run_cmd(["pactl", "set-sink-mute", "@DEFAULT_SINK@", "0"])
+        _sync_all_mute_async("0", False)
+        muted = False
 
-    new_vol = curr_vol + delta
     max_cap = BOOST_MAX_VOLUME if allow_boost else MAX_VOLUME
-    new_vol = max(0, min(max_cap, new_vol))
-    
-    val_float = round(new_vol / 100.0, 2)
-    run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", str(val_float)])
-    notify_sink_osd()
+    new_vol = max(0, min(max_cap, curr_vol + delta))
+    set_sink_volume(new_vol, muted=muted)
 
-def set_sink_volume(target_percent):
-    """Set exact sink volume percentage."""
+def set_sink_volume(target_percent, muted=False):
+    """Set exact sink volume percentage across all active sink nodes."""
     target_percent = max(0, min(BOOST_MAX_VOLUME, target_percent))
     val_float = round(target_percent / 100.0, 2)
     run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", str(val_float)])
-    notify_sink_osd()
+    run_cmd(["pactl", "set-sink-volume", "@DEFAULT_SINK@", f"{target_percent}%"])
+    _sync_all_sinks_async(val_float, target_percent)
+    notify_sink_osd(vol=target_percent, muted=muted)
 
 def toggle_sink_mute():
-    """Toggle mute for default sink."""
-    run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
-    notify_sink_osd()
+    """Toggle mute for default sink across all node instances."""
+    curr_vol, muted, _ = get_sink_info()
+    new_mute = "0" if muted else "1"
+    new_mute_bool = not muted
+    
+    run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", new_mute])
+    run_cmd(["pactl", "set-sink-mute", "@DEFAULT_SINK@", "1" if new_mute_bool else "0"])
+    _sync_all_mute_async(new_mute, new_mute_bool)
+    notify_sink_osd(vol=curr_vol, muted=new_mute_bool)
 
 # ---------------------------------------------------------
 # Audio Source (Microphone) Operations
@@ -171,30 +188,12 @@ def get_source_info():
             muted = True
 
     source_name = "Microphone"
-    default_src = run_cmd(["pactl", "get-default-source"])
-    raw_srcs = run_cmd(["pactl", "-f", "json", "list", "sources"])
-    if raw_srcs and default_src:
-        try:
-            srcs = json.loads(raw_srcs)
-            for s in srcs:
-                if s.get("name") == default_src:
-                    desc = s.get("description", "")
-                    if desc:
-                        if "Digital Microphone" in desc or "Internal" in desc:
-                            source_name = "Built-in Mic"
-                        elif "Stereo Microphone" in desc or "Headset" in desc:
-                            source_name = "Headset / Ext Mic"
-                        else:
-                            source_name = desc
-                    break
-        except Exception:
-            pass
-
     return vol_pct, muted, source_name
 
-def notify_source_osd():
+def notify_source_osd(vol=None, muted=None, name="Microphone"):
     """Show OSD notification for microphone volume & mute status."""
-    vol, muted, name = get_source_info()
+    if vol is None or muted is None:
+        vol, muted, name = get_source_info()
     bar = build_progress_bar(vol)
 
     if muted:
@@ -208,28 +207,69 @@ def notify_source_osd():
         body = f"<b>{name}</b>\n{bar}"
         show_notification(title, body, icon, percentage=vol, notif_id=SOURCE_NOTIF_ID, tag="mic_osd")
 
+def _sync_all_sources_async(val_float, target_percent):
+    def _worker():
+        raw_srcs = run_cmd(["pactl", "-f", "json", "list", "sources"])
+        if raw_srcs:
+            try:
+                sources = json.loads(raw_srcs)
+                for s in sources:
+                    idx = s.get("index")
+                    if idx is not None:
+                        run_cmd(["wpctl", "set-volume", str(idx), str(val_float)])
+                        run_cmd(["pactl", "set-source-volume", str(idx), f"{target_percent}%"])
+            except Exception:
+                pass
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+
+def _sync_all_source_mute_async(new_mute, new_mute_bool):
+    def _worker():
+        raw_srcs = run_cmd(["pactl", "-f", "json", "list", "sources"])
+        if raw_srcs:
+            try:
+                sources = json.loads(raw_srcs)
+                for s in sources:
+                    idx = s.get("index")
+                    if idx is not None:
+                        run_cmd(["wpctl", "set-mute", str(idx), new_mute])
+                        run_cmd(["pactl", "set-source-mute", str(idx), "1" if new_mute_bool else "0"])
+            except Exception:
+                pass
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+
 def change_source_volume(delta):
     """Adjust mic volume by delta percentage."""
     curr_vol, muted, _ = get_source_info()
     if muted and delta > 0:
         run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "0"])
+        run_cmd(["pactl", "set-source-mute", "@DEFAULT_SOURCE@", "0"])
+        _sync_all_source_mute_async("0", False)
+        muted = False
 
     new_vol = max(0, min(100, curr_vol + delta))
-    val_float = round(new_vol / 100.0, 2)
-    run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SOURCE@", str(val_float)])
-    notify_source_osd()
+    set_source_volume(new_vol, muted=muted)
 
-def set_source_volume(target_percent):
-    """Set exact mic volume percentage."""
+def set_source_volume(target_percent, muted=False):
+    """Set exact mic volume percentage across all source instances."""
     target_percent = max(0, min(100, target_percent))
     val_float = round(target_percent / 100.0, 2)
     run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SOURCE@", str(val_float)])
-    notify_source_osd()
+    run_cmd(["pactl", "set-source-volume", "@DEFAULT_SOURCE@", f"{target_percent}%"])
+    _sync_all_sources_async(val_float, target_percent)
+    notify_source_osd(vol=target_percent, muted=muted)
 
 def toggle_source_mute():
-    """Toggle mute for default microphone."""
-    run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"])
-    notify_source_osd()
+    """Toggle mute for default microphone across all instances."""
+    curr_vol, muted, _ = get_source_info()
+    new_mute = "0" if muted else "1"
+    new_mute_bool = not muted
+    
+    run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", new_mute])
+    run_cmd(["pactl", "set-source-mute", "@DEFAULT_SOURCE@", "1" if new_mute_bool else "0"])
+    _sync_all_source_mute_async(new_mute, new_mute_bool)
+    notify_source_osd(vol=curr_vol, muted=new_mute_bool)
 
 # ---------------------------------------------------------
 # Audio Devices (Sinks / Sources) Listing & Switching
@@ -286,13 +326,63 @@ def get_sources_list():
     return results
 
 def set_default_sink(sink_id_or_name):
-    """Set the system default audio sink."""
+    """Set the system default audio sink and migrate active playback streams."""
     run_cmd(["pactl", "set-default-sink", str(sink_id_or_name)])
+    
+    # Set WirePlumber default node
+    sinks = get_sinks_list()
+    target_idx = None
+    for s in sinks:
+        if s.get("name") == str(sink_id_or_name) or str(s.get("index")) == str(sink_id_or_name):
+            target_idx = s.get("index")
+            break
+    if target_idx is not None:
+        run_cmd(["wpctl", "set-default", str(target_idx)])
+    elif str(sink_id_or_name).isdigit():
+        run_cmd(["wpctl", "set-default", str(sink_id_or_name)])
+
+    # Move active playback streams to new sink
+    raw_inputs = run_cmd(["pactl", "-f", "json", "list", "sink-inputs"])
+    if raw_inputs:
+        try:
+            inputs = json.loads(raw_inputs)
+            for inp in inputs:
+                idx = inp.get("index")
+                if idx is not None:
+                    run_cmd(["pactl", "move-sink-input", str(idx), str(sink_id_or_name)])
+        except Exception:
+            pass
+
     notify_sink_osd()
 
 def set_default_source(source_id_or_name):
-    """Set the system default audio source."""
+    """Set the system default audio source and migrate active recording streams."""
     run_cmd(["pactl", "set-default-source", str(source_id_or_name)])
+    
+    # Set WirePlumber default node
+    sources = get_sources_list()
+    target_idx = None
+    for s in sources:
+        if s.get("name") == str(source_id_or_name) or str(s.get("index")) == str(source_id_or_name):
+            target_idx = s.get("index")
+            break
+    if target_idx is not None:
+        run_cmd(["wpctl", "set-default", str(target_idx)])
+    elif str(source_id_or_name).isdigit():
+        run_cmd(["wpctl", "set-default", str(source_id_or_name)])
+
+    # Move active recording streams
+    raw_outputs = run_cmd(["pactl", "-f", "json", "list", "source-outputs"])
+    if raw_outputs:
+        try:
+            outputs = json.loads(raw_outputs)
+            for out_item in outputs:
+                s_idx = out_item.get("index")
+                if s_idx is not None:
+                    run_cmd(["pactl", "move-source-output", str(s_idx), str(source_id_or_name)])
+        except Exception:
+            pass
+
     notify_source_osd()
 
 def cycle_sink(direction=1):

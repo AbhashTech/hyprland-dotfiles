@@ -86,6 +86,8 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │       ├── sound-menu.sh         # Sound launcher for Waybar
     │       ├── system-stats.py       # Interactive GTK LayerShell hardware & stats dashboard
     │       └── toggle-stats.py       # Hardware stats drawer toggler
+    ├── wireplumber/             # WirePlumber Audio Session Rules
+    │   └── wireplumber.conf.d/  # Software DSP volume mixing (api.alsa.soft-mixer) & stream routing
     ├── kitty/                   # Kitty Terminal Emulator
     │   └── kitty.conf           # Catppuccin Mocha theme, font, padding & shortcuts
     ├── starship.toml            # Starship Cross-Shell Prompt (Catppuccin Mocha)
@@ -248,6 +250,10 @@ The dotfiles include a dedicated **Sound Control Center & Audio Hub** ([`sound-m
   - **󰋋 Test Audio**: Plays stereo left/right audio channel test tones.
   - **🔄 Restart PipeWire**: Single-click restart and recovery of `pipewire`, `pipewire-pulse`, and `wireplumber` user services.
   - **🎛️ Terminal TUI**: Launches the interactive curses mixer in a floating Kitty terminal.
+- **Enhanced PipeWire & WirePlumber Audio Architecture**:
+  - **Software DSP Mixing (`api.alsa.soft-mixer = true`)**: Configured in `~/.config/wireplumber/wireplumber.conf.d/51-alsa-soft-mixer.conf` to force software-level digital PCM attenuation for HDMI / DisplayPort monitors and external speakers lacking physical ALSA hardware mixer registers.
+  - **Zero-Lag Multi-Node Broadcast Sync**: Asynchronous non-blocking background workers (`threading.Thread`) synchronize volume levels and mute states across all active ALSA sink/source instances and Pulse endpoints simultaneously, eliminating volume lag, stuttering, and ghost node unattenuated audio.
+  - **Waybar Smooth Scroll & Click**: Native scroll-up/down and click-to-mute bindings directly wired to the broadcast volume controller.
 - **Alternative Access Modes**:
   - **Terminal Curses TUI**: Run `~/.config/waybar/scripts/sound-manager.py --tui` or middle-click the Waybar sound icon.
   - **CLI Flags**: `--toggle-mute`, `--toggle-mic`, `--up`, `--down`, `--test`, `--restart`.

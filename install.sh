@@ -211,6 +211,7 @@ mkdir -p "${CONFIG_TARGET}"
 DOT_CONFIG_DIRS=(
     "hypr"
     "waybar"
+    "wireplumber"
     "fuzzel"
     "mako"
     "wofi"

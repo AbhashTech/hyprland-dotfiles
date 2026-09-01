@@ -1,9 +1,9 @@
-/* Wlogout Colors: Catppuccin Mocha */
-@define-color base            #1e1e2e;
-@define-color mantle          #181825;
-@define-color crust           #11111b;
-@define-color text            #cdd6f4;
-@define-color surface0        #313244;
-@define-color surface1        #45475a;
-@define-color accent          #cba6f7;
-@define-color bg_overlay      rgba(17, 17, 27, 0.75);
+/* Wlogout Colors: Dracula */
+@define-color base            #282a36;
+@define-color mantle          #21222c;
+@define-color crust           #191a21;
+@define-color text            #f8f8f2;
+@define-color surface0        #343746;
+@define-color surface1        #44475a;
+@define-color accent          #bd93f9;
+@define-color bg_overlay      rgba(25, 26, 33, 0.75);

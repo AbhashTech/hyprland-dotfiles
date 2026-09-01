@@ -240,22 +240,21 @@ def volume_submenu():
         return
 
     if "Mute Audio" in chosen or "Unmute Audio" in chosen:
-        run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
-        notify("Audio Status", "Toggled Audio Mute")
+        run_cmd(["python3", "/home/kunal/.config/hypr/scripts/volume_control.py", "mute"])
     elif "100%" in chosen:
-        run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "1.0"])
+        run_cmd(["python3", "/home/kunal/.config/hypr/scripts/volume_control.py", "set", "100"])
     elif "75%" in chosen:
-        run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "0.75"])
+        run_cmd(["python3", "/home/kunal/.config/hypr/scripts/volume_control.py", "set", "75"])
     elif "50%" in chosen:
-        run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "0.50"])
+        run_cmd(["python3", "/home/kunal/.config/hypr/scripts/volume_control.py", "set", "50"])
     elif "25%" in chosen:
-        run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "0.25"])
+        run_cmd(["python3", "/home/kunal/.config/hypr/scripts/volume_control.py", "set", "25"])
     elif "10%" in chosen:
-        run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "0.10"])
+        run_cmd(["python3", "/home/kunal/.config/hypr/scripts/volume_control.py", "set", "10"])
     elif "+5%" in chosen:
-        run_cmd(["wpctl", "set-volume", "-l", "1.0", "@DEFAULT_AUDIO_SINK@", "5%+"])
+        run_cmd(["python3", "/home/kunal/.config/hypr/scripts/volume_control.py", "up", "5"])
     elif "-5%" in chosen:
-        run_cmd(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-"])
+        run_cmd(["python3", "/home/kunal/.config/hypr/scripts/volume_control.py", "down", "5"])
     elif "Volume Mixer" in chosen:
         if os.path.exists("/usr/bin/pavucontrol"):
             subprocess.Popen(["pavucontrol"])
