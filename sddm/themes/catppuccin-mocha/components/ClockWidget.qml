@@ -4,25 +4,17 @@ import QtQuick.Controls
 Item {
     id: clockRoot
 
+    property string greetingText: "Welcome!"
     property string timeFormat: "HH:mm"
-    property string dateFormat: "dddd, MMMM d, yyyy"
+    property string dateFormat: "dddd, d 'of' MMMM"
     property string fontFamily: "JetBrainsMono Nerd Font"
-    property color timeColor: "#cdd6f4"
-    property color dateColor: "#b4befe"
-    property color greetingColor: "#a6adc8"
-    property string currentUserName: ""
+    property color greetingColor: "#ffffff"
+    property color timeColor: "#ffffff"
+    property color dateColor: "#cdd6f4"
     property bool showGreeting: true
 
     implicitWidth: clockColumn.implicitWidth
     implicitHeight: clockColumn.implicitHeight
-
-    function getGreeting() {
-        var hour = new Date().getHours()
-        if (hour >= 5 && hour < 12) return "Good morning"
-        if (hour >= 12 && hour < 17) return "Good afternoon"
-        if (hour >= 17 && hour < 22) return "Good evening"
-        return "Good night"
-    }
 
     Timer {
         id: timer
@@ -34,31 +26,25 @@ Item {
             var date = new Date()
             timeLabel.text = Qt.formatTime(date, clockRoot.timeFormat)
             dateLabel.text = Qt.formatDate(date, clockRoot.dateFormat)
-            if (clockRoot.showGreeting) {
-                var greet = clockRoot.getGreeting()
-                if (clockRoot.currentUserName.length > 0) {
-                    greetingLabel.text = greet + ", " + clockRoot.currentUserName
-                } else {
-                    greetingLabel.text = greet
-                }
-            }
         }
     }
 
     Column {
         id: clockColumn
         anchors.centerIn: parent
-        spacing: 4
+        spacing: 6
 
-        // Greeting
+        // Welcome Header
         Text {
             id: greetingLabel
             visible: clockRoot.showGreeting
             anchors.horizontalCenter: parent.horizontalCenter
+            text: clockRoot.greetingText
             color: clockRoot.greetingColor
             font.family: clockRoot.fontFamily
-            font.pixelSize: 15
-            font.bold: false
+            font.pixelSize: 30
+            font.weight: Font.DemiBold
+            renderType: Text.NativeRendering
         }
 
         // Live Clock
@@ -67,8 +53,9 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             color: clockRoot.timeColor
             font.family: clockRoot.fontFamily
-            font.pixelSize: 64
+            font.pixelSize: 56
             font.bold: true
+            renderType: Text.NativeRendering
         }
 
         // Full Date
@@ -77,8 +64,11 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             color: clockRoot.dateColor
             font.family: clockRoot.fontFamily
-            font.pixelSize: 14
-            font.bold: false
+            font.pixelSize: 15
+            font.weight: Font.Normal
+            opacity: 0.85
+            renderType: Text.NativeRendering
         }
     }
 }
+
