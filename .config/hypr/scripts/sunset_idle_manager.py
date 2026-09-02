@@ -22,6 +22,7 @@ import signal
 import shutil
 import argparse
 import subprocess
+import threading
 from pathlib import Path
 
 # Paths
@@ -255,18 +256,32 @@ class SunsetController:
 
     @staticmethod
     def stop(silent=False):
-        pid = SunsetController.get_pid()
-        if pid:
+        """Cleanly terminate all night light instances and ensure unbinding."""
+        # 1. Kill recorded pid if exists
+        if NIGHTLIGHT_PID_FILE.exists():
             try:
+                pid = int(NIGHTLIGHT_PID_FILE.read_text().strip())
                 os.kill(pid, signal.SIGTERM)
             except Exception:
                 pass
-        NIGHTLIGHT_PID_FILE.unlink(missing_ok=True)
-        NIGHTLIGHT_STATE_FILE.unlink(missing_ok=True)
+            NIGHTLIGHT_PID_FILE.unlink(missing_ok=True)
+            NIGHTLIGHT_STATE_FILE.unlink(missing_ok=True)
 
-        # Cleanup stray processes
+        # 2. Terminate all instances
         subprocess.run(["pkill", "-x", "hyprsunset"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(["pkill", "-x", "wlsunset"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        # 3. Wait up to 300ms for clean unbinding from hyprland-ctm-control
+        for _ in range(15):
+            res_hs = subprocess.run(["pgrep", "-x", "hyprsunset"], capture_output=True, text=True)
+            res_ws = subprocess.run(["pgrep", "-x", "wlsunset"], capture_output=True, text=True)
+            if not res_hs.stdout.strip() and not res_ws.stdout.strip():
+                break
+            time.sleep(0.02)
+        else:
+            subprocess.run(["pkill", "-9", "-x", "hyprsunset"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(["pkill", "-9", "-x", "wlsunset"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            time.sleep(0.05)
 
         state = load_state()
         state["sunset_enabled"] = False
@@ -277,9 +292,18 @@ class SunsetController:
 
     @staticmethod
     def start(temp=None, silent=False):
+        """Start hyprsunset with clean process isolation."""
         if temp is None:
             temp = SunsetController.get_current_temp()
         temp = int(temp)
+
+        # If already running at this exact temperature, just update state
+        if SunsetController.is_active() and SunsetController.get_current_temp() == temp:
+            state = load_state()
+            state["sunset_enabled"] = True
+            state["sunset_temp"] = temp
+            save_state(state)
+            return True
 
         SunsetController.stop(silent=True)
 
@@ -295,6 +319,14 @@ class SunsetController:
 
         try:
             proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            time.sleep(0.06)
+            if proc.poll() is not None:
+                # Retrying once after full kill cleanup
+                SunsetController.stop(silent=True)
+                time.sleep(0.08)
+                proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                time.sleep(0.06)
+
             NIGHTLIGHT_PID_FILE.write_text(str(proc.pid))
             NIGHTLIGHT_STATE_FILE.write_text(str(temp))
 
@@ -324,7 +356,6 @@ class SunsetController:
         state = load_state()
         state["sunset_temp"] = temp
         save_state(state)
-        # If currently active, apply immediately
         if SunsetController.is_active() or state.get("sunset_enabled", False):
             SunsetController.start(temp, silent=silent)
         elif not silent:
@@ -383,7 +414,7 @@ class IdleController:
                 config_data["lock_timeout"] = int(lock_match.group(1))
 
             # Look for dpms off (monitor off)
-            dpms_match = re.search(r'listener\s*\{[^}]*timeout\s*=\s*(\d+)[^}]*dpms\s+off', content, re.DOTALL)
+            dpms_match = re.search(r'listener\s*\{[^}]*timeout\s*=\s*(\d+)[^}]*dpms', content, re.DOTALL)
             if dpms_match:
                 config_data["dpms_timeout"] = int(dpms_match.group(1))
 
@@ -401,7 +432,7 @@ class IdleController:
 
     @staticmethod
     def generate_config(dim_timeout=150, lock_timeout=300, dpms_timeout=330, suspend_timeout=1800, ignore_dbus_inhibit=False):
-        """Generate standardized hypridle.conf content."""
+        """Generate standardized hypridle.conf content with Lua & standard DPMS dispatchers."""
         lines = [
             "# =============================================================================",
             "# Hypridle Configuration - Hyprland Idle Daemon",
@@ -411,7 +442,7 @@ class IdleController:
             "general {",
             "    lock_cmd = pidof hyprlock || hyprlock       # Command to run on dbus lock-session",
             "    before_sleep_cmd = loginctl lock-session    # Lock before suspend",
-            "    after_sleep_cmd = hyprctl dispatch dpms on  # Turn display back on after resume",
+            "    after_sleep_cmd = hyprctl dispatch 'hl.dsp.dpms(\"on\")' 2>/dev/null || hyprctl dispatch dpms on  # Turn display back on after resume",
             f"    ignore_dbus_inhibit = {'true' if ignore_dbus_inhibit else 'false'}                 # Respect media players inhibiting idle",
             "}",
             ""
@@ -446,8 +477,8 @@ class IdleController:
                 f"# 3. Turn off displays (DPMS) after {dpms_timeout}s ({dpms_timeout//60}m {dpms_timeout%60}s)",
                 "listener {",
                 f"    timeout = {dpms_timeout}",
-                "    on-timeout = hyprctl dispatch dpms off",
-                "    on-resume = hyprctl dispatch dpms on",
+                "    on-timeout = hyprctl dispatch 'hl.dsp.dpms(\"off\")' 2>/dev/null || hyprctl dispatch dpms off",
+                "    on-resume = hyprctl dispatch 'hl.dsp.dpms(\"on\")' 2>/dev/null || hyprctl dispatch dpms on",
                 "}",
                 ""
             ])
@@ -504,19 +535,32 @@ class IdleController:
 
     # Immediate actions
     @staticmethod
+    def _dispatch_hypr(action):
+        """Execute Hyprland DPMS dispatcher with Lua & standard fallbacks."""
+        # 1. Try Hyprland Lua dispatcher
+        lua_cmd = ["hyprctl", "dispatch", f'hl.dsp.dpms("{action}")']
+        res = subprocess.run(lua_cmd, capture_output=True, text=True)
+        if "ok" in res.stdout:
+            return True
+        # 2. Fallback to standard Hyprland legacy dispatcher
+        std_cmd = ["hyprctl", "dispatch", "dpms", action]
+        res_std = subprocess.run(std_cmd, capture_output=True, text=True)
+        return "ok" in res_std.stdout
+
+    @staticmethod
     def turn_off_monitors():
         """Immediately turn off monitor via DPMS."""
-        subprocess.run(["hyprctl", "dispatch", "dpms", "off"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return IdleController._dispatch_hypr("off")
 
     @staticmethod
     def turn_on_monitors():
         """Turn on monitors via DPMS."""
-        subprocess.run(["hyprctl", "dispatch", "dpms", "on"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return IdleController._dispatch_hypr("on")
 
     @staticmethod
     def toggle_monitors():
         """Toggle monitor power state via DPMS."""
-        subprocess.run(["hyprctl", "dispatch", "dpms", "toggle"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return IdleController._dispatch_hypr("toggle")
 
     @staticmethod
     def lock_screen():
@@ -1084,20 +1128,33 @@ def show_gui():
     # Event Handlers & Signals
     # =========================================================================
 
+    scale_debounce_timer = [None]
+    updating_switch_ui = [False]
+
+    def _apply_debounced_temp(target_val):
+        if sunset_switch.get_active():
+            SunsetController.start(target_val, silent=True)
+        else:
+            SunsetController.set_temperature(target_val, silent=True)
+        scale_debounce_timer[0] = None
+        return False
+
     def on_temp_scale_changed(scale):
         val = int(scale.get_value())
         slider_val_lbl.set_markup(f"<b>{val}K</b>")
-        if sunset_switch.get_active():
-            SunsetController.start(val, silent=True)
-        else:
-            SunsetController.set_temperature(val, silent=True)
+        if scale_debounce_timer[0] is not None:
+            GLib.source_remove(scale_debounce_timer[0])
+        scale_debounce_timer[0] = GLib.timeout_add(150, _apply_debounced_temp, val)
 
     temp_scale.connect("value-changed", on_temp_scale_changed)
 
     def on_sunset_switch_toggled(sw, gparam):
+        if updating_switch_ui[0]:
+            return
         active = sw.get_active()
+        target_temp = int(temp_scale.get_value())
         if active:
-            SunsetController.start(int(temp_scale.get_value()))
+            SunsetController.start(target_temp)
         else:
             SunsetController.stop()
 
@@ -1117,7 +1174,8 @@ def show_gui():
     caffeine_btn.connect("clicked", on_caffeine_clicked)
 
     def on_turn_off_now_clicked(btn):
-        IdleController.turn_off_monitors()
+        # Brief delay so mouse button release does not cancel DPMS sleep immediately
+        threading.Timer(0.35, IdleController.turn_off_monitors).start()
 
     turn_off_now_btn.connect("clicked", on_turn_off_now_clicked)
 
@@ -1139,12 +1197,40 @@ def show_gui():
             suspend_timeout=suspend_s
         )
 
+        target_temp = int(temp_scale.get_value())
         if sunset_switch.get_active():
-            SunsetController.start(int(temp_scale.get_value()))
+            SunsetController.start(target_temp, silent=True)
         else:
-            SunsetController.stop()
+            SunsetController.stop(silent=True)
+
+        notify("💾 Settings Saved", "Display idle timeouts and Night Light preferences applied.", "document-save")
 
     apply_btn.connect("clicked", on_apply_clicked)
+
+    def sync_ui_state():
+        """Periodic real-time UI state synchronization."""
+        # 1. Night Light switch state
+        is_nl_active = SunsetController.is_active()
+        if sunset_switch.get_active() != is_nl_active:
+            updating_switch_ui[0] = True
+            sunset_switch.set_active(is_nl_active)
+            updating_switch_ui[0] = False
+
+        # 2. Caffeine button state
+        is_caff = IdleController.is_caffeine_active()
+        classes = caffeine_btn.get_style_context().list_classes()
+        if is_caff and "action-btn" in classes:
+            caffeine_btn.set_label("☕ Caffeine: ACTIVE")
+            caffeine_btn.get_style_context().remove_class("action-btn")
+            caffeine_btn.get_style_context().add_class("caffeine-active")
+        elif not is_caff and "caffeine-active" in classes:
+            caffeine_btn.set_label("☕ Caffeine: OFF")
+            caffeine_btn.get_style_context().remove_class("caffeine-active")
+            caffeine_btn.get_style_context().add_class("action-btn")
+
+        return True
+
+    GLib.timeout_add(1000, sync_ui_state)
 
     # Key press handler for Escape key dismissal
     def on_key_press(widget, event):

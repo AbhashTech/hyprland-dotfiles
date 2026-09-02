@@ -11,6 +11,8 @@ hl.config({
         animate_manual_resizes  = false, -- Reduces GPU overhead during manual resizing
         animate_mouse_windowdragging = false, -- Reduces latency/GPU load during window drags
         vrr                     = 1,     -- Enable Variable Refresh Rate / Adaptive Sync (0=off, 1=on, 2=fullscreen only)
+        mouse_move_enables_dpms = true,  -- Wake displays automatically on mouse movement
+        key_press_enables_dpms  = true,  -- Wake displays automatically on keyboard key press
     },
     render = {
         direct_scanout = true,           -- Zero-latency direct scanout for fullscreen apps and games
