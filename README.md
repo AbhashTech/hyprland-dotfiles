@@ -300,10 +300,15 @@ The dotfiles include a dedicated **Display Power, Monitor Turn-Off & Night Light
     - 🕯️ **Candlelight** (`2500K` - Late-night amber tint)
     - 🔴 **Deep Ember** (`1800K` - Pitch-dark bedtime mode)
   - Automatic state persistence across desktop reboots.
+- **Night Light Scheduling & Solar Location Engine**:
+  - **⏰ Custom Time Schedule**: Set fixed daily turn-on and turn-off hours (e.g. `20:00` to `06:30`).
+  - **📍 Solar Sunset-to-Sunrise (Location)**: Automatically turns Night Light on at sunset and off at sunrise based on real geographic coordinates.
+  - **🛰️ 1-Click IP Geolocation**: Auto-detects your city coordinates with a single click in the GUI or via `--auto-location`.
+  - **🔄 Background Daemon**: Evaluates scheduling rules every minute and transitions color temperatures smoothly without user intervention.
 - **Hypridle & Display Power Engine**:
   - **Configurable Monitor Turn-Off Timeout (DPMS)**: Configure idle monitor power-off timeout directly from the GUI or quick menu (`1m`, `2m`, `2.5m`, `5m`, `10m`, `15m`, `30m`, `1h`, `Never / Disabled`, or custom seconds).
   - **Idle Lock, Dimming & Suspend Synchronization**: Configure and sync screen dimming (`brightnessctl`), screen lock (`hyprlock`), and system sleep timeouts directly into `~/.config/hypr/hypridle.conf` with automatic daemon reloading.
-  - **Instant Display Turn-Off**: Power down display panels immediately (`hyprctl dispatch dpms off`) — wake up instantly with mouse or keyboard movement.
+  - **Instant Display Turn-Off**: Power down display panels immediately (`hyprctl dispatch dpms off`) — wake up instantly on mouse movement or keyboard key press.
   - **☕ Caffeine / Idle Inhibit Mode**: 1-click toggle to prevent monitors from turning off, dimming, or sleeping during movies, presentations, or long compiles.
 - **Access Modes**:
   - **GTK3 Control Center GUI**: Press **`SUPER + ALT + I`** or launch from application menu.
@@ -315,6 +320,10 @@ The dotfiles include a dedicated **Display Power, Monitor Turn-Off & Night Light
     python3 ~/.config/hypr/scripts/sunset_idle_manager.py --menu                     # Launch Fuzzel/Wofi interactive menu
     python3 ~/.config/hypr/scripts/sunset_idle_manager.py --sunset-toggle            # Toggle Night Light On/Off
     python3 ~/.config/hypr/scripts/sunset_idle_manager.py --set-temp 3800            # Set Night Light temperature to 3800K
+    python3 ~/.config/hypr/scripts/sunset_idle_manager.py --schedule-mode location   # Enable Solar Sunset/Sunrise auto-schedule
+    python3 ~/.config/hypr/scripts/sunset_idle_manager.py --auto-location            # Auto-detect coordinates via IP
+    python3 ~/.config/hypr/scripts/sunset_idle_manager.py --schedule-mode custom --schedule-on 21:00 --schedule-off 06:30
+    python3 ~/.config/hypr/scripts/sunset_idle_manager.py --daemon                   # Run background scheduler daemon
     python3 ~/.config/hypr/scripts/sunset_idle_manager.py --dpms-off                 # Turn off displays immediately
     python3 ~/.config/hypr/scripts/sunset_idle_manager.py --set-dpms-timeout 300     # Set monitor turn-off to 5 minutes
     python3 ~/.config/hypr/scripts/sunset_idle_manager.py --caffeine-toggle          # Toggle Caffeine mode

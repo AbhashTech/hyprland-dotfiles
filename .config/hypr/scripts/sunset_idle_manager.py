@@ -18,11 +18,14 @@ import sys
 import re
 import json
 import time
+import math
 import signal
 import shutil
+import datetime
 import argparse
 import subprocess
 import threading
+import urllib.request
 from pathlib import Path
 
 # Paths
@@ -33,6 +36,7 @@ STATE_FILE = STATE_DIR / "sunset_idle_state.json"
 NIGHTLIGHT_PID_FILE = Path("/tmp/hypr_nightlight.pid")
 NIGHTLIGHT_STATE_FILE = Path("/tmp/hypr_nightlight.state")
 CAFFEINE_PID_FILE = Path("/tmp/hypr_caffeine.pid")
+DAEMON_PID_FILE = Path("/tmp/hypr_sunset_daemon.pid")
 APPLICATIONS_DIR = Path.home() / ".local" / "share" / "applications"
 
 DEFAULT_WARM_TEMP = 3800
@@ -109,12 +113,19 @@ def load_state():
     if STATE_FILE.exists():
         try:
             with open(STATE_FILE, "r") as f:
-                return json.load(f)
+                data = json.load(f)
+                return data
         except Exception:
             pass
     return {
         "sunset_enabled": False,
         "sunset_temp": DEFAULT_WARM_TEMP,
+        "schedule_mode": "manual",  # "manual" | "custom" | "location"
+        "schedule_on": "20:00",
+        "schedule_off": "06:30",
+        "latitude": 18.52,
+        "longitude": 73.85,
+        "location_name": "Auto / Pune, India",
         "caffeine_enabled": False,
         "dpms_timeout": 330,
         "lock_timeout": 300,
@@ -360,6 +371,136 @@ class SunsetController:
             SunsetController.start(temp, silent=silent)
         elif not silent:
             notify("⚙️ Night Light Preset Updated", f"Target temperature set to <b>{temp}K</b> (Currently Disabled).", "preferences-desktop-display")
+
+
+# =============================================================================
+# Night Light Schedule & Solar Location Manager
+# =============================================================================
+
+class ScheduleManager:
+    @staticmethod
+    def calculate_sun_times(lat, lon, date=None):
+        """Calculate sunrise and sunset times (local time) for given latitude and longitude."""
+        if date is None:
+            date = datetime.date.today()
+        day_of_year = date.timetuple().tm_yday
+        gamma = 2 * math.pi / 365 * (day_of_year - 1)
+        eqtime = 229.18 * (0.000075 + 0.001868 * math.cos(gamma) - 0.032077 * math.sin(gamma) - 0.014615 * math.cos(2 * gamma) - 0.040849 * math.sin(2 * gamma))
+        decl = 0.006918 - 0.399912 * math.cos(gamma) + 0.070257 * math.sin(gamma) - 0.006758 * math.cos(2 * gamma) + 0.000907 * math.sin(2 * gamma) - 0.002697 * math.cos(3 * gamma) + 0.00148 * math.sin(3 * gamma)
+
+        lat_rad = math.radians(float(lat))
+        zenith_rad = math.radians(90.833)  # Official solar zenith with atmospheric refraction
+
+        cos_ha = (math.cos(zenith_rad) / (math.cos(lat_rad) * math.cos(decl))) - (math.tan(lat_rad) * math.tan(decl))
+        if cos_ha > 1.0 or cos_ha < -1.0:
+            return None, None  # Polar day / night
+
+        ha = math.degrees(math.acos(cos_ha))
+        sunrise_utc_min = 720 - 4 * (float(lon) + ha) - eqtime
+        sunset_utc_min = 720 - 4 * (float(lon) - ha) - eqtime
+
+        now = datetime.datetime.now()
+        utc_now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+        tz_offset = (now - utc_now).total_seconds() / 60.0
+
+        sunrise_local_min = (sunrise_utc_min + tz_offset) % 1440
+        sunset_local_min = (sunset_utc_min + tz_offset) % 1440
+
+        sunrise_time = datetime.time(int(sunrise_local_min // 60), int(sunrise_local_min % 60))
+        sunset_time = datetime.time(int(sunset_local_min // 60), int(sunset_local_min % 60))
+        return sunrise_time, sunset_time
+
+    @staticmethod
+    def auto_detect_location():
+        """Auto-detect geographic coordinates and city via free IP geolocation."""
+        endpoints = [
+            ("http://ip-api.com/json/?fields=status,country,city,lat,lon", lambda d: (d.get("lat"), d.get("lon"), f"{d.get('city', '')}, {d.get('country', '')}".strip(", ")) if d.get("status") == "success" else None),
+            ("https://ipapi.co/json/", lambda d: (d.get("latitude"), d.get("longitude"), f"{d.get('city', '')}, {d.get('country_name', '')}".strip(", ")) if "latitude" in d else None)
+        ]
+        for url, parser in endpoints:
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "SunsetIdleManager/1.0"})
+                with urllib.request.urlopen(req, timeout=4) as resp:
+                    data = json.loads(resp.read().decode())
+                    res = parser(data)
+                    if res and res[0] is not None and res[1] is not None:
+                        return float(res[0]), float(res[1]), res[2]
+            except Exception:
+                continue
+        return None, None, None
+
+    @staticmethod
+    def is_time_in_range(start_time, end_time, current_time=None):
+        """Check if current time is within [start_time, end_time] accounting for midnight wrap."""
+        if current_time is None:
+            current_time = datetime.datetime.now().time()
+        if start_time < end_time:
+            return start_time <= current_time <= end_time
+        else:
+            # Over midnight (e.g. 20:00 to 06:30)
+            return current_time >= start_time or current_time <= end_time
+
+    @staticmethod
+    def should_nightlight_be_active(state=None):
+        """Determine if night light should currently be active according to schedule rules."""
+        if state is None:
+            state = load_state()
+
+        mode = state.get("schedule_mode", "manual")
+        if mode == "manual":
+            return state.get("sunset_enabled", False), "manual"
+
+        now_time = datetime.datetime.now().time()
+
+        if mode == "custom":
+            on_str = state.get("schedule_on", "20:00")
+            off_str = state.get("schedule_off", "06:30")
+            try:
+                on_h, on_m = map(int, on_str.split(":"))
+                off_h, off_m = map(int, off_str.split(":"))
+                start_t = datetime.time(on_h, on_m)
+                end_t = datetime.time(off_h, off_m)
+                active = ScheduleManager.is_time_in_range(start_t, end_t, now_time)
+                return active, f"custom ({on_str} - {off_str})"
+            except Exception:
+                return False, "invalid_custom_time"
+
+        elif mode == "location":
+            lat = state.get("latitude")
+            lon = state.get("longitude")
+            if lat is None or lon is None:
+                lat, lon, loc_name = ScheduleManager.auto_detect_location()
+                if lat is not None and lon is not None:
+                    state["latitude"] = lat
+                    state["longitude"] = lon
+                    state["location_name"] = loc_name or "Auto Location"
+                    save_state(state)
+
+            if lat is not None and lon is not None:
+                s_rise, s_set = ScheduleManager.calculate_sun_times(lat, lon)
+                if s_rise and s_set:
+                    # Night light is ON from sunset to sunrise
+                    active = ScheduleManager.is_time_in_range(s_set, s_rise, now_time)
+                    return active, f"solar (Sunset {s_set.strftime('%H:%M')} - Sunrise {s_rise.strftime('%H:%M')})"
+
+        return False, "unknown"
+
+    @staticmethod
+    def evaluate_and_apply(silent=True):
+        """Evaluate schedule and apply night light status."""
+        state = load_state()
+        mode = state.get("schedule_mode", "manual")
+        if mode == "manual":
+            return
+
+        should_be_on, reason = ScheduleManager.should_nightlight_be_active(state)
+        target_temp = state.get("sunset_temp", DEFAULT_WARM_TEMP)
+        is_currently_active = SunsetController.is_active()
+
+        if should_be_on and not is_currently_active:
+            SunsetController.start(target_temp, silent=silent)
+        elif not should_be_on and is_currently_active:
+            SunsetController.stop(silent=silent)
 
 
 # =============================================================================
@@ -631,13 +772,14 @@ def show_menu():
     sunset_active = SunsetController.is_active()
     current_temp = SunsetController.get_current_temp()
     caffeine_active = IdleController.is_caffeine_active()
-    idle_config = IdleController.parse_config()
-    dpms_time = idle_config.get("dpms_timeout", 330)
-    dpms_label = f"{dpms_time//60}m {dpms_time%60}s" if dpms_time > 0 else "Never (Disabled)"
+    state = load_state()
+    sched_mode = state.get("schedule_mode", "manual")
+    sched_label = "Manual" if sched_mode == "manual" else ("Custom Times" if sched_mode == "custom" else "Solar / Location")
 
     menu_items = [
         f"🌙 Toggle Night Light ({'ON' if sunset_active else 'OFF'} • {current_temp}K)",
         f"🌡️  Set Night Light Temperature...",
+        f"⏰ Configure Night Light Schedule (Mode: {sched_label})...",
         f"⏱️  Set Monitor Turn-Off Timeout (Currently: {dpms_label})...",
         f"🔒 Set Screen Lock Timeout (Currently: {idle_config.get('lock_timeout', 300)}s)...",
         f"🖥️  Turn Off Displays Now (DPMS Off)",
@@ -666,6 +808,63 @@ def show_menu():
                 k_val = t_choice.split("K")[0].strip()
                 if k_val.isdigit():
                     SunsetController.set_temperature(int(k_val))
+    elif "Configure Night Light Schedule" in choice:
+        sched_items = [
+            "1. Manual (Disabled / Controlled Manually)",
+            "2. Custom Schedule (Fixed Time Range)",
+            "3. Solar Sunset to Sunrise (Location Coordinates)"
+        ]
+        s_choice = prompt_menu(launcher, sched_items, "Night Light Schedule Mode")
+        if s_choice:
+            state = load_state()
+            if "1. Manual" in s_choice:
+                state["schedule_mode"] = "manual"
+                save_state(state)
+                notify("⏰ Schedule Updated", "Night Light schedule set to Manual mode.", "preferences-desktop-display")
+            elif "2. Custom" in s_choice:
+                on_t = prompt_input(launcher, "Enter Turn-On Time (HH:MM e.g. 20:00):", state.get("schedule_on", "20:00"))
+                off_t = prompt_input(launcher, "Enter Turn-Off Time (HH:MM e.g. 06:30):", state.get("schedule_off", "06:30"))
+                if on_t and off_t:
+                    state["schedule_mode"] = "custom"
+                    state["schedule_on"] = on_t
+                    state["schedule_off"] = off_t
+                    save_state(state)
+                    ScheduleManager.evaluate_and_apply(silent=False)
+                    notify("⏰ Custom Schedule Saved", f"Night Light active from <b>{on_t}</b> to <b>{off_t}</b>.", "preferences-desktop-display")
+            elif "3. Solar" in s_choice:
+                loc_opts = [
+                    "📍 Auto-Detect Location via IP",
+                    "✏️  Enter Latitude & Longitude Manually"
+                ]
+                loc_choice = prompt_menu(launcher, loc_opts, "Location Setup")
+                if loc_choice:
+                    if "Auto-Detect" in loc_choice:
+                        lat, lon, loc_name = ScheduleManager.auto_detect_location()
+                        if lat is not None and lon is not None:
+                            state["schedule_mode"] = "location"
+                            state["latitude"] = lat
+                            state["longitude"] = lon
+                            state["location_name"] = loc_name or "Auto Location"
+                            save_state(state)
+                            s_rise, s_set = ScheduleManager.calculate_sun_times(lat, lon)
+                            ScheduleManager.evaluate_and_apply(silent=False)
+                            notify("📍 Location Configured", f"Location: <b>{loc_name}</b>\nSunset: <b>{s_set.strftime('%H:%M')}</b> | Sunrise: <b>{s_rise.strftime('%H:%M')}</b>", "mark-location")
+                        else:
+                            notify("❌ Error", "Could not detect location via IP.", "dialog-error")
+                    elif "Manually" in loc_choice:
+                        lat_in = prompt_input(launcher, "Enter Latitude (e.g. 18.52):", str(state.get("latitude", "18.52")))
+                        lon_in = prompt_input(launcher, "Enter Longitude (e.g. 73.85):", str(state.get("longitude", "73.85")))
+                        if lat_in and lon_in:
+                            try:
+                                state["schedule_mode"] = "location"
+                                state["latitude"] = float(lat_in)
+                                state["longitude"] = float(lon_in)
+                                save_state(state)
+                                s_rise, s_set = ScheduleManager.calculate_sun_times(float(lat_in), float(lon_in))
+                                ScheduleManager.evaluate_and_apply(silent=False)
+                                notify("📍 Location Saved", f"Solar Sunset: <b>{s_set.strftime('%H:%M')}</b> | Sunrise: <b>{s_rise.strftime('%H:%M')}</b>", "mark-location")
+                            except Exception as e:
+                                notify("❌ Error", f"Invalid coordinates: {e}", "dialog-error")
     elif "Set Monitor Turn-Off Timeout" in choice:
         dpms_items = [f"{label} ({sec}s)" if sec > 0 else label for sec, label in DPMS_TIMEOUT_PRESETS]
         dpms_items.append("Custom Timeout in Seconds...")
@@ -915,6 +1114,21 @@ def show_gui():
         color: {accent_fg};
         border-radius: 6px;
     }}
+    entry {{
+        background-color: {c_surface0};
+        color: {c_text};
+        border-radius: 8px;
+        border: 1px solid {c_surface1};
+        padding: 5px 8px;
+        font-weight: 600;
+    }}
+    entry:focus {{
+        border-color: {c_accent};
+    }}
+    separator {{
+        background-color: {c_surface0};
+        min-height: 1px;
+    }}
     """
     css_provider = Gtk.CssProvider()
     css_provider.load_from_data(css.encode())
@@ -1010,6 +1224,126 @@ def show_gui():
         btn.connect("clicked", on_preset_click)
         presets_box.pack_start(btn, True, True, 0)
     sunset_card.pack_start(presets_box, False, False, 0)
+
+    # Schedule Section
+    sched_sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+    sunset_card.pack_start(sched_sep, False, False, 6)
+
+    sched_hdr_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    sched_title = Gtk.Label(xalign=0)
+    sched_title.set_markup(f"<b>⏰ Auto Schedule:</b>")
+    sched_hdr_box.pack_start(sched_title, True, True, 0)
+
+    sched_mode_combo = Gtk.ComboBoxText()
+    sched_mode_combo.append("manual", "Manual (Controlled Manually)")
+    sched_mode_combo.append("custom", "Custom Hours (Fixed Times)")
+    sched_mode_combo.append("location", "Solar Sunset to Sunrise (Location)")
+    
+    current_state = load_state()
+    sched_mode_combo.set_active_id(current_state.get("schedule_mode", "manual"))
+    sched_hdr_box.pack_end(sched_mode_combo, False, False, 0)
+    sunset_card.pack_start(sched_hdr_box, False, False, 0)
+
+    # 1. Custom Time Container Box
+    custom_time_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+    on_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+    on_lbl = Gtk.Label(label="Turn On At:", xalign=0)
+    on_entry = Gtk.Entry()
+    on_entry.set_text(current_state.get("schedule_on", "20:00"))
+    on_entry.set_max_length(5)
+    on_entry.set_width_chars(6)
+    on_entry.set_placeholder_text("20:00")
+    on_box.pack_start(on_lbl, False, False, 0)
+    on_box.pack_start(on_entry, False, False, 0)
+    custom_time_box.pack_start(on_box, True, True, 0)
+
+    off_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+    off_lbl = Gtk.Label(label="Turn Off At:", xalign=0)
+    off_entry = Gtk.Entry()
+    off_entry.set_text(current_state.get("schedule_off", "06:30"))
+    off_entry.set_max_length(5)
+    off_entry.set_width_chars(6)
+    off_entry.set_placeholder_text("06:30")
+    off_box.pack_start(off_lbl, False, False, 0)
+    off_box.pack_start(off_entry, False, False, 0)
+    custom_time_box.pack_start(off_box, True, True, 0)
+    sunset_card.pack_start(custom_time_box, False, False, 0)
+
+    # 2. Location Container Box
+    location_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+    loc_inputs_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+    
+    lat_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+    lat_lbl = Gtk.Label(label="Latitude:", xalign=0)
+    lat_entry = Gtk.Entry()
+    lat_entry.set_text(str(current_state.get("latitude", 18.52)))
+    lat_entry.set_width_chars(8)
+    lat_box.pack_start(lat_lbl, False, False, 0)
+    lat_box.pack_start(lat_entry, False, False, 0)
+    loc_inputs_box.pack_start(lat_box, True, True, 0)
+
+    lon_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+    lon_lbl = Gtk.Label(label="Longitude:", xalign=0)
+    lon_entry = Gtk.Entry()
+    lon_entry.set_text(str(current_state.get("longitude", 73.85)))
+    lon_entry.set_width_chars(8)
+    lon_box.pack_start(lon_lbl, False, False, 0)
+    lon_box.pack_start(lon_entry, False, False, 0)
+    loc_inputs_box.pack_start(lon_box, True, True, 0)
+
+    detect_loc_btn = Gtk.Button(label="📍 Auto-Detect")
+    detect_loc_btn.get_style_context().add_class("action-btn")
+    detect_loc_btn.set_tooltip_text("Auto-detect coordinates via IP geolocation")
+    loc_inputs_box.pack_end(detect_loc_btn, False, False, 0)
+    location_box.pack_start(loc_inputs_box, False, False, 0)
+
+    # Solar times badge
+    solar_info_lbl = Gtk.Label(xalign=0)
+    def update_solar_info_label(lat_v, lon_v, loc_name=None):
+        try:
+            s_rise, s_set = ScheduleManager.calculate_sun_times(float(lat_v), float(lon_v))
+            if s_rise and s_set:
+                loc_str = f" ({loc_name})" if loc_name else ""
+                solar_info_lbl.set_markup(
+                    f"<span size='small' color='{colors.get('peach', '#fab387')}'>☀️ Solar times today{loc_str}: <b>Sunrise {s_rise.strftime('%H:%M')}</b> • <b>Sunset {s_set.strftime('%H:%M')}</b></span>"
+                )
+            else:
+                solar_info_lbl.set_markup("<span size='small' color='{colors.get('subtext0', '#a6adc8')}'>Polar day/night region</span>")
+        except Exception:
+            solar_info_lbl.set_markup("<span size='small' color='{colors.get('red', '#f38ba8')}'>Invalid coordinates</span>")
+
+    update_solar_info_label(lat_entry.get_text(), lon_entry.get_text(), current_state.get("location_name"))
+    location_box.pack_start(solar_info_lbl, False, False, 0)
+    sunset_card.pack_start(location_box, False, False, 0)
+
+    def on_sched_mode_changed(combo):
+        m = combo.get_active_id()
+        custom_time_box.set_visible(m == "custom")
+        location_box.set_visible(m == "location")
+
+    sched_mode_combo.connect("changed", on_sched_mode_changed)
+    on_sched_mode_changed(sched_mode_combo)
+
+    def on_detect_loc_clicked(btn):
+        btn.set_label("📍 Detecting...")
+        btn.set_sensitive(False)
+        def _bg_detect():
+            lat_res, lon_res, name_res = ScheduleManager.auto_detect_location()
+            def _apply_ui():
+                btn.set_label("📍 Auto-Detect")
+                btn.set_sensitive(True)
+                if lat_res is not None and lon_res is not None:
+                    lat_entry.set_text(f"{lat_res:.4f}")
+                    lon_entry.set_text(f"{lon_res:.4f}")
+                    update_solar_info_label(lat_res, lon_res, name_res)
+                    notify("📍 Location Detected", f"Found coordinates: <b>{name_res}</b> ({lat_res:.2f}, {lon_res:.2f})", "mark-location")
+                else:
+                    notify("❌ Location Error", "Could not detect location via IP. Please enter coordinates manually.", "dialog-error")
+                return False
+            GLib.idle_add(_apply_ui)
+        threading.Thread(target=_bg_detect, daemon=True).start()
+
+    detect_loc_btn.connect("clicked", on_detect_loc_clicked)
 
     content_vbox.pack_start(sunset_card, False, False, 0)
 
@@ -1197,13 +1531,29 @@ def show_gui():
             suspend_timeout=suspend_s
         )
 
+        m = sched_mode_combo.get_active_id() or "manual"
+        state = load_state()
+        state["schedule_mode"] = m
+        state["schedule_on"] = on_entry.get_text().strip() or "20:00"
+        state["schedule_off"] = off_entry.get_text().strip() or "06:30"
+        try:
+            state["latitude"] = float(lat_entry.get_text().strip())
+            state["longitude"] = float(lon_entry.get_text().strip())
+        except Exception:
+            pass
         target_temp = int(temp_scale.get_value())
-        if sunset_switch.get_active():
-            SunsetController.start(target_temp, silent=True)
-        else:
-            SunsetController.stop(silent=True)
+        state["sunset_temp"] = target_temp
+        save_state(state)
 
-        notify("💾 Settings Saved", "Display idle timeouts and Night Light preferences applied.", "document-save")
+        if m != "manual":
+            ScheduleManager.evaluate_and_apply(silent=False)
+            notify("💾 Settings & Schedule Saved", f"Schedule mode: <b>{m.title()}</b> applied.", "document-save")
+        else:
+            if sunset_switch.get_active():
+                SunsetController.start(target_temp, silent=True)
+            else:
+                SunsetController.stop(silent=True)
+            notify("💾 Settings Saved", "Display idle timeouts and Night Light preferences applied.", "document-save")
 
     apply_btn.connect("clicked", on_apply_clicked)
 
@@ -1247,8 +1597,46 @@ def show_gui():
 
 
 # =============================================================================
-# CLI Entrypoint & Argument Parser
+# Background Daemon & CLI Entrypoint
 # =============================================================================
+
+def run_daemon():
+    """Run persistent background scheduler daemon."""
+    # Check if another daemon is already running
+    if DAEMON_PID_FILE.exists():
+        try:
+            old_pid = int(DAEMON_PID_FILE.read_text().strip())
+            if old_pid != os.getpid():
+                os.kill(old_pid, 0)
+                print(f"Sunset scheduler daemon is already active (PID {old_pid}). Exiting.")
+                return
+        except Exception:
+            pass
+
+    DAEMON_PID_FILE.write_text(str(os.getpid()))
+
+    def _cleanup_daemon(*args):
+        DAEMON_PID_FILE.unlink(missing_ok=True)
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, _cleanup_daemon)
+    signal.signal(signal.SIGTERM, _cleanup_daemon)
+
+    print("Sunset & Idle Manager background scheduler daemon running...", flush=True)
+
+    # Initial check on launch
+    try:
+        ScheduleManager.evaluate_and_apply(silent=True)
+    except Exception as e:
+        print(f"Initial schedule error: {e}", file=sys.stderr)
+
+    while True:
+        time.sleep(60)
+        try:
+            ScheduleManager.evaluate_and_apply(silent=True)
+        except Exception as e:
+            print(f"Schedule evaluation error: {e}", file=sys.stderr)
+
 
 def get_status_json():
     """Return complete status dictionary."""
@@ -1256,11 +1644,38 @@ def get_status_json():
     sunset_temp = SunsetController.get_current_temp()
     caffeine = IdleController.is_caffeine_active()
     idle_config = IdleController.parse_config()
+    state = load_state()
+    sched_mode = state.get("schedule_mode", "manual")
+    should_be_active, reason = ScheduleManager.should_nightlight_be_active(state)
+
+    solar_times = {}
+    if state.get("latitude") is not None and state.get("longitude") is not None:
+        try:
+            s_rise, s_set = ScheduleManager.calculate_sun_times(state["latitude"], state["longitude"])
+            if s_rise and s_set:
+                solar_times = {
+                    "sunrise": s_rise.strftime("%H:%M"),
+                    "sunset": s_set.strftime("%H:%M")
+                }
+        except Exception:
+            pass
+
     return {
         "sunset": {
             "active": sunset_active,
             "temperature_k": sunset_temp,
             "pid": SunsetController.get_pid()
+        },
+        "schedule": {
+            "mode": sched_mode,
+            "custom_on": state.get("schedule_on", "20:00"),
+            "custom_off": state.get("schedule_off", "06:30"),
+            "latitude": state.get("latitude"),
+            "longitude": state.get("longitude"),
+            "location_name": state.get("location_name"),
+            "solar_times_today": solar_times,
+            "should_be_active_now": should_be_active,
+            "rule_reason": reason
         },
         "hypridle": {
             "running": IdleController.is_running(),
@@ -1283,6 +1698,10 @@ Examples:
   sunset_idle_manager.py --menu                     # Launch Fuzzel/Wofi interactive menu
   sunset_idle_manager.py --sunset-toggle            # Toggle Night Light On/Off
   sunset_idle_manager.py --set-temp 3800            # Set Night Light temperature to 3800K
+  sunset_idle_manager.py --schedule-mode location   # Enable Solar Sunset/Sunrise auto-schedule
+  sunset_idle_manager.py --auto-location            # Auto-detect coordinates via IP geolocation
+  sunset_idle_manager.py --schedule-mode custom --schedule-on 21:00 --schedule-off 07:00
+  sunset_idle_manager.py --daemon                   # Run background schedule evaluator daemon
   sunset_idle_manager.py --dpms-off                 # Immediately turn off all displays
   sunset_idle_manager.py --set-dpms-timeout 300     # Set idle monitor turn-off to 5 minutes
   sunset_idle_manager.py --caffeine-toggle          # Toggle Caffeine mode (inhibit sleep/turn off)
@@ -1296,6 +1715,18 @@ Examples:
     parser.add_argument("--sunset-on", action="store_true", help="Turn on Hyprsunset night light")
     parser.add_argument("--sunset-off", action="store_true", help="Turn off Hyprsunset night light")
     parser.add_argument("--set-temp", type=int, metavar="KELVIN", help="Set color temperature (1000 - 6500K)")
+    
+    # Schedule options
+    parser.add_argument("--schedule-mode", choices=["manual", "custom", "location"], help="Set Night Light schedule mode")
+    parser.add_argument("--schedule-on", metavar="HH:MM", help="Set custom schedule start time (e.g. 20:00)")
+    parser.add_argument("--schedule-off", metavar="HH:MM", help="Set custom schedule stop time (e.g. 06:30)")
+    parser.add_argument("--schedule-lat", type=float, metavar="LAT", help="Set geographic latitude")
+    parser.add_argument("--schedule-lon", type=float, metavar="LON", help="Set geographic longitude")
+    parser.add_argument("--auto-location", action="store_true", help="Auto-detect latitude and longitude via IP geolocation")
+    parser.add_argument("--check-schedule", action="store_true", help="Evaluate schedule rules and apply state once")
+    parser.add_argument("--daemon", action="store_true", help="Run persistent background scheduler daemon")
+
+    # DPMS & Idle options
     parser.add_argument("--dpms-off", action="store_true", help="Turn off monitor immediately (DPMS off)")
     parser.add_argument("--dpms-on", action="store_true", help="Turn on monitor (DPMS on)")
     parser.add_argument("--dpms-toggle", action="store_true", help="Toggle monitor power (DPMS)")
@@ -1307,13 +1738,66 @@ Examples:
     parser.add_argument("--caffeine-toggle", "--inhibit", action="store_true", help="Toggle Caffeine mode (Inhibit idle & display turn off)")
     parser.add_argument("--restart-idle", action="store_true", help="Restart hypridle daemon")
     parser.add_argument("--status", action="store_true", help="Print current status in JSON")
-    parser.add_argument("--init", action="store_true", help="Initialize sunset according to saved state")
+    parser.add_argument("--init", action="store_true", help="Initialize sunset according to saved state or schedule")
 
     args = parser.parse_args()
 
-    # Handle commands
+    # Handle daemon
+    if args.daemon:
+        run_daemon()
+        return
+
+    # Handle status
     if args.status:
         print(json.dumps(get_status_json(), indent=2))
+        return
+
+    # Handle auto-location
+    if args.auto_location:
+        lat, lon, name = ScheduleManager.auto_detect_location()
+        if lat is not None and lon is not None:
+            state = load_state()
+            state["latitude"] = lat
+            state["longitude"] = lon
+            state["location_name"] = name or "Auto Location"
+            save_state(state)
+            s_rise, s_set = ScheduleManager.calculate_sun_times(lat, lon)
+            print(f"Location Detected: {name} (Lat: {lat:.4f}, Lon: {lon:.4f})")
+            if s_rise and s_set:
+                print(f"Solar Times Today: Sunrise {s_rise.strftime('%H:%M')} | Sunset {s_set.strftime('%H:%M')}")
+            notify("📍 Location Detected", f"<b>{name}</b> ({lat:.2f}, {lon:.2f})", "mark-location")
+        else:
+            print("Failed to auto-detect location.", file=sys.stderr)
+            notify("❌ Error", "Could not detect location via IP.", "dialog-error")
+        return
+
+    # Handle schedule updates
+    schedule_changed = False
+    state = load_state()
+    if args.schedule_mode:
+        state["schedule_mode"] = args.schedule_mode
+        schedule_changed = True
+    if args.schedule_on:
+        state["schedule_on"] = args.schedule_on
+        schedule_changed = True
+    if args.schedule_off:
+        state["schedule_off"] = args.schedule_off
+        schedule_changed = True
+    if args.schedule_lat is not None:
+        state["latitude"] = args.schedule_lat
+        schedule_changed = True
+    if args.schedule_lon is not None:
+        state["longitude"] = args.schedule_lon
+        schedule_changed = True
+
+    if schedule_changed:
+        save_state(state)
+        ScheduleManager.evaluate_and_apply(silent=False)
+        notify("⏰ Schedule Configured", f"Night Light Schedule Mode: <b>{state['schedule_mode'].title()}</b>", "preferences-desktop-display")
+        return
+
+    if args.check_schedule:
+        ScheduleManager.evaluate_and_apply(silent=False)
         return
 
     if args.gui:
@@ -1377,11 +1861,13 @@ Examples:
 
     if args.init:
         state = load_state()
-        if state.get("sunset_enabled", False):
+        if state.get("schedule_mode", "manual") != "manual":
+            ScheduleManager.evaluate_and_apply(silent=True)
+        elif state.get("sunset_enabled", False):
             SunsetController.start(state.get("sunset_temp", DEFAULT_WARM_TEMP), silent=True)
         return
 
-    # Default action if no arguments: launch GUI or menu
+    # Default action if no arguments: launch GUI
     show_gui()
 
 
