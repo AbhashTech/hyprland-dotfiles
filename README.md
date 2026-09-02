@@ -11,20 +11,22 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 ├── install.sh                   # All-in-one dependency installer & symlink deployer (Pacman native)
 ├── .gitignore                   # Exclusions for temporary files & Python cache
 ├── README.md                    # Full documentation and shortcut cheat sheet
-├── sddm/                        # SDDM Catppuccin Mocha Theme Suite
+├── sddm/                        # SDDM Theme Suite (Left-Sidebar Frosted Glass Layout)
 │   ├── test-theme.sh            # Live test-mode theme previewer (Qt6)
 │   ├── scripts/
+│   │   ├── hide-unwanted-apps.sh# App launcher cleaner
 │   │   └── install-theme.sh     # System deployment & /etc/sddm.conf.d activator
 │   └── themes/catppuccin-mocha/ # Full Qt6 QML Theme
 │       ├── Main.qml             # Main greeter entrypoint & SDDM bindings
 │       ├── metadata.desktop     # Theme metadata definition
 │       ├── theme.conf           # User-customizable settings (colors, background, fonts)
-│       ├── components/          # Modular QML components (GlassCard, Clock, Avatar, Password, Session, Power)
-│       └── assets/              # Vector SVG icons & Catppuccin Mocha background wallpaper
+│       ├── components/          # Modular QML components (UsernameField, PasswordField, Clock, PowerMenu, Session)
+│       └── assets/              # Vector SVG icons & custom wallpaper artwork
 └── .config/
     ├── hypr/                    # Hyprland Compositor Config & Scripts
     │   ├── hyprland.lua         # Main modular entrypoint
-    │   ├── hyprlock.conf        # Catppuccin Mocha lockscreen configuration
+    │   ├── hyprlock.conf        # Unified left-sidebar lockscreen configuration
+    │   ├── assets/              # Lockscreen background artwork (lock_bg.jpg)
     │   ├── hypridle.conf        # Screen timeout & idle power management
     │   ├── install.sh           # Standalone Hyprland installer
     │   ├── modules/             # Config modules (animations, keybinds, rules, monitors, input, etc.)
@@ -585,34 +587,49 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 
 ---
 
-## 🎨 Catppuccin Mocha SDDM Theme
+## 🎨 Modern Left-Sidebar SDDM Theme & Hyprlock
 
-A sleek, responsive, and glassmorphic login theme built with Qt6 QML that seamlessly integrates with the desktop aesthetic.
+A sleek, modern split-screen design layout unifying both the **SDDM Display Manager** login screen and the **Hyprlock (`hyprlock.conf`)** lock screen with a full-height left frosted-glass sidebar and un-obscured right background artwork.
 
-### ✨ Highlights
-- **Frosted Glassmorphism**: Translucent floating card (`#181825`) with glowing Mauve (`#cba6f7`) focus borders and dark backdrop vignette.
-- **Dynamic Clock & Greeting**: Real-time 24h/12h digital clock, full date formatting, and contextual greeting based on the time of day.
-- **User Avatar & Profile Switcher**: Circular user avatar with glowing border ring and multi-user dropdown selector.
-- **Password Input**: Modern pill input with reveal/hide password toggle (eye icon), auto-focus, Caps Lock active warning banner, and error shake animation with feedback on failed authentication.
-- **Session Selector**: Wayland / X11 desktop session switcher (Hyprland, etc.) with styled popup list.
-- **Power Menu & Confirmation**: Fast access to Power Off, Restart, Suspend, and Hibernate with safety confirmation modals to prevent accidental shutdowns.
-- **Host & Status Indicator**: System hostname badge and battery monitor.
+### ✨ SDDM Theme Highlights
+- **Left Frosted Sidebar**: Full-height translucent dark sidebar (`rgba(20, 22, 33, 0.82)`) on the left side (~36% width) with a subtle vertical dividing border.
+- **Top Greeting & Live Clock**: Bold `"Welcome!"` greeting, large digital clock (`HH:mm`), and formatted date (`Monday, d of MMMM`).
+- **Username Input**: Pill-outlined input container with a dark user silhouette badge on the left, auto-filled with the current user and supporting multi-user dropdown switching.
+- **Password Input**: Matching pill-outlined container with dot masking, Caps Lock warning banner, and error shake animation on failed authentication.
+- **Show Password Checkbox**: Interactive checkbox toggle to reveal or hide password characters.
+- **Log In Button**: Prominent solid pill button (`#ffffff` / `#e0def4`) with interactive hover and click feedback.
+- **Session Selector**: Clean `"Session: <SessionName>"` dropdown to easily select between Wayland and X11 sessions (e.g. Hyprland).
+- **Power Menu & Confirmation**: Pinned at the bottom with **Suspend**, **Reboot**, and **Shutdown** actions featuring icons, text labels, and safety confirmation modals.
 
-### 🧪 Live Preview / Test Mode
-You can test and preview the SDDM theme in a standalone window without root permissions:
-
+### 🧪 Live Preview & SDDM Deployment
 ```bash
-# Preview using the built-in runner script:
+# Preview SDDM theme in test mode without logging out:
 ~/.dotfiles/sddm/test-theme.sh
 
-# Or directly with sddm-greeter-qt6:
+# Or directly with sddm-greeter-qt6 / qml6:
 sddm-greeter-qt6 --test-mode --theme ~/.dotfiles/sddm/themes/catppuccin-mocha
+qml6 ~/.dotfiles/sddm/themes/catppuccin-mocha/Main.qml
+
+# Install and activate theme systemwide in /usr/share/sddm/themes/:
+~/.dotfiles/sddm/scripts/install-theme.sh
 ```
 
 ### ⚙️ Theme Customization (`sddm/themes/catppuccin-mocha/theme.conf`)
 Modify `~/.dotfiles/sddm/themes/catppuccin-mocha/theme.conf` to customize:
-- `Background`: Path to custom wallpaper (SVG/PNG/JPG)
+- `Background`: Path to custom wallpaper (defaults to `assets/background.jpg`)
 - `FontFamily`: Preferred system font (defaults to `JetBrainsMono Nerd Font`)
 - `ClockFormat` / `DateFormat`: Time and date layout formats
 - `AccentColor`: Primary accent hex color (`#cba6f7`)
 - `ShowSessions` / `ShowPowerButtons` / `ShowGreeting`: Toggle UI component visibility
+
+---
+
+## 🔒 Hyprlock Screen (`~/.config/hypr/hyprlock.conf`)
+
+Hyprland's screen locker is styled with the exact same left-sidebar aesthetic:
+- **Left Frosted Sidebar**: Semi-transparent rectangular panel (`rgba(20, 22, 33, 0.82)`) extending full height on the left.
+- **Welcome & Clock Widgets**: Top `"Welcome!"` greeting with large digital clock (`60px`) and full date.
+- **User & Password Field**: User icon label with a sleek pill-outlined password input field.
+- **Power Status Hints**: Bottom action hints for Suspend, Reboot, and Shutdown.
+- **Lockscreen Shortcut**: Press **`SUPER + L`** or **`SUPER + ALT + L`** to lock the session.
+
