@@ -46,7 +46,6 @@ return {
       "hrsh7th/cmp-nvim-lsp",
     },
     config = function()
-      local lspconfig = require("lspconfig")
       local cmp_nvim_lsp = require("cmp_nvim_lsp")
       local capabilities = cmp_nvim_lsp.default_capabilities()
 
@@ -74,24 +73,28 @@ return {
       end
 
       -- Attach keybindings
-      local on_attach = function(client, bufnr)
-        local map = function(mode, l, r, desc)
-          vim.keymap.set(mode, l, r, { buffer = bufnr, desc = "LSP: " .. desc })
-        end
+      vim.api.nvim_create_autocmd("LspAttach", {
+        group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
+        callback = function(ev)
+          local bufnr = ev.buf
+          local map = function(mode, l, r, desc)
+            vim.keymap.set(mode, l, r, { buffer = bufnr, desc = "LSP: " .. desc })
+          end
 
-        map("n", "gd", vim.lsp.buf.definition, "Goto Definition")
-        map("n", "gD", vim.lsp.buf.declaration, "Goto Declaration")
-        map("n", "gr", "<cmd>Telescope lsp_references<CR>", "Goto References")
-        map("n", "gI", vim.lsp.buf.implementation, "Goto Implementation")
-        map("n", "gy", vim.lsp.buf.type_definition, "Goto Type Definition")
-        map("n", "K", vim.lsp.buf.hover, "Hover Documentation")
-        map("n", "<C-k>", vim.lsp.buf.signature_help, "Signature Help")
-        map("n", "<leader>ca", vim.lsp.buf.code_action, "Code Action")
-        map("n", "<leader>rn", vim.lsp.buf.rename, "Rename Symbol")
-        map("n", "<leader>f", function()
-          require("conform").format({ bufnr = bufnr, lsp_fallback = true })
-        end, "Format Document")
-      end
+          map("n", "gd", vim.lsp.buf.definition, "Goto Definition")
+          map("n", "gD", vim.lsp.buf.declaration, "Goto Declaration")
+          map("n", "gr", "<cmd>Telescope lsp_references<CR>", "Goto References")
+          map("n", "gI", vim.lsp.buf.implementation, "Goto Implementation")
+          map("n", "gy", vim.lsp.buf.type_definition, "Goto Type Definition")
+          map("n", "K", vim.lsp.buf.hover, "Hover Documentation")
+          map("n", "<C-k>", vim.lsp.buf.signature_help, "Signature Help")
+          map("n", "<leader>ca", vim.lsp.buf.code_action, "Code Action")
+          map("n", "<leader>rn", vim.lsp.buf.rename, "Rename Symbol")
+          map("n", "<leader>f", function()
+            require("conform").format({ bufnr = bufnr, lsp_fallback = true })
+          end, "Format Document")
+        end,
+      })
 
       -- Setup common servers
       local servers = {
@@ -117,10 +120,10 @@ return {
         yamlls = {},
       }
 
-      for server, config in pairs(servers) do
-        config.capabilities = capabilities
-        config.on_attach = on_attach
-        lspconfig[server].setup(config)
+      for server, server_config in pairs(servers) do
+        server_config.capabilities = capabilities
+        vim.lsp.config(server, server_config)
+        vim.lsp.enable(server)
       end
     end,
   },
