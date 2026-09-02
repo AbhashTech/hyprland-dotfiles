@@ -1,0 +1,30 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Night Light & Idle Manager
+GenericName=Display Power & Night Light Control
+Comment=Configure Hyprsunset color temperature, Hypridle timeouts, monitor turn-off, and Caffeine mode
+Exec=python3 /home/kunal/.config/hypr/scripts/sunset_idle_manager.py --gui
+Icon=preferences-desktop-display
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;HardwareSettings;
+StartupWMClass=sunset-idle-manager
+StartupNotify=true
+Keywords=hyprsunset;hypridle;nightlight;bluelight;display;screen;idle;dpms;sleep;caffeine;brightness;temperature;
+Actions=ToggleNightLight;TurnOffMonitor;CaffeineMode;OpenMenu;
+
+[Desktop Action ToggleNightLight]
+Name=Toggle Night Light (On/Off)
+Exec=python3 /home/kunal/.config/hypr/scripts/sunset_idle_manager.py --sunset-toggle
+
+[Desktop Action TurnOffMonitor]
+Name=Turn Off Displays Now (DPMS)
+Exec=python3 /home/kunal/.config/hypr/scripts/sunset_idle_manager.py --dpms-off
+
+[Desktop Action CaffeineMode]
+Name=Toggle Caffeine Mode (Inhibit Sleep)
+Exec=python3 /home/kunal/.config/hypr/scripts/sunset_idle_manager.py --caffeine-toggle
+
+[Desktop Action OpenMenu]
+Name=Quick Selection Menu
+Exec=python3 /home/kunal/.config/hypr/scripts/sunset_idle_manager.py --menu

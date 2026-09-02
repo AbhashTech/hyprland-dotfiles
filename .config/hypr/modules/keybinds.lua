@@ -214,8 +214,14 @@ hl.bind(mainMod .. " + CTRL + O",  hl.dsp.exec_cmd("python3 " .. os.getenv("HOME
 -- Screen QR Code: Read & Decode QR to Clipboard
 hl.bind(mainMod .. " + ALT + Q",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/qr_reader.py"))
 
--- Toggle Warm Blue-Light Night Filter
-hl.bind(mainMod .. " + ALT + N",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/nightlight.py toggle"))
+-- Toggle Warm Blue-Light Night Filter (Hyprsunset)
+local sunsetIdleScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/sunset_idle_manager.py"
+hl.bind(mainMod .. " + ALT + N",   hl.dsp.exec_cmd(sunsetIdleScript .. " --sunset-toggle"))
+hl.bind(mainMod .. " + CTRL + N",  hl.dsp.exec_cmd(sunsetIdleScript .. " --menu"))
+
+-- Open Display Power, Monitor Turn-Off & Idle Manager (Hypridle)
+hl.bind(mainMod .. " + ALT + I",   hl.dsp.exec_cmd(sunsetIdleScript .. " --gui"))
+hl.bind(mainMod .. " + CTRL + I",  hl.dsp.exec_cmd(sunsetIdleScript .. " --menu"))
 
 -- Open Quick Math Calculator Prompt
 hl.bind(mainMod .. " + equal",     hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/quick_calc.py"))

@@ -48,10 +48,12 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │       ├── clipboard_manager.py  # Image/text clipboard manager with previews & purge
     │       ├── emoji_picker.py       # Searchable emoji catalog with auto-typing
     │       ├── fuzzel_launcher.sh    # Fuzzel wrapper with outside-click dismissal
+    │       ├── hyprsunset-hypridle.desktop # Application menu entry for Night Light & Idle Manager
     │       ├── keybinds_viewer.py    # Dynamic keybinds parser & searchable overlay
     │       ├── keyboard_layout.py    # Dynamic keyboard layout switcher & installer
     │       ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
-    │       ├── nightlight.py         # Blue-light filter (3800K night / 6500K day)
+    │       ├── nightlight.py         # Blue-light filter wrapper (delegates to sunset_idle_manager)
+    │       ├── sunset_idle_manager.py # Unified Hyprsunset & Hypridle display power & idle control center (GTK3/Menu/CLI)
     │       ├── ocr-language-manager.desktop # Application menu entry for OCR Language Manager
     │       ├── ocr_grab.py           # Optical character recognition text grabber
     │       ├── ocr_language_manager.py # Tesseract OCR language model downloader, manager & selector (GTK3/CLI)
@@ -284,6 +286,43 @@ The dotfiles include a dedicated **Display & Brightness Control Center** ([`brig
 
 ---
 
+## 🌅 Hyprsunset & Hypridle Display Management Suite
+
+The dotfiles include a dedicated **Display Power, Monitor Turn-Off & Night Light Control Suite** ([`sunset_idle_manager.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/sunset_idle_manager.py)):
+
+- **Application Menu Integration**: Available directly in the app launcher as **Night Light & Idle Manager** (`hyprsunset-hypridle.desktop`).
+- **Hyprsunset / Blue Light Engine**:
+  - Continuous color temperature slider (1000K – 6500K) with instant preview.
+  - Quick temperature preset buttons:
+    - ☀️ **Daylight** (`6500K` - Normal display colors)
+    - 🍵 **Soft Warm** (`5000K` - Gentle eye relaxation)
+    - 🌙 **Night Light** (`3800K` - Evening eye comfort)
+    - 🕯️ **Candlelight** (`2500K` - Late-night amber tint)
+    - 🔴 **Deep Ember** (`1800K` - Pitch-dark bedtime mode)
+  - Automatic state persistence across desktop reboots.
+- **Hypridle & Display Power Engine**:
+  - **Configurable Monitor Turn-Off Timeout (DPMS)**: Configure idle monitor power-off timeout directly from the GUI or quick menu (`1m`, `2m`, `2.5m`, `5m`, `10m`, `15m`, `30m`, `1h`, `Never / Disabled`, or custom seconds).
+  - **Idle Lock, Dimming & Suspend Synchronization**: Configure and sync screen dimming (`brightnessctl`), screen lock (`hyprlock`), and system sleep timeouts directly into `~/.config/hypr/hypridle.conf` with automatic daemon reloading.
+  - **Instant Display Turn-Off**: Power down display panels immediately (`hyprctl dispatch dpms off`) — wake up instantly with mouse or keyboard movement.
+  - **☕ Caffeine / Idle Inhibit Mode**: 1-click toggle to prevent monitors from turning off, dimming, or sleeping during movies, presentations, or long compiles.
+- **Access Modes**:
+  - **GTK3 Control Center GUI**: Press **`SUPER + ALT + I`** or launch from application menu.
+  - **Fuzzel / Wofi Interactive Menu**: Press **`SUPER + CTRL + I`** (Idle & Power) or **`SUPER + CTRL + N`** (Night Light).
+  - **Quick Toggle**: Press **`SUPER + ALT + N`** to instantly toggle Night Light on/off.
+  - **CLI Commands**:
+    ```bash
+    python3 ~/.config/hypr/scripts/sunset_idle_manager.py --gui                      # Launch GTK3 Control Center
+    python3 ~/.config/hypr/scripts/sunset_idle_manager.py --menu                     # Launch Fuzzel/Wofi interactive menu
+    python3 ~/.config/hypr/scripts/sunset_idle_manager.py --sunset-toggle            # Toggle Night Light On/Off
+    python3 ~/.config/hypr/scripts/sunset_idle_manager.py --set-temp 3800            # Set Night Light temperature to 3800K
+    python3 ~/.config/hypr/scripts/sunset_idle_manager.py --dpms-off                 # Turn off displays immediately
+    python3 ~/.config/hypr/scripts/sunset_idle_manager.py --set-dpms-timeout 300     # Set monitor turn-off to 5 minutes
+    python3 ~/.config/hypr/scripts/sunset_idle_manager.py --caffeine-toggle          # Toggle Caffeine mode
+    python3 ~/.config/hypr/scripts/sunset_idle_manager.py --status                   # Print status JSON
+    ```
+
+---
+
 ## 🖥️ System Hardware & Stats Dashboard
 
 The dotfiles include a dedicated **System Hardware & Stats** popup ([`system-stats.py`](file:///home/kunal/.dotfiles/.config/waybar/scripts/system-stats.py)):
@@ -502,7 +541,10 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + ALT + O` | **OCR Language Manager GUI** | Launch graphical GTK3 language downloader & multi-language manager |
 | `SUPER + CTRL + O` | **OCR Language Selector Menu** | Fast interactive Fuzzel/Wofi OCR language switcher |
 | `SUPER + ALT + Q` | **Screen QR Reader** | Select region with mouse, decode QR/2D barcodes to clipboard & open URLs |
-| `SUPER + ALT + N` | **Night Light** | Toggle warm blue-light eye comfort filter (3800K night / 6500K day) |
+| `SUPER + ALT + N` | **Toggle Night Light** | Toggle warm blue-light eye comfort filter (Hyprsunset) |
+| `SUPER + CTRL + N` | **Night Light Menu** | Interactive color temperature selector (6500K, 5000K, 3800K, 2500K, 1800K) |
+| `SUPER + ALT + I` | **Idle & Display Power GUI** | Launch GTK3 Night Light & Display Idle Power Manager |
+| `SUPER + CTRL + I` | **Idle & Power Menu** | Quick menu for monitor turn-off timeouts, DPMS off, and Caffeine mode |
 | `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator** | Interactive math expression evaluator via Fuzzel prompt |
 | `SUPER + .` (period) | **Emoji Picker** | Searchable emoji catalog with automatic clipboard copy & auto-typing |
 | `SUPER + ALT + S` | **App Shortcut Creator** | Launch interactive desktop shortcut (.desktop) creator & manager GUI |

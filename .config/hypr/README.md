@@ -32,11 +32,13 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
     ├── brightness_control.py    # Backlight & external DDC monitor brightness with OSD & GUI menu
     ├── clipboard_manager.py     # Image/text clipboard manager with thumbnails, pause & delete
     ├── emoji_picker.py          # Searchable emoji catalog with instant copy & auto-typing
-    ├── fuzzel_launcher.sh       # Fuzzel application launcher toggle wrapper
+    ├── fuzzel_launcher.sh       # Fuzzel application launcher toggle
+    ├── hyprsunset-hypridle.desktop  # Application menu entry for Night Light & Idle Manager
     ├── keybinds_viewer.py       # Dynamic keybindings parser & interactive cheat sheet
     ├── keyboard_layout.py       # Dynamic keyboard layout switcher & installer
     ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
-    ├── nightlight.py            # Warm blue-light filter (3800K night / 6500K day)
+    ├── nightlight.py            # Warm blue-light filter wrapper (delegates to sunset_idle_manager)
+    ├── sunset_idle_manager.py   # Hyprsunset & Hypridle display power, monitor turn-off & idle manager
     ├── ocr_grab.py              # Screen OCR text extraction via Tesseract
     ├── quick_calc.py            # Interactive math expression evaluator
     ├── resolution_menu.py       # Interactive display resolution & UI scale switcher
@@ -250,7 +252,10 @@ sudo usermod -aG i2c $USER
 | `SUPER + ALT + O` | **OCR Language Manager GUI**: Launch GTK3 language downloader & manager |
 | `SUPER + CTRL + O` | **OCR Language Selector Menu**: Fast interactive Fuzzel OCR language switcher |
 | `SUPER + ALT + Q` | **Screen QR Reader**: Select region & decode QR / 2D barcodes to clipboard |
-| `SUPER + ALT + N` | **Night Light**: Toggle warm blue-light eye comfort filter (3800K / 6500K) |
+| `SUPER + ALT + N` | **Toggle Night Light**: Toggle warm blue-light eye comfort filter (Hyprsunset) |
+| `SUPER + CTRL + N` | **Night Light Menu**: Color temperature selector menu (6500K - 1800K) |
+| `SUPER + ALT + I` | **Display Power & Idle GUI**: Launch GTK3 Night Light & Idle Manager |
+| `SUPER + CTRL + I` | **Display Power & Idle Menu**: Set monitor turn-off timeouts & DPMS off |
 | `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator**: Interactive math evaluator via Fuzzel prompt |
 | `SUPER + .` (period) | **Emoji Picker**: Searchable emoji menu with instant copy & auto-typing |
 | `SUPER + ALT + S` | **App Shortcut Creator**: Launch desktop shortcut (.desktop) creator GUI |

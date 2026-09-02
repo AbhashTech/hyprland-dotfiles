@@ -143,7 +143,7 @@ fi
 # 5. Desktop Shortcuts & Initialize Theme Variables
 log_info "Deploying custom desktop application shortcuts..."
 mkdir -p "${HOME}/.local/share/applications"
-for desktop_file in app-shortcut-creator.desktop theme-manager.desktop ocr-language-manager.desktop; do
+for desktop_file in app-shortcut-creator.desktop theme-manager.desktop ocr-language-manager.desktop hyprsunset-hypridle.desktop; do
     if [ -f "${SCRIPTS_DIR}/${desktop_file}" ]; then
         cp "${SCRIPTS_DIR}/${desktop_file}" "${HOME}/.local/share/applications/"
         chmod +x "${HOME}/.local/share/applications/${desktop_file}"
