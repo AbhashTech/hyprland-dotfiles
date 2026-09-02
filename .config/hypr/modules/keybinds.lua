@@ -141,7 +141,6 @@ hl.bind(mainMod .. " + CTRL + down",  hl.dsp.exec_cmd(scaleScript .. " down"),  
 hl.bind(mainMod .. " + CTRL + J",     hl.dsp.exec_cmd(scaleScript .. " down"),  { repeating = true })
 
 -- Show Active Window Dimensions OSD
-hl.bind(mainMod .. " + CTRL + I", hl.dsp.exec_cmd(scaleScript .. " show"))
 hl.bind(mainMod .. " + CTRL + 0", hl.dsp.exec_cmd(scaleScript .. " show"))
 
 -- Open Screen Resolution & Scaling Menu

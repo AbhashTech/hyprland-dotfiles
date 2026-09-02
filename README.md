@@ -526,7 +526,7 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + CTRL + Left / H` | **Resize Width Left** | Shrink window horizontally from the left (-40px) |
 | `SUPER + CTRL + Up / K` | **Resize Height Up** | Shrink window vertically from the top (-40px) |
 | `SUPER + CTRL + Down / J` | **Resize Height Down** | Grow window vertically to the bottom (+40px) |
-| `SUPER + CTRL + I` / `0` | **Show Window Size** | Display active window dimensions & screen coverage percentage OSD |
+| `SUPER + CTRL + 0` | **Show Window Size** | Display active window dimensions & screen coverage percentage OSD |
 | `SUPER + SHIFT + R` / `SUPER + SHIFT + D` | **Resolution & Scaling Menu** | Interactive menu to set monitor resolution and DPI scaling |
 | `SUPER + ALT + =` / `+` | **Display Scale Up** | Increment display scaling (+0.1) |
 | `SUPER + ALT + -` | **Display Scale Down** | Decrement display scaling (-0.1) |
