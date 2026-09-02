@@ -16,7 +16,7 @@ $cmd_duration\
 $line_break\
 $character"""
 
-palette = "dracula"
+palette = "everforest"
 
 [palettes.catppuccin_mocha]
 rosewater = "#f5e0dc"

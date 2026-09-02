@@ -1,9 +1,9 @@
-/* Wlogout Colors: Dracula */
-@define-color base            #282a36;
-@define-color mantle          #21222c;
-@define-color crust           #191a21;
-@define-color text            #f8f8f2;
-@define-color surface0        #343746;
-@define-color surface1        #44475a;
-@define-color accent          #bd93f9;
-@define-color bg_overlay      rgba(25, 26, 33, 0.75);
+/* Wlogout Colors: Everforest Dark */
+@define-color base            #2d353b;
+@define-color mantle          #232a2e;
+@define-color crust           #1e2326;
+@define-color text            #d3c6aa;
+@define-color surface0        #343f44;
+@define-color surface1        #3d484d;
+@define-color accent          #a7c080;
+@define-color bg_overlay      rgba(30, 35, 38, 0.75);

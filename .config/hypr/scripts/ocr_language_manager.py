@@ -451,6 +451,25 @@ def get_theme_colors():
         "sapphire": "#74c7ec", "lavender": "#b4befe"
     }
 
+def get_contrast_color(hex_color, dark_fg="#11111b", light_fg="#ffffff"):
+    """Calculate WCAG high-contrast foreground color based on background luminance."""
+    if not hex_color or not isinstance(hex_color, str) or not hex_color.startswith("#"):
+        return light_fg
+    hex_clean = hex_color.lstrip("#")
+    if len(hex_clean) == 3:
+        hex_clean = "".join(c + c for c in hex_clean)
+    if len(hex_clean) < 6:
+        return light_fg
+    try:
+        r = int(hex_clean[0:2], 16)
+        g = int(hex_clean[2:4], 16)
+        b = int(hex_clean[4:6], 16)
+        lum = 0.299 * r + 0.587 * g + 0.114 * b
+        return dark_fg if lum > 140 else light_fg
+    except Exception:
+        return light_fg
+
+
 def launch_gtk_gui():
     """Launch full GTK3 graphical language manager with multi-language selector."""
     import gi
@@ -473,6 +492,12 @@ def launch_gtk_gui():
     c_red = colors.get("red", "#f38ba8")
     c_blue = colors.get("blue", "#89b4fa")
     c_sapphire = colors.get("sapphire", "#74c7ec")
+
+    accent_fg = get_contrast_color(c_accent)
+    sapphire_fg = get_contrast_color(c_sapphire)
+    blue_fg = get_contrast_color(c_blue)
+    red_fg = get_contrast_color(c_red)
+    green_fg = get_contrast_color(c_green)
 
     css_provider = Gtk.CssProvider()
     css_data = f"""
@@ -537,10 +562,10 @@ def launch_gtk_gui():
     button.btn-reset:hover {{
         background-color: {c_surface1};
         border-color: {c_accent};
-        color: #ffffff;
+        color: {c_text};
     }}
     button.btn-reset:hover label {{
-        color: #ffffff;
+        color: {c_text};
     }}
 
     /* Action buttons on cards (Select Solo, Only This) */
@@ -558,10 +583,10 @@ def launch_gtk_gui():
     button.btn-solo:hover {{
         background-color: {c_surface1};
         border-color: {c_accent};
-        color: #ffffff;
+        color: {c_text};
     }}
     button.btn-solo:hover label {{
-        color: #ffffff;
+        color: {c_text};
     }}
 
     /* Capture & Test OCR Button */
@@ -569,22 +594,23 @@ def launch_gtk_gui():
         background-color: {c_accent};
         background-image: none;
         border: 1px solid {c_accent};
-        color: {c_crust};
+        color: {accent_fg};
         font-weight: 800;
         font-size: 13px;
         border-radius: 10px;
         padding: 8px 18px;
     }}
     button.btn-capture label {{
-        color: {c_crust};
+        color: {accent_fg};
         font-weight: 800;
     }}
     button.btn-capture:hover {{
-        background-color: {colors.get("mauve", "#cba6f7")};
-        color: #000000;
+        background-color: {c_surface1};
+        border-color: {c_accent};
+        color: {c_text};
     }}
     button.btn-capture:hover label {{
-        color: #000000;
+        color: {c_text};
     }}
 
     /* Delete Button */
@@ -601,18 +627,18 @@ def launch_gtk_gui():
     }}
     button.btn-danger:hover {{
         background-color: {c_red};
-        color: {c_crust};
+        color: {red_fg};
     }}
     button.btn-danger:hover label {{
-        color: {c_crust};
+        color: {red_fg};
     }}
 
     /* Download Button */
     button.btn-download {{
         background-color: {c_sapphire};
         background-image: none;
-        border: 1px solid {c_blue};
-        color: {c_crust};
+        border: 1px solid {c_sapphire};
+        color: {sapphire_fg};
         padding: 6px 14px;
     }}
     button.btn-download label {{

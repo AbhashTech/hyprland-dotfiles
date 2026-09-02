@@ -2,7 +2,7 @@
 // Zellij Terminal Multiplexer Configuration - Catppuccin Mocha
 // =============================================================================
 
-theme "dracula"
+theme "everforest"
 default_layout "compact"
 mouse_mode true
 copy_on_select true

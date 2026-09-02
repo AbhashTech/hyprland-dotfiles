@@ -656,8 +656,31 @@ def get_sound_theme_colors():
         "mauve": "#cba6f7", "teal": "#94e2d5", "pink": "#f5c2e7",
     }, "dark"
 
+
+def get_contrast_color(hex_color, dark_fg="#11111b", light_fg="#ffffff"):
+    """Calculate WCAG high-contrast foreground color based on background luminance."""
+    if not hex_color or not isinstance(hex_color, str) or not hex_color.startswith("#"):
+        return light_fg
+    hex_clean = hex_color.lstrip("#")
+    if len(hex_clean) == 3:
+        hex_clean = "".join(c + c for c in hex_clean)
+    if len(hex_clean) < 6:
+        return light_fg
+    try:
+        r = int(hex_clean[0:2], 16)
+        g = int(hex_clean[2:4], 16)
+        b = int(hex_clean[4:6], 16)
+        lum = 0.299 * r + 0.587 * g + 0.114 * b
+        return dark_fg if lum > 140 else light_fg
+    except Exception:
+        return light_fg
+
+
 def get_sound_gtk_css():
     c, ttype = get_sound_theme_colors()
+    blue_fg = get_contrast_color(c.get("blue", "#89b4fa"))
+    accent_fg = get_contrast_color(c.get("accent", "#cba6f7"))
+    peach_fg = get_contrast_color(c.get("peach", "#fab387"))
     return f"""
 * {{
     all: unset;
@@ -749,7 +772,7 @@ combobox menu menuitem {{
 
 combobox menu menuitem:hover {{
     background-color: {c.get("blue", "#89b4fa")};
-    color: #11111b;
+    color: {blue_fg};
     font-weight: 800;
 }}
 
@@ -841,7 +864,7 @@ scale slider:hover {{
 
 .btn-preset:hover {{
     background-color: {c.get("blue", "#89b4fa")};
-    color: #11111b;
+    color: {blue_fg};
     border-color: {c.get("blue", "#89b4fa")};
 }}
 

@@ -133,7 +133,7 @@ def save_state(state):
 
 
 def get_active_theme_colors():
-    """Load colors from active theme JSON file with fallback."""
+    """Load colors and theme type from active theme JSON file with fallback."""
     cache_state = Path.home() / ".cache" / "hypr_theme_state.json"
     current_txt = Path.home() / ".cache" / "current_theme"
     theme_id = "catppuccin-mocha"
@@ -150,13 +150,15 @@ def get_active_theme_colors():
         except Exception:
             pass
 
-    theme_file = Path.home() / ".config" / "theme" / f"{theme_id}.json"
-    if theme_file.exists():
-        try:
-            with open(theme_file, "r") as f:
-                return json.load(f).get("colors", {})
-        except Exception:
-            pass
+    for d in [Path.home() / ".config" / "theme", Path.home() / ".dotfiles" / ".config" / "theme"]:
+        tfile = d / f"{theme_id}.json"
+        if tfile.exists():
+            try:
+                with open(tfile, "r") as f:
+                    tdata = json.load(f)
+                    return tdata.get("colors", {}), tdata.get("type", "dark"), theme_id
+            except Exception:
+                pass
 
     # Default Catppuccin Mocha colors
     return {
@@ -184,7 +186,26 @@ def get_active_theme_colors():
         "pink": "#f5c2e7",
         "flamingo": "#f2cdcd",
         "rosewater": "#f5e0dc"
-    }
+    }, "dark", "catppuccin-mocha"
+
+
+def get_contrast_color(hex_color, dark_fg="#11111b", light_fg="#ffffff"):
+    """Calculate WCAG high-contrast foreground color based on background luminance."""
+    if not hex_color or not isinstance(hex_color, str) or not hex_color.startswith("#"):
+        return light_fg
+    hex_clean = hex_color.lstrip("#")
+    if len(hex_clean) == 3:
+        hex_clean = "".join(c + c for c in hex_clean)
+    if len(hex_clean) < 6:
+        return light_fg
+    try:
+        r = int(hex_clean[0:2], 16)
+        g = int(hex_clean[2:4], 16)
+        b = int(hex_clean[4:6], 16)
+        lum = 0.299 * r + 0.587 * g + 0.114 * b
+        return dark_fg if lum > 140 else light_fg
+    except Exception:
+        return light_fg
 
 
 # =============================================================================
@@ -680,7 +701,27 @@ def show_gui():
         show_menu()
         return
 
-    colors = get_active_theme_colors()
+    colors, theme_type, theme_id = get_active_theme_colors()
+
+    c_base = colors.get("base", "#1e1e2e")
+    c_mantle = colors.get("mantle", "#181825")
+    c_crust = colors.get("crust", "#11111b")
+    c_surface0 = colors.get("surface0", "#313244")
+    c_surface1 = colors.get("surface1", "#45475a")
+    c_surface2 = colors.get("surface2", "#585b70")
+    c_text = colors.get("text", "#cdd6f4")
+    c_subtext0 = colors.get("subtext0", "#a6adc8")
+    c_accent = colors.get("accent", colors.get("mauve", "#cba6f7"))
+    c_blue = colors.get("blue", "#89b4fa")
+    c_peach = colors.get("peach", "#fab387")
+    c_red = colors.get("red", "#f38ba8")
+    c_green = colors.get("green", "#a6e3a1")
+
+    # Dynamic contrast foregrounds for buttons
+    primary_fg = get_contrast_color(c_accent)
+    danger_fg = get_contrast_color(c_red)
+    caffeine_fg = get_contrast_color(c_peach)
+    accent_fg = get_contrast_color(c_accent)
 
     # Create GTK Window
     win = Gtk.Window(title="Night Light & Display Idle Manager")
@@ -690,107 +731,145 @@ def show_gui():
 
     # Apply CSS styling
     css = f"""
+    * {{
+        font-family: 'Inter', 'JetBrains Mono Nerd Font', 'Noto Sans', sans-serif;
+    }}
     window {{
-        background-color: {colors.get('base', '#1e1e2e')};
-        color: {colors.get('text', '#cdd6f4')};
-        font-family: 'JetBrains Mono Nerd Font', 'Noto Sans', sans-serif;
+        background-color: {c_base};
+        color: {c_text};
     }}
     .header-box {{
-        background-color: {colors.get('mantle', '#181825')};
+        background-color: {c_mantle};
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 14px;
-        border: 1px solid {colors.get('surface0', '#313244')};
+        border: 1px solid {c_surface0};
     }}
     .card-box {{
-        background-color: {colors.get('mantle', '#181825')};
+        background-color: {c_mantle};
         border-radius: 12px;
         padding: 18px;
         margin-bottom: 14px;
-        border: 1px solid {colors.get('surface0', '#313244')};
+        border: 1px solid {c_surface0};
+    }}
+    label {{
+        color: {c_text};
     }}
     .title-label {{
         font-size: 16pt;
         font-weight: bold;
-        color: {colors.get('mauve', '#cba6f7')};
+        color: {c_accent};
     }}
     .subtitle-label {{
         font-size: 9.5pt;
-        color: {colors.get('subtext0', '#a6adc8')};
+        color: {c_subtext0};
     }}
     .section-title {{
         font-size: 11pt;
         font-weight: bold;
-        color: {colors.get('blue', '#89b4fa')};
+        color: {c_blue};
     }}
-    .preset-btn {{
-        background-color: {colors.get('surface0', '#313244')};
-        color: {colors.get('text', '#cdd6f4')};
+    button {{
+        background-image: none;
+        box-shadow: none;
+        text-shadow: none;
+    }}
+    .preset-btn, .preset-btn label {{
+        background-color: {c_surface0};
+        color: {c_text};
         border-radius: 8px;
-        border: 1px solid {colors.get('surface1', '#45475a')};
-        padding: 6px 12px;
+        border: 1px solid {c_surface1};
+        padding: 6px 10px;
         font-size: 9pt;
+        font-weight: 600;
     }}
-    .preset-btn:hover {{
-        background-color: {colors.get('surface1', '#45475a')};
-        border-color: {colors.get('mauve', '#cba6f7')};
+    .preset-btn:hover, .preset-btn:hover label {{
+        background-color: {c_accent};
+        color: {accent_fg};
+        border-color: {c_accent};
     }}
-    .action-btn {{
-        background-color: {colors.get('surface0', '#313244')};
-        color: {colors.get('text', '#cdd6f4')};
+    .action-btn, .action-btn label {{
+        background-color: {c_surface0};
+        color: {c_text};
         border-radius: 8px;
-        border: 1px solid {colors.get('surface1', '#45475a')};
-        padding: 8px 16px;
+        border: 1px solid {c_surface1};
+        padding: 8px 14px;
         font-weight: bold;
     }}
-    .action-btn:hover {{
-        background-color: {colors.get('surface1', '#45475a')};
+    .action-btn:hover, .action-btn:hover label {{
+        background-color: {c_surface1};
+        color: {c_text};
+        border-color: {c_accent};
     }}
-    .primary-btn {{
-        background-color: {colors.get('mauve', '#cba6f7')};
-        color: {colors.get('crust', '#11111b')};
+    .primary-btn, .primary-btn label {{
+        background-color: {c_accent};
+        color: {primary_fg};
         border-radius: 8px;
         font-weight: bold;
         padding: 8px 16px;
-        border: none;
+        border: 1px solid {c_accent};
     }}
-    .primary-btn:hover {{
-        background-color: {colors.get('pink', '#f5c2e7')};
+    .primary-btn:hover, .primary-btn:hover label {{
+        background-color: {c_surface1};
+        color: {c_text};
+        border-color: {c_accent};
     }}
-    .danger-btn {{
-        background-color: {colors.get('red', '#f38ba8')};
-        color: {colors.get('crust', '#11111b')};
+    .danger-btn, .danger-btn label {{
+        background-color: {c_red};
+        color: {danger_fg};
         border-radius: 8px;
         font-weight: bold;
         padding: 8px 14px;
         border: none;
     }}
-    .caffeine-active {{
-        background-color: {colors.get('peach', '#fab387')};
-        color: {colors.get('crust', '#11111b')};
+    .caffeine-active, .caffeine-active label {{
+        background-color: {c_peach};
+        color: {caffeine_fg};
         font-weight: bold;
+        border: 1px solid {c_peach};
     }}
     scale trough {{
-        background-color: {colors.get('surface0', '#313244')};
+        background-color: {c_surface0};
         border-radius: 6px;
         min-height: 8px;
     }}
     scale highlight {{
-        background-color: {colors.get('mauve', '#cba6f7')};
+        background-color: {c_accent};
         border-radius: 6px;
     }}
     scale slider {{
-        background-color: {colors.get('rosewater', '#f5e0dc')};
+        background-color: {c_accent};
         min-width: 18px;
         min-height: 18px;
         border-radius: 50%;
     }}
-    combobox button {{
-        background-color: {colors.get('surface0', '#313244')};
-        color: {colors.get('text', '#cdd6f4')};
+    combobox button, combobox button label, combobox button cellview {{
+        background-color: {c_surface0};
+        color: {c_text};
         border-radius: 8px;
-        border: 1px solid {colors.get('surface1', '#45475a')};
+        border: 1px solid {c_surface1};
         padding: 4px 8px;
+        font-weight: 600;
+    }}
+    combobox button:hover {{
+        border-color: {c_accent};
+    }}
+    menu, combobox menu, combobox window {{
+        background-color: {c_mantle};
+        color: {c_text};
+        border: 1px solid {c_surface1};
+        border-radius: 8px;
+        padding: 4px;
+    }}
+    menuitem, menuitem label {{
+        color: {c_text};
+        font-weight: 600;
+        padding: 4px 8px;
+    }}
+    menuitem:hover, menuitem:hover label {{
+        background-color: {c_accent};
+        color: {accent_fg};
+        border-radius: 6px;
     }}
     """
     css_provider = Gtk.CssProvider()

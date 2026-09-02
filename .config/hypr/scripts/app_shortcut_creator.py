@@ -78,8 +78,34 @@ def get_active_theme_colors():
         "mauve": "#cba6f7", "teal": "#94e2d5", "pink": "#f5c2e7",
     }, "dark"
 
+
+def get_contrast_color(hex_color, dark_fg="#11111b", light_fg="#ffffff"):
+    """Calculate WCAG high-contrast foreground color based on background luminance."""
+    if not hex_color or not isinstance(hex_color, str) or not hex_color.startswith("#"):
+        return light_fg
+    hex_clean = hex_color.lstrip("#")
+    if len(hex_clean) == 3:
+        hex_clean = "".join(c + c for c in hex_clean)
+    if len(hex_clean) < 6:
+        return light_fg
+    try:
+        r = int(hex_clean[0:2], 16)
+        g = int(hex_clean[2:4], 16)
+        b = int(hex_clean[4:6], 16)
+        lum = 0.299 * r + 0.587 * g + 0.114 * b
+        return dark_fg if lum > 140 else light_fg
+    except Exception:
+        return light_fg
+
+
 def get_dynamic_gtk_css():
     c, ttype = get_active_theme_colors()
+    blue_fg = get_contrast_color(c.get("blue", "#89b4fa"))
+    lavender_fg = get_contrast_color(c.get("lavender", "#b4befe"))
+    accent_fg = get_contrast_color(c.get("accent", "#cba6f7"))
+    pink_fg = get_contrast_color(c.get("pink", "#f5c2e7"))
+    red_fg = get_contrast_color(c.get("red", "#f38ba8"))
+    maroon_fg = get_contrast_color(c.get("maroon", "#eba0ac"))
     return f"""
 * {{
     font-family: system-ui, -apple-system, 'Inter', 'Roboto', 'Noto Sans', 'Cantarell', 'Ubuntu', sans-serif;
@@ -230,12 +256,12 @@ button.suggested-action {{
     background-color: {c.get("blue", "#89b4fa")};
     background-image: none;
     box-shadow: none;
-    color: #11111b;
+    color: {blue_fg};
     border: 1px solid {c.get("sapphire", "#74c7ec")};
 }}
 
 button.suggested-action label {{
-    color: #11111b;
+    color: {blue_fg};
     font-weight: bold;
     font-size: 13px;
 }}
@@ -243,23 +269,23 @@ button.suggested-action label {{
 button.suggested-action:hover {{
     background-color: {c.get("lavender", "#b4befe")};
     background-image: none;
-    color: #11111b;
+    color: {lavender_fg};
 }}
 
 button.suggested-action:hover label {{
-    color: #11111b;
+    color: {lavender_fg};
 }}
 
 button.secondary-action {{
     background-color: {c.get("accent", "#cba6f7")};
     background-image: none;
     box-shadow: none;
-    color: #11111b;
+    color: {accent_fg};
     border: 1px solid {c.get("lavender", "#b4befe")};
 }}
 
 button.secondary-action label {{
-    color: #11111b;
+    color: {accent_fg};
     font-weight: bold;
     font-size: 13px;
 }}
@@ -267,23 +293,23 @@ button.secondary-action label {{
 button.secondary-action:hover {{
     background-color: {c.get("pink", "#f5c2e7")};
     background-image: none;
-    color: #11111b;
+    color: {pink_fg};
 }}
 
 button.secondary-action:hover label {{
-    color: #11111b;
+    color: {pink_fg};
 }}
 
 button.destructive-action {{
     background-color: {c.get("red", "#f38ba8")};
     background-image: none;
     box-shadow: none;
-    color: #11111b;
+    color: {red_fg};
     border: 1px solid {c.get("maroon", "#eba0ac")};
 }}
 
 button.destructive-action label {{
-    color: #11111b;
+    color: {red_fg};
     font-weight: bold;
     font-size: 13px;
 }}
@@ -291,11 +317,11 @@ button.destructive-action label {{
 button.destructive-action:hover {{
     background-color: {c.get("maroon", "#eba0ac")};
     background-image: none;
-    color: #11111b;
+    color: {maroon_fg};
 }}
 
 button.destructive-action:hover label {{
-    color: #11111b;
+    color: {maroon_fg};
 }}
 
 checkbutton {{
@@ -322,7 +348,7 @@ checkbutton check:checked {{
     background-color: {c.get("blue", "#89b4fa")};
     background-image: none;
     border-color: {c.get("blue", "#89b4fa")};
-    color: #11111b;
+    color: {blue_fg};
 }}
 
 frame > border {{

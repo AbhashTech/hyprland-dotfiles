@@ -1,28 +1,28 @@
 # =============================================================================
-# Lazygit Configuration - Dracula
+# Lazygit Configuration - Everforest Dark
 # =============================================================================
 
 gui:
   theme:
     activeBorderColor:
-      - '#bd93f9'
+      - '#a7c080'
       - bold
     inactiveBorderColor:
-      - '#6272a4'
+      - '#475258'
     optionsTextColor:
-      - '#6272a4'
+      - '#7fbbb3'
     selectedLineBgColor:
-      - '#343746'
+      - '#343f44'
     cherryPickedCommitBgColor:
-      - '#44475a'
+      - '#3d484d'
     cherryPickedCommitFgColor:
-      - '#bd93f9'
+      - '#a7c080'
     unstagedChangesColor:
-      - '#ff5555'
+      - '#e67e80'
     defaultFgColor:
-      - '#f8f8f2'
+      - '#d3c6aa'
     searchingActiveBorderColor:
-      - '#f1fa8c'
+      - '#dbbc7f'
 
 git:
   paging:
