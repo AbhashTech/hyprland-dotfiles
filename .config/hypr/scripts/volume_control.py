@@ -272,22 +272,78 @@ def toggle_source_mute():
     notify_source_osd(vol=curr_vol, muted=new_mute_bool)
 
 # ---------------------------------------------------------
+# ---------------------------------------------------------
 # Audio Devices (Sinks / Sources) Listing & Switching
 # ---------------------------------------------------------
+
+def get_port_availability():
+    """Retrieve ALSA card port availability states."""
+    port_avail = {}
+    raw = run_cmd(["pactl", "-f", "json", "list", "cards"])
+    if raw:
+        try:
+            cards = json.loads(raw)
+            for c in cards:
+                ports = c.get("ports", {})
+                if isinstance(ports, dict):
+                    for pname, pinfo in ports.items():
+                        avail = pinfo.get("availability")
+                        port_avail[pname] = avail
+                        short_name = pname.split("]")[-1].strip() if "]" in pname else pname
+                        port_avail[short_name] = avail
+        except Exception:
+            pass
+    return port_avail
+
+def clean_device_name(raw_desc, is_source=False):
+    """Strip verbose chip descriptions for clean OSD/menu display."""
+    if not raw_desc:
+        return "Microphone" if is_source else "Speakers"
+    desc = raw_desc
+    if "Chipset Family" in desc or "Audio Controller" in desc or "High Definition Audio" in desc:
+        parts = desc.split(")")
+        if len(parts) > 1 and parts[-1].strip():
+            desc = parts[-1].strip()
+    desc = re.sub(r'\(HD Audio\)', '', desc).strip()
+    return desc or raw_desc
 
 def get_sinks_list():
     """Return a list of available audio sink devices."""
     default_sink = run_cmd(["pactl", "get-default-sink"])
+    port_avail = get_port_availability()
     raw_sinks = run_cmd(["pactl", "-f", "json", "list", "sinks"])
     results = []
+    seen_names = set()
     if raw_sinks:
         try:
             sinks = json.loads(raw_sinks)
-            for s in sinks:
-                name = s.get("name")
-                desc = s.get("description", name)
+            for s in reversed(sinks):
+                name = s.get("name", "")
+                ports = s.get("ports", [])
+                active_port = s.get("active_port")
+
+                is_unavail = False
+                if ports:
+                    is_unavail = all(p.get("availability") == "not available" for p in ports)
+                elif active_port and port_avail.get(active_port) == "not available":
+                    is_unavail = True
+                else:
+                    for p_key, status in port_avail.items():
+                        if f"__{p_key}__" in name and status == "not available":
+                            is_unavail = True
+                            break
+
+                desc = clean_device_name(s.get("description", name))
                 idx = s.get("index")
                 is_default = (name == default_sink)
+
+                if is_unavail and not is_default:
+                    continue
+
+                if desc in seen_names and not is_default:
+                    continue
+                seen_names.add(desc)
+
                 results.append({
                     "index": idx,
                     "name": name,
@@ -295,6 +351,7 @@ def get_sinks_list():
                     "is_default": is_default,
                     "mute": s.get("mute", False)
                 })
+            results.reverse()
         except Exception:
             pass
     return results
@@ -302,18 +359,43 @@ def get_sinks_list():
 def get_sources_list():
     """Return a list of available audio input source devices (excluding monitors)."""
     default_src = run_cmd(["pactl", "get-default-source"])
+    port_avail = get_port_availability()
     raw_srcs = run_cmd(["pactl", "-f", "json", "list", "sources"])
     results = []
+    seen_names = set()
     if raw_srcs:
         try:
             srcs = json.loads(raw_srcs)
-            for s in srcs:
+            for s in reversed(srcs):
                 name = s.get("name", "")
                 if name.endswith(".monitor"):
                     continue
-                desc = s.get("description", name)
+
+                ports = s.get("ports", [])
+                active_port = s.get("active_port")
+
+                is_unavail = False
+                if ports:
+                    is_unavail = all(p.get("availability") == "not available" for p in ports)
+                elif active_port and port_avail.get(active_port) == "not available":
+                    is_unavail = True
+                else:
+                    for p_key, status in port_avail.items():
+                        if f"__{p_key}__" in name and status == "not available":
+                            is_unavail = True
+                            break
+
+                desc = clean_device_name(s.get("description", name), is_source=True)
                 idx = s.get("index")
                 is_default = (name == default_src)
+
+                if is_unavail and not is_default:
+                    continue
+
+                if desc in seen_names and not is_default:
+                    continue
+                seen_names.add(desc)
+
                 results.append({
                     "index": idx,
                     "name": name,
@@ -321,6 +403,7 @@ def get_sources_list():
                     "is_default": is_default,
                     "mute": s.get("mute", False)
                 })
+            results.reverse()
         except Exception:
             pass
     return results

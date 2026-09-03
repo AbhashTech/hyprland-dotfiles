@@ -151,6 +151,25 @@ class SoundBackend:
         return desc
 
     @staticmethod
+    def get_port_availability():
+        port_avail = {}
+        raw = run_cmd(["pactl", "-f", "json", "list", "cards"])
+        if raw:
+            try:
+                cards = json.loads(raw)
+                for c in cards:
+                    ports = c.get("ports", {})
+                    if isinstance(ports, dict):
+                        for pname, pinfo in ports.items():
+                            avail = pinfo.get("availability")
+                            port_avail[pname] = avail
+                            short_name = pname.split("]")[-1].strip() if "]" in pname else pname
+                            port_avail[short_name] = avail
+            except Exception:
+                pass
+        return port_avail
+
+    @staticmethod
     def get_sinks():
         default_sink = run_cmd(["pactl", "get-default-sink"])
         wp_status = run_cmd(["wpctl", "status"])
@@ -172,6 +191,7 @@ class SoundBackend:
                             pass
                         break
 
+        port_avail = SoundBackend.get_port_availability()
         raw = run_cmd(["pactl", "-f", "json", "list", "sinks"])
         results = []
         seen_names = set()
@@ -184,9 +204,28 @@ class SoundBackend:
                     name = s.get("name", "")
                     if has_hifi and (".pro-output-" in name or "pro_output" in name):
                         continue
+
+                    # Filter out physically disconnected / unavailable outputs (e.g. unplugged HDMI/DP or Headphones)
+                    ports = s.get("ports", [])
+                    active_port = s.get("active_port")
+                    is_unavail = False
+                    if ports:
+                        is_unavail = all(p.get("availability") == "not available" for p in ports)
+                    elif active_port and port_avail.get(active_port) == "not available":
+                        is_unavail = True
+                    else:
+                        for p_key, status in port_avail.items():
+                            if f"__{p_key}__" in name and status == "not available":
+                                is_unavail = True
+                                break
+
                     idx = s.get("index")
                     desc = SoundBackend.clean_device_name(s.get("description", name))
                     is_def = (idx == default_wp_id) or (name == default_sink and default_wp_id is None)
+
+                    if is_unavail and not is_def:
+                        continue
+
                     if desc in seen_names and not is_def:
                         continue
                     seen_names.add(desc)
@@ -236,6 +275,7 @@ class SoundBackend:
                             pass
                         break
 
+        port_avail = SoundBackend.get_port_availability()
         raw = run_cmd(["pactl", "-f", "json", "list", "sources"])
         results = []
         seen_names = set()
@@ -249,9 +289,28 @@ class SoundBackend:
                         continue
                     if has_hifi and (".pro-input-" in name or "pro_input" in name):
                         continue
+
+                    # Filter out physically disconnected / unavailable inputs (e.g. unplugged external mic)
+                    ports = s.get("ports", [])
+                    active_port = s.get("active_port")
+                    is_unavail = False
+                    if ports:
+                        is_unavail = all(p.get("availability") == "not available" for p in ports)
+                    elif active_port and port_avail.get(active_port) == "not available":
+                        is_unavail = True
+                    else:
+                        for p_key, status in port_avail.items():
+                            if f"__{p_key}__" in name and status == "not available":
+                                is_unavail = True
+                                break
+
                     idx = s.get("index")
                     desc = SoundBackend.clean_device_name(s.get("description", name), is_source=True)
                     is_def = (idx == default_wp_src_id) or (name == default_src and default_wp_src_id is None)
+
+                    if is_unavail and not is_def:
+                        continue
+
                     if desc in seen_names and not is_def:
                         continue
                     seen_names.add(desc)
