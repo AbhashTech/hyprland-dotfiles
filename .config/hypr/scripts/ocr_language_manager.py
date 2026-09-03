@@ -257,7 +257,7 @@ def set_active_languages(lang_codes: list):
     notify(
         "🌐 OCR Languages Updated",
         f"Active OCR Recognition:\n<b>{display_str}</b>",
-        icon="character-set"
+        icon="ocr-language-manager"
     )
     return config["active_language"]
 
@@ -308,7 +308,7 @@ def delete_user_language(lang_code: str):
         return True, "Language model deleted."
     return False, "File not found."
 
-def notify(title, body, icon="character-set", timeout=4000):
+def notify(title, body, icon="ocr-language-manager", timeout=4000):
     """Show desktop notification."""
     if not shutil.which("notify-send"):
         return
@@ -800,7 +800,13 @@ def launch_gtk_gui():
             super().__init__(title="Tesseract OCR Language Hub")
             self.set_default_size(800, 740)
             self.set_position(Gtk.WindowPosition.CENTER)
-            self.set_icon_name("character-set")
+            self.set_icon_name("ocr-language-manager")
+            icon_file = Path.home() / ".local/share/icons/hicolor/512x512/apps/ocr-language-manager.png"
+            if icon_file.exists():
+                try:
+                    self.set_icon_from_file(str(icon_file))
+                except Exception:
+                    pass
 
             self.installed_langs = get_installed_languages()
             self.config = load_ocr_config()

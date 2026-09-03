@@ -325,6 +325,22 @@ for desktop_file in app-shortcut-creator.desktop theme-manager.desktop ocr-langu
     fi
 done
 
+if [ -f "${DOTFILES_DIR}/.config/hypr/assets/ocr-language-manager.png" ]; then
+    mkdir -p "${HOME}/.local/share/icons/hicolor/512x512/apps" "${HOME}/.local/share/icons"
+    cp "${DOTFILES_DIR}/.config/hypr/assets/ocr-language-manager.png" "${HOME}/.local/share/icons/"
+    for size in 16 24 32 48 64 128 256 512; do
+        mkdir -p "${HOME}/.local/share/icons/hicolor/${size}x${size}/apps"
+        if command -v magick >/dev/null 2>&1; then
+            magick "${DOTFILES_DIR}/.config/hypr/assets/ocr-language-manager.png" -resize "${size}x${size}" "${HOME}/.local/share/icons/hicolor/${size}x${size}/apps/ocr-language-manager.png" 2>/dev/null || true
+        else
+            cp "${DOTFILES_DIR}/.config/hypr/assets/ocr-language-manager.png" "${HOME}/.local/share/icons/hicolor/${size}x${size}/apps/ocr-language-manager.png" 2>/dev/null || true
+        fi
+    done
+    if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+        gtk-update-icon-cache -f -t "${HOME}/.local/share/icons/hicolor" >/dev/null 2>&1 || true
+    fi
+fi
+
 # Hide technical / developer / internal background helper desktop entries
 if [ -f "${DOTFILES_DIR}/sddm/scripts/hide-unwanted-apps.sh" ]; then
     bash "${DOTFILES_DIR}/sddm/scripts/hide-unwanted-apps.sh" >/dev/null 2>&1 || true
@@ -333,7 +349,7 @@ fi
 if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database "${HOME}/.local/share/applications" >/dev/null 2>&1 || true
 fi
-log_success "Application menus cleaned and customized."
+log_success "Application menus and icons deployed."
 
 # 9. Initialize Theme & Color Variables
 log_info "Initializing desktop theme and dynamic color variables..."

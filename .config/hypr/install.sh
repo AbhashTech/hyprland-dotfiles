@@ -149,6 +149,22 @@ for desktop_file in app-shortcut-creator.desktop theme-manager.desktop ocr-langu
         chmod +x "${HOME}/.local/share/applications/${desktop_file}"
     fi
 done
+if [ -f "${HYPR_DIR}/assets/ocr-language-manager.png" ]; then
+    mkdir -p "${HOME}/.local/share/icons/hicolor/512x512/apps" "${HOME}/.local/share/icons"
+    cp "${HYPR_DIR}/assets/ocr-language-manager.png" "${HOME}/.local/share/icons/"
+    for size in 16 24 32 48 64 128 256 512; do
+        mkdir -p "${HOME}/.local/share/icons/hicolor/${size}x${size}/apps"
+        if command -v magick >/dev/null 2>&1; then
+            magick "${HYPR_DIR}/assets/ocr-language-manager.png" -resize "${size}x${size}" "${HOME}/.local/share/icons/hicolor/${size}x${size}/apps/ocr-language-manager.png" 2>/dev/null || true
+        else
+            cp "${HYPR_DIR}/assets/ocr-language-manager.png" "${HOME}/.local/share/icons/hicolor/${size}x${size}/apps/ocr-language-manager.png" 2>/dev/null || true
+        fi
+    done
+    if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+        gtk-update-icon-cache -f -t "${HOME}/.local/share/icons/hicolor" >/dev/null 2>&1 || true
+    fi
+fi
+
 if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database "${HOME}/.local/share/applications" >/dev/null 2>&1 || true
 fi
