@@ -94,7 +94,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   └── wireplumber.conf.d/  # Software DSP mixing (51-alsa-soft-mixer.conf) & profile priority routing (52-alsa-routes.conf)
     ├── kitty/                   # Kitty Terminal Emulator
     │   └── kitty.conf           # Catppuccin Mocha theme, font, padding & shortcuts
-    ├── starship.toml            # Starship Cross-Shell Prompt (Catppuccin Mocha)
+    ├── starship.toml            # Starship Cross-Shell Prompt (Catppuccin Mocha, multi-theme, continuation prompt & Claude Code statusline)
     ├── zellij/                  # Terminal Multiplexer
     │   └── config.kdl           # Themes, compact status bar & ergonomics
     ├── lazygit/                 # Git Terminal UI
@@ -637,6 +637,17 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `ld` | `lazydocker` | Launch Docker/Podman container TUI |
 | `zj` | `zellij` | Launch Zellij terminal multiplexer |
 | `ff` | `fastfetch` | Display hardware and OS info |
+
+---
+
+### 🚀 Starship Prompt & Shell Integration (`~/.config/starship.toml`)
+
+- **Cross-Shell Prompting**: High-performance prompt supporting Bash, Zsh, and Fish with Git branch/status, execution time (`cmd_duration`), language versions (Rust, Go, Python, Node), and OS iconography.
+- **Dynamic Theme Palette Sync**: Synced across 19 desktop themes via `theme_switcher.py`.
+- **Advanced Features**:
+  - **Continuation Prompt (`continuation_prompt`)**: Displays `▶▶ ` on multi-line and unclosed statements.
+  - **Dynamic Terminal Window Title**: `set_win_title` hook via `starship_precmd_user_func` dynamically updates terminal tabs with your current working directory.
+  - **Claude Code Statusline**: Pre-configured statusline profile (`starship statusline claude-code`) featuring active model display, visual context window gauge (`▰▰▰▱▱▱`), and token cost tracking.
 
 ---
 
