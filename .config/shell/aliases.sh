@@ -83,3 +83,9 @@ alias add-app="python3 ~/.config/hypr/scripts/app_shortcut_creator.py"
 alias create-shortcut="python3 ~/.config/hypr/scripts/app_shortcut_creator.py"
 alias app-creator="python3 ~/.config/hypr/scripts/app_shortcut_creator.py"
 
+# --- Dotfiles & Theme Synchronization ---
+alias dotpush="~/.dotfiles/scripts/dotfiles-push.sh"
+alias theme-sync="python3 ~/.config/hypr/scripts/theme_switcher.py --git-sync"
+alias theme-skip="python3 ~/.config/hypr/scripts/theme_switcher.py --git-skip"
+alias theme-unskip="python3 ~/.config/hypr/scripts/theme_switcher.py --git-unskip"
+

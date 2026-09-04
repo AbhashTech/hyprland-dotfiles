@@ -187,6 +187,143 @@ def save_state(theme_id):
     except Exception as e:
         print(f"Error saving state: {e}", file=sys.stderr)
 
+
+# =============================================================================
+# Git Integration & Worktree Isolation for Theme Files
+# =============================================================================
+DOTFILES_ROOT = HOME / ".dotfiles"
+
+THEME_TRACKED_REL_PATHS = [
+    ".config/hypr/theme.conf",
+    ".config/hypr/theme_vars.lua",
+    ".config/waybar/colors.css",
+    ".config/wofi/colors.css",
+    ".config/wlogout/colors.css",
+    ".config/kitty/theme.conf",
+    ".config/fuzzel/fuzzel.ini",
+    ".config/mako/config",
+    ".config/btop/btop.conf",
+    ".config/starship.toml",
+    ".config/zellij/config.kdl",
+    ".config/lazygit/config.yml",
+    ".config/swappy/config",
+    ".config/kdeglobals",
+    ".config/dolphinrc",
+    ".config/gtk-3.0/settings.ini",
+    ".config/gtk-4.0/settings.ini",
+    ".config/xsettingsd/xsettingsd.conf",
+    ".config/nvim/lua/theme_colors.lua",
+]
+
+def get_theme_tracked_files():
+    """Return list of existing tracked theme files relative to ~/.dotfiles root."""
+    existing = []
+    for rel_path in THEME_TRACKED_REL_PATHS:
+        if (DOTFILES_ROOT / rel_path).exists():
+            existing.append(rel_path)
+    return existing
+
+def set_git_skip_worktree(skip=True, quiet=False):
+    """
+    Set (--skip-worktree) or unset (--no-skip-worktree) on theme files in git repo.
+    Prevents local theme changes from dirtying git status.
+    """
+    if not (DOTFILES_ROOT / ".git").exists():
+        return False
+    files = get_theme_tracked_files()
+    if not files:
+        return False
+    flag = "--skip-worktree" if skip else "--no-skip-worktree"
+    try:
+        subprocess.run(
+            ["git", "-C", str(DOTFILES_ROOT), "update-index", flag] + files,
+            capture_output=True,
+            check=True
+        )
+        if not quiet:
+            action = "Ignored locally (skip-worktree)" if skip else "Tracking un-ignored"
+            print(f"{C_GRAY}git: {action} {len(files)} theme files{C_RESET}")
+        return True
+    except Exception as e:
+        if not quiet:
+            print(f"{C_YELLOW}Warning: git update-index {flag} failed: {e}{C_RESET}", file=sys.stderr)
+        return False
+
+def check_pending_theme_changes():
+    """Check if any theme files have modified content compared to git index."""
+    if not (DOTFILES_ROOT / ".git").exists():
+        return []
+    files = get_theme_tracked_files()
+    if not files:
+        return []
+    subprocess.run(
+        ["git", "-C", str(DOTFILES_ROOT), "update-index", "--no-skip-worktree"] + files,
+        capture_output=True,
+        check=False
+    )
+    try:
+        res = subprocess.run(
+            ["git", "-C", str(DOTFILES_ROOT), "status", "--porcelain"] + files,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        modified = [l.strip() for l in res.stdout.splitlines() if l.strip()]
+        return modified
+    finally:
+        subprocess.run(
+            ["git", "-C", str(DOTFILES_ROOT), "update-index", "--skip-worktree"] + files,
+            capture_output=True,
+            check=False
+        )
+
+def sync_theme_git(commit_message=None):
+    """
+    Unskip theme files, stage them, commit changes if any, and re-apply skip-worktree.
+    """
+    if not (DOTFILES_ROOT / ".git").exists():
+        print(f"{C_RED}Error: {DOTFILES_ROOT} is not a git repository.{C_RESET}", file=sys.stderr)
+        return False
+
+    files = get_theme_tracked_files()
+    if not files:
+        print(f"{C_YELLOW}No theme tracked files found.{C_RESET}")
+        return False
+
+    subprocess.run(
+        ["git", "-C", str(DOTFILES_ROOT), "update-index", "--no-skip-worktree"] + files,
+        capture_output=True,
+        check=False
+    )
+
+    try:
+        res = subprocess.run(
+            ["git", "-C", str(DOTFILES_ROOT), "status", "--porcelain"] + files,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        modified = [l.strip() for l in res.stdout.splitlines() if l.strip()]
+        if modified:
+            theme_id = CURRENT_THEME_TXT.read_text().strip() if CURRENT_THEME_TXT.exists() else "theme"
+            msg = commit_message or f"chore(theme): sync active theme ({theme_id})"
+            subprocess.run(["git", "-C", str(DOTFILES_ROOT), "add"] + files, check=True)
+            subprocess.run(["git", "-C", str(DOTFILES_ROOT), "commit", "-m", msg, "--"] + files, check=True)
+            print(f"{C_GREEN}✓ Successfully committed active theme:{C_RESET} {msg}")
+        else:
+            print(f"{C_BLUE}ℹ No theme changes to sync in git (working tree clean).{C_RESET}")
+        return True
+    except Exception as e:
+        print(f"{C_RED}Error syncing theme to git: {e}{C_RESET}", file=sys.stderr)
+        return False
+    finally:
+        subprocess.run(
+            ["git", "-C", str(DOTFILES_ROOT), "update-index", "--skip-worktree"] + files,
+            capture_output=True,
+            check=False
+        )
+
+
 # =============================================================================
 # Generator Functions for Components
 # =============================================================================
@@ -1316,6 +1453,9 @@ def apply_theme(theme_id, themes=None, notify=True):
 
     # Live reload desktop
     reload_desktop()
+
+    # Enforce git skip-worktree so theme switching never taints git status
+    set_git_skip_worktree(skip=True, quiet=True)
 
     if notify:
         send_theme_notification(theme)
@@ -2721,8 +2861,33 @@ def main():
     parser.add_argument("--toggle-mode", action="store_true", help="Toggle between dark and light mode systemwide")
     parser.add_argument("--mode", choices=["dark", "light", "toggle"], help="Set or toggle theme mode systemwide")
     parser.add_argument("--silent", action="store_true", help="Suppress desktop notifications")
+    parser.add_argument("--git-skip", action="store_true", help="Mark theme files as skip-worktree to isolate them from git status")
+    parser.add_argument("--git-unskip", action="store_true", help="Unmark theme files from skip-worktree")
+    parser.add_argument("--git-sync", action="store_true", help="Sync, stage, and commit active theme changes to git")
+    parser.add_argument("--check-git", action="store_true", help="Check for pending uncommitted theme changes")
 
     args = parser.parse_args()
+
+    if args.git_skip:
+        set_git_skip_worktree(skip=True)
+        return
+    elif args.git_unskip:
+        set_git_skip_worktree(skip=False)
+        return
+    elif args.git_sync:
+        sync_theme_git()
+        return
+    elif args.check_git:
+        changes = check_pending_theme_changes()
+        if changes:
+            print(f"{C_YELLOW}Pending theme changes detected:{C_RESET}")
+            for c in changes:
+                print(f"  {c}")
+            sys.exit(1)
+        else:
+            print(f"{C_GREEN}No pending theme changes.{C_RESET}")
+            sys.exit(0)
+
     themes = load_themes()
 
     if args.list:
