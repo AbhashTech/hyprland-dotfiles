@@ -9,6 +9,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 ```
 ~/.dotfiles/
 ├── install.sh                   # All-in-one dependency installer & symlink deployer (Pacman native)
+├── .zshrc                      # Modern Zsh shell configuration (history, plugins, prompt)
 ├── .gitignore                   # Exclusions for temporary files & Python cache
 ├── README.md                    # Full documentation and shortcut cheat sheet
 ├── sddm/                        # SDDM Theme Suite (Left-Sidebar Frosted Glass Layout)
@@ -139,7 +140,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | **Modern CLI Power Suite** | `eza`, `bat`, `ripgrep`, `fd`, `git-delta`, `duf`, `dust`, `tealdeer`, `xh`, `glow`, `fzf`, `zoxide`, `wtype` | Daily replacements for ls, cat, grep, find, diff, du, df, man, curl |
 | **TUIs & Multiplexing** | `lazygit`, `lazydocker`, `zellij`, `btop`, `fastfetch` | Interactive terminal UIs for Git, Docker, terminal multiplexing, and system monitoring |
 | **Performance, Gaming & Thermals** | `gamemode`, `thermald`, `power-profiles-daemon`, `upower` | Process CPU/GPU optimizer, Intel thermal daemon, and hardware power profile metrics |
-| **Shell & Environment** | `starship`, `atuin`, `direnv`, `mise` | Fast prompt, SQLite history search, per-directory env/venv, tool version manager |
+| **Shell & Environment** | `starship`, `zsh`, `zsh-autosuggestions`, `zsh-syntax-highlighting`, `atuin`, `direnv`, `mise` | Fast prompt, Zsh shell with autosuggestions & syntax highlighting, SQLite history search, per-directory env/venv, tool version manager |
 | **Audio & Media Codecs** | `pipewire`, `pipewire-pulse`, `pipewire-alsa`, `pipewire-jack`, `wireplumber`, `libldac`, `libfreeaptx`, `gst-plugins-good`, `gst-plugins-bad`, `gst-plugins-ugly`, `gst-libav`, `playerctl`, `libva-utils` | PipeWire audio suite, LDAC/aptX Bluetooth HD codecs, GStreamer codecs, VA-API utils, and MPRIS playback keys |
 | **System Tuning & Cleanup** | `zram-generator`, `pacman-contrib` | Compressed in-memory ZRAM swap and automated pacman cache maintenance |
 | **Brightness & Night Light**| `brightnessctl`, `ddcutil`, `hyprsunset` / `wlsunset` | Backlight, external DDC brightness, and warm blue-light filter |

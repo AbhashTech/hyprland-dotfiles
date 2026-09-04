@@ -88,6 +88,9 @@ if command -v pacman >/dev/null 2>&1; then
 
         # Shell Prompt & Environment
         starship
+        zsh
+        zsh-autosuggestions
+        zsh-syntax-highlighting
         atuin
         direnv
         mise
@@ -263,6 +266,18 @@ for cfg_file in "starship.toml" "mimeapps.list"; do
         log_success "Symlinked ~/.config/${cfg_file} -> ${DOTFILES_DIR}/.config/${cfg_file}"
     fi
 done
+
+# Symlink .zshrc
+if [ -f "${DOTFILES_DIR}/.zshrc" ]; then
+    ZSH_DEST="${HOME}/.zshrc"
+    if [ -L "$ZSH_DEST" ]; then
+        rm "$ZSH_DEST"
+    elif [ -f "$ZSH_DEST" ]; then
+        mv "$ZSH_DEST" "${ZSH_DEST}.backup_$(date +%Y%m%d_%H%M%S)"
+    fi
+    ln -s "${DOTFILES_DIR}/.zshrc" "$ZSH_DEST"
+    log_success "Symlinked ~/.zshrc -> ${DOTFILES_DIR}/.zshrc"
+fi
 
 # 3. Ensure Permissions
 log_info "Configuring executable permissions for all custom scripts..."
