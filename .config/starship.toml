@@ -18,6 +18,8 @@ $character"""
 
 palette = "nord"
 
+continuation_prompt = "[▶▶ ](bold mauve)"
+
 [palettes.catppuccin_mocha]
 rosewater = "#f5e0dc"
 flamingo = "#f2cdcd"
@@ -113,6 +115,53 @@ format = "[$symbol$context]($style) "
 min_time = 2_000
 style = "bold yellow"
 format = "took [$duration]($style) "
+
+# =============================================================================
+# Claude Code Statusline Configuration
+# =============================================================================
+[profiles]
+claude-code = "$claude_model$git_branch$claude_context$claude_cost"
+
+[claude_model]
+format = "[$symbol$model]($style) "
+symbol = "🤖 "
+style = "bold sapphire"
+
+[claude_context]
+format = "[$gauge]($style) "
+gauge_width = 10
+
+[[claude_context.display]]
+threshold = 0
+style = "bold green"
+
+[[claude_context.display]]
+threshold = 50
+style = "bold yellow"
+
+[[claude_context.display]]
+threshold = 75
+style = "bold peach"
+
+[[claude_context.display]]
+threshold = 90
+style = "bold red"
+
+[claude_cost]
+format = "[$symbol(\\$$cost)]($style) "
+symbol = "💰 "
+
+[[claude_cost.display]]
+threshold = 0.0
+hidden = true
+
+[[claude_cost.display]]
+threshold = 1.0
+style = "bold yellow"
+
+[[claude_cost.display]]
+threshold = 5.0
+style = "bold red"
 
 [palettes.tokyo_night]
 rosewater = "#f7768e"
