@@ -1,28 +1,28 @@
 # =============================================================================
-# Lazygit Configuration - Everforest Dark
+# Lazygit Configuration - Nord Arctic
 # =============================================================================
 
 gui:
   theme:
     activeBorderColor:
-      - '#a7c080'
+      - '#88c0d0'
       - bold
     inactiveBorderColor:
-      - '#475258'
+      - '#4c566a'
     optionsTextColor:
-      - '#7fbbb3'
+      - '#81a1c1'
     selectedLineBgColor:
-      - '#343f44'
+      - '#3b4252'
     cherryPickedCommitBgColor:
-      - '#3d484d'
+      - '#434c5e'
     cherryPickedCommitFgColor:
-      - '#a7c080'
+      - '#88c0d0'
     unstagedChangesColor:
-      - '#e67e80'
+      - '#bf616a'
     defaultFgColor:
-      - '#d3c6aa'
+      - '#eceff4'
     searchingActiveBorderColor:
-      - '#dbbc7f'
+      - '#ebcb8b'
 
 git:
   paging:

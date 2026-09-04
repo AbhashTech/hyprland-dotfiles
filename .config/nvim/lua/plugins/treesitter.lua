@@ -1,22 +1,29 @@
 -- =============================================================================
--- Treesitter Syntax Highlighting & Code Parsing
+-- Treesitter Syntax Highlighting & Code Parsing (nvim-treesitter main / Neovim 0.12+)
 -- =============================================================================
 
 return {
   {
     "nvim-treesitter/nvim-treesitter",
-    branch = "master",
+    branch = "main",
+    lazy = false,
     build = ":TSUpdate",
-    event = { "BufReadPost", "BufNewFile" },
-    cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
-    main = "nvim-treesitter.configs",
-    opts = {
-      highlight = {
-        enable = true,
-        additional_vim_regex_highlighting = false,
-      },
-      indent = { enable = true },
-      ensure_installed = {
+    config = function()
+      local ts = require("nvim-treesitter")
+
+      ts.setup({
+        install_dir = vim.fn.stdpath("data") .. "/site",
+      })
+
+      -- Automatically start Treesitter highlighting for supported filetypes
+      vim.api.nvim_create_autocmd("FileType", {
+        callback = function(args)
+          pcall(vim.treesitter.start, args.buf)
+        end,
+      })
+
+      -- Install desired parsers
+      ts.install({
         "bash",
         "c",
         "cpp",
@@ -40,16 +47,7 @@ return {
         "vim",
         "vimdoc",
         "yaml",
-      },
-      incremental_selection = {
-        enable = true,
-        keymaps = {
-          init_selection = "<C-space>",
-          node_incremental = "<C-space>",
-          scope_incremental = false,
-          node_decremental = "<bs>",
-        },
-      },
-    },
+      })
+    end,
   },
 }
