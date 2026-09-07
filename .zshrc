@@ -31,10 +31,6 @@ compinit -d "${HOME}/.cache/zsh/zcompdump"
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' # Case-insensitive tab completion
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"     # Colored completion matching ls
 
-# --- Default Environment Variables ---
-export EDITOR="nvim"
-export VISUAL="nvim"
-
 # --- Dynamic Terminal / Tab Window Title ---
 function set_win_title() {
     print -Pn "\e]0;%1~\a"
@@ -47,6 +43,10 @@ add-zsh-hook precmd set_win_title
 
 # --- Shell Productivity Aliases ---
 [[ -f "${HOME}/.dotfiles/.config/shell/aliases.sh" ]] && source "${HOME}/.dotfiles/.config/shell/aliases.sh"
+
+# --- Preferred Editor ---
+export EDITOR="nvim"
+export VISUAL="nvim"
 
 # --- Official Pacman Zsh Plugins ---
 # Autosuggestions (Fish-like history suggestions)

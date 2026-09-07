@@ -419,6 +419,18 @@ def generate_waybar_colors(theme):
     if (DOTFILES_DIR / "waybar").exists():
         (DOTFILES_DIR / "waybar" / "colors.css").write_text(content)
 
+    # Export colors for Quickshell
+    try:
+        qs_defs = {}
+        for line in lines:
+            m = re.match(r'@define-color\s+(\w+)\s+([^;]+);', line.strip())
+            if m:
+                qs_defs[m.group(1)] = m.group(2).strip()
+        (CONFIG_DIR / "quickshell").mkdir(parents=True, exist_ok=True)
+        (CONFIG_DIR / "quickshell" / "colors.json").write_text(json.dumps(qs_defs, indent=2))
+    except Exception:
+        pass
+
 
 def generate_wofi_colors(theme):
     """Generate ~/.config/wofi/colors.css for Wofi."""

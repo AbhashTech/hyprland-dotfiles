@@ -48,6 +48,7 @@ if command -v pacman >/dev/null 2>&1; then
         wlsunset
         xdg-desktop-portal-hyprland
         xdg-desktop-portal-gtk
+        quickshell
         waybar
         mako
         hyprpaper
@@ -184,5 +185,5 @@ echo -e "  • Shortcuts Cheat:   ${COLOR_BOLD}SUPER + /${COLOR_RESET} or ${COLO
 echo -e "  • Theme Menu:        ${COLOR_BOLD}SUPER + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --menu${COLOR_RESET})"
 echo -e "  • Theme Manager GUI: ${COLOR_BOLD}SUPER + ALT + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --gui${COLOR_RESET})"
 echo -e "  • If already in Hyprland, reload with: ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"
-echo -e "  • Toggle Waybar with: ${COLOR_BOLD}SUPER + SHIFT + W${COLOR_RESET} (or ${COLOR_BOLD}~/.config/waybar/scripts/launch_waybar.sh${COLOR_RESET})"
+echo -e "  • Toggle Status Bar with: ${COLOR_BOLD}SUPER + SHIFT + W${COLOR_RESET} (or ${COLOR_BOLD}~/.config/quickshell/scripts/launch_quickshell.sh --toggle${COLOR_RESET})"
 

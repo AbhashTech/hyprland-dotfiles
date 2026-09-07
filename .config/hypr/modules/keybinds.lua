@@ -55,8 +55,8 @@ local powerMenuScript = os.getenv("HOME") .. "/.config/waybar/scripts/power-menu
 hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("bash " .. powerMenuScript))
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("bash " .. powerMenuScript))
 
--- Toggle Waybar Status Bar
-hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/waybar/scripts/launch_waybar.sh --toggle"))
+-- Toggle Status Bar (Quickshell)
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/launch_quickshell.sh --toggle"))
 
 -- Open Keyboard Shortcuts Cheat Sheet
 local keybindViewer = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/keybinds_viewer.py"

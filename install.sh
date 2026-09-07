@@ -54,6 +54,7 @@ if command -v pacman >/dev/null 2>&1; then
         xdg-desktop-portal-gtk
 
         # Bar, Launchers & Notifications
+        quickshell
         waybar
         mako
         fuzzel
@@ -415,7 +416,7 @@ echo -e "  • Shortcuts Cheat:   ${COLOR_BOLD}SUPER + /${COLOR_RESET} or ${COLO
 echo -e "  • Theme Menu:        ${COLOR_BOLD}SUPER + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --menu${COLOR_RESET})"
 echo -e "  • Theme Manager GUI: ${COLOR_BOLD}SUPER + ALT + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --gui${COLOR_RESET})"
 echo -e "  • Hyprland Reload:   ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"
-echo -e "  • Waybar Toggle:     ${COLOR_BOLD}SUPER + SHIFT + W${COLOR_RESET} (or ${COLOR_BOLD}~/.config/waybar/scripts/launch_waybar.sh${COLOR_RESET})"
+echo -e "  • Status Bar Toggle: ${COLOR_BOLD}SUPER + SHIFT + W${COLOR_RESET} (or ${COLOR_BOLD}~/.config/quickshell/scripts/launch_quickshell.sh --toggle${COLOR_RESET})"
 echo -e "  • Power Menu:        ${COLOR_BOLD}SUPER + ESCAPE${COLOR_RESET} / ${COLOR_BOLD}SUPER + M${COLOR_RESET} (wlogout)"
 echo -e "  • Git TUI Overlay:   ${COLOR_BOLD}SUPER + G${COLOR_RESET} (lazygit)"
 echo -e "  • Notification Mako: ${COLOR_BOLD}makoctl reload${COLOR_RESET}"

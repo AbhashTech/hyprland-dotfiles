@@ -1,0 +1,82 @@
+import QtQuick
+import Quickshell
+import ".."
+
+Rectangle {
+    id: root
+
+    property bool showDate: false
+    property string timeStr: ""
+    property string dateStr: ""
+
+    implicitHeight: Theme.barHeight - 8
+    implicitWidth: row.implicitWidth + 20
+    radius: Theme.capsuleRadius
+
+    readonly property bool isHovered: mouseArea.containsMouse
+    color: isHovered ? Theme.moduleHoverBg : Theme.moduleBg
+    border.color: isHovered ? Theme.moduleHoverBorder : Theme.moduleBorder
+    border.width: 1
+
+    function updateTime() {
+        var now = new Date();
+        var hours = now.getHours();
+        var minutes = now.getMinutes();
+        var seconds = now.getSeconds();
+        var ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        var hStr = hours < 10 ? "0" + hours : hours;
+        var mStr = minutes < 10 ? "0" + minutes : minutes;
+        var sStr = seconds < 10 ? "0" + seconds : seconds;
+
+        root.timeStr = hStr + ":" + mStr + " " + ampm;
+
+        var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        root.dateStr = days[now.getDay()] + ", " + now.getDate() + " " + months[now.getMonth()] + " " + now.getFullYear();
+    }
+
+    Component.onCompleted: updateTime()
+
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: root.updateTime()
+    }
+
+    Row {
+        id: row
+        anchors.centerIn: parent
+        spacing: 6
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.showDate ? "󰃭" : ""
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+            font.bold: true
+            color: Theme.accent
+        }
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.showDate ? root.dateStr : root.timeStr
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+            font.bold: true
+            color: Theme.text
+        }
+    }
+
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: {
+            root.showDate = !root.showDate;
+        }
+    }
+}

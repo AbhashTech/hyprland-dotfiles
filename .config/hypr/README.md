@@ -63,7 +63,8 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
 - **hyprpolkitagent** — Polkit authentication agent for privilege escalation.
 
 ### 2. Status Bar, Notifications, Session & Launchers
-- **waybar** — Highly customizable top status bar with hardware stats & dynamic power profiles.
+- **quickshell** — High-performance desktop shell status bar with glassmorphic island design, hardware stats, audio, brightness, and MPRIS controls.
+- **waybar** — Alternative status bar (configuration preserved).
 - **mako** — Lightweight notification daemon (with click-to-focus window activation).
 - **hyprpaper** — Fast wallpaper utility.
 - **fuzzel** — High-performance Wayland application launcher and dmenu.
@@ -131,7 +132,7 @@ chmod +x ~/.config/hypr/install.sh
 sudo pacman -S --needed \
     hyprland hypridle hyprlock hyprpaper hyprpicker hyprsunset wlsunset hyprpolkitagent \
     xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
-    waybar mako fuzzel wofi wlogout kitty yazi zoxide fzf wtype \
+    quickshell waybar mako fuzzel wofi wlogout kitty yazi zoxide fzf wtype \
     dolphin firefox btop \
     pipewire pipewire-pulse wireplumber libpulse playerctl \
     brightnessctl ddcutil wl-clipboard cliphist \
@@ -175,10 +176,10 @@ sudo usermod -aG i2c $USER
   hyprctl reload
   ```
 - **Lock Screen**: Press `SUPER + L` or `SUPER + ALT + L`.
-- **Toggle Waybar**:
+- **Toggle Status Bar (Quickshell)**:
   Press `SUPER + SHIFT + W` or run:
   ```bash
-  ~/.config/waybar/scripts/launch_waybar.sh
+  ~/.config/quickshell/scripts/launch_quickshell.sh --toggle
   ```
 
 ---
@@ -201,7 +202,7 @@ sudo usermod -aG i2c $USER
 | `SUPER + J` | Toggle Layout Split Orientation (Dwindle) |
 | `SUPER + L` / `SUPER + ALT + L` | Lock Screen immediately (`hyprlock`) |
 | `SUPER + Escape` / `SUPER + M` | Open Power & Session Menu (`wlogout`) |
-| `SUPER + SHIFT + W` | Toggle Waybar Status Bar (Show / Hide) |
+| `SUPER + SHIFT + W` | Toggle Quickshell Status Bar (Show / Hide) |
 | `SUPER + /` / `SUPER + ?` / `SUPER + F1` | Open Dynamic Keybindings Cheat Sheet Viewer |
 
 ---

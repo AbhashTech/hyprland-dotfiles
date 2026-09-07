@@ -1,0 +1,99 @@
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import ".."
+
+Rectangle {
+    id: root
+
+    implicitHeight: Theme.barHeight - 8
+    implicitWidth: Math.min(row.implicitWidth + 20, 260)
+    radius: Theme.capsuleRadius
+
+    readonly property bool isHovered: mouseArea.containsMouse
+    color: isHovered ? Theme.moduleHoverBg : Theme.moduleBg
+    border.color: isHovered ? Theme.moduleHoverBorder : Theme.moduleBorder
+    border.width: 1
+
+    property string windowTitle: "󰖲 Desktop"
+    property string iconText: "󰖲"
+
+    Process {
+        id: titleProc
+        command: ["hyprctl", "activewindow", "-j"]
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    var win = JSON.parse(data);
+                    var title = win && win.title ? win.title.trim() : "";
+                    if (!title) {
+                        root.windowTitle = "Desktop";
+                        root.iconText = "󰖲";
+                        return;
+                    }
+
+                    if (title.indexOf("Mozilla Firefox") !== -1) {
+                        root.iconText = "󰈹";
+                        title = title.replace(" — Mozilla Firefox", "").replace(" - Mozilla Firefox", "");
+                    } else if (title.indexOf("Kitty") !== -1 || win.class === "kitty") {
+                        root.iconText = "󰞷";
+                        title = title.replace(" - Kitty", "");
+                    } else if (title.indexOf("Dolphin") !== -1 || win.class === "dolphin") {
+                        root.iconText = "󰉋";
+                        title = title.replace(" - Dolphin", "");
+                    } else if (title.indexOf("Visual Studio Code") !== -1 || win.class === "Code") {
+                        root.iconText = "󰨞";
+                        title = title.replace(" - Visual Studio Code", "");
+                    } else {
+                        root.iconText = "󰖲";
+                    }
+
+                    if (title.length > 28) {
+                        title = title.substring(0, 25) + "...";
+                    }
+                    root.windowTitle = title;
+                } catch (e) {}
+            }
+        }
+    }
+
+    Timer {
+        interval: 300
+        running: true
+        repeat: true
+        onTriggered: {
+            if (!titleProc.running) titleProc.running = true;
+        }
+    }
+
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+    }
+
+    Row {
+        id: row
+        anchors.centerIn: parent
+        spacing: 6
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.iconText
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+            font.bold: true
+            color: Theme.accent
+        }
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.windowTitle
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+            font.bold: true
+            color: Theme.text
+            elide: Text.ElideRight
+        }
+    }
+}

@@ -68,7 +68,12 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │       ├── volume_control.py     # Speaker/mic volume control, OSD & sink switcher
     │       ├── wallpaper_switcher.py # Wallpaper randomizer & selector (~/Wallpaper)
     │       └── wofi_launcher.py      # Wofi wrapper with transparent backdrop layer
-    ├── waybar/                  # Waybar Status Bar
+    ├── quickshell/              # Quickshell Status Bar & Desktop Shell
+    │   ├── shell.qml            # Main entrypoint, screen variants & glassmorphic window
+    │   ├── Theme.qml            # Dynamic palette provider connected to colors.json
+    │   ├── components/          # Modular QML capsules (Launcher, Workspaces, Window, MPRIS, Clock, Status, Tray)
+    │   └── scripts/             # Launch & toggle supervisor (launch_quickshell.sh)
+    ├── waybar/                  # Waybar Status Bar (Preserved)
     │   ├── config.jsonc         # Bar layout, modules, click actions & tooltips
     │   ├── style.css            # Styling, gradients, glassmorphism & dynamic colors
     │   └── scripts/             # Waybar helper scripts & TUI / popup menus
@@ -130,7 +135,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | **Display Manager (SDDM)**| `sddm`, `qt6-declarative`, `qt6-svg`, `qt6-5compat` | Qt6 display manager & Catppuccin Mocha glassmorphic greeter |
 | **Compositor & Portals** | `hyprland`, `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk`, `xdg-utils`, `xdg-user-dirs`, `hyprpolkitagent` | Wayland compositor, XDG portals for screen sharing & file dialogs, and Polkit agent |
 | **Session, Lock & Logout** | `hyprlock`, `hypridle`, `wlogout` | Catppuccin Mocha lockscreen, idle management, and Wayland power modal |
-| **Status Bar & Power** | `waybar`, `power-profiles-daemon`, `upower` | Status bar with hardware stats, power profile selector & battery metrics |
+| **Status Bar & Power** | `quickshell`, `waybar`, `power-profiles-daemon`, `upower` | Modern Quickshell status bar, Waybar fallback, hardware stats, power profile selector & battery metrics |
 | **Notifications** | `mako`, `libnotify` | Notification daemon & `notify-send` for OSDs (with click-to-focus) |
 | **Wallpaper** | `hyprpaper` | Fast Wayland wallpaper daemon |
 | **App Launchers & Theming** | `fuzzel`, `wofi`, `nwg-look`, `gsettings-desktop-schemas`, `dconf`, `xsettingsd` | Fast Wayland launcher, GTK dmenu, and GTK3/4 & DConf settings sync |
@@ -197,9 +202,9 @@ source ~/.config/shell/aliases.sh
 
 ---
 
-## 📊 Waybar Architecture & Interactive Features
+## 📊 Status Bar Architecture & Interactive Features (Quickshell)
 
-The top status bar is divided into three functional zones:
+The top status bar is built with **Quickshell** (`~/.config/quickshell/shell.qml`) replicating the glassmorphic island design across three functional zones:
 
 ### 1. Left Zone
 - **󰣇 Application Launcher (`custom/launcher`)**: Left-click launches **Fuzzel** with backdrop blur; right-click opens the **Wlogout** power menu.
@@ -499,7 +504,7 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + J` | **Toggle Layout Split** | Toggle horizontal/vertical split orientation (Dwindle layout) |
 | `SUPER + L` / `SUPER + ALT + L` | **Lock Screen** | Immediately trigger `hyprlock` lockscreen |
 | `SUPER + Escape` / `SUPER + M` | **Power & Session Menu** | Open **Wlogout** session modal (Lock, Logout, Suspend, Reboot, Shutdown) |
-| `SUPER + SHIFT + W` | **Toggle Waybar** | Toggle Waybar status bar on/off with state persistence |
+| `SUPER + SHIFT + W` | **Toggle Status Bar** | Toggle Quickshell status bar on/off with state persistence |
 | `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Shortcut Cheat Sheet** | Open interactive **Fuzzel/Wofi** dynamic keybindings viewer |
 
 ---
