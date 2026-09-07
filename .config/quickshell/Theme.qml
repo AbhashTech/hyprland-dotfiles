@@ -6,10 +6,15 @@ import Quickshell.Io
 QtObject {
     id: root
 
+    property int version: 0
+
     // File watcher for dynamic theme reloading
     property var colorsJsonFile: FileView {
         path: Quickshell.env("HOME") + "/.config/quickshell/colors.json"
         printErrors: false
+        onLoaded: {
+            root.version++;
+        }
     }
 
     // Default fallback palette (Nord)
@@ -37,6 +42,7 @@ QtObject {
 
     // Raw loaded map
     property var colorMap: {
+        var v = root.version;
         try {
             var raw = colorsJsonFile.text();
             if (raw && raw.trim().length > 0) {
@@ -48,50 +54,66 @@ QtObject {
         return {};
     }
 
+    function parseColor(str, fallback) {
+        if (!str || typeof str !== "string") return fallback;
+        str = str.trim();
+        if (str.startsWith("#")) return str;
+        // Parse rgba(r, g, b, a) or rgb(r, g, b)
+        var m = str.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)$/);
+        if (m) {
+            var r = parseInt(m[1], 10) / 255.0;
+            var g = parseInt(m[2], 10) / 255.0;
+            var b = parseInt(m[3], 10) / 255.0;
+            var a = m[4] !== undefined ? parseFloat(m[4]) : 1.0;
+            return Qt.rgba(r, g, b, a);
+        }
+        return fallback;
+    }
+
     function getColor(name, fallback) {
         if (colorMap && colorMap[name]) {
-            return colorMap[name];
+            return parseColor(colorMap[name], fallback);
         }
         return fallback;
     }
 
     // Semantic Colors
-    readonly property color base: getColor("base", defaultBase)
-    readonly property color mantle: getColor("mantle", defaultMantle)
-    readonly property color crust: getColor("crust", defaultCrust)
-    readonly property color surface0: getColor("surface0", defaultSurface0)
-    readonly property color surface1: getColor("surface1", defaultSurface1)
-    readonly property color surface2: getColor("surface2", defaultSurface2)
-    readonly property color overlay0: getColor("overlay0", defaultOverlay0)
-    readonly property color overlay1: getColor("overlay1", defaultOverlay1)
-    readonly property color text: getColor("text", defaultText)
-    readonly property color subtext0: getColor("subtext0", defaultSubtext0)
-    readonly property color subtext1: getColor("subtext1", defaultSubtext1)
-    readonly property color blue: getColor("blue", defaultBlue)
-    readonly property color lavender: getColor("lavender", defaultLavender)
-    readonly property color sapphire: getColor("sapphire", defaultSapphire)
-    readonly property color teal: getColor("teal", defaultTeal)
-    readonly property color green: getColor("green", defaultGreen)
-    readonly property color yellow: getColor("yellow", defaultYellow)
-    readonly property color peach: getColor("peach", defaultPeach)
-    readonly property color red: getColor("red", defaultRed)
-    readonly property color mauve: getColor("mauve", defaultMauve)
-    readonly property color accent: getColor("accent", defaultAccent)
+    property color base: getColor("base", defaultBase)
+    property color mantle: getColor("mantle", defaultMantle)
+    property color crust: getColor("crust", defaultCrust)
+    property color surface0: getColor("surface0", defaultSurface0)
+    property color surface1: getColor("surface1", defaultSurface1)
+    property color surface2: getColor("surface2", defaultSurface2)
+    property color overlay0: getColor("overlay0", defaultOverlay0)
+    property color overlay1: getColor("overlay1", defaultOverlay1)
+    property color text: getColor("text", defaultText)
+    property color subtext0: getColor("subtext0", defaultSubtext0)
+    property color subtext1: getColor("subtext1", defaultSubtext1)
+    property color blue: getColor("blue", defaultBlue)
+    property color lavender: getColor("lavender", defaultLavender)
+    property color sapphire: getColor("sapphire", defaultSapphire)
+    property color teal: getColor("teal", defaultTeal)
+    property color green: getColor("green", defaultGreen)
+    property color yellow: getColor("yellow", defaultYellow)
+    property color peach: getColor("peach", defaultPeach)
+    property color red: getColor("red", defaultRed)
+    property color mauve: getColor("mauve", defaultMauve)
+    property color accent: getColor("accent", defaultAccent)
 
     // Dynamic Glassmorphic Colors matching Waybar
-    readonly property color barBg: getColor("waybar_bg", "#991e222a")
-    readonly property color barBorder: getColor("waybar_border", "#1fffffff")
-    readonly property color barShadow: getColor("waybar_shadow", "#66000000")
+    property color barBg: getColor("waybar_bg", Qt.rgba(30/255, 34/255, 42/255, 0.60))
+    property color barBorder: getColor("waybar_border", Qt.rgba(1, 1, 1, 0.12))
+    property color barShadow: getColor("waybar_shadow", Qt.rgba(0, 0, 0, 0.40))
 
-    readonly property color moduleBg: getColor("module_bg", "#e02e3440")
-    readonly property color moduleBorder: getColor("module_border", "#1fffffff")
-    readonly property color moduleHoverBg: getColor("module_hover_bg", "#f23b4252")
-    readonly property color moduleHoverBorder: getColor("module_hover_border", "#8088c0d0")
-    readonly property color moduleActiveBg: getColor("module_active_bg", "#cc434c5e")
-    readonly property color accentGlow: getColor("accent_glow", "#6688c0d0")
+    property color moduleBg: getColor("module_bg", Qt.rgba(46/255, 52/255, 64/255, 0.88))
+    property color moduleBorder: getColor("module_border", Qt.rgba(1, 1, 1, 0.12))
+    property color moduleHoverBg: getColor("module_hover_bg", Qt.rgba(59/255, 66/255, 82/255, 0.95))
+    property color moduleHoverBorder: getColor("module_hover_border", Qt.rgba(136/255, 192/255, 208/255, 0.50))
+    property color moduleActiveBg: getColor("module_active_bg", Qt.rgba(67/255, 76/255, 94/255, 0.80))
+    property color accentGlow: getColor("accent_glow", Qt.rgba(136/255, 192/255, 208/255, 0.40))
 
-    readonly property color tooltipBg: getColor("tooltip_bg", "#f2242933")
-    readonly property color tooltipBorder: getColor("tooltip_border", "#7388c0d0")
+    property color tooltipBg: getColor("tooltip_bg", Qt.rgba(36/255, 41/255, 51/255, 0.95))
+    property color tooltipBorder: getColor("tooltip_border", Qt.rgba(136/255, 192/255, 208/255, 0.45))
 
     // Typography & Metrics
     readonly property string fontFamily: "JetBrainsMono Nerd Font, JetBrains Mono, monospace"

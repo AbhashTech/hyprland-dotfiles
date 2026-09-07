@@ -150,6 +150,10 @@ def is_dnd():
 def notify_waybar():
     try:
         run_cmd(["bash", "-c", "pgrep -x waybar >/dev/null && pkill -RTMIN+10 waybar || true"])
+        # Trigger Quickshell notification update
+        trigger_path = os.path.expanduser("~/.cache/notif_trigger")
+        with open(trigger_path, "w") as f:
+            f.write(str(time.time()))
     except Exception:
         pass
 

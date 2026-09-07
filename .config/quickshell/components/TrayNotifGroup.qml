@@ -20,6 +20,26 @@ Rectangle {
     property string notifText: ""
     property string clipIcon: "󰅌"
 
+    FileView {
+        id: notifTrigger
+        path: Quickshell.env("HOME") + "/.cache/notif_trigger"
+        printErrors: false
+        onLoaded: root.refreshNotifications()
+    }
+
+    Timer {
+        id: reloadTimer
+        interval: 100
+        repeat: false
+        onTriggered: {
+            if (!notifProc.running) notifProc.running = true;
+        }
+    }
+
+    function refreshNotifications() {
+        reloadTimer.restart();
+    }
+
     Process {
         id: notifProc
         command: ["python3", Quickshell.env("HOME") + "/.config/waybar/scripts/notifications.py", "--status"]
@@ -164,8 +184,11 @@ Rectangle {
                         ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/waybar/scripts/notifications.py"]);
                     } else if (mouse.button === Qt.RightButton) {
                         ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/waybar/scripts/notifications.py", "--toggle-dnd"]);
+                        root.refreshNotifications();
                     } else if (mouse.button === Qt.MiddleButton) {
+                        root.notifText = "󰂚";
                         ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/waybar/scripts/notifications.py", "--clear"]);
+                        root.refreshNotifications();
                     }
                 }
             }

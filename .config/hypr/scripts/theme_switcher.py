@@ -29,6 +29,7 @@ Provides CLI management and an interactive Fuzzel / Wofi GUI menu (SUPER + T).
 import os
 import sys
 import json
+import re
 import shutil
 import argparse
 import subprocess
@@ -1373,6 +1374,15 @@ def reload_desktop():
     # 2. Reload Waybar
     try:
         subprocess.run(["pkill", "-SIGUSR2", "waybar"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+    # 3. Reload Quickshell if running
+    try:
+        if subprocess.run(["pgrep", "-x", "quickshell"], stdout=subprocess.DEVNULL).returncode == 0:
+            qs_script = HOME / ".config/quickshell/scripts/launch_quickshell.sh"
+            if qs_script.exists():
+                subprocess.Popen(["bash", str(qs_script), "--restart"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception:
         pass
 
