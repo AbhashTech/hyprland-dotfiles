@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Widgets
 import Quickshell.Io
 import Quickshell.Services.SystemTray
 import ".."
@@ -16,6 +17,7 @@ Rectangle {
     border.color: isHovered ? Theme.moduleHoverBorder : Theme.moduleBorder
     border.width: 1
 
+    property var barWindow: null
     property string notifIcon: "󰂚"
     property int notifCount: 0
 
@@ -72,6 +74,13 @@ Rectangle {
                     height: 18
                     anchors.verticalCenter: parent.verticalCenter
 
+                    QsMenuAnchor {
+                        id: menuAnchor
+                        menu: trayItemWrapper.modelData.menu
+                        anchor.window: root.barWindow
+                        anchor.item: trayItemWrapper
+                    }
+
                     Image {
                         anchors.fill: parent
                         source: modelData.icon || ""
@@ -89,7 +98,9 @@ Rectangle {
                                     modelData.activate();
                                 } else if (mouse.button === Qt.RightButton) {
                                     if (modelData.hasMenu && modelData.menu) {
-                                        modelData.menu.open(trayItemWrapper);
+                                        menuAnchor.open();
+                                    } else if (modelData.hasMenu) {
+                                        menuAnchor.open();
                                     } else if (typeof modelData.secondaryActivate === "function") {
                                         modelData.secondaryActivate();
                                     } else {

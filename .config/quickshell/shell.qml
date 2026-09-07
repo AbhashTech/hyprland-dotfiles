@@ -1,3 +1,4 @@
+//@ pragma UseQApplication
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -88,7 +89,9 @@ ShellRoot {
                         spacing: 6
 
                         RecordingModule {}
-                        TrayNotifGroup {}
+                        TrayNotifGroup {
+                            barWindow: barWindow
+                        }
                         StatusGroup {}
                         StatsModule {}
                         PowerModule {}
