@@ -31,7 +31,7 @@ Rectangle {
 
     Process {
         id: statsProc
-        command: ["python3", "-c", "import os, json\ncpu = 0; mem_pct = 0; mem_txt = ''; disk_pct = 0; disk_txt = ''\ntry:\n    import psutil\n    cpu = int(psutil.cpu_percent())\n    mem = psutil.virtual_memory()\n    mem_pct = int(mem.percent)\n    mem_txt = f'{mem.used/(1024**3):.1f}/{mem.total/(1024**3):.1f} GB'\n    disk = psutil.disk_usage('/')\n    disk_pct = int(disk.percent)\n    disk_txt = f'{disk.used/(1024**3):.0f}/{disk.total/(1024**3):.0f} GB'\nexcept Exception:\n    try:\n        # Fallback to /proc & os.statvfs\n        vfs = os.statvfs('/')\n        total_d = vfs.f_blocks * vfs.f_frsize\n        free_d = vfs.f_bavail * vfs.f_frsize\n        used_d = total_d - free_d\n        disk_pct = int((used_d / total_d) * 100) if total_d else 0\n        disk_txt = f'{used_d/(1024**3):.0f}/{total_d/(1024**3):.0f} GB'\n        meminfo = {}\n        for line in open('/proc/meminfo'):\n            parts = line.split(':')\n            if len(parts) == 2:\n                meminfo[parts[0].strip()] = int(parts[1].split()[0]) * 1024\n        total_m = meminfo.get('MemTotal', 1)\n        avail_m = meminfo.get('MemAvailable', meminfo.get('MemFree', 0))\n        used_m = total_m - avail_m\n        mem_pct = int((used_m / total_m) * 100)\n        mem_txt = f'{used_m/(1024**3):.1f}/{total_m/(1024**3):.1f} GB'\n    except Exception:\n        pass\nprint(json.dumps({'cpu': cpu, 'mem_pct': mem_pct, 'mem_txt': mem_txt, 'disk_pct': disk_pct, 'disk_txt': disk_txt}))"]
+        command: ["python3", "-c", "import os, time, json\ncpu = 0\ntry:\n    with open('/proc/stat') as f:\n        fields = [float(x) for x in f.readline().strip().split()[1:]]\n    idle1, total1 = fields[3], sum(fields)\n    time.sleep(0.05)\n    with open('/proc/stat') as f:\n        fields2 = [float(x) for x in f.readline().strip().split()[1:]]\n    idle2, total2 = fields2[3], sum(fields2)\n    idle_d, total_d = idle2 - idle1, total2 - total1\n    cpu = int(max(0, min(100, (1.0 - idle_d / total_d) * 100))) if total_d else 0\nexcept Exception:\n    pass\n\nmem_pct = 0\nmem_txt = ''\ntry:\n    meminfo = {}\n    with open('/proc/meminfo') as f:\n        for line in f:\n            parts = line.split(':')\n            if len(parts) == 2:\n                meminfo[parts[0].strip()] = int(parts[1].split()[0]) * 1024\n    total_m = meminfo.get('MemTotal', 1)\n    avail_m = meminfo.get('MemAvailable', meminfo.get('MemFree', 0))\n    used_m = max(0, total_m - avail_m)\n    mem_pct = int((used_m / total_m) * 100)\n    mem_txt = f'{used_m/(1024**3):.1f}/{total_m/(1024**3):.1f} GB'\nexcept Exception:\n    pass\n\ndisk_pct = 0\ndisk_txt = ''\ntry:\n    vfs = os.statvfs('/')\n    total_d = vfs.f_blocks * vfs.f_frsize\n    free_d = vfs.f_bavail * vfs.f_frsize\n    used_d = max(0, total_d - free_d)\n    disk_pct = int((used_d / total_d) * 100) if total_d else 0\n    disk_txt = f'{used_d/(1024**3):.0f}/{total_d/(1024**3):.0f} GB'\nexcept Exception:\n    pass\n\nprint(json.dumps({'cpu': cpu, 'mem_pct': mem_pct, 'mem_txt': mem_txt, 'disk_pct': disk_pct, 'disk_txt': disk_txt}))"]
         stdout: SplitParser {
             onRead: data => {
                 try {
@@ -47,7 +47,7 @@ Rectangle {
     }
 
     Timer {
-        interval: 2000
+        interval: 800
         running: PluginManager.sysinfoVisible
         repeat: true
         onTriggered: root.refreshStats()
@@ -125,6 +125,9 @@ Rectangle {
                     height: parent.height
                     radius: 4
                     color: root.cpuUsage > 80 ? Theme.red : Theme.blue
+
+                    Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
+                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
         }
@@ -151,6 +154,9 @@ Rectangle {
                     height: parent.height
                     radius: 4
                     color: root.memUsage > 85 ? Theme.red : Theme.mauve
+
+                    Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
+                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
         }
@@ -177,6 +183,9 @@ Rectangle {
                     height: parent.height
                     radius: 4
                     color: root.diskUsage > 90 ? Theme.red : Theme.green
+
+                    Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
+                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
             }
         }

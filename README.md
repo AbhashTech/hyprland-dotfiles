@@ -45,23 +45,21 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   │   └── rules.lua        # Window rules, layer blur & workspace persistence
     │   └── scripts/             # Python & Shell utilities
     │       ├── app_shortcut_creator.py # App menu shortcut (.desktop) creator & manager GUI/CLI
+    │       ├── bluetooth_agent.py    # Background Bluetooth auto-pairing DBus agent
     │       ├── brightness_control.py # Panel & external DDC brightness with OSD & presets
-    │       ├── clipboard_manager.py  # Image/text clipboard manager daemon
-    │       ├── emoji_picker.py       # Searchable emoji catalog with auto-typing
+    │       ├── clipboard_manager.py  # Image/text clipboard manager daemon & thumbnailer
     │       ├── hyprsunset-hypridle.desktop # Application menu entry for Night Light & Idle Manager
     │       ├── keybinds_viewer.py    # Dynamic keybinds parser & JSON provider
     │       ├── keyboard_layout.py    # Dynamic keyboard layout switcher & installer
     │       ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
-    │       ├── nightlight.py         # Blue-light filter wrapper (delegates to sunset_idle_manager)
-    │       ├── sunset_idle_manager.py # Unified Hyprsunset & Hypridle display power & idle control center (GTK3/Menu/CLI)
     │       ├── ocr-language-manager.desktop # Application menu entry for OCR Language Manager
     │       ├── ocr_grab.py           # Optical character recognition text grabber
     │       ├── ocr_language_manager.py # Tesseract OCR language model downloader, manager & selector (GTK3/CLI)
     │       ├── qr_reader.py          # Screen QR / 2D barcode scanner & decoder
-    │       ├── quick_calc.py         # Interactive math expression evaluator
     │       ├── resolution_menu.py    # Display resolution & UI scaling switcher
     │       ├── scale_window.py       # Window resizing with on-screen dimensions overlay
     │       ├── screen_capture.py     # Screenshot & video recorder with Swappy annotation
+    │       ├── sunset_idle_manager.py # Unified Hyprsunset & Hypridle display power & idle control center (GTK3/Menu/CLI)
     │       ├── theme-manager.desktop # Application menu entry for graphical Theme Manager
     │       ├── theme_switcher.py     # Universal desktop theme switcher & palette manager (GTK3/CLI)
     │       ├── volume_control.py     # Speaker/mic volume control, OSD & sink switcher
@@ -80,7 +78,10 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   │   ├── keybinds/        # Interactive shortcut reference cheat sheet
     │   │   ├── volume/          # Audio mixer & speaker/mic slider popup
     │   │   ├── brightness/      # Display backlight & warm night light popup
-    │   │   └── sysinfo/         # System hardware dashboard (CPU, RAM, Disk, Temperature)
+    │   │   ├── connectivity/    # Native Wi-Fi & Bluetooth network management
+    │   │   ├── battery/         # Battery metrics & dynamic power profile selector
+    │   │   ├── notifications/   # Notification center & history viewer
+    │   │   └── sysinfo/         # System hardware dashboard (CPU, RAM, Disk) with fast 800ms updates
     │   └── scripts/             # Supervisor scripts (launch_quickshell.sh, toggle_plugin.sh)
     ├── wireplumber/             # WirePlumber Audio Session Rules
     │   └── wireplumber.conf.d/  # Software DSP mixing (51-alsa-soft-mixer.conf) & profile priority routing (52-alsa-routes.conf)
@@ -95,19 +96,11 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   └── config.jsonc         # Minimal, clean hardware/OS summary
     ├── swappy/                  # Screenshot Annotator
     │   └── config               # Paint tools, fonts & instant save rules
-    ├── wlogout/                 # Wayland Logout & Power Menu
-    │   ├── layout               # Lock, logout, suspend, reboot, shutdown buttons
-    │   └── style.css            # Catppuccin glassmorphism modal stylesheet
     ├── shell/                   # Modular Shell Setup
     │   ├── aliases.sh           # Modern aliases (ls->eza, cat->bat, grep->rg, rm->trash-put)
     │   └── env.sh               # Prompt hooks (Starship, Atuin, Zoxide, Direnv, Mise)
-    ├── fuzzel/                  # Application Launcher & Dmenu
-    │   └── fuzzel.ini           # Font, border radius, prompt & colors
     ├── mako/                    # Notification Daemon
     │   └── config               # Formatting, timeouts, icons, border & colors
-    ├── wofi/                    # Alternative Application Launcher
-    │   ├── config               # Dimensions, prompt & search mode
-    │   └── style.css            # GTK stylesheet for Wofi
     └── btop/                    # System & Resource Monitor
         └── btop.conf            # Layout, update intervals, process sorting & graphs
 ```
@@ -190,52 +183,52 @@ source ~/.config/shell/aliases.sh
 
 ## 📊 Status Bar Architecture & Interactive Features (Quickshell)
 
-The top status bar is built with **Quickshell** (`~/.config/quickshell/shell.qml`) replicating the glassmorphic island design across three functional zones:
+The top status bar is built with **Quickshell** (`~/.config/quickshell/shell.qml`) featuring a glassmorphic island design across three functional zones and modular native plugins:
 
 ### 1. Left Zone
-- **󰣇 Application Launcher (`custom/launcher`)**: Left-click launches **Fuzzel** with backdrop blur; right-click opens the **Wlogout** power menu.
-- **Workspaces (`hyprland/workspaces`)**: Persistent workspaces 1–4 with live active badges and automatic available workspace allocation when connecting external monitors; mouse scroll cycles through workspaces.
-- **Active Window (`hyprland/window`)**: Shows current focused window title with contextual application icons (Firefox, Kitty, Dolphin, VS Code).
-- **MPRIS Media Controller (`mpris`)**: Shows currently playing media (Spotify, Firefox, mpv) with play/pause click and scroll track skipping.
+- **󰣇 Application Launcher (`LauncherButton.qml`)**: Left-click opens the native **Quickshell App Launcher** popup with live desktop application search, categories, and icons; right-click opens the **Quickshell Power Menu**.
+- **Workspaces (`Workspaces.qml`)**: Persistent workspaces 1–4 with live active badges and automatic available workspace allocation when connecting external monitors; mouse scroll cycles through workspaces.
+- **Active Window (`ActiveWindow.qml`)**: Shows current focused window title with contextual application icons (Firefox, Kitty, Dolphin, VS Code).
+- **MPRIS Media Controller (`MprisModule.qml`)**: Shows currently playing media (Spotify, Firefox, mpv) with play/pause click and scroll track skipping.
 
 ### 2. Center Zone
-- ** Clock & Calendar (`clock`)**: 12h/24h digital clock with a rich interactive Catppuccin calendar tooltip. Right-click toggles format; scroll navigates months.
-- **󰌌 Keyboard Layout (`hyprland/language`)**: Live keyboard layout indicator (e.g. US). Left-click cycles layout; right-click opens layout menu; middle-click opens layout installer.
+- ** Clock & Calendar (`ClockModule.qml`)**: 12h/24h digital clock with a rich interactive Catppuccin calendar tooltip. Right-click toggles format; scroll navigates months.
+- **󰌌 Keyboard Layout (`LanguageModule.qml`)**: Live keyboard layout indicator (e.g. US). Left-click cycles layout; right-click opens layout menu; middle-click opens layout installer.
 
 ### 3. Right Zone
-- **Live Screen Recording Indicator (`custom/recording`)**:
+- **Live Screen Recording Indicator (`RecordingModule.qml`)**:
   - Automatically appears when video screen recording (`wf-recorder`) is active with a pulsating red capsule and live duration counter (`󰻃 REC 00:15`).
   - **Left-Click**: Instantly stops recording, finalizes the video container, and triggers desktop save notification.
-  - **Right-Click**: Toggles Waybar indicator visibility on/off.
+  - **Right-Click**: Toggles recording indicator visibility on/off.
   - **Middle-Click**: Opens the full Screen Capture & Recording menu.
-- **Group Tray & Notifications (`group/tray-notif`)**:
-  - System tray (`tray`) for background application indicators.
-  - Clipboard indicator (`custom/clipboard`): Left-click browses history; right-click opens deletion menu; middle-click pauses/resumes daemon.
-  - Notification center (`custom/notification`): Left-click shows history; right-click toggles Do-Not-Disturb (DND); middle-click clears all.
-- **Group Status (`group/status`)**:
-  - PipeWire Audio (`pulseaudio`): Volume level and mute state. Left-click toggles mute; right-click opens the **GTK LayerShell** Sound Control Center with device dropdowns and range sliders; middle-click opens TUI mixer in Kitty; scroll adjusts volume.
-  - Screen Brightness (`backlight`): Live display brightness percentage and adaptive icon (`󰃞`, `󰃟`, `󰃠`). Left-click opens the Display & Brightness Control Center with range sliders; right-click toggles Night Light; middle-click launches floating TUI mixer; scroll adjusts brightness (±5%) with OSD.
-  - Network (`network`): Wi-Fi signal strength and Ethernet link state. Left-click opens network manager menu.
-  - Bluetooth (`bluetooth`): Connection status and battery percentage. Left-click opens device selector; right-click toggles RFKill.
-  - Battery & Power Profiles (`custom/battery`): Dynamic battery percentage and power profile color indicator. Left/right click opens power profile selector.
-- **󰍛 System Hardware & Stats Chip (`custom/stats`)**:
-  - Displays a clean chip icon in Waybar.
-  - **Left-Click**: Opens the **GTK LayerShell** System Hardware & Stats Dashboard with live metrics, gradient progress bars, and outside-click dismissal.
+- **Group Tray & Notifications (`TrayNotifGroup.qml`)**:
+  - System tray for background application indicators.
+  - Clipboard indicator: Left-click opens the searchable **Clipboard History** drawer (`quickshell/plugins/clipboard/`); right-click wipes history.
+  - Notification center badge: Shows unread count badge. Left-click opens the **Notification Center** popup (`quickshell/plugins/notifications/`); right-click toggles Do-Not-Disturb (DND); middle-click clears notifications.
+- **Group Status (`StatusGroup.qml`)**:
+  - PipeWire Audio: Volume level and mute state. Left-click toggles mute; right-click opens the **Quickshell Audio Mixer** popup (`quickshell/plugins/volume/`) with device switching and per-app sliders; scroll adjusts volume.
+  - Screen Brightness: Live display brightness percentage and adaptive icon (`󰃞`, `󰃟`, `󰃠`). Left-click opens the **Quickshell Brightness & Night Light** popup (`quickshell/plugins/brightness/`); right-click toggles Night Light; scroll adjusts brightness (±5%).
+  - Wi-Fi: Signal strength icon. Left-click opens the native **Wi-Fi & Network Manager** popup (`quickshell/plugins/connectivity/`) with network scanning, connection, password prompts, and forget network options.
+  - Bluetooth: Connection status. Left-click opens the native **Bluetooth Manager** popup (`quickshell/plugins/connectivity/`) for pairing, connecting, and disconnecting devices.
+  - Battery & Power Profiles: Dynamic battery percentage and power profile color indicator. Left-click opens the **Battery & Power Profile** popup (`quickshell/plugins/battery/`) to switch between Power Saver, Balanced, and Performance modes.
+- **󰍛 System Hardware & Stats Chip (`StatsModule.qml`)**:
+  - Displays a clean chip icon in the status bar.
+  - **Left-Click**: Opens the glassmorphic **System Resources Dashboard** (`quickshell/plugins/sysinfo/`) with fast 800ms real-time metric updates, smooth progress bar animations, CPU %, RAM GB/%, Disk GB/%, and outside-click dismissal.
   - **Right-Click**: Directly opens **Btop** task monitor (`kitty --class btop -e btop`).
-- **󰐥 Power Menu (`custom/power`)**: Left-click launches **Wlogout** session modal.
+- **󰐥 Power Menu (`PowerModule.qml`)**: Left-click launches the glassmorphic **Quickshell Power & Session Menu** (Lock, Suspend, Logout, Reboot, Shutdown).
 
 ---
 
-## 🔊 Sound & Audio Management Control Center
+## 🔊 Sound & Audio Management Control Center (Quickshell Plugin)
 
-The dotfiles include a dedicated **Sound Control Center & Audio Hub** ([`sound-manager.py`](file:///home/kunal/.dotfiles/.config/waybar/scripts/sound-manager.py)):
+The dotfiles include a dedicated **Audio Mixer & Sound Hub** (`~/.config/quickshell/plugins/volume/`):
 
-- **Waybar Right-Click Trigger**: Right-clicking the sound icon on Waybar opens a glassmorphic **GTK LayerShell** popup anchored directly beneath the bar (`sound-menu.sh`).
+- **Status Bar Trigger**: Right-clicking the sound icon on the top bar or pressing **`SUPER + SHIFT + A`** opens a glassmorphic popup anchored directly beneath the bar.
 - **Device Selection Dropdowns**:
-  - **Output Sinks Dropdown (`GtkComboBoxText`)**: Instant switching between connected output devices (HDMI/DisplayPort, Headphones, Built-in Speakers, Bluetooth headsets).
-  - **Input Sources Dropdown (`GtkComboBoxText`)**: Instant switching between microphones (Internal Laptop Mic, Headset Mic, USB Microphones).
-- **Smooth Range Sliders (`GtkScale`)**:
-  - **Master Output Volume**: Range slider supporting `0%` to `150%` (volume amplification boost beyond standard 100%) with a live percentage indicator badge.
+  - **Output Sinks Dropdown**: Instant switching between connected output devices (HDMI/DisplayPort, Headphones, Built-in Speakers, Bluetooth headsets).
+  - **Input Sources Dropdown**: Instant switching between microphones (Internal Laptop Mic, Headset Mic, USB Microphones).
+- **Smooth Range Sliders**:
+  - **Master Output Volume**: Range slider supporting `0%` to `150%` (volume amplification boost beyond standard 100%) with live percentage feedback.
   - **Master Microphone Volume**: Range slider (`0% - 100%`) with gain indicator.
   - **Quick Volume Presets**: One-click preset pills: `[20%]`, `[50%]`, `[80%]`, `[100%]`, `[150% 🚀]`.
   - **Mute Controls**: Independent mute toggle buttons for output and microphone with active color badges.
@@ -247,22 +240,17 @@ The dotfiles include a dedicated **Sound Control Center & Audio Hub** ([`sound-m
   - **🔄 Restart PipeWire**: Single-click restart and recovery of `pipewire`, `pipewire-pulse`, and `wireplumber` user services.
   - **🎛️ Terminal TUI**: Launches the interactive curses mixer in a floating Kitty terminal.
 - **Enhanced PipeWire & WirePlumber Audio Architecture**:
-  - **Hardware Jack & Cable Presence Sense**: Audio utilities actively verify physical port connection availability via `pactl list cards`, hiding phantom/unplugged HDMI audio pipes and disconnected mic/headphone jacks from volume menus and switcher shortcuts.
+  - **Hardware Jack & Cable Presence Sense**: Audio utilities actively verify physical port connection availability via `pactl list cards`, hiding phantom/unplugged HDMI audio pipes and disconnected mic/headphone jacks.
   - **Clean Profile Routing (`52-alsa-routes.conf`)**: Enforces stable default priority for internal Speaker and microphone routing without duplicate node ghosting.
   - **Software DSP Mixing (`api.alsa.soft-mixer = true`)**: Configured in `~/.config/wireplumber/wireplumber.conf.d/51-alsa-soft-mixer.conf` to force software-level digital PCM attenuation for HDMI / DisplayPort monitors and external speakers lacking physical ALSA hardware mixer registers.
-  - **Zero-Lag Multi-Node Broadcast Sync**: Asynchronous non-blocking background workers (`threading.Thread`) synchronize volume levels and mute states across all active ALSA sink/source instances and Pulse endpoints simultaneously, eliminating volume lag, stuttering, and ghost node unattenuated audio.
-  - **Waybar Smooth Scroll & Click**: Native scroll-up/down and click-to-mute bindings directly wired to the broadcast volume controller.
-- **Alternative Access Modes**:
-  - **Terminal Curses TUI**: Run `~/.config/waybar/scripts/sound-manager.py --tui` or middle-click the Waybar sound icon.
-  - **CLI Flags**: `--toggle-mute`, `--toggle-mic`, `--up`, `--down`, `--test`, `--restart`.
 
 ---
 
-## ☀️ Display Brightness & External Monitor Manager
+## ☀️ Display Brightness & External Monitor Manager (Quickshell Plugin)
 
-The dotfiles include a dedicated **Display & Brightness Control Center** ([`brightness-manager.py`](file:///home/kunal/.dotfiles/.config/waybar/scripts/brightness-manager.py)):
+The dotfiles include a dedicated **Display & Brightness Control Center** (`~/.config/quickshell/plugins/brightness/`):
 
-- **Instant Launch (<30ms)**: Pre-caches display metadata and runs non-blocking background DDC/CI hardware synchronization so the window renders immediately on click.
+- **Status Bar Trigger**: Left-clicking the brightness indicator or pressing **`SUPER + SHIFT + B`** opens the glassmorphic Display Control Center.
 - **Built-in Laptop Display Controls**:
   - Continuous range slider (1% – 100%) with live value badge.
   - Quick preset buttons (`10%`, `25%`, `50%`, `75%`, `100%`).
@@ -274,9 +262,6 @@ The dotfiles include a dedicated **Display & Brightness Control Center** ([`brig
 - **Night Light (Blue Light Filter)**:
   - One-click toggle button with active state badge.
   - Color temperature range slider (2500K – 6500K) and presets (`3000K Candle`, `3800K Warm`, `4500K Soft`, `6500K Daylight`).
-- **Alternative Modes**:
-  - **Terminal Curses TUI**: Launch via `~/.config/waybar/scripts/brightness-manager.py --tui` or middle-click Waybar brightness icon.
-  - **Fuzzel / Wofi Menu**: Launch via `~/.config/waybar/scripts/brightness-manager.py --menu`.
 
 ---
 
@@ -326,36 +311,34 @@ The dotfiles include a dedicated **Display Power, Monitor Turn-Off & Night Light
 
 ---
 
-## 🖥️ System Hardware & Stats Dashboard
+## 🖥️ System Hardware & Stats Dashboard (Quickshell Plugin)
 
-The dotfiles include a dedicated **System Hardware & Stats** popup ([`system-stats.py`](file:///home/kunal/.dotfiles/.config/waybar/scripts/system-stats.py)):
+The dotfiles include a dedicated **System Hardware & Resources** dashboard (`~/.config/quickshell/plugins/sysinfo/`):
 
-- **Chip Icon in Waybar (`󰍛`)**: A minimal and responsive chip indicator on the right side of the status bar.
-- **Left-Click Dashboard Popup**: Opens a glassmorphic **GTK LayerShell** modal styled with high-contrast Catppuccin Mocha colors:
-  - **Dynamic Sizing & Scrolling**: Automatically calculates active monitor dimensions via `hyprctl` to utilize **~90% of screen height** with a smooth custom-styled scrolling container, preventing any overflow on compact or fractional scaled screens.
-  - **Host & System Info**: Displays hostname, Linux kernel release, and formatted system uptime.
-  - **CPU Utilization**: Live percentage, CPU model name, total core count, 1m/5m/15m load averages, and a Sky/Mauve gradient progress bar.
-  - **Memory & Storage Metrics**: Dual cards showing GiB RAM and Swap usage metrics alongside root disk (`/`) capacity and utilization bars.
-  - **All Hardware Temperatures**: Aggregates and displays all detected hardware temperature sensors (**CPU Package**, **Per-Core temperatures**, **NVMe SSD**, and **Motherboard/Ambient sensors**) with dynamic thermal health badges and color thresholds.
-  - **Dedicated Top Active Processes**: A dedicated section displaying the top active tasks with process name, PID, `% CPU` badge, and `% RAM` badge.
-  - **High-Contrast Btop Launcher**: High-visibility interactive action button (and right-click trigger) to launch **Btop** in Kitty terminal.
-  - **Outside-Click & Escape Dismissal**: Transparent full-screen backdrop dismissal and Escape key handling.
-- **Right-Click Action**: Instantly launches the **Btop** interactive terminal monitor.
+- **Status Bar Chip (`󰍛`)**: A minimal and responsive chip indicator on the right side of the status bar.
+- **Left-Click Dashboard Popup**: Opens a glassmorphic popup styled with Catppuccin Mocha colors:
+  - **Ultra-Fast 800ms Update Interval**: Polling and metric sampling occurs every 800ms for smooth, real-time live performance tracking.
+  - **Accurate Instant CPU Metric**: Direct kernel `/proc/stat` delta sampling providing real-time CPU usage percentage without external library latency or 0.0% initialization lag.
+  - **Memory & Storage Metrics**: Real-time RAM usage in GiB and percentage alongside root filesystem (`/`) capacity and utilization.
+  - **Smooth Fluid Progress Bars**: Hardware bars feature animated width interpolation (`NumberAnimation`) and dynamic color transitions based on load thresholds.
+  - **Btop Terminal Launcher**: 1-click button (and status bar right-click trigger) to immediately open **Btop** in Kitty terminal.
+  - **Outside-Click & Escape Dismissal**: Easy keyboard and mouse dismissal.
+- **Right-Click Action**: Instantly launches the **Btop** interactive terminal monitor (`kitty --class btop -e btop`).
 
 ---
 
-## 🔋 Power Management & Waybar Profiles
+## 🔋 Power Management & Battery Profiles (Quickshell Plugin)
 
-The dotfiles include a dedicated **Power Profile & Battery Management** system:
+The dotfiles include a dedicated **Power Profile & Battery Management** system (`~/.config/quickshell/plugins/battery/`):
 
-- **Dynamic Icon Coloring**: The Waybar battery icon changes color in real-time based on the active power profile:
+- **Dynamic Icon Coloring**: The battery icon dynamically changes color based on the active power profile:
   - **🌱 Power Saver**: **Green** (`#a6e3a1`) — Reduces CPU clocks and limits background power draw.
-  - **⚖ Balanced**: **Orange** (`#fab387`) — Standard dynamic balance between speed and battery life.
-  - **🚀 Performance**: **Red** (`#f38ba8`) — Maximum CPU clock speeds and responsiveness for heavy workloads.
-- **Rich Hover Tooltip**: Hovering over the battery icon displays the active power mode, charging state, estimated time remaining, and battery hardware health percentage.
-- **Interactive Selector Popup**: **Clicking** the battery icon opens a glassmorphic **GTK LayerShell** popup styled with Catppuccin Mocha colors:
-  - Features high-contrast cards, active state badges, outside-click backdrop dismissal, and `Escape` key handling.
-  - Switches profiles instantly via `power-profiles-daemon` over DBus and notifies Waybar for zero-latency UI updates.
+  - **⚖ Balanced**: **Blue** (`#89b4fa`) — Standard dynamic balance between speed and battery life.
+  - **🚀 Performance**: **Peach / Red** (`#fab387` / `#f38ba8`) — Maximum CPU clock speeds and responsiveness for heavy workloads.
+- **Interactive Selector Popup**: **Clicking** the battery indicator opens a glassmorphic popup:
+  - High-contrast power profile cards for instant 1-click switching over DBus (`powerprofilesctl`).
+  - Live power consumption in Watts (`power_now`), battery health percentage, and charging state.
+  - Instant outside-click backdrop dismissal and `Escape` key handling.
 
 ---
 
@@ -489,9 +472,9 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + P` | **Toggle Pseudo Tiling** | Toggle pseudo-tile mode on active window |
 | `SUPER + J` | **Toggle Layout Split** | Toggle horizontal/vertical split orientation (Dwindle layout) |
 | `SUPER + L` / `SUPER + ALT + L` | **Lock Screen** | Immediately trigger `hyprlock` lockscreen |
-| `SUPER + Escape` / `SUPER + M` | **Power & Session Menu** | Open **Wlogout** session modal (Lock, Logout, Suspend, Reboot, Shutdown) |
+| `SUPER + Escape` / `SUPER + M` | **Power & Session Menu** | Open **Quickshell** session modal (Lock, Logout, Suspend, Reboot, Shutdown) |
 | `SUPER + SHIFT + W` | **Toggle Status Bar** | Toggle Quickshell status bar on/off with state persistence |
-| `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Shortcut Cheat Sheet** | Open interactive **Fuzzel/Wofi** dynamic keybindings viewer |
+| `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Shortcut Cheat Sheet** | Open interactive **Quickshell** dynamic keybindings viewer |
 
 ---
 
@@ -548,8 +531,8 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + CTRL + N` | **Night Light Menu** | Interactive color temperature selector (6500K, 5000K, 3800K, 2500K, 1800K) |
 | `SUPER + ALT + I` | **Idle & Display Power GUI** | Launch GTK3 Night Light & Display Idle Power Manager |
 | `SUPER + CTRL + I` | **Idle & Power Menu** | Quick menu for monitor turn-off timeouts, DPMS off, and Caffeine mode |
-| `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator** | Interactive math expression evaluator via Fuzzel prompt |
-| `SUPER + .` (period) | **Emoji Picker** | Searchable emoji catalog with automatic clipboard copy & auto-typing |
+| `SUPER + =` / `SUPER + ALT + C` | **Quick Calculator** | Interactive math expression evaluator via **Quickshell** Calc plugin |
+| `SUPER + .` (period) | **Emoji Picker** | Searchable emoji catalog with clipboard copy via **Quickshell** Emoji plugin |
 | `SUPER + ALT + S` | **App Shortcut Creator** | Launch interactive desktop shortcut (.desktop) creator & manager GUI |
 | `SUPER + W` | **Random Wallpaper** | Cycle to a random wallpaper from `~/Wallpaper` |
 | `SUPER + ALT + W` | **Wallpaper Selector Menu** | Interactive graphical wallpaper selector with live preview |
@@ -562,9 +545,9 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 ### 🔔 Notifications & Clipboard History
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
-| `SUPER + N` | **Notifications Center** | Open notification history and management center |
+| `SUPER + N` | **Notifications Center** | Open notification history and management center (**Quickshell**) |
 | `SUPER + SHIFT + N` | **Toggle DND** | Toggle Do-Not-Disturb notification silencing mode |
-| `SUPER + SHIFT + V` / `ALT + V` / `SHIFT + C` | **Clipboard Browser** | Open searchable clipboard history with images and snippets |
+| `SUPER + SHIFT + V` / `ALT + V` / `SHIFT + C` | **Clipboard Browser** | Open searchable clipboard history with images and snippets (**Quickshell**) |
 | `SUPER + ALT + D` / `SUPER + CTRL + V` | **Clipboard Cleaner** | Open menu to delete individual entries or wipe clipboard cache |
 
 ---
@@ -578,21 +561,23 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `XF86AudioMicMute` | **Toggle Mic Mute** | Mute / unmute microphone input |
 | `SHIFT + XF86AudioRaiseVolume` | **Mic Volume Up** | Increase microphone input gain (+5%) |
 | `SHIFT + XF86AudioLowerVolume` | **Mic Volume Down** | Decrease microphone input gain (-5%) |
-| `SUPER + SHIFT + A` / `SUPER + ALT + A` | **Audio Control Center** | Open Sound Control Center & audio sink/source device switcher |
+| `SUPER + SHIFT + A` / `SUPER + ALT + A` | **Audio Control Center** | Open **Quickshell** Sound Control Center & audio sink/source device switcher |
 | `XF86AudioPlay` / `XF86AudioPause` | **Play / Pause** | Toggle media playback (Spotify, browser, playerctl) |
 | `XF86AudioNext` | **Next Track** | Skip to next track in active media player |
 | `XF86AudioPrev` | **Previous Track** | Skip to previous track in active media player |
 
 ---
 
-### ☀️ Brightness & External Monitor DDC Controls (`brightness_control.py` & `brightness-manager.py`)
+### ☀️ Brightness, Network & Connectivity Controls
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
 | `XF86MonBrightnessUp` | **Brightness Up (+5%)** | Increase laptop panel backlight with visual OSD |
 | `XF86MonBrightnessDown` | **Brightness Down (-5%)** | Decrease laptop panel backlight with visual OSD |
 | `SHIFT + XF86MonBrightnessUp` / `SUPER + Up` | **External DDC Up** | Increase external monitor brightness via DDC/CI (`ddcutil`) |
 | `SHIFT + XF86MonBrightnessDown` / `SUPER + Down` | **External DDC Down** | Decrease external monitor brightness via DDC/CI (`ddcutil`) |
-| `SUPER + SHIFT + B` / `SUPER + ALT + B` | **Display Control Center** | Open GTK LayerShell Display Brightness & Contrast Control Center |
+| `SUPER + SHIFT + B` / `SUPER + ALT + B` | **Display Control Center** | Open **Quickshell** Display Brightness & Contrast Control Center |
+| `SUPER + CTRL + W` | **Wi-Fi Network Manager** | Open native **Quickshell** Wi-Fi network scanner and connection manager |
+| `SUPER + CTRL + B` | **Bluetooth Manager** | Open native **Quickshell** Bluetooth device manager |
 
 ---
 

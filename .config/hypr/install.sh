@@ -114,7 +114,7 @@ if command -v pacman >/dev/null 2>&1; then
 
 else
     log_warn "Non-Arch Linux distribution detected."
-    log_info "Please ensure the required packages (Hyprland, Waybar, Mako, Fuzzel, Cliphist, Grim, Slurp, Pipewire, Brightnessctl) are installed with your package manager."
+    log_info "Please ensure the required packages (Hyprland, Quickshell, Mako, Fuzzel, Cliphist, Grim, Slurp, Pipewire, Brightnessctl) are installed with your package manager."
 fi
 
 # 2. Make scripts executable
@@ -147,15 +147,15 @@ for desktop_file in app-shortcut-creator.desktop theme-manager.desktop ocr-langu
         chmod +x "${HOME}/.local/share/applications/${desktop_file}"
     fi
 done
-if [ -f "${HYPR_DIR}/assets/ocr-language-manager.png" ]; then
+if [ -f "${CONFIG_DIR}/assets/ocr-language-manager.png" ]; then
     mkdir -p "${HOME}/.local/share/icons/hicolor/512x512/apps" "${HOME}/.local/share/icons"
-    cp "${HYPR_DIR}/assets/ocr-language-manager.png" "${HOME}/.local/share/icons/"
+    cp "${CONFIG_DIR}/assets/ocr-language-manager.png" "${HOME}/.local/share/icons/"
     for size in 16 24 32 48 64 128 256 512; do
         mkdir -p "${HOME}/.local/share/icons/hicolor/${size}x${size}/apps"
         if command -v magick >/dev/null 2>&1; then
-            magick "${HYPR_DIR}/assets/ocr-language-manager.png" -resize "${size}x${size}" "${HOME}/.local/share/icons/hicolor/${size}x${size}/apps/ocr-language-manager.png" 2>/dev/null || true
+            magick "${CONFIG_DIR}/assets/ocr-language-manager.png" -resize "${size}x${size}" "${HOME}/.local/share/icons/hicolor/${size}x${size}/apps/ocr-language-manager.png" 2>/dev/null || true
         else
-            cp "${HYPR_DIR}/assets/ocr-language-manager.png" "${HOME}/.local/share/icons/hicolor/${size}x${size}/apps/ocr-language-manager.png" 2>/dev/null || true
+            cp "${CONFIG_DIR}/assets/ocr-language-manager.png" "${HOME}/.local/share/icons/hicolor/${size}x${size}/apps/ocr-language-manager.png" 2>/dev/null || true
         fi
     done
     if command -v gtk-update-icon-cache >/dev/null 2>&1; then

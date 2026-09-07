@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # Unified Hyprland Desktop Dotfiles - Automated Installer & Symlinker
-# (Hyprland, Waybar, Fuzzel, Mako, Wofi, Btop, Kitty, Audio, Modern CLI Tools)
+# (Hyprland, Quickshell, Fuzzel, Mako, Wofi, Btop, Kitty, Audio, Modern CLI Tools)
 # =============================================================================
 
 set -e
@@ -33,7 +33,7 @@ log_error() {
 }
 
 echo -e "${COLOR_BOLD}======================================================${COLOR_RESET}"
-echo -e "${COLOR_BOLD}   Unified Dotfiles Setup: Hyprland & Waybar Desktop  ${COLOR_RESET}"
+echo -e "${COLOR_BOLD} Unified Dotfiles Setup: Hyprland & Quickshell Desktop${COLOR_RESET}"
 echo -e "${COLOR_BOLD}======================================================${COLOR_RESET}"
 
 # 1. Install System Dependencies (Arch Linux / Pacman Only)
@@ -202,7 +202,7 @@ if command -v pacman >/dev/null 2>&1; then
 
 else
     log_warn "Non-Arch Linux distribution detected."
-    log_info "Ensure Hyprland, Waybar, Mako, Fuzzel, Cliphist, Grim, Slurp, Pipewire, SDDM, and Python dependencies are installed."
+    log_info "Ensure Hyprland, Quickshell, Mako, Fuzzel, Cliphist, Grim, Slurp, Pipewire, SDDM, and Python dependencies are installed."
 fi
 
 # 2. Symlink Configs to ~/.config
@@ -411,7 +411,7 @@ echo -e "  • Theme Menu:        ${COLOR_BOLD}SUPER + T${COLOR_RESET} (or ${COL
 echo -e "  • Theme Manager GUI: ${COLOR_BOLD}SUPER + ALT + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --gui${COLOR_RESET})"
 echo -e "  • Hyprland Reload:   ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"
 echo -e "  • Status Bar Toggle: ${COLOR_BOLD}SUPER + SHIFT + W${COLOR_RESET} (or ${COLOR_BOLD}~/.config/quickshell/scripts/launch_quickshell.sh --toggle${COLOR_RESET})"
-echo -e "  • Power Menu:        ${COLOR_BOLD}SUPER + ESCAPE${COLOR_RESET} / ${COLOR_BOLD}SUPER + M${COLOR_RESET} (wlogout)"
+echo -e "  • Power Menu:        ${COLOR_BOLD}SUPER + ESCAPE${COLOR_RESET} / ${COLOR_BOLD}SUPER + M${COLOR_RESET} (Quickshell Power Menu)"
 echo -e "  • Git TUI Overlay:   ${COLOR_BOLD}SUPER + G${COLOR_RESET} (lazygit)"
 echo -e "  • Notification Mako: ${COLOR_BOLD}makoctl reload${COLOR_RESET}"
 echo -e "  • Test SDDM Theme:   ${COLOR_BOLD}~/.dotfiles/sddm/test-theme.sh${COLOR_RESET}"
