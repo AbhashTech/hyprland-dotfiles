@@ -367,8 +367,13 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    ctlProc.exec(["kitty", "--class", "btop", "-e", "btop"]);
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: mouse => {
+                    if (mouse.button === Qt.LeftButton) {
+                        PluginManager.toggle("battery");
+                    } else if (mouse.button === Qt.RightButton) {
+                        ctlProc.exec(["kitty", "--class", "btop", "-e", "btop"]);
+                    }
                 }
             }
         }

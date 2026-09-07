@@ -16,6 +16,7 @@ QtObject {
     property bool volumeVisible: false
     property bool brightnessVisible: false
     property bool sysinfoVisible: false
+    property bool batteryVisible: false
     property bool connectivityVisible: false
     property string connectivityTab: "wifi"
 
@@ -30,6 +31,7 @@ QtObject {
         volumeVisible = false;
         brightnessVisible = false;
         sysinfoVisible = false;
+        batteryVisible = false;
         connectivityVisible = false;
     }
 
@@ -97,6 +99,14 @@ QtObject {
                 current = sysinfoVisible;
                 closeAll();
                 sysinfoVisible = !current;
+                break;
+            case "battery":
+            case "powerprofile":
+            case "powerprofiles":
+            case "power":
+                current = batteryVisible;
+                closeAll();
+                batteryVisible = !current;
                 break;
             case "wifi":
             case "wifimenu":

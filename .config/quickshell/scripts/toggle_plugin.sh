@@ -15,6 +15,11 @@ if ! pgrep -x quickshell >/dev/null 2>&1; then
     sleep 0.2
 fi
 
-# Atomic write with timestamp to ensure FileView triggers onLoaded
+# Try quickshell native IPC first
+if quickshell ipc call pluginManager toggle "${PLUGIN}" >/dev/null 2>&1; then
+    exit 0
+fi
+
+# Fallback: Atomic write with timestamp to ensure FileView triggers onLoaded
 echo "${PLUGIN} $(date +%s%N)" > "${CACHE_TRIGGER}.tmp"
 mv "${CACHE_TRIGGER}.tmp" "${CACHE_TRIGGER}"

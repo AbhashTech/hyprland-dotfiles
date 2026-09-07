@@ -1,6 +1,7 @@
 //@ pragma UseQApplication
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import "components"
 import "plugins/appmenu"
@@ -13,9 +14,20 @@ import "plugins/volume"
 import "plugins/brightness"
 import "plugins/sysinfo"
 import "plugins/connectivity"
+import "plugins/battery"
 
 ShellRoot {
     id: root
+
+    IpcHandler {
+        target: "pluginManager"
+        function toggle(name: string) {
+            PluginManager.toggle(name);
+        }
+        function closeAll() {
+            PluginManager.closeAll();
+        }
+    }
 
     // Top Status Bar across screens
     Variants {
@@ -113,4 +125,5 @@ ShellRoot {
     BrightnessWindow {}
     SysInfoWindow {}
     ConnectivityWindow {}
+    BatteryWindow {}
 }
