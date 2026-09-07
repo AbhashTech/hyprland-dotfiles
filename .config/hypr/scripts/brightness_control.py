@@ -109,14 +109,23 @@ def set_brightness(target_percent):
 # External Monitor Brightness (ddcutil)
 # ---------------------------------------------------------
 
+def get_ddc_bus():
+    """Find the first available I2C bus with DDC/CI."""
+    for b in [1, 2, 3, 4, 5, 0, 6, 7]:
+        if os.path.exists(f"/dev/i2c-{b}"):
+            res = run_cmd(["ddcutil", "--bus", str(b), "--noverify", "getvcp", "10"])
+            if res and "current value" in res:
+                return b
+    return 1
+
 def change_ddc_brightness(delta):
     """Adjust external monitor brightness via ddcutil."""
+    bus = get_ddc_bus()
     sign = "+" if delta > 0 else "-"
-    run_cmd(["ddcutil", "--noverify", "setvcp", "10", sign, str(abs(delta))])
+    run_cmd(["ddcutil", "--bus", str(bus), "--noverify", "setvcp", "10", sign, str(abs(delta))])
     
-    # Try reading current value
     val = None
-    res = run_cmd(["ddcutil", "--noverify", "getvcp", "10"])
+    res = run_cmd(["ddcutil", "--bus", str(bus), "--noverify", "getvcp", "10"])
     if res:
         match = re.search(r'current value =\s*(\d+)', res)
         if match:
@@ -128,6 +137,26 @@ def change_ddc_brightness(delta):
     title = f"🖥️ Ext Monitor Brightness: {pct}%" if val is not None else "🖥️ External Monitor Brightness"
     body = f"<b>External Display (DDC/CI)</b>\n{bar}"
     show_notification(title, body, icon, percentage=pct, tag="ext_brightness_osd")
+
+def change_ddc_contrast(delta):
+    """Adjust external monitor contrast via ddcutil."""
+    bus = get_ddc_bus()
+    sign = "+" if delta > 0 else "-"
+    run_cmd(["ddcutil", "--bus", str(bus), "--noverify", "setvcp", "12", sign, str(abs(delta))])
+    
+    val = None
+    res = run_cmd(["ddcutil", "--bus", str(bus), "--noverify", "getvcp", "12"])
+    if res:
+        match = re.search(r'current value =\s*(\d+)', res)
+        if match:
+            val = int(match.group(1))
+
+    pct = val if val is not None else (50 if delta > 0 else 40)
+    bar = build_progress_bar(pct)
+    icon = "video-display"
+    title = f"🖥️ Ext Monitor Contrast: {pct}%" if val is not None else "🖥️ External Monitor Contrast"
+    body = f"<b>External Display Contrast</b>\n{bar}"
+    show_notification(title, body, icon, percentage=pct, tag="ext_contrast_osd")
 
 # ---------------------------------------------------------
 # Interactive Menu
@@ -179,8 +208,10 @@ def interactive_menu():
         "☀️ 1% (Minimum)",
         "─── ACTIONS ───",
         "🎛️ Open Display & Brightness Sliders (GUI)",
-        "🖥️ Adjust External Monitor (+10%)",
-        "🖥️ Adjust External Monitor (-10%)",
+        "🖥️ Ext Monitor Brightness (+10%)",
+        "🖥️ Ext Monitor Brightness (-10%)",
+        "🖥️ Ext Monitor Contrast (+10%)",
+        "🖥️ Ext Monitor Contrast (-10%)",
         "🌙 Toggle Night Light",
     ]
 
@@ -189,7 +220,7 @@ def interactive_menu():
         return
 
     if "Open Display & Brightness Sliders" in selected:
-        subprocess.Popen(["/home/kunal/.config/waybar/scripts/brightness-manager.py"])
+        subprocess.Popen(["bash", os.path.expanduser("~/.config/quickshell/scripts/toggle_plugin.sh"), "brightness"])
     elif "100%" in selected:
         set_brightness(100)
     elif "80%" in selected:
@@ -206,12 +237,16 @@ def interactive_menu():
         set_brightness(10)
     elif "1%" in selected:
         set_brightness(1)
-    elif "Adjust External Monitor (+10%)" in selected:
+    elif "Ext Monitor Brightness (+10%)" in selected:
         change_ddc_brightness(10)
-    elif "Adjust External Monitor (-10%)" in selected:
+    elif "Ext Monitor Brightness (-10%)" in selected:
         change_ddc_brightness(-10)
+    elif "Ext Monitor Contrast (+10%)" in selected:
+        change_ddc_contrast(10)
+    elif "Ext Monitor Contrast (-10%)" in selected:
+        change_ddc_contrast(-10)
     elif "Toggle Night Light" in selected:
-        subprocess.Popen(["/home/kunal/.config/hypr/scripts/nightlight.py", "toggle"])
+        subprocess.Popen(["python3", os.path.expanduser("~/.config/hypr/scripts/sunset_idle_manager.py"), "--sunset-toggle"])
 
 # ---------------------------------------------------------
 # CLI Entry Point
@@ -239,15 +274,19 @@ def main():
         set_brightness(step)
     elif cmd in ["show", "status", "info"]:
         notify_brightness_osd()
-    elif cmd in ["ddc-up", "ext-up"]:
+    elif cmd in ["ddc-up", "ext-up", "ext-bright-up"]:
         change_ddc_brightness(step if len(sys.argv) >= 3 else 10)
-    elif cmd in ["ddc-down", "ext-down"]:
+    elif cmd in ["ddc-down", "ext-down", "ext-bright-down"]:
         change_ddc_brightness(-step if len(sys.argv) >= 3 else -10)
+    elif cmd in ["ddc-contrast-up", "ext-contrast-up"]:
+        change_ddc_contrast(step if len(sys.argv) >= 3 else 10)
+    elif cmd in ["ddc-contrast-down", "ext-contrast-down"]:
+        change_ddc_contrast(-step if len(sys.argv) >= 3 else -10)
     elif cmd in ["menu", "dmenu", "gui"]:
         interactive_menu()
     else:
         print(f"Unknown action: {cmd}")
-        print("Usage: brightness_control.py [up|down|set|show|ddc-up|ddc-down|menu]")
+        print("Usage: brightness_control.py [up|down|set|show|ddc-up|ddc-down|ddc-contrast-up|ddc-contrast-down|menu]")
         sys.exit(1)
 
 if __name__ == "__main__":

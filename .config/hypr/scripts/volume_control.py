@@ -548,6 +548,12 @@ def open_dmenu(prompt, options):
     except Exception:
         return ""
 
+def restart_sound_server():
+    """Restart pipewire, pipewire-pulse, wireplumber user services."""
+    show_notification("🔊 Restarting Audio", "Restarting PipeWire & WirePlumber...", "audio-speakers", notif_id=SINK_NOTIF_ID)
+    subprocess.run(["systemctl", "--user", "restart", "pipewire", "pipewire-pulse", "wireplumber"])
+    show_notification("✓ Audio Stack Ready", "PipeWire & WirePlumber restarted successfully.", "audio-volume-high", notif_id=SINK_NOTIF_ID)
+
 def interactive_menu():
     """Run interactive audio control & switcher menu."""
     vol, sink_muted, sink_name = get_sink_info()
@@ -564,6 +570,8 @@ def interactive_menu():
         "─── CONTROLS ───",
         f"⏯ {sink_mute_label}",
         f"⏯ {mic_mute_label}",
+        "🎛️ Open Graphical Audio Mixer (QuickShell)",
+        "󰑐 Restart Audio Server (PipeWire)",
         "─── PRESET VOLUMES ───",
         "🔊 Volume: 100% (Maximum Standard)",
         "🔊 Volume: 80%",
@@ -588,7 +596,11 @@ def interactive_menu():
     if not selected:
         return
 
-    if "Mute Output" in selected or "Unmute Output" in selected:
+    if "Open Graphical Audio Mixer" in selected:
+        subprocess.Popen(["bash", os.path.expanduser("~/.config/quickshell/scripts/toggle_plugin.sh"), "volume"])
+    elif "Restart Audio Server" in selected:
+        restart_sound_server()
+    elif "Mute Output" in selected or "Unmute Output" in selected:
         toggle_sink_mute()
     elif "Mute Microphone" in selected or "Unmute Microphone" in selected:
         toggle_source_mute()
@@ -675,11 +687,13 @@ def main():
         print(json.dumps(get_sinks_list(), indent=2))
     elif cmd in ["list-sources"]:
         print(json.dumps(get_sources_list(), indent=2))
+    elif cmd in ["restart", "restart-server", "restart-sound"]:
+        restart_sound_server()
     elif cmd in ["menu", "dmenu", "gui"]:
         interactive_menu()
     else:
         print(f"Unknown action: {cmd}")
-        print("Usage: volume_control.py [up|down|set|mute|mic-up|mic-down|mic-mute|next-sink|next-source|menu|show]")
+        print("Usage: volume_control.py [up|down|set|mute|mic-up|mic-down|mic-mute|next-sink|next-source|restart|menu|show]")
         sys.exit(1)
 
 if __name__ == "__main__":
