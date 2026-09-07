@@ -264,14 +264,16 @@ Rectangle {
         }
 
         // Network Item
-        Item {
-            implicitWidth: netContent.implicitWidth
+        Rectangle {
+            implicitWidth: Math.max(22, netContent.implicitWidth + 8)
             implicitHeight: root.implicitHeight
+            radius: 4
+            color: netArea.containsMouse ? Theme.moduleActiveBg : "transparent"
             anchors.verticalCenter: parent.verticalCenter
 
             Row {
                 id: netContent
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.centerIn: parent
                 spacing: 4
 
                 Text {
@@ -285,29 +287,28 @@ Rectangle {
             }
 
             MouseArea {
+                id: netArea
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: mouse => {
-                    if (mouse.button === Qt.LeftButton) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/wifi_manager.py"]);
-                    } else if (mouse.button === Qt.RightButton) {
-                        ctlProc.exec(["kitty", "--class", "iwctl-floating", "-T", "WiFi Manager (iwctl)", "iwctl"]);
-                    }
+                    ctlProc.exec(["kitty", "--class", "iwctl-floating", "-T", "WiFi Network Manager (iwctl)", "-e", "iwctl"]);
                 }
             }
         }
 
         // Bluetooth Item
-        Item {
-            implicitWidth: btContent.implicitWidth
+        Rectangle {
+            implicitWidth: Math.max(22, btContent.implicitWidth + 8)
             implicitHeight: root.implicitHeight
+            radius: 4
+            color: btArea.containsMouse ? Theme.moduleActiveBg : "transparent"
             anchors.verticalCenter: parent.verticalCenter
 
             Row {
                 id: btContent
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.centerIn: parent
                 spacing: 4
 
                 Text {
@@ -321,6 +322,7 @@ Rectangle {
             }
 
             MouseArea {
+                id: btArea
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
@@ -328,7 +330,7 @@ Rectangle {
 
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/bluetooth_menu.py"]);
+                        ctlProc.exec(["kitty", "--class", "bt-floating", "-T", "Bluetooth Manager (bluetoothctl)", "-e", "bluetoothctl"]);
                     } else if (mouse.button === Qt.RightButton) {
                         ctlProc.exec(["rfkill", "toggle", "bluetooth"]);
                     }
