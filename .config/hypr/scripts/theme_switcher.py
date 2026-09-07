@@ -993,6 +993,10 @@ ForegroundNeutral={yellow_rgb}
 ForegroundPositive={green_rgb}
 DecorationFocus={accent_rgb}
 DecorationHover={blue_rgb}
+
+[org.kde.kdecoration2]
+ButtonsOnLeft=
+ButtonsOnRight=X
 """
 
     kde_config = CONFIG_DIR / "kdeglobals"
@@ -1259,6 +1263,15 @@ def update_systemwide_theme(theme):
             except Exception:
                 pass
 
+        try:
+            subprocess.run(
+                ["gsettings", "set", "org.gnome.desktop.wm.preferences", "button-layout", ":close"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except Exception:
+            pass
+
     # 2. Update DConf directly if available
     if shutil.which("dconf"):
         for key_path, val in [
@@ -1294,6 +1307,7 @@ def update_systemwide_theme(theme):
 
         settings_dict["gtk-application-prefer-dark-theme"] = gtk_dark_val
         settings_dict["gtk-color-scheme"] = f'"{color_scheme}"'
+        settings_dict["gtk-decoration-layout"] = ":close"
         if "gtk-theme-name" not in settings_dict or settings_dict["gtk-theme-name"] in ["Adwaita", "Adwaita-dark", "Breeze", "Breeze-Dark"]:
             settings_dict["gtk-theme-name"] = gtk_theme_name
         if "gtk-icon-theme-name" not in settings_dict or settings_dict["gtk-icon-theme-name"] in ["Papirus", "Papirus-Dark", "Papirus-Light"]:
@@ -1321,6 +1335,7 @@ def update_systemwide_theme(theme):
 Net/IconThemeName "{icon_theme_name}"
 Gtk/ApplicationPreferDarkTheme {gtk_dark_val}
 Gtk/ColorScheme "{color_scheme}"
+Gtk/DecorationLayout ":close"
 """
     try:
         xsettings_file.write_text(xsettings_content, encoding="utf-8")
