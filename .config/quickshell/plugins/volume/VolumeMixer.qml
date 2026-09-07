@@ -64,13 +64,24 @@ Rectangle {
         }
     }
 
-    Component.onCompleted: root.refreshAudio()
+    focus: true
+    Keys.onEscapePressed: event => {
+        PluginManager.closeAll();
+        event.accepted = true;
+    }
+
+    function grabFocus() {
+        root.forceActiveFocus();
+        root.refreshAudio();
+    }
+
+    Component.onCompleted: root.grabFocus()
 
     Connections {
         target: PluginManager
         function onVolumeVisibleChanged() {
             if (PluginManager.volumeVisible) {
-                root.refreshAudio();
+                root.grabFocus();
             }
         }
     }

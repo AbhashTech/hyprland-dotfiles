@@ -17,10 +17,34 @@ Rectangle {
     border.width: 1
 
     property string notifIcon: "󰂚"
-    property string notifText: ""
+    property int notifCount: 0
 
     Process {
         id: ctlProc
+    }
+
+    Process {
+        id: notifCountProc
+        command: ["python3", "-c", "import subprocess, json; res = subprocess.run(['makoctl', 'history'], capture_output=True, text=True).stdout; \ntry:\n    data = json.loads(res)\n    count = len(data.get('data', [[]])[0]) if 'data' in data else 0\nexcept Exception:\n    count = 0\nprint(count)"]
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    root.notifCount = parseInt(data.trim(), 10) || 0;
+                } catch (e) {
+                    root.notifCount = 0;
+                }
+            }
+        }
+    }
+
+    Timer {
+        interval: 3000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            if (!notifCountProc.running) notifCountProc.running = true;
+        }
     }
 
     MouseArea {
@@ -42,9 +66,10 @@ Rectangle {
             Repeater {
                 model: SystemTray.items
                 Item {
+                    id: trayItemWrapper
                     required property var modelData
-                    width: 16
-                    height: 16
+                    width: 18
+                    height: 18
                     anchors.verticalCenter: parent.verticalCenter
 
                     Image {
@@ -57,12 +82,18 @@ Rectangle {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                         onClicked: mouse => {
                             if (mouse.button === Qt.LeftButton) {
                                 modelData.activate();
-                            } else if (mouse.button === Qt.RightButton && modelData.hasMenu) {
-                                modelData.menu.open();
+                            } else if (mouse.button === Qt.RightButton) {
+                                if (modelData.hasMenu && modelData.menu) {
+                                    modelData.menu.open(trayItemWrapper);
+                                } else if (typeof modelData.secondaryActivate === "function") {
+                                    modelData.secondaryActivate();
+                                }
+                            } else if (mouse.button === Qt.MiddleButton && typeof modelData.secondaryActivate === "function") {
+                                modelData.secondaryActivate();
                             }
                         }
                     }
@@ -107,18 +138,34 @@ Rectangle {
         // Notifications / Mako Button
         Rectangle {
             anchors.verticalCenter: parent.verticalCenter
-            implicitWidth: 20
-            implicitHeight: 20
+            implicitWidth: notifRow.implicitWidth + 8
+            implicitHeight: 22
             radius: 4
             color: notifArea.containsMouse ? Theme.moduleActiveBg : "transparent"
 
-            Text {
+            Row {
+                id: notifRow
                 anchors.centerIn: parent
-                text: "󰂚"
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize
-                font.bold: true
-                color: Theme.accent
+                spacing: 4
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.notifCount > 0 ? "󱅫" : "󰂚"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+                    font.bold: true
+                    color: root.notifCount > 0 ? Theme.peach : Theme.accent
+                }
+
+                Text {
+                    visible: root.notifCount > 0
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.notifCount.toString()
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.bold: true
+                    color: Theme.peach
+                }
             }
 
             MouseArea {
@@ -130,8 +177,10 @@ Rectangle {
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
                         ctlProc.exec(["makoctl", "restore"]);
+                        if (!notifCountProc.running) notifCountProc.running = true;
                     } else if (mouse.button === Qt.RightButton) {
                         ctlProc.exec(["makoctl", "dismiss", "-a"]);
+                        root.notifCount = 0;
                     }
                 }
             }

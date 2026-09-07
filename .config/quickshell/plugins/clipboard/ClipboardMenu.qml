@@ -87,18 +87,25 @@ Rectangle {
         }
     }
 
-    Component.onCompleted: {
+    focus: true
+    Keys.onEscapePressed: event => {
+        PluginManager.closeAll();
+        event.accepted = true;
+    }
+
+    function grabFocus() {
+        searchInput.text = "";
         root.refreshClipboard();
         searchInput.forceActiveFocus();
     }
+
+    Component.onCompleted: root.grabFocus()
 
     Connections {
         target: PluginManager
         function onClipboardVisibleChanged() {
             if (PluginManager.clipboardVisible) {
-                searchInput.text = "";
-                root.refreshClipboard();
-                searchInput.forceActiveFocus();
+                root.grabFocus();
             }
         }
     }

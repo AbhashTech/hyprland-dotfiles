@@ -10,21 +10,41 @@ PanelWindow {
 
     anchors {
         top: true
+        left: true
+        right: true
+        bottom: true
     }
 
-    margins {
-        top: Theme.barHeight + 40
-    }
-
-    implicitWidth: 440
-    implicitHeight: 200
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell:calc"
     WlrLayershell.keyboardFocus: PluginManager.calcVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    QuickCalc {
+    MouseArea {
         anchors.fill: parent
+        onClicked: PluginManager.closeAll()
+
+        QuickCalc {
+            id: quickCalcItem
+            anchors.top: parent.top
+            anchors.topMargin: Theme.barHeight + 40
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            // Prevent clicks inside popup from dismissing
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+            }
+        }
+    }
+
+    Connections {
+        target: PluginManager
+        function onCalcVisibleChanged() {
+            if (PluginManager.calcVisible) {
+                quickCalcItem.grabFocus();
+            }
+        }
     }
 }

@@ -10,21 +10,40 @@ PanelWindow {
 
     anchors {
         top: true
+        left: true
+        right: true
+        bottom: true
     }
 
-    margins {
-        top: Theme.barHeight + 30
-    }
-
-    implicitWidth: 560
-    implicitHeight: 460
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell:emoji"
     WlrLayershell.keyboardFocus: PluginManager.emojiVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    EmojiPicker {
+    MouseArea {
         anchors.fill: parent
+        onClicked: PluginManager.closeAll()
+
+        EmojiPicker {
+            id: emojiPickerItem
+            anchors.top: parent.top
+            anchors.topMargin: Theme.barHeight + 30
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+            }
+        }
+    }
+
+    Connections {
+        target: PluginManager
+        function onEmojiVisibleChanged() {
+            if (PluginManager.emojiVisible) {
+                emojiPickerItem.grabFocus();
+            }
+        }
     }
 }

@@ -137,18 +137,28 @@ Rectangle {
         id: copyProc
     }
 
+    focus: true
+    Keys.onEscapePressed: event => {
+        PluginManager.closeAll();
+        event.accepted = true;
+    }
+
+    function grabFocus() {
+        emojiInput.text = "";
+        root.filterEmojis();
+        emojiInput.forceActiveFocus();
+    }
+
     Component.onCompleted: {
         root.loadDefaultEmojis();
-        emojiInput.forceActiveFocus();
+        root.grabFocus();
     }
 
     Connections {
         target: PluginManager
         function onEmojiVisibleChanged() {
             if (PluginManager.emojiVisible) {
-                emojiInput.text = "";
-                root.filterEmojis();
-                emojiInput.forceActiveFocus();
+                root.grabFocus();
             }
         }
     }

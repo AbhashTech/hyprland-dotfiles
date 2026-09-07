@@ -288,8 +288,13 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    ctlProc.exec(["kitty", "--class", "nmtui-floating", "-e", "nmtui"]);
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: mouse => {
+                    if (mouse.button === Qt.LeftButton) {
+                        ctlProc.exec(["bash", "-c", "command -v nm-connection-editor >/dev/null 2>&1 && nm-connection-editor || kitty --class nmtui-floating -e nmtui"]);
+                    } else if (mouse.button === Qt.RightButton) {
+                        ctlProc.exec(["kitty", "--class", "nmtui-floating", "-e", "nmtui"]);
+                    }
                 }
             }
         }
@@ -323,7 +328,7 @@ Rectangle {
 
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
-                        ctlProc.exec(["kitty", "--class", "bt-floating", "-e", "bluetui"]);
+                        ctlProc.exec(["bash", "-c", "command -v blueman-manager >/dev/null 2>&1 && blueman-manager || kitty --class bt-floating -e bluetui || rfkill toggle bluetooth"]);
                     } else if (mouse.button === Qt.RightButton) {
                         ctlProc.exec(["rfkill", "toggle", "bluetooth"]);
                     }

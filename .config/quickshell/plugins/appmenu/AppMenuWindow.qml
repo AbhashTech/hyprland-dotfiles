@@ -11,22 +11,40 @@ PanelWindow {
     anchors {
         top: true
         left: true
+        right: true
+        bottom: true
     }
 
-    margins {
-        top: Theme.barHeight + 16
-        left: 16
-    }
-
-    implicitWidth: 640
-    implicitHeight: 520
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell:appmenu"
     WlrLayershell.keyboardFocus: PluginManager.appMenuVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    AppMenu {
+    MouseArea {
         anchors.fill: parent
+        onClicked: PluginManager.closeAll()
+
+        AppMenu {
+            id: appMenuItem
+            anchors.top: parent.top
+            anchors.topMargin: Theme.barHeight + 16
+            anchors.left: parent.left
+            anchors.leftMargin: 16
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+            }
+        }
+    }
+
+    Connections {
+        target: PluginManager
+        function onAppMenuVisibleChanged() {
+            if (PluginManager.appMenuVisible) {
+                appMenuItem.grabFocus();
+            }
+        }
     }
 }

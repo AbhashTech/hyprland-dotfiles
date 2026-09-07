@@ -10,23 +10,41 @@ PanelWindow {
 
     anchors {
         top: true
+        left: true
         right: true
+        bottom: true
     }
 
-    margins {
-        top: Theme.barHeight + 16
-        right: 16
-    }
-
-    implicitWidth: 540
-    implicitHeight: 480
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell:clipboard"
     WlrLayershell.keyboardFocus: PluginManager.clipboardVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    ClipboardMenu {
+    MouseArea {
         anchors.fill: parent
+        onClicked: PluginManager.closeAll()
+
+        ClipboardMenu {
+            id: clipboardMenuItem
+            anchors.top: parent.top
+            anchors.topMargin: Theme.barHeight + 16
+            anchors.right: parent.right
+            anchors.rightMargin: 16
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+            }
+        }
+    }
+
+    Connections {
+        target: PluginManager
+        function onClipboardVisibleChanged() {
+            if (PluginManager.clipboardVisible) {
+                clipboardMenuItem.grabFocus();
+            }
+        }
     }
 }

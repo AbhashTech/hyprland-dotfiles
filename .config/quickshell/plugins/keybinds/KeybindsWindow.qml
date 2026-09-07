@@ -10,21 +10,40 @@ PanelWindow {
 
     anchors {
         top: true
+        left: true
+        right: true
+        bottom: true
     }
 
-    margins {
-        top: Theme.barHeight + 20
-    }
-
-    implicitWidth: 700
-    implicitHeight: 520
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell:keybinds"
     WlrLayershell.keyboardFocus: PluginManager.keybindsVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    KeybindsViewer {
+    MouseArea {
         anchors.fill: parent
+        onClicked: PluginManager.closeAll()
+
+        KeybindsViewer {
+            id: keybindsViewerItem
+            anchors.top: parent.top
+            anchors.topMargin: Theme.barHeight + 20
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+            }
+        }
+    }
+
+    Connections {
+        target: PluginManager
+        function onKeybindsVisibleChanged() {
+            if (PluginManager.keybindsVisible) {
+                keybindsViewerItem.grabFocus();
+            }
+        }
     }
 }

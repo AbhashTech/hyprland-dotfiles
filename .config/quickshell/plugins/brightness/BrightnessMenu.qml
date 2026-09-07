@@ -54,13 +54,24 @@ Rectangle {
         }
     }
 
-    Component.onCompleted: root.refreshBrightness()
+    focus: true
+    Keys.onEscapePressed: event => {
+        PluginManager.closeAll();
+        event.accepted = true;
+    }
+
+    function grabFocus() {
+        root.forceActiveFocus();
+        root.refreshBrightness();
+    }
+
+    Component.onCompleted: root.grabFocus()
 
     Connections {
         target: PluginManager
         function onBrightnessVisibleChanged() {
             if (PluginManager.brightnessVisible) {
-                root.refreshBrightness();
+                root.grabFocus();
             }
         }
     }

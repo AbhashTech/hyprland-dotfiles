@@ -55,18 +55,25 @@ Rectangle {
         }
     }
 
-    Component.onCompleted: {
+    focus: true
+    Keys.onEscapePressed: event => {
+        PluginManager.closeAll();
+        event.accepted = true;
+    }
+
+    function grabFocus() {
+        searchInput.text = "";
         root.refreshKeybinds();
         searchInput.forceActiveFocus();
     }
+
+    Component.onCompleted: root.grabFocus()
 
     Connections {
         target: PluginManager
         function onKeybindsVisibleChanged() {
             if (PluginManager.keybindsVisible) {
-                searchInput.text = "";
-                root.refreshKeybinds();
-                searchInput.forceActiveFocus();
+                root.grabFocus();
             }
         }
     }

@@ -72,19 +72,25 @@ QtObject {
                 keybindsVisible = !current;
                 break;
             case "volume":
+            case "volumemenu":
             case "audio":
             case "sound":
+            case "mixer":
                 current = volumeVisible;
                 closeAll();
                 volumeVisible = !current;
                 break;
             case "brightness":
+            case "brightnessmenu":
+            case "light":
                 current = brightnessVisible;
                 closeAll();
                 brightnessVisible = !current;
                 break;
             case "sysinfo":
+            case "system":
             case "stats":
+            case "resources":
                 current = sysinfoVisible;
                 closeAll();
                 sysinfoVisible = !current;

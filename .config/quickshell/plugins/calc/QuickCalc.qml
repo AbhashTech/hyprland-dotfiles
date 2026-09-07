@@ -58,16 +58,26 @@ Rectangle {
         id: copyProc
     }
 
-    Component.onCompleted: calcInput.forceActiveFocus()
+    focus: true
+    Keys.onEscapePressed: event => {
+        PluginManager.closeAll();
+        event.accepted = true;
+    }
+
+    function grabFocus() {
+        calcInput.text = "";
+        root.calculationResult = "";
+        root.calculationError = "";
+        calcInput.forceActiveFocus();
+    }
+
+    Component.onCompleted: grabFocus()
 
     Connections {
         target: PluginManager
         function onCalcVisibleChanged() {
             if (PluginManager.calcVisible) {
-                calcInput.text = "";
-                root.calculationResult = "";
-                root.calculationError = "";
-                calcInput.forceActiveFocus();
+                root.grabFocus();
             }
         }
     }

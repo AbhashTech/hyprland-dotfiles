@@ -37,7 +37,7 @@ PanelWindow {
 
             Component.onCompleted: {
                 if (powerMenuWindow.visible) {
-                    powerMenu.forceActiveFocus();
+                    powerMenu.grabFocus();
                 }
             }
         }
@@ -47,7 +47,7 @@ PanelWindow {
         target: PluginManager
         function onPowerMenuVisibleChanged() {
             if (PluginManager.powerMenuVisible) {
-                powerMenu.forceActiveFocus();
+                powerMenu.grabFocus();
             }
         }
     }

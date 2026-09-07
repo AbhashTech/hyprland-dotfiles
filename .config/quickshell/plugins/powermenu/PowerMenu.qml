@@ -50,8 +50,15 @@ Rectangle {
     }
 
     focus: true
+    Keys.onEscapePressed: event => {
+        PluginManager.closeAll();
+        event.accepted = true;
+    }
 
-    Keys.onEscapePressed: PluginManager.closeAll()
+    function grabFocus() {
+        root.selectedIndex = 0;
+        root.forceActiveFocus();
+    }
     Keys.onReturnPressed: {
         if (root.selectedIndex >= 0 && root.selectedIndex < root.actions.length) {
             root.triggerAction(root.actions[root.selectedIndex].id);

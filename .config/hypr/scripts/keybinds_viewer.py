@@ -89,7 +89,7 @@ def parse_keybinds(file_path):
         return []
 
     entries = []
-    current_category = "🖥️ Core Applications & Navigation"
+    current_category = "🖥️ Core Applications & Essential Controls"
     pending_comments = []
     last_description = ""
     in_for_loop = False
@@ -105,7 +105,6 @@ def parse_keybinds(file_path):
         # 1. Blank line
         if not line:
             pending_comments = []
-            last_description = ""
             i += 1
             continue
 
@@ -158,8 +157,12 @@ def parse_keybinds(file_path):
             bind_match = re.search(r"hl\.bind\(\s*([^,\)]+)", line)
             if bind_match:
                 raw_key = bind_match.group(1).strip()
-                cleaned_key = raw_key.replace('mainMod .. "', 'SUPER').replace('"', '').replace("'", "").replace(' .. ', '')
+                # Clean Lua string concatenations
+                cleaned_key = raw_key.replace('mainMod .. "', 'SUPER').replace('mainMod .. \'', 'SUPER')
+                cleaned_key = cleaned_key.replace('"', '').replace("'", "").replace(' .. ', ' ')
                 cleaned_key = cleaned_key.replace("mainMod", "SUPER").strip()
+                # Normalize double spaces or plus signs
+                cleaned_key = re.sub(r"\s+", " ", cleaned_key)
                 key_combo = cleaned_key
 
             # Look for actual inline comment (outside quotes)

@@ -53,13 +53,24 @@ Rectangle {
         onTriggered: root.refreshStats()
     }
 
-    Component.onCompleted: root.refreshStats()
+    focus: true
+    Keys.onEscapePressed: event => {
+        PluginManager.closeAll();
+        event.accepted = true;
+    }
+
+    function grabFocus() {
+        root.forceActiveFocus();
+        root.refreshStats();
+    }
+
+    Component.onCompleted: root.grabFocus()
 
     Connections {
         target: PluginManager
         function onSysinfoVisibleChanged() {
             if (PluginManager.sysinfoVisible) {
-                root.refreshStats();
+                root.grabFocus();
             }
         }
     }

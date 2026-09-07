@@ -98,19 +98,29 @@ Rectangle {
         }
     }
 
+    focus: true
+    Keys.onEscapePressed: event => {
+        PluginManager.closeAll();
+        event.accepted = true;
+    }
+
+    function grabFocus() {
+        searchInput.text = "";
+        root.activeCategory = "All";
+        root.filterApps();
+        searchInput.forceActiveFocus();
+    }
+
     Component.onCompleted: {
         scannerProc.running = true;
-        searchInput.forceActiveFocus();
+        root.grabFocus();
     }
 
     Connections {
         target: PluginManager
         function onAppMenuVisibleChanged() {
             if (PluginManager.appMenuVisible) {
-                searchInput.text = "";
-                root.activeCategory = "All";
-                root.filterApps();
-                searchInput.forceActiveFocus();
+                root.grabFocus();
             }
         }
     }

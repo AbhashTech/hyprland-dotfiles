@@ -10,23 +10,41 @@ PanelWindow {
 
     anchors {
         top: true
+        left: true
         right: true
+        bottom: true
     }
 
-    margins {
-        top: Theme.barHeight + 16
-        right: 40
-    }
-
-    implicitWidth: 440
-    implicitHeight: 340
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell:sysinfo"
     WlrLayershell.keyboardFocus: PluginManager.sysinfoVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    SystemStats {
+    MouseArea {
         anchors.fill: parent
+        onClicked: PluginManager.closeAll()
+
+        SystemStats {
+            id: systemStatsItem
+            anchors.top: parent.top
+            anchors.topMargin: Theme.barHeight + 16
+            anchors.right: parent.right
+            anchors.rightMargin: 40
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+            }
+        }
+    }
+
+    Connections {
+        target: PluginManager
+        function onSysinfoVisibleChanged() {
+            if (PluginManager.sysinfoVisible) {
+                systemStatsItem.grabFocus();
+            }
+        }
     }
 }
