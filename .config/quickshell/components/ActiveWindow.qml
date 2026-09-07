@@ -66,10 +66,25 @@ Rectangle {
         }
     }
 
+    Process {
+        id: ctlProc
+    }
+
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+        onClicked: mouse => {
+            if (mouse.button === Qt.LeftButton) {
+                ctlProc.exec(["hyprctl", "dispatch", "togglefloating"]);
+            } else if (mouse.button === Qt.RightButton) {
+                ctlProc.exec(["hyprctl", "dispatch", "killactive"]);
+            } else if (mouse.button === Qt.MiddleButton) {
+                ctlProc.exec(["hyprctl", "dispatch", "fullscreen", "1"]);
+            }
+        }
     }
 
     Row {

@@ -343,7 +343,7 @@ def main():
     entries = parse_keybinds(config_file)
 
     if args.json:
-        print(json.dumps(entries, indent=2))
+        print(json.dumps(entries))
     elif args.markdown:
         print(generate_markdown(entries))
     elif args.cli or (not args.gui and not os.getenv("WAYLAND_DISPLAY")):

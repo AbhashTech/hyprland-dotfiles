@@ -532,21 +532,94 @@ def open_interactive_menu():
         f"⚙️  Waybar Recording Icon: [{ind_label}] (Click to toggle)",
     ])
 
-    input_str = "\n".join(options)
-
+    choice = ""
     if shutil.which("fuzzel"):
         cmd = ["fuzzel", "--dmenu", "--prompt", "Capture: ", "--width", "42", "--lines", str(len(options) + 1)]
+        try:
+            proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+            choice, _ = proc.communicate(input=input_str)
+            choice = choice.strip()
+        except Exception:
+            pass
     elif shutil.which("wofi"):
         cmd = ["wofi", "--dmenu", "--prompt", "Screen Capture", "--width", "440", "--height", "420", "--hide-scroll", "--insensitive"]
+        try:
+            proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+            choice, _ = proc.communicate(input=input_str)
+            choice = choice.strip()
+        except Exception:
+            pass
     elif shutil.which("rofi"):
         cmd = ["rofi", "-dmenu", "-p", "Screen Capture"]
+        try:
+            proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+            choice, _ = proc.communicate(input=input_str)
+            choice = choice.strip()
+        except Exception:
+            pass
     else:
-        show_notification("❌ Error", "No launcher found (install fuzzel, wofi, or rofi)", "dialog-error")
-        return
+        # Native GTK3 Dialog
+        try:
+            import gi
+            gi.require_version("Gtk", "3.0")
+            from gi.repository import Gtk, Gdk
+
+            selected = [""]
+            dialog = Gtk.Dialog(title="Screen Capture & Recording Hub", flags=0)
+            dialog.set_default_size(440, 480)
+            dialog.set_position(Gtk.WindowPosition.CENTER)
+
+            box = dialog.get_content_area()
+            box.set_spacing(6)
+            box.set_margin_top(12)
+            box.set_margin_bottom(12)
+            box.set_margin_start(12)
+            box.set_margin_end(12)
+
+            header = Gtk.Label()
+            header.set_markup("<span size='12000' weight='bold'>📸 Screen Capture &amp; Recording Hub</span>")
+            box.pack_start(header, False, False, 4)
+
+            scroller = Gtk.ScrolledWindow()
+            scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+            listbox = Gtk.ListBox()
+            listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+
+            for opt in options:
+                row = Gtk.ListBoxRow()
+                lbl = Gtk.Label(label=opt)
+                lbl.set_xalign(0)
+                lbl.set_margin_top(6)
+                lbl.set_margin_bottom(6)
+                lbl.set_margin_start(10)
+                lbl.set_margin_end(10)
+                row.add(lbl)
+                row.opt_text = opt
+                listbox.add(row)
+
+            def on_row_activated(lb, r):
+                selected[0] = getattr(r, "opt_text", "")
+                dialog.response(Gtk.ResponseType.OK)
+
+            listbox.connect("row-activated", on_row_activated)
+            scroller.add(listbox)
+            box.pack_start(scroller, True, True, 0)
+
+            dialog.add_button("Cancel", Gtk.ResponseType.CANCEL)
+            dialog.connect("key-press-event", lambda w, e: dialog.response(Gtk.ResponseType.CANCEL) if e.keyval == Gdk.KEY_Escape else None)
+            dialog.show_all()
+            resp = dialog.run()
+            dialog.destroy()
+            while Gtk.events_pending():
+                Gtk.main_iteration()
+
+            if resp == Gtk.ResponseType.OK:
+                choice = selected[0]
+        except Exception as e:
+            print(f"Error showing capture GTK menu: {e}", file=sys.stderr)
+            return
 
     try:
-        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
-        choice, _ = proc.communicate(input=input_str)
         choice = choice.strip()
         if not choice:
             return

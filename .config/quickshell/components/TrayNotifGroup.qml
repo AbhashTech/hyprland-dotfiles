@@ -84,16 +84,24 @@ Rectangle {
                         cursorShape: Qt.PointingHandCursor
                         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                         onClicked: mouse => {
-                            if (mouse.button === Qt.LeftButton) {
-                                modelData.activate();
-                            } else if (mouse.button === Qt.RightButton) {
-                                if (modelData.hasMenu && modelData.menu) {
-                                    modelData.menu.open(trayItemWrapper);
-                                } else if (typeof modelData.secondaryActivate === "function") {
-                                    modelData.secondaryActivate();
+                            try {
+                                if (mouse.button === Qt.LeftButton) {
+                                    modelData.activate();
+                                } else if (mouse.button === Qt.RightButton) {
+                                    if (modelData.hasMenu && modelData.menu) {
+                                        modelData.menu.open(trayItemWrapper);
+                                    } else if (typeof modelData.secondaryActivate === "function") {
+                                        modelData.secondaryActivate();
+                                    } else {
+                                        modelData.activate();
+                                    }
+                                } else if (mouse.button === Qt.MiddleButton) {
+                                    if (typeof modelData.secondaryActivate === "function") {
+                                        modelData.secondaryActivate();
+                                    }
                                 }
-                            } else if (mouse.button === Qt.MiddleButton && typeof modelData.secondaryActivate === "function") {
-                                modelData.secondaryActivate();
+                            } catch (e) {
+                                console.log("Tray action error: " + e);
                             }
                         }
                     }

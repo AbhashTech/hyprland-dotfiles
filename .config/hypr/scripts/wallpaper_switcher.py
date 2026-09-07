@@ -450,6 +450,81 @@ def launch_menu(images):
         except Exception:
             pass
 
+    # Native GTK3 Dialog fallback
+    if not selected_line and not shutil.which("fuzzel") and not shutil.which("wofi"):
+        try:
+            import gi
+            gi.require_version("Gtk", "3.0")
+            from gi.repository import Gtk, Gdk
+
+            chosen = [None]
+            dialog = Gtk.Dialog(title="Wallpaper Selector", flags=0)
+            dialog.set_default_size(500, 520)
+            dialog.set_position(Gtk.WindowPosition.CENTER)
+
+            box = dialog.get_content_area()
+            box.set_spacing(8)
+            box.set_margin_top(12)
+            box.set_margin_bottom(12)
+            box.set_margin_start(12)
+            box.set_margin_end(12)
+
+            header = Gtk.Label()
+            header.set_markup("<span size='12000' weight='bold'>🎨 Select Desktop Wallpaper</span>")
+            box.pack_start(header, False, False, 4)
+
+            # Search entry
+            search_entry = Gtk.SearchEntry()
+            search_entry.set_placeholder_text("Filter wallpapers...")
+            box.pack_start(search_entry, False, False, 4)
+
+            scroller = Gtk.ScrolledWindow()
+            scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+            listbox = Gtk.ListBox()
+            listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+
+            for line in menu_lines:
+                row = Gtk.ListBoxRow()
+                lbl = Gtk.Label(label=line)
+                lbl.set_xalign(0)
+                lbl.set_margin_top(6)
+                lbl.set_margin_bottom(6)
+                lbl.set_margin_start(10)
+                lbl.set_margin_end(10)
+                row.add(lbl)
+                row.item_text = line
+                listbox.add(row)
+
+            def filter_func(row):
+                query = search_entry.get_text().lower().strip()
+                if not query:
+                    return True
+                return query in getattr(row, "item_text", "").lower()
+
+            listbox.set_filter_func(filter_func)
+            search_entry.connect("search-changed", lambda e: listbox.invalidate_filter())
+
+            def on_row_activated(lb, r):
+                chosen[0] = getattr(r, "item_text", None)
+                dialog.response(Gtk.ResponseType.OK)
+
+            listbox.connect("row-activated", on_row_activated)
+            scroller.add(listbox)
+            box.pack_start(scroller, True, True, 0)
+
+            dialog.add_button("Cancel", Gtk.ResponseType.CANCEL)
+            dialog.connect("key-press-event", lambda w, e: dialog.response(Gtk.ResponseType.CANCEL) if e.keyval == Gdk.KEY_Escape else None)
+            dialog.show_all()
+            resp = dialog.run()
+            dialog.destroy()
+            while Gtk.events_pending():
+                Gtk.main_iteration()
+
+            if resp == Gtk.ResponseType.OK and chosen[0]:
+                selected_line = chosen[0]
+        except Exception as e:
+            print(f"Error showing wallpaper GTK menu: {e}", file=sys.stderr)
+
     if selected_line and selected_line in mapping:
         set_wallpaper(mapping[selected_line])
 

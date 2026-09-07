@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import ".."
 
 Rectangle {
@@ -70,13 +71,22 @@ Rectangle {
         }
     }
 
+    Process {
+        id: ctlProc
+    }
+
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            root.showDate = !root.showDate;
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: mouse => {
+            if (mouse.button === Qt.LeftButton) {
+                root.showDate = !root.showDate;
+            } else if (mouse.button === Qt.RightButton) {
+                ctlProc.exec(["kitty", "--class", "calendar-floating", "-T", "Calendar", "-e", "bash", "-c", "cal -3; read -n 1 -s -r -p 'Press any key to close...'"]);
+            }
         }
     }
 }

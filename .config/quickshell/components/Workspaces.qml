@@ -69,7 +69,7 @@ Rectangle {
         spacing: 4
 
         Repeater {
-            model: [1, 2, 3, 4]
+            model: [1, 2, 3, 4, 5]
 
             Rectangle {
                 id: wsBtn
@@ -103,7 +103,7 @@ Rectangle {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        dispatchProc.exec(["hyprctl", "dispatch", "hl.dsp.focus", "{ workspace = " + wsNum + " }"]);
+                        dispatchProc.exec(["hyprctl", "dispatch", "workspace", wsNum.toString()]);
                         root.activeWorkspaceId = wsNum;
                     }
                 }
@@ -116,9 +116,9 @@ Rectangle {
         acceptedButtons: Qt.NoButton
         onWheel: wheel => {
             if (wheel.angleDelta.y > 0) {
-                dispatchProc.exec(["hyprctl", "dispatch", "hl.dsp.focus", "{ workspace = \"e-1\" }"]);
+                dispatchProc.exec(["hyprctl", "dispatch", "workspace", "e-1"]);
             } else if (wheel.angleDelta.y < 0) {
-                dispatchProc.exec(["hyprctl", "dispatch", "hl.dsp.focus", "{ workspace = \"e+1\" }"]);
+                dispatchProc.exec(["hyprctl", "dispatch", "workspace", "e+1"]);
             }
         }
     }

@@ -45,8 +45,8 @@ start_quickshell() {
     # If waybar is running, stop it to prevent overlapping top bars
     pkill -x waybar 2>/dev/null
     pkill -f launch_waybar.py 2>/dev/null
-
-    /usr/bin/quickshell -d -p "$HOME/.config/quickshell/shell.qml" "${PASSTHROUGH_ARGS[@]}" >/dev/null 2>&1
+    QS_BIN="$(command -v quickshell || echo /usr/bin/quickshell)"
+    nohup "$QS_BIN" -d -p "$HOME/.config/quickshell/shell.qml" "${PASSTHROUGH_ARGS[@]}" >/dev/null 2>&1 &
 }
 
 case "$ACTION" in

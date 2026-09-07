@@ -525,31 +525,128 @@ def remove_layout(layout_arg, variant_arg=""):
     return True
 
 def run_fuzzel_menu(prompt, lines_list):
-    """Display interactive Fuzzel fuzzy-search dmenu."""
-    if not shutil.which("fuzzel"):
-        print("Error: fuzzel is not installed.", file=sys.stderr)
-        return None
-
+    """Display interactive Fuzzel fuzzy-search dmenu or native GTK3 dialog."""
     menu_input = "\n".join(lines_list)
-    try:
-        res = subprocess.run(
-            [
-                "fuzzel",
-                "--dmenu",
-                "--prompt", prompt,
-                "--lines", str(min(max(len(lines_list), 4), 16)),
-                "--width", "56",
-            ],
-            input=menu_input,
-            capture_output=True,
-            text=True,
-        )
-        if res.returncode == 0 and res.stdout.strip():
-            return res.stdout.strip()
-        return None
-    except Exception as e:
-        print(f"Fuzzel execution error: {e}", file=sys.stderr)
-        return None
+    if shutil.which("fuzzel"):
+        try:
+            res = subprocess.run(
+                [
+                    "fuzzel",
+                    "--dmenu",
+                    "--prompt", prompt,
+                    "--lines", str(min(max(len(lines_list), 4), 16)),
+                    "--width", "56",
+                ],
+                input=menu_input,
+                capture_output=True,
+                text=True,
+            )
+            if res.returncode == 0 and res.stdout.strip():
+                return res.stdout.strip()
+            return None
+        except Exception as e:
+            print(f"Fuzzel execution error: {e}", file=sys.stderr)
+            return None
+    elif shutil.which("wofi"):
+        try:
+            res = subprocess.run(
+                [
+                    "wofi",
+                    "--dmenu",
+                    "--prompt", prompt,
+                    "--lines", str(min(max(len(lines_list), 4), 16)),
+                    "--width", "560",
+                ],
+                input=menu_input,
+                capture_output=True,
+                text=True,
+            )
+            if res.returncode == 0 and res.stdout.strip():
+                return res.stdout.strip()
+            return None
+        except Exception as e:
+            print(f"Wofi execution error: {e}", file=sys.stderr)
+            return None
+    else:
+        # Native GTK3 Dialog
+        try:
+            import gi
+            gi.require_version("Gtk", "3.0")
+            from gi.repository import Gtk, Gdk
+
+            selected = [None]
+            dialog = Gtk.Dialog(title=prompt.strip("> "), flags=0)
+            dialog.set_default_size(520, 480)
+            dialog.set_position(Gtk.WindowPosition.CENTER)
+
+            box = dialog.get_content_area()
+            box.set_spacing(8)
+            box.set_margin_top(12)
+            box.set_margin_bottom(12)
+            box.set_margin_start(12)
+            box.set_margin_end(12)
+
+            header = Gtk.Label()
+            header.set_markup(f"<span size='12000' weight='bold'>{prompt.strip('> ')}</span>")
+            box.pack_start(header, False, False, 4)
+
+            # Search entry
+            search_entry = Gtk.SearchEntry()
+            search_entry.set_placeholder_text("Search layout / language...")
+            box.pack_start(search_entry, False, False, 4)
+
+            scroller = Gtk.ScrolledWindow()
+            scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+            listbox = Gtk.ListBox()
+            listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+
+            row_items = []
+            for item in lines_list:
+                if item.startswith("───"):
+                    continue
+                row = Gtk.ListBoxRow()
+                lbl = Gtk.Label(label=item)
+                lbl.set_xalign(0)
+                lbl.set_margin_top(6)
+                lbl.set_margin_bottom(6)
+                lbl.set_margin_start(10)
+                lbl.set_margin_end(10)
+                row.add(lbl)
+                row.item_text = item
+                listbox.add(row)
+                row_items.append((row, item.lower()))
+
+            def filter_func(row):
+                query = search_entry.get_text().lower().strip()
+                if not query:
+                    return True
+                return query in getattr(row, "item_text", "").lower()
+
+            listbox.set_filter_func(filter_func)
+            search_entry.connect("search-changed", lambda e: listbox.invalidate_filter())
+
+            def on_row_activated(lb, r):
+                selected[0] = getattr(r, "item_text", None)
+                dialog.response(Gtk.ResponseType.OK)
+
+            listbox.connect("row-activated", on_row_activated)
+            scroller.add(listbox)
+            box.pack_start(scroller, True, True, 0)
+
+            dialog.add_button("Cancel", Gtk.ResponseType.CANCEL)
+            dialog.connect("key-press-event", lambda w, e: dialog.response(Gtk.ResponseType.CANCEL) if e.keyval == Gdk.KEY_Escape else None)
+            dialog.show_all()
+            resp = dialog.run()
+            dialog.destroy()
+            while Gtk.events_pending():
+                Gtk.main_iteration()
+
+            if resp == Gtk.ResponseType.OK:
+                return selected[0]
+            return None
+        except Exception as e:
+            print(f"Error showing keyboard layout GTK menu: {e}", file=sys.stderr)
+            return None
 
 def gui_add_layout_menu():
     """Interactive GUI search menu to add any layout or variant."""

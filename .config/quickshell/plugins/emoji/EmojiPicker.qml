@@ -216,6 +216,32 @@ Rectangle {
                                 root.copyEmoji(root.filteredEmojis[root.selectedIndex]);
                             }
                         }
+                        Keys.onRightPressed: {
+                            if (root.selectedIndex < root.filteredEmojis.length - 1) {
+                                root.selectedIndex++;
+                                emojiGrid.positionViewAtIndex(root.selectedIndex, GridView.Contain);
+                            }
+                        }
+                        Keys.onLeftPressed: {
+                            if (root.selectedIndex > 0) {
+                                root.selectedIndex--;
+                                emojiGrid.positionViewAtIndex(root.selectedIndex, GridView.Contain);
+                            }
+                        }
+                        Keys.onDownPressed: {
+                            var cols = Math.max(1, Math.floor(emojiGrid.width / 64));
+                            if (root.selectedIndex + cols < root.filteredEmojis.length) {
+                                root.selectedIndex += cols;
+                                emojiGrid.positionViewAtIndex(root.selectedIndex, GridView.Contain);
+                            }
+                        }
+                        Keys.onUpPressed: {
+                            var cols = Math.max(1, Math.floor(emojiGrid.width / 64));
+                            if (root.selectedIndex - cols >= 0) {
+                                root.selectedIndex -= cols;
+                                emojiGrid.positionViewAtIndex(root.selectedIndex, GridView.Contain);
+                            }
+                        }
                     }
                 }
             }
