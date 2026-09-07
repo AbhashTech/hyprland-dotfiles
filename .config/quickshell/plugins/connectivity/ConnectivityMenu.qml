@@ -536,6 +536,7 @@ Rectangle {
                     color: Theme.surface0
                     border.color: Theme.teal
                     border.width: 1
+                    clip: true
 
                     RowLayout {
                         anchors.fill: parent
@@ -564,18 +565,20 @@ Rectangle {
                             spacing: 2
 
                             RowLayout {
+                                Layout.fillWidth: true
                                 spacing: 8
                                 Text {
+                                    Layout.fillWidth: true
                                     text: root.wifiSsid
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSizeLarge
                                     font.bold: true
                                     color: Theme.text
                                     elide: Text.ElideRight
-                                    Layout.maximumWidth: 200
                                 }
 
                                 Rectangle {
+                                    Layout.alignment: Qt.AlignVCenter
                                     implicitWidth: 64
                                     implicitHeight: 18
                                     radius: 9
@@ -593,10 +596,12 @@ Rectangle {
                             }
 
                             Text {
+                                Layout.fillWidth: true
                                 text: (root.wifiIp ? root.wifiIp + " • " : "") + (root.wifiSecurity ? root.wifiSecurity + " • " : "") + root.wifiSignal + "% Signal"
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSizeSmall
                                 color: Theme.overlay0
+                                elide: Text.ElideRight
                             }
                         }
 
