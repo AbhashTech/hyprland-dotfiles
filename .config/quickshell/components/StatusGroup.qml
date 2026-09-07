@@ -56,7 +56,7 @@ Rectangle {
 
     Process {
         id: netProc
-        command: ["python3", "-c", "import subprocess, json; res = subprocess.run(['nmcli', '-t', '-f', 'ACTIVE,SSID,SIGNAL,DEVICE,TYPE', 'dev', 'wifi'], capture_output=True, text=True).stdout; lines = [l for l in res.splitlines() if l.startswith('yes:')]; print(json.dumps({'ssid': lines[0].split(':')[1] if lines else '', 'sig': lines[0].split(':')[2] if lines else '0'}))"]
+        command: ["python3", "-c", "import subprocess, json\nssid = ''\nsig = 0\ntry:\n    # Try nmcli first\n    res = subprocess.run(['nmcli', '-t', '-f', 'ACTIVE,SSID,SIGNAL', 'dev', 'wifi'], capture_output=True, text=True).stdout\n    lines = [l for l in res.splitlines() if l.startswith('yes:')]\n    if lines:\n        ssid = lines[0].split(':')[1]\n        sig = int(lines[0].split(':')[2] or 0)\nexcept Exception:\n    pass\nif not ssid:\n    try:\n        # Fallback to iwctl / iwd\n        res = subprocess.run(['iwctl', 'station', 'wlan0', 'show'], capture_output=True, text=True).stdout\n        for l in res.splitlines():\n            if 'Connected network' in l:\n                ssid = l.split('Connected network')[-1].strip()\n            if 'RSSI' in l and not sig:\n                try:\n                    rssi_val = int(l.split('RSSI')[-1].strip().split()[0])\n                    # Convert dBm to approx percentage (e.g. -50 dBm -> ~80%)\n                    sig = max(0, min(100, int(2 * (rssi_val + 100))))\n                except Exception:\n                    sig = 75\n    except Exception:\n        pass\nprint(json.dumps({'ssid': ssid, 'sig': sig}))"]
         stdout: SplitParser {
             onRead: data => {
                 try {
@@ -291,9 +291,9 @@ Rectangle {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
-                        ctlProc.exec(["bash", "-c", "command -v nm-connection-editor >/dev/null 2>&1 && nm-connection-editor || kitty --class nmtui-floating -e nmtui"]);
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/wifi_manager.py"]);
                     } else if (mouse.button === Qt.RightButton) {
-                        ctlProc.exec(["kitty", "--class", "nmtui-floating", "-e", "nmtui"]);
+                        ctlProc.exec(["kitty", "--class", "iwctl-floating", "-T", "WiFi Manager (iwctl)", "iwctl"]);
                     }
                 }
             }
@@ -328,7 +328,7 @@ Rectangle {
 
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
-                        ctlProc.exec(["bash", "-c", "command -v blueman-manager >/dev/null 2>&1 && blueman-manager || kitty --class bt-floating -e bluetui || rfkill toggle bluetooth"]);
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/bluetooth_menu.py"]);
                     } else if (mouse.button === Qt.RightButton) {
                         ctlProc.exec(["rfkill", "toggle", "bluetooth"]);
                     }
