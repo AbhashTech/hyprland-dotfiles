@@ -17,8 +17,13 @@ QtObject {
     property bool brightnessVisible: false
     property bool sysinfoVisible: false
     property bool batteryVisible: false
+    property string powerProfile: "balanced"
     property bool connectivityVisible: false
     property string connectivityTab: "wifi"
+
+    function setPowerProfile(profile) {
+        powerProfile = profile;
+    }
 
     // Close all open plugins
     function closeAll() {

@@ -20,7 +20,16 @@ Rectangle {
     property int brightness: 50
     property string wifiText: "󰤨"
     property string btText: "󰂯"
-    property string batText: "󰁹 100%"
+    property string batIcon: "󰁹"
+    property string batPercent: "100%"
+    property string batProfile: PluginManager.powerProfile
+
+    // Dynamic color based on power profile
+    readonly property color batColor: {
+        if (batProfile === "power-saver") return Theme.green;
+        if (batProfile === "performance") return Theme.peach;
+        return Theme.blue; // balanced
+    }
 
     Process {
         id: volProc
@@ -100,7 +109,7 @@ Rectangle {
 
     Process {
         id: batProc
-        command: ["python3", "-c", "import glob, os, json; bats = glob.glob('/sys/class/power_supply/BAT*'); cap = 100; status = 'Full';\nif bats:\n    b = bats[0]\n    try:\n        cap = int(open(b + '/capacity').read().strip())\n        status = open(b + '/status').read().strip()\n    except: pass\nprint(json.dumps({'cap': cap, 'status': status}))"]
+        command: ["python3", "-c", "import glob, subprocess, json\nbats = glob.glob('/sys/class/power_supply/BAT*')\ncap = 100; status = 'Full'\nif bats:\n    b = bats[0]\n    try: cap = int(open(b + '/capacity').read().strip())\n    except: pass\n    try: status = open(b + '/status').read().strip()\n    except: pass\nprof = 'balanced'\ntry:\n    res = subprocess.run(['powerprofilesctl', 'get'], capture_output=True, text=True, timeout=1)\n    if res.returncode == 0 and res.stdout.strip():\n        prof = res.stdout.strip()\nexcept: pass\nprint(json.dumps({'cap': cap, 'status': status, 'profile': prof}))"]
         stdout: SplitParser {
             onRead: data => {
                 try {
@@ -118,9 +127,15 @@ Rectangle {
                     else if (cap <= 80) icon = chg ? "󰂊" : "󰂀";
                     else if (cap <= 90) icon = chg ? "󰂋" : "󰂁";
                     else icon = chg ? "󰂅" : "󰁹";
-                    root.batText = icon + " " + cap + "%";
+                    root.batIcon = icon;
+                    root.batPercent = cap + "%";
+                    if (obj.profile) {
+                        root.batProfile = obj.profile;
+                        PluginManager.setPowerProfile(obj.profile);
+                    }
                 } catch (e) {
-                    root.batText = "󰁹 100%";
+                    root.batIcon = "󰁹";
+                    root.batPercent = "100%";
                 }
             }
         }
@@ -355,11 +370,22 @@ Rectangle {
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: root.batText
+                    text: root.batIcon
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize
                     font.bold: true
-                    color: Theme.green
+                    color: root.batColor
+
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.batPercent
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+                    font.bold: true
+                    color: Theme.text
                 }
             }
 

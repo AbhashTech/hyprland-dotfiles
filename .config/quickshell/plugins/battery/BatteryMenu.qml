@@ -15,7 +15,7 @@ Rectangle {
     border.color: Theme.barBorder
     border.width: 1
 
-    property string currentProfile: "balanced"
+    property string currentProfile: PluginManager.powerProfile
     property int batteryCap: 100
     property string batteryStatus: "Full"
     property double powerWatt: 0.0
@@ -52,6 +52,7 @@ Rectangle {
 
     function setProfile(profileId) {
         root.currentProfile = profileId;
+        PluginManager.setPowerProfile(profileId);
         ctlProc.exec(["powerprofilesctl", "set", profileId]);
         refreshTimer.restart();
     }
@@ -75,6 +76,7 @@ Rectangle {
                 var p = data.trim();
                 if (p.length > 0) {
                     root.currentProfile = p;
+                    PluginManager.setPowerProfile(p);
                 }
             }
         }
