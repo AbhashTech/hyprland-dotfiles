@@ -600,30 +600,73 @@ Rectangle {
                             }
                         }
 
-                        // Disconnect Button
-                        Rectangle {
-                            implicitWidth: 84
-                            implicitHeight: 30
-                            radius: Theme.pillRadius
-                            color: disconnHover.containsMouse ? Theme.red : Theme.surface1
-                            border.color: Theme.moduleBorder
-                            border.width: 1
+                        // Actions: Disconnect & Forget
+                        RowLayout {
+                            spacing: 6
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: "Disconnect"
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 11
-                                font.bold: true
-                                color: disconnHover.containsMouse ? "#ffffff" : Theme.red
+                            // Disconnect Button
+                            Rectangle {
+                                implicitWidth: 78
+                                implicitHeight: 30
+                                radius: Theme.pillRadius
+                                color: disconnHover.containsMouse ? Theme.red : Theme.surface1
+                                border.color: Theme.moduleBorder
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "Disconnect"
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    color: disconnHover.containsMouse ? "#ffffff" : Theme.red
+                                }
+
+                                MouseArea {
+                                    id: disconnHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.disconnectWifi()
+                                }
                             }
 
-                            MouseArea {
-                                id: disconnHover
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.disconnectWifi()
+                            // Forget Button
+                            Rectangle {
+                                implicitWidth: 72
+                                implicitHeight: 30
+                                radius: Theme.pillRadius
+                                color: forgetActiveHover.containsMouse ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.2) : Theme.surface1
+                                border.color: forgetActiveHover.containsMouse ? Theme.red : Theme.moduleBorder
+                                border.width: 1
+
+                                RowLayout {
+                                    anchors.centerIn: parent
+                                    spacing: 4
+
+                                    Text {
+                                        text: "󰆴"
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 11
+                                        color: forgetActiveHover.containsMouse ? Theme.red : Theme.overlay0
+                                    }
+
+                                    Text {
+                                        text: "Forget"
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                        color: forgetActiveHover.containsMouse ? Theme.red : Theme.subtext0
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: forgetActiveHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.forgetWifi(root.wifiSsid)
+                                }
                             }
                         }
                     }
@@ -718,6 +761,7 @@ Rectangle {
                                 // Signal Icon
                                 Text {
                                     text: {
+                                        if (modelData.in_range === false) return "󰤭";
                                         var sig = modelData.signal || 0;
                                         if (sig >= 75) return "󰤨";
                                         if (sig >= 50) return "󰤥";
@@ -726,7 +770,7 @@ Rectangle {
                                     }
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSize
-                                    color: modelData.connected ? Theme.teal : Theme.accent
+                                    color: modelData.connected ? Theme.teal : (modelData.in_range === false ? Theme.overlay0 : Theme.accent)
                                 }
 
                                 // SSID & Badges
@@ -742,9 +786,9 @@ Rectangle {
                                             font.family: Theme.fontFamily
                                             font.pixelSize: Theme.fontSize
                                             font.bold: modelData.connected || modelData.known
-                                            color: modelData.connected ? Theme.teal : Theme.text
+                                            color: modelData.connected ? Theme.teal : (modelData.in_range === false ? Theme.overlay0 : Theme.text)
                                             elide: Text.ElideRight
-                                            Layout.maximumWidth: 210
+                                            Layout.maximumWidth: 190
                                         }
 
                                         // Lock badge
@@ -753,12 +797,12 @@ Rectangle {
                                             font.family: Theme.fontFamily
                                             font.pixelSize: 11
                                             color: Theme.overlay0
-                                            visible: text.length > 0
+                                            visible: text.length > 0 && modelData.in_range !== false
                                         }
 
                                         // Saved badge
                                         Rectangle {
-                                            implicitWidth: 42
+                                            implicitWidth: (modelData.in_range === false) ? 105 : 42
                                             implicitHeight: 16
                                             radius: 4
                                             color: Theme.surface2
@@ -766,7 +810,7 @@ Rectangle {
 
                                             Text {
                                                 anchors.centerIn: parent
-                                                text: "Saved"
+                                                text: (modelData.in_range === false) ? "Saved • Out of range" : "Saved"
                                                 font.family: Theme.fontFamily
                                                 font.pixelSize: 9
                                                 color: Theme.subtext0
@@ -777,26 +821,27 @@ Rectangle {
 
                                 // Signal %
                                 Text {
-                                    text: (modelData.signal || 0) + "%"
+                                    text: (modelData.in_range === false) ? "" : ((modelData.signal || 0) + "%")
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSizeSmall
                                     color: Theme.overlay0
+                                    visible: modelData.in_range !== false
                                 }
 
                                 // Action Button
                                 Rectangle {
-                                    implicitWidth: modelData.connected ? 70 : 64
+                                    implicitWidth: (modelData.in_range === false) ? 60 : (modelData.connected ? 70 : 64)
                                     implicitHeight: 28
                                     radius: 6
-                                    color: modelData.connected ? Qt.rgba(Theme.teal.r, Theme.teal.g, Theme.teal.b, 0.2) : (connBtnArea.containsMouse ? Theme.accent : Theme.surface2)
+                                    color: (modelData.in_range === false) ? (connBtnArea.containsMouse ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.2) : Theme.surface2) : (modelData.connected ? Qt.rgba(Theme.teal.r, Theme.teal.g, Theme.teal.b, 0.2) : (connBtnArea.containsMouse ? Theme.accent : Theme.surface2))
 
                                     Text {
                                         anchors.centerIn: parent
-                                        text: modelData.connected ? "Active" : (modelData.known ? "Connect" : "Join")
+                                        text: (modelData.in_range === false) ? "Forget" : (modelData.connected ? "Active" : (modelData.known ? "Connect" : "Join"))
                                         font.family: Theme.fontFamily
                                         font.pixelSize: 11
                                         font.bold: true
-                                        color: modelData.connected ? Theme.teal : (connBtnArea.containsMouse ? Theme.mantle : Theme.text)
+                                        color: (modelData.in_range === false) ? (connBtnArea.containsMouse ? Theme.red : Theme.subtext0) : (modelData.connected ? Theme.teal : (connBtnArea.containsMouse ? Theme.mantle : Theme.text))
                                     }
 
                                     MouseArea {
@@ -805,7 +850,9 @@ Rectangle {
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
-                                            if (modelData.connected) {
+                                            if (modelData.in_range === false) {
+                                                root.forgetWifi(modelData.ssid);
+                                            } else if (modelData.connected) {
                                                 root.disconnectWifi();
                                             } else if (modelData.known || (modelData.security && modelData.security.toLowerCase() === "open")) {
                                                 root.connectWifi(modelData.ssid);
@@ -814,6 +861,33 @@ Rectangle {
                                                 root.wifiPasswordInput = "";
                                             }
                                         }
+                                    }
+                                }
+
+                                // Forget Button (Icon) for in-range saved/known networks
+                                Rectangle {
+                                    implicitWidth: 28
+                                    implicitHeight: 28
+                                    radius: 6
+                                    color: forgetNetArea.containsMouse ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.2) : "transparent"
+                                    border.color: forgetNetArea.containsMouse ? Theme.red : "transparent"
+                                    border.width: 1
+                                    visible: modelData.known && modelData.in_range !== false
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "󰆴"
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 12
+                                        color: forgetNetArea.containsMouse ? Theme.red : Theme.overlay0
+                                    }
+
+                                    MouseArea {
+                                        id: forgetNetArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.forgetWifi(modelData.ssid)
                                     }
                                 }
                             }

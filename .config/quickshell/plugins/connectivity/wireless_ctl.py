@@ -87,7 +87,7 @@ def get_wifi_status() -> dict:
     known_out = run_cmd(['iwctl', 'known-networks', 'list'])
     for l in known_out.splitlines():
         parts = re.split(r'\s{2,}', l.strip())
-        if parts and parts[0] not in ('Name', 'Known Networks', '---') and not parts[0].startswith('-'):
+        if parts and parts[0] and parts[0] not in ('Name', 'Known Networks', '---') and not parts[0].startswith('-'):
             known_set.add(parts[0])
 
     # Available networks
@@ -112,7 +112,8 @@ def get_wifi_status() -> dict:
                 'security': sec,
                 'signal': sig_val,
                 'connected': is_conn or (name == result['ssid'] and result['connected']),
-                'known': name in known_set
+                'known': name in known_set,
+                'in_range': True
             })
 
     # If current connected network not in list, prepend it
@@ -122,11 +123,29 @@ def get_wifi_status() -> dict:
             'security': result['security'] or 'psk',
             'signal': result['signal'] or 85,
             'connected': True,
-            'known': True
+            'known': True,
+            'in_range': True
         })
+        seen_ssids.add(result['ssid'])
 
-    # Sort networks: connected first, then known, then by signal strength
-    result['networks'].sort(key=lambda n: (n['connected'], n['known'], n['signal']), reverse=True)
+    # Add known networks that are currently out of range so the user can manage/forget them
+    for kname in sorted(known_set):
+        if kname and kname not in seen_ssids:
+            result['networks'].append({
+                'ssid': kname,
+                'security': 'psk',
+                'signal': 0,
+                'connected': False,
+                'known': True,
+                'in_range': False
+            })
+
+    # Sort networks: connected first, then in-range by signal, then out-of-range
+    result['networks'].sort(key=lambda n: (
+        1 if n['connected'] else 0,
+        1 if n.get('in_range', True) else 0,
+        n['signal']
+    ), reverse=True)
     return result
 
 def wifi_connect(ssid: str, password: str = None) -> bool:
@@ -150,11 +169,24 @@ def wifi_disconnect() -> bool:
         return False
 
 def wifi_forget(ssid: str) -> bool:
-    try:
-        subprocess.run(['iwctl', 'known-networks', ssid, 'forget'], timeout=5, check=True)
-        return True
-    except Exception:
+    if not ssid:
         return False
+    ok = False
+    try:
+        res = subprocess.run(['iwctl', 'known-networks', ssid, 'forget'], capture_output=True, text=True, timeout=5)
+        if res.returncode == 0:
+            ok = True
+    except Exception:
+        pass
+
+    if not ok and shutil.which('nmcli'):
+        try:
+            res = subprocess.run(['nmcli', 'con', 'delete', ssid], capture_output=True, text=True, timeout=5)
+            if res.returncode == 0:
+                ok = True
+        except Exception:
+            pass
+    return ok
 
 def wifi_toggle() -> bool:
     try:
