@@ -27,8 +27,9 @@ Rectangle {
 
     Process {
         id: notifCountProc
-        command: ["python3", "-c", "import subprocess, json; res = subprocess.run(['makoctl', 'history'], capture_output=True, text=True).stdout; \ntry:\n    data = json.loads(res)\n    count = len(data.get('data', [[]])[0]) if 'data' in data else 0\nexcept Exception:\n    count = 0\nprint(count)"]
+        command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py", "count"]
         stdout: SplitParser {
+            splitMarker: ""
             onRead: data => {
                 try {
                     root.notifCount = parseInt(data.trim(), 10) || 0;
@@ -148,7 +149,7 @@ Rectangle {
                     if (mouse.button === Qt.LeftButton) {
                         PluginManager.toggle("clipboard");
                     } else if (mouse.button === Qt.RightButton) {
-                        ctlProc.exec(["cliphist", "wipe"]);
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "wipe"]);
                     }
                 }
             }
@@ -160,7 +161,7 @@ Rectangle {
             implicitWidth: notifRow.implicitWidth + 8
             implicitHeight: 22
             radius: 4
-            color: notifArea.containsMouse ? Theme.moduleActiveBg : "transparent"
+            color: notifArea.containsMouse || PluginManager.notificationVisible ? Theme.moduleActiveBg : "transparent"
 
             Row {
                 id: notifRow
@@ -195,10 +196,10 @@ Rectangle {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
-                        ctlProc.exec(["makoctl", "restore"]);
+                        PluginManager.toggle("notifications");
                         if (!notifCountProc.running) notifCountProc.running = true;
                     } else if (mouse.button === Qt.RightButton) {
-                        ctlProc.exec(["makoctl", "dismiss", "-a"]);
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py", "dismiss-all"]);
                         root.notifCount = 0;
                     }
                 }

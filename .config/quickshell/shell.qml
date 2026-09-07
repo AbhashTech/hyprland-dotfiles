@@ -15,6 +15,7 @@ import "plugins/brightness"
 import "plugins/sysinfo"
 import "plugins/connectivity"
 import "plugins/battery"
+import "plugins/notifications"
 
 ShellRoot {
     id: root
@@ -126,4 +127,5 @@ ShellRoot {
     SysInfoWindow {}
     ConnectivityWindow {}
     BatteryWindow {}
+    NotificationWindow {}
 }

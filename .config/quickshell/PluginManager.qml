@@ -17,6 +17,7 @@ QtObject {
     property bool brightnessVisible: false
     property bool sysinfoVisible: false
     property bool batteryVisible: false
+    property bool notificationVisible: false
     property string powerProfile: "balanced"
     property bool connectivityVisible: false
     property string connectivityTab: "wifi"
@@ -37,6 +38,7 @@ QtObject {
         brightnessVisible = false;
         sysinfoVisible = false;
         batteryVisible = false;
+        notificationVisible = false;
         connectivityVisible = false;
     }
 
@@ -141,6 +143,13 @@ QtObject {
                 current = root.connectivityVisible;
                 root.closeAll();
                 root.connectivityVisible = !current;
+                break;
+            case "notifications":
+            case "notification":
+            case "notif":
+                current = root.notificationVisible;
+                root.closeAll();
+                root.notificationVisible = !current;
                 break;
             case "close":
             case "hide":
