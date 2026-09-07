@@ -86,7 +86,7 @@ def list_clips(limit=60):
 
 def copy_clip(clip_id, raw_line=None):
     try:
-        if not raw_line:
+        if not raw_line or "\t" not in raw_line:
             res = subprocess.run(["cliphist", "list"], capture_output=True, text=True, errors="replace")
             for l in res.stdout.splitlines():
                 if l.startswith(f"{clip_id}\t"):
@@ -110,10 +110,25 @@ def copy_clip(clip_id, raw_line=None):
     except Exception as e:
         sys.stderr.write(f"Copy error: {e}\n")
 
-def delete_clip(raw_line):
+def delete_clip(clip_id, raw_line=None):
     try:
-        p = subprocess.Popen(["cliphist", "delete"], stdin=subprocess.PIPE)
-        p.communicate(input=raw_line.encode("utf-8"))
+        # If raw_line not provided or incomplete, look up full line from cliphist list
+        if not raw_line or "\t" not in raw_line:
+            res = subprocess.run(["cliphist", "list"], capture_output=True, text=True, errors="replace")
+            for l in res.stdout.splitlines():
+                if l.startswith(f"{clip_id}\t"):
+                    raw_line = l
+                    break
+
+        if raw_line:
+            p = subprocess.Popen(["cliphist", "delete"], stdin=subprocess.PIPE)
+            p.communicate(input=raw_line.encode("utf-8"))
+
+        # Remove cached thumbnail if present
+        if clip_id:
+            thumb_path = THUMB_DIR / f"thumb_{clip_id}.png"
+            if thumb_path.exists():
+                thumb_path.unlink()
     except Exception as e:
         sys.stderr.write(f"Delete error: {e}\n")
 
@@ -138,11 +153,12 @@ if __name__ == "__main__":
     if cmd == "list":
         list_clips()
     elif cmd == "copy":
-        raw = sys.argv[2] if len(sys.argv) > 2 else ""
-        cid = sys.argv[3] if len(sys.argv) > 3 else ""
+        cid = sys.argv[2] if len(sys.argv) > 2 else ""
+        raw = sys.argv[3] if len(sys.argv) > 3 else ""
         copy_clip(cid, raw)
     elif cmd == "delete":
-        raw = sys.argv[2] if len(sys.argv) > 2 else ""
-        delete_clip(raw)
+        cid = sys.argv[2] if len(sys.argv) > 2 else ""
+        raw = sys.argv[3] if len(sys.argv) > 3 else ""
+        delete_clip(cid, raw)
     elif cmd == "wipe":
         wipe()

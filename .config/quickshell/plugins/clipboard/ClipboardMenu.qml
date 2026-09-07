@@ -46,12 +46,12 @@ Rectangle {
     function copyItem(item) {
         if (!item) return;
         PluginManager.closeAll();
-        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "copy", item.raw, item.id]);
+        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "copy", item.id, item.raw]);
     }
 
     function deleteItem(item) {
         if (!item) return;
-        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "delete", item.raw]);
+        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "delete", item.id, item.raw]);
         root.allItems = root.allItems.filter(it => it.id !== item.id);
         root.filterItems();
     }
@@ -286,6 +286,7 @@ Rectangle {
                 border.color: root.selectedIndex === index ? Theme.accent : "transparent"
                 border.width: 1
 
+                // Row content
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: 12
@@ -316,38 +317,53 @@ Rectangle {
                         }
                     }
 
-                    // Text Content
-                    ColumnLayout {
+                    // Text Content (Clickable)
+                    Item {
                         Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: 2
+                        Layout.fillHeight: true
 
-                        Text {
-                            Layout.fillWidth: true
-                            text: modelData.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize
-                            font.bold: root.selectedIndex === index
-                            color: root.selectedIndex === index ? Theme.accent : Theme.text
-                            elide: Text.ElideRight
+                        ColumnLayout {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 2
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.text
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize
+                                font.bold: root.selectedIndex === index
+                                color: root.selectedIndex === index ? Theme.accent : Theme.text
+                                elide: Text.ElideRight
+                            }
+
+                            Text {
+                                visible: modelData.category !== "text"
+                                text: modelData.category.toUpperCase()
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 9
+                                font.bold: true
+                                color: Theme.overlay0
+                            }
                         }
 
-                        Text {
-                            visible: modelData.category !== "text"
-                            text: modelData.category.toUpperCase()
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 9
-                            font.bold: true
-                            color: Theme.overlay0
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onEntered: root.selectedIndex = index
+                            onClicked: root.copyItem(modelData)
                         }
                     }
 
                     // Delete single item icon
                     Rectangle {
-                        implicitWidth: 24
-                        implicitHeight: 24
-                        radius: 12
+                        implicitWidth: 26
+                        implicitHeight: 26
+                        radius: 13
                         color: delItemArea.containsMouse ? Theme.red : "transparent"
+                        z: 10
 
                         Text {
                             anchors.centerIn: parent
@@ -365,14 +381,6 @@ Rectangle {
                             onClicked: root.deleteItem(modelData)
                         }
                     }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onEntered: root.selectedIndex = index
-                    onClicked: root.copyItem(modelData)
                 }
             }
 

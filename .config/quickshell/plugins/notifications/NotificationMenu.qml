@@ -358,10 +358,11 @@ Rectangle {
 
                         // Single dismiss button
                         Rectangle {
-                            implicitWidth: 20
-                            implicitHeight: 20
-                            radius: 10
+                            implicitWidth: 24
+                            implicitHeight: 24
+                            radius: 12
                             color: delMouse.containsMouse ? Theme.red : "transparent"
+                            z: 10
 
                             Text {
                                 anchors.centerIn: parent
@@ -381,40 +382,52 @@ Rectangle {
                         }
                     }
 
-                    // Summary / Title
-                    Text {
-                        visible: modelData.summary && modelData.summary.length > 0
+                    // Content Area (Clickable to invoke action)
+                    Item {
                         Layout.fillWidth: true
-                        text: modelData.summary || ""
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
-                        font.bold: true
-                        color: Theme.text
-                        wrapMode: Text.Wrap
-                        maximumLineCount: 2
-                        elide: Text.ElideRight
-                    }
+                        implicitHeight: textColumn.implicitHeight
 
-                    // Body
-                    Text {
-                        visible: modelData.body && modelData.body.length > 0
-                        Layout.fillWidth: true
-                        text: modelData.body || ""
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: Theme.subtext0
-                        wrapMode: Text.Wrap
-                        maximumLineCount: 3
-                        elide: Text.ElideRight
-                    }
-                }
+                        ColumnLayout {
+                            id: textColumn
+                            anchors.fill: parent
+                            spacing: 2
 
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onEntered: root.selectedIndex = index
-                    onClicked: root.invokeItem(modelData)
+                            // Summary / Title
+                            Text {
+                                visible: modelData.summary && modelData.summary.length > 0
+                                Layout.fillWidth: true
+                                text: modelData.summary || ""
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize
+                                font.bold: true
+                                color: Theme.text
+                                wrapMode: Text.Wrap
+                                maximumLineCount: 2
+                                elide: Text.ElideRight
+                            }
+
+                            // Body
+                            Text {
+                                visible: modelData.body && modelData.body.length > 0
+                                Layout.fillWidth: true
+                                text: modelData.body || ""
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.subtext0
+                                wrapMode: Text.Wrap
+                                maximumLineCount: 3
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onEntered: root.selectedIndex = index
+                            onClicked: root.invokeItem(modelData)
+                        }
+                    }
                 }
             }
 
