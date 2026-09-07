@@ -12,6 +12,7 @@ import "plugins/keybinds"
 import "plugins/volume"
 import "plugins/brightness"
 import "plugins/sysinfo"
+import "plugins/connectivity"
 
 ShellRoot {
     id: root
@@ -111,4 +112,5 @@ ShellRoot {
     VolumeMixerWindow {}
     BrightnessWindow {}
     SysInfoWindow {}
+    ConnectivityWindow {}
 }

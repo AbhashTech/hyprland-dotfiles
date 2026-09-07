@@ -329,6 +329,10 @@ hl.bind(mainMod .. " + XF86MonBrightnessDown", hl.dsp.exec_cmd(brightnessScript 
 hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd(programs.brightnessMenu))
 hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd(programs.brightnessMenu))
 
+-- Open Wireless & Wi-Fi Management Control Center (Quickshell Connectivity Plugin)
+hl.bind(mainMod .. " + CTRL + W",  hl.dsp.exec_cmd(programs.wifiMenu))
+hl.bind(mainMod .. " + CTRL + B",  hl.dsp.exec_cmd(programs.bluetoothMenu))
+
 -- =============================================================================
 -- 📸 Screenshots & Screen Recording
 -- =============================================================================

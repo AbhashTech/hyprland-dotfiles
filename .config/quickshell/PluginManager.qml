@@ -16,6 +16,8 @@ QtObject {
     property bool volumeVisible: false
     property bool brightnessVisible: false
     property bool sysinfoVisible: false
+    property bool connectivityVisible: false
+    property string connectivityTab: "wifi"
 
     // Close all open plugins
     function closeAll() {
@@ -28,6 +30,7 @@ QtObject {
         volumeVisible = false;
         brightnessVisible = false;
         sysinfoVisible = false;
+        connectivityVisible = false;
     }
 
     // Toggle a plugin by name
@@ -94,6 +97,35 @@ QtObject {
                 current = sysinfoVisible;
                 closeAll();
                 sysinfoVisible = !current;
+                break;
+            case "wifi":
+            case "wifimenu":
+            case "network":
+            case "wlan":
+                if (root.connectivityVisible && root.connectivityTab === "wifi") {
+                    root.closeAll();
+                } else {
+                    root.closeAll();
+                    root.connectivityTab = "wifi";
+                    root.connectivityVisible = true;
+                }
+                break;
+            case "bluetooth":
+            case "bt":
+            case "bluetoothmenu":
+                if (root.connectivityVisible && root.connectivityTab === "bluetooth") {
+                    root.closeAll();
+                } else {
+                    root.closeAll();
+                    root.connectivityTab = "bluetooth";
+                    root.connectivityVisible = true;
+                }
+                break;
+            case "connectivity":
+            case "wireless":
+                current = root.connectivityVisible;
+                root.closeAll();
+                root.connectivityVisible = !current;
                 break;
             case "close":
             case "hide":

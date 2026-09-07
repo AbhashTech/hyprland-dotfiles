@@ -293,7 +293,11 @@ Rectangle {
                 cursorShape: Qt.PointingHandCursor
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: mouse => {
-                    ctlProc.exec(["kitty", "--class", "iwctl-floating", "-T", "WiFi Network Manager (iwctl)", "-e", "iwctl"]);
+                    if (mouse.button === Qt.LeftButton) {
+                        PluginManager.toggle("wifi");
+                    } else if (mouse.button === Qt.RightButton) {
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/connectivity/wireless_ctl.py", "wifi-toggle"]);
+                    }
                 }
             }
         }
@@ -330,9 +334,9 @@ Rectangle {
 
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
-                        ctlProc.exec(["kitty", "--class", "bt-floating", "-T", "Bluetooth Manager (bluetoothctl)", "-e", "bluetoothctl"]);
+                        PluginManager.toggle("bluetooth");
                     } else if (mouse.button === Qt.RightButton) {
-                        ctlProc.exec(["rfkill", "toggle", "bluetooth"]);
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/connectivity/wireless_ctl.py", "bt-toggle"]);
                     }
                 }
             }

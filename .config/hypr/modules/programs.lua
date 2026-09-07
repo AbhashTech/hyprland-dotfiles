@@ -15,6 +15,8 @@ local programs = {
     volumeMenu  = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh volume",
     brightnessMenu = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh brightness",
     sysinfo     = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh sysinfo",
+    wifiMenu    = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh wifi",
+    bluetoothMenu = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh bluetooth",
     browser     = "firefox",
 }
 
