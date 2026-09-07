@@ -11,8 +11,8 @@ Rectangle {
     radius: Theme.capsuleRadius
 
     readonly property bool isHovered: mouseArea.containsMouse
-    color: isHovered ? Theme.moduleHoverBg : Theme.moduleBg
-    border.color: isHovered ? Theme.moduleHoverBorder : Theme.moduleBorder
+    color: isHovered || PluginManager.sysinfoVisible ? Theme.moduleHoverBg : Theme.moduleBg
+    border.color: isHovered || PluginManager.sysinfoVisible ? Theme.moduleHoverBorder : Theme.moduleBorder
     border.width: 1
 
     Behavior on color { ColorAnimation { duration: 200 } }
@@ -24,7 +24,7 @@ Rectangle {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeIcon
         font.bold: true
-        color: root.isHovered ? Theme.accent : Theme.text
+        color: root.isHovered || PluginManager.sysinfoVisible ? Theme.accent : Theme.text
     }
 
     Process {
@@ -40,7 +40,7 @@ Rectangle {
 
         onClicked: mouse => {
             if (mouse.button === Qt.LeftButton) {
-                ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/waybar/scripts/system-stats.py"]);
+                PluginManager.toggle("sysinfo");
             } else if (mouse.button === Qt.RightButton) {
                 ctlProc.exec(["kitty", "--class", "btop", "-e", "btop"]);
             }

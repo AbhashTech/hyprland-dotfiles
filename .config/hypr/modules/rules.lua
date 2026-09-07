@@ -80,31 +80,10 @@ hl.window_rule({
 -- Layer rules
 hl.layer_rule({
     name  = "quickshell-blur",
-    match = { namespace = "quickshell" },
+    match = { namespace = "quickshell.*" },
     blur  = true,
     ignore_alpha = 0.2,
     blur_popups = true,
-})
-
-hl.layer_rule({
-    name  = "waybar-blur",
-    match = { namespace = "waybar" },
-    blur  = true,
-    ignore_alpha = 0.2,
-    blur_popups = true,
-})
-
-hl.layer_rule({
-    name  = "fuzzel-blur",
-    match = { namespace = "fuzzel" },
-    blur  = true,
-})
-
-hl.layer_rule({
-    name  = "sound-control-blur",
-    match = { namespace = "sound-control-popup" },
-    blur  = true,
-    ignore_alpha = 0.2,
 })
 
 -- Hyprland-run windowrule
@@ -195,12 +174,6 @@ hl.window_rule({
     opacity = "0.98 0.92",
 })
 
--- Layer rules (Fuzzel, Wlogout)
-hl.layer_rule({
-    name  = "wlogout-blur",
-    match = { namespace = "wlogout" },
-    blur  = true,
-})
 
 -- Screenshot Annotation Tools (Swappy / Satty)
 hl.window_rule({

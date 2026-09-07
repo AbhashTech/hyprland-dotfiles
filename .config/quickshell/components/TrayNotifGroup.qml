@@ -18,54 +18,9 @@ Rectangle {
 
     property string notifIcon: "󰂚"
     property string notifText: ""
-    property string clipIcon: "󰅌"
-
-    FileView {
-        id: notifTrigger
-        path: Quickshell.env("HOME") + "/.cache/notif_trigger"
-        printErrors: false
-        onLoaded: root.refreshNotifications()
-    }
-
-    Timer {
-        id: reloadTimer
-        interval: 100
-        repeat: false
-        onTriggered: {
-            if (!notifProc.running) notifProc.running = true;
-        }
-    }
-
-    function refreshNotifications() {
-        reloadTimer.restart();
-    }
-
-    Process {
-        id: notifProc
-        command: ["python3", Quickshell.env("HOME") + "/.config/waybar/scripts/notifications.py", "--status"]
-        stdout: SplitParser {
-            onRead: data => {
-                try {
-                    var obj = JSON.parse(data);
-                    if (obj && obj.text) {
-                        root.notifText = obj.text;
-                    }
-                } catch (e) {}
-            }
-        }
-    }
 
     Process {
         id: ctlProc
-    }
-
-    Timer {
-        interval: 3000
-        running: true
-        repeat: true
-        onTriggered: {
-            if (!notifProc.running) notifProc.running = true;
-        }
     }
 
     MouseArea {
@@ -115,13 +70,13 @@ Rectangle {
             }
         }
 
-        // Clipboard Manager Button
+        // Clipboard Manager Button (Quickshell Plugin)
         Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             implicitWidth: 20
             implicitHeight: 20
             radius: 4
-            color: clipArea.containsMouse ? Theme.moduleActiveBg : "transparent"
+            color: clipArea.containsMouse || PluginManager.clipboardVisible ? Theme.moduleActiveBg : "transparent"
 
             Text {
                 anchors.centerIn: parent
@@ -137,40 +92,33 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/clipboard_manager.py", "--menu"]);
+                        PluginManager.toggle("clipboard");
                     } else if (mouse.button === Qt.RightButton) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/clipboard_manager.py", "--delete"]);
-                    } else if (mouse.button === Qt.MiddleButton) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/clipboard_manager.py", "--toggle-pause"]);
+                        ctlProc.exec(["cliphist", "wipe"]);
                     }
                 }
             }
         }
 
-        // Notifications Button
+        // Notifications / Mako Button
         Rectangle {
             anchors.verticalCenter: parent.verticalCenter
-            implicitWidth: notifRow.implicitWidth + 4
+            implicitWidth: 20
             implicitHeight: 20
             radius: 4
             color: notifArea.containsMouse ? Theme.moduleActiveBg : "transparent"
 
-            Row {
-                id: notifRow
+            Text {
                 anchors.centerIn: parent
-                spacing: 3
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.notifText ? root.notifText : "󰂚"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
-                    font.bold: true
-                    color: Theme.accent
-                }
+                text: "󰂚"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize
+                font.bold: true
+                color: Theme.accent
             }
 
             MouseArea {
@@ -178,17 +126,12 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/waybar/scripts/notifications.py"]);
+                        ctlProc.exec(["makoctl", "restore"]);
                     } else if (mouse.button === Qt.RightButton) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/waybar/scripts/notifications.py", "--toggle-dnd"]);
-                        root.refreshNotifications();
-                    } else if (mouse.button === Qt.MiddleButton) {
-                        root.notifText = "󰂚";
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/waybar/scripts/notifications.py", "--clear"]);
-                        root.refreshNotifications();
+                        ctlProc.exec(["makoctl", "dismiss", "-a"]);
                     }
                 }
             }

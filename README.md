@@ -1,6 +1,6 @@
 # 🌌 Unified Hyprland & Wayland Dotfiles
 
-A modular, unified, and fully version-controlled dotfiles suite for **Hyprland** on Arch Linux. Features **Waybar**, **Fuzzel**, **Mako**, **Wofi**, **Wlogout**, **Btop**, **Kitty**, **Starship**, **Lazygit**, **Zellij**, **Swappy**, custom OSD overlays, Catppuccin Mocha themed SDDM greeter, dynamic power profiles, keyboard layout management, clipboard history, media/audio switchers, dynamic shortcut viewer, and a comprehensive modern CLI productivity suite (100% official Pacman packages).
+A modular, unified, and fully version-controlled dotfiles suite for **Hyprland** on Arch Linux. Features **Quickshell** (modular status bar and native plugins suite for App Menu, Power Session, Clipboard, Calculator, Emojis, Keybindings, Audio Mixer, Display Brightness, and System Resources), **Mako**, **Btop**, **Kitty**, **Starship**, **Lazygit**, **Zellij**, **Swappy**, custom OSD overlays, Catppuccin Mocha themed SDDM greeter, dynamic power profiles, keyboard layout management, media/audio switchers, and a comprehensive modern CLI productivity suite (100% official Pacman packages).
 
 ---
 
@@ -46,11 +46,10 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   └── scripts/             # Python & Shell utilities
     │       ├── app_shortcut_creator.py # App menu shortcut (.desktop) creator & manager GUI/CLI
     │       ├── brightness_control.py # Panel & external DDC brightness with OSD & presets
-    │       ├── clipboard_manager.py  # Image/text clipboard manager with previews & purge
+    │       ├── clipboard_manager.py  # Image/text clipboard manager daemon
     │       ├── emoji_picker.py       # Searchable emoji catalog with auto-typing
-    │       ├── fuzzel_launcher.sh    # Fuzzel wrapper with outside-click dismissal
     │       ├── hyprsunset-hypridle.desktop # Application menu entry for Night Light & Idle Manager
-    │       ├── keybinds_viewer.py    # Dynamic keybinds parser & searchable overlay
+    │       ├── keybinds_viewer.py    # Dynamic keybinds parser & JSON provider
     │       ├── keyboard_layout.py    # Dynamic keyboard layout switcher & installer
     │       ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
     │       ├── nightlight.py         # Blue-light filter wrapper (delegates to sunset_idle_manager)
@@ -64,38 +63,25 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │       ├── scale_window.py       # Window resizing with on-screen dimensions overlay
     │       ├── screen_capture.py     # Screenshot & video recorder with Swappy annotation
     │       ├── theme-manager.desktop # Application menu entry for graphical Theme Manager
-    │       ├── theme_switcher.py     # Universal desktop theme switcher & palette manager (Fuzzel/GTK3)
+    │       ├── theme_switcher.py     # Universal desktop theme switcher & palette manager (GTK3/CLI)
     │       ├── volume_control.py     # Speaker/mic volume control, OSD & sink switcher
-    │       ├── wallpaper_switcher.py # Wallpaper randomizer & selector (~/Wallpaper)
-    │       └── wofi_launcher.py      # Wofi wrapper with transparent backdrop layer
-    ├── quickshell/              # Quickshell Status Bar & Desktop Shell
-    │   ├── shell.qml            # Main entrypoint, screen variants & glassmorphic window
+    │       └── wallpaper_switcher.py # Wallpaper randomizer & selector (~/Wallpaper)
+    ├── quickshell/              # Quickshell Status Bar & Desktop Shell Suite
+    │   ├── shell.qml            # Main entrypoint, screen variants, status bar & plugin windows
     │   ├── Theme.qml            # Dynamic palette provider connected to colors.json
-    │   ├── components/          # Modular QML capsules (Launcher, Workspaces, Window, MPRIS, Clock, Status, Tray)
-    │   └── scripts/             # Launch & toggle supervisor (launch_quickshell.sh)
-    ├── waybar/                  # Waybar Status Bar (Preserved)
-    │   ├── config.jsonc         # Bar layout, modules, click actions & tooltips
-    │   ├── style.css            # Styling, gradients, glassmorphism & dynamic colors
-    │   └── scripts/             # Waybar helper scripts & TUI / popup menus
-    │       ├── battery-status.py     # Battery health & power profile JSON provider
-    │       ├── bluetooth-menu.sh     # Interactive Bluetooth device manager
-    │       ├── brightness-manager.py # GTK LayerShell Display Brightness & Contrast Control Center
-    │       ├── brightness-menu.sh    # Waybar brightness click/scroll launcher
-    │       ├── clipboard.py          # Clipboard history Waybar status provider
-    │       ├── connectivity.py       # Network & Internet connectivity tester
-    │       ├── keyboard-layout.py    # Layout status & click switcher for Waybar
-    │       ├── launch_waybar.sh      # Waybar launch & toggle script with persistence
-    │       ├── launch_waybar.py      # Python Waybar process controller
-    │       ├── netctl-tui.py         # Terminal UI network connection manager
-    │       ├── network-menu.sh       # Wi-Fi / Ethernet interactive network menu
-    │       ├── notifications.py      # Mako notification center & DND toggle
-    │       ├── power-menu.sh         # Wlogout & session power launcher
-    │       ├── power-profile.py      # Interactive GTK LayerShell power profile selector
-    │       ├── quick-settings.py     # Quick settings & hardware shortcuts menu
-    │       ├── sound-manager.py      # Interactive GTK LayerShell audio & volume hub
-    │       ├── sound-menu.sh         # Sound launcher for Waybar
-    │       ├── system-stats.py       # Interactive GTK LayerShell hardware & stats dashboard
-    │       └── toggle-stats.py       # Hardware stats drawer toggler
+    │   ├── PluginManager.qml    # Singleton managing plugin visibility & IPC state
+    │   ├── components/          # Modular bar capsules (Launcher, Workspaces, Window, MPRIS, Clock, Status, Tray)
+    │   ├── plugins/             # Native Quickshell Plugins (Folderwise)
+    │   │   ├── appmenu/         # Searchable Application Launcher with categories & desktop scanning
+    │   │   ├── powermenu/       # Glassmorphic session menu (Lock, Suspend, Logout, Reboot, Shutdown)
+    │   │   ├── clipboard/       # Live searchable clipboard history drawer (cliphist & wl-copy)
+    │   │   ├── calc/            # Quick math evaluator & instant copy
+    │   │   ├── emoji/           # Categorized emoji picker with wtype auto-paste
+    │   │   ├── keybinds/        # Interactive shortcut reference cheat sheet
+    │   │   ├── volume/          # Audio mixer & speaker/mic slider popup
+    │   │   ├── brightness/      # Display backlight & warm night light popup
+    │   │   └── sysinfo/         # System hardware dashboard (CPU, RAM, Disk, Temperature)
+    │   └── scripts/             # Supervisor scripts (launch_quickshell.sh, toggle_plugin.sh)
     ├── wireplumber/             # WirePlumber Audio Session Rules
     │   └── wireplumber.conf.d/  # Software DSP mixing (51-alsa-soft-mixer.conf) & profile priority routing (52-alsa-routes.conf)
     ├── kitty/                   # Kitty Terminal Emulator

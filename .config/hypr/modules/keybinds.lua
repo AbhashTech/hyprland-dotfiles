@@ -50,19 +50,17 @@ hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
 hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("hyprlock"))
 
--- Open Power & Session Menu (wlogout)
-local powerMenuScript = os.getenv("HOME") .. "/.config/waybar/scripts/power-menu.sh"
-hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("bash " .. powerMenuScript))
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("bash " .. powerMenuScript))
+-- Open Power & Session Menu (Quickshell Power Plugin)
+hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd(programs.powerMenu))
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd(programs.powerMenu))
 
 -- Toggle Status Bar (Quickshell)
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/launch_quickshell.sh --toggle"))
 
--- Open Keyboard Shortcuts Cheat Sheet
-local keybindViewer = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/keybinds_viewer.py"
-hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd(keybindViewer))
-hl.bind(mainMod .. " + question", hl.dsp.exec_cmd(keybindViewer))
-hl.bind(mainMod .. " + F1", hl.dsp.exec_cmd(keybindViewer))
+-- Open Keyboard Shortcuts Cheat Sheet (Quickshell Plugin)
+hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd(programs.keybinds))
+hl.bind(mainMod .. " + question", hl.dsp.exec_cmd(programs.keybinds))
+hl.bind(mainMod .. " + F1", hl.dsp.exec_cmd(programs.keybinds))
 
 -- =============================================================================
 -- 🗂️ Workspaces & Window Navigation
@@ -222,12 +220,12 @@ hl.bind(mainMod .. " + CTRL + N",  hl.dsp.exec_cmd(sunsetIdleScript .. " --menu"
 hl.bind(mainMod .. " + ALT + I",   hl.dsp.exec_cmd(sunsetIdleScript .. " --gui"))
 hl.bind(mainMod .. " + CTRL + I",  hl.dsp.exec_cmd(sunsetIdleScript .. " --menu"))
 
--- Open Quick Math Calculator Prompt
-hl.bind(mainMod .. " + equal",     hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/quick_calc.py"))
-hl.bind(mainMod .. " + ALT + C",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/quick_calc.py"))
+-- Open Quick Math Calculator Prompt (Quickshell Plugin)
+hl.bind(mainMod .. " + equal",     hl.dsp.exec_cmd(programs.calc))
+hl.bind(mainMod .. " + ALT + C",   hl.dsp.exec_cmd(programs.calc))
 
--- Search & Paste Emojis
-hl.bind(mainMod .. " + period",    hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/emoji_picker.py"))
+-- Search & Paste Emojis (Quickshell Plugin)
+hl.bind(mainMod .. " + period",    hl.dsp.exec_cmd(programs.emoji))
 
 -- Launch Application Desktop Shortcut Creator GUI
 local appShortcutCreator = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/app_shortcut_creator.py"
@@ -254,20 +252,20 @@ hl.bind(mainMod .. " + ALT + K",   hl.dsp.exec_cmd(kbLayoutScript .. " --add-men
 -- 🔔 Notifications & Clipboard History
 -- =============================================================================
 
--- Open Notification History Center
-hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/waybar/scripts/notifications.py"))
+-- Open Notification History Center (Mako restore)
+hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("makoctl restore"))
 
--- Toggle Do-Not-Disturb (DND) Mode
-hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/waybar/scripts/notifications.py --toggle-dnd"))
+-- Toggle Do-Not-Disturb (DND) Mode (Mako)
+hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("makoctl set-mode dnd 2>/dev/null || makoctl mode -t dnd"))
 
--- Open Searchable Clipboard History Browser
-hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --menu"))
-hl.bind(mainMod .. " + ALT + V",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --menu"))
-hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --menu"))
+-- Open Searchable Clipboard History Browser (Quickshell Plugin)
+hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(programs.clipboard))
+hl.bind(mainMod .. " + ALT + V",   hl.dsp.exec_cmd(programs.clipboard))
+hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd(programs.clipboard))
 
 -- Open Clipboard Delete & Wipe Menu
-hl.bind(mainMod .. " + ALT + D",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --delete"))
-hl.bind(mainMod .. " + CTRL + V",  hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --delete"))
+hl.bind(mainMod .. " + ALT + D",   hl.dsp.exec_cmd("cliphist wipe && notify-send -a 'Clipboard' 'Clipboard History Cleared'"))
+hl.bind(mainMod .. " + CTRL + V",  hl.dsp.exec_cmd("cliphist wipe && notify-send -a 'Clipboard' 'Clipboard History Cleared'"))
 
 -- =============================================================================
 -- 🔊 Audio & Media Controls
@@ -293,9 +291,9 @@ hl.bind("SHIFT + XF86AudioRaiseVolume", hl.dsp.exec_cmd(volumeScript .. " mic-up
 -- Microphone Gain Down (-5%)
 hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd(volumeScript .. " mic-down"), { locked = true, repeating = true })
 
--- Open Sound Control Center & Device Switcher
-hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd(volumeScript .. " menu"))
-hl.bind(mainMod .. " + ALT + A",   hl.dsp.exec_cmd(volumeScript .. " menu"))
+-- Open Sound Control Center & Device Switcher (Quickshell Audio Mixer Plugin)
+hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd(programs.volumeMenu))
+hl.bind(mainMod .. " + ALT + A",   hl.dsp.exec_cmd(programs.volumeMenu))
 
 -- Skip to Next Audio Track
 hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })
@@ -327,9 +325,9 @@ hl.bind(mainMod .. " + XF86MonBrightnessUp",   hl.dsp.exec_cmd(brightnessScript 
 hl.bind("SHIFT + XF86MonBrightnessDown",       hl.dsp.exec_cmd(brightnessScript .. " ddc-down"), { locked = true, repeating = true })
 hl.bind(mainMod .. " + XF86MonBrightnessDown", hl.dsp.exec_cmd(brightnessScript .. " ddc-down"), { locked = true, repeating = true })
 
--- Open Display Brightness & Contrast Control Center
-hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd(brightnessScript .. " menu"))
-hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd(brightnessScript .. " menu"))
+-- Open Display Brightness & Contrast Control Center (Quickshell Brightness Plugin)
+hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd(programs.brightnessMenu))
+hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd(programs.brightnessMenu))
 
 -- =============================================================================
 -- 📸 Screenshots & Screen Recording

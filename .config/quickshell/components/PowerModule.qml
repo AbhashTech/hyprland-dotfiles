@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import ".."
 
 Rectangle {
@@ -11,8 +10,8 @@ Rectangle {
     radius: Theme.capsuleRadius
 
     readonly property bool isHovered: mouseArea.containsMouse
-    color: isHovered ? Theme.red : Theme.moduleBg
-    border.color: isHovered ? Theme.red : Theme.moduleBorder
+    color: isHovered || PluginManager.powerMenuVisible ? Theme.red : Theme.moduleBg
+    border.color: isHovered || PluginManager.powerMenuVisible ? Theme.red : Theme.moduleBorder
     border.width: 1
 
     Behavior on color { ColorAnimation { duration: 200 } }
@@ -24,11 +23,7 @@ Rectangle {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeIcon
         font.bold: true
-        color: root.isHovered ? "#ffffff" : Theme.red
-    }
-
-    Process {
-        id: ctlProc
+        color: root.isHovered || PluginManager.powerMenuVisible ? "#ffffff" : Theme.red
     }
 
     MouseArea {
@@ -37,7 +32,7 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            ctlProc.exec(["bash", Quickshell.env("HOME") + "/.config/waybar/scripts/power-menu.sh"]);
+            PluginManager.toggle("powermenu");
         }
     }
 }

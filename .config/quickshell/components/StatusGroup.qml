@@ -38,13 +38,16 @@ Rectangle {
 
     Process {
         id: brightProc
-        command: ["python3", Quickshell.env("HOME") + "/.config/waybar/scripts/brightness-active.py"]
+        command: ["brightnessctl", "-m"]
         stdout: SplitParser {
             onRead: data => {
                 try {
-                    var obj = JSON.parse(data);
-                    if (obj && obj.percentage !== undefined) {
-                        root.brightness = obj.percentage;
+                    var lines = data.trim().split("\n");
+                    if (lines.length > 0) {
+                        var parts = lines[0].split(",");
+                        if (parts.length >= 4) {
+                            root.brightness = parseInt(parts[3].replace("%", ""), 10);
+                        }
                     }
                 } catch (e) {}
             }
@@ -58,47 +61,67 @@ Rectangle {
             onRead: data => {
                 try {
                     var obj = JSON.parse(data);
-                    if (obj.ssid) {
-                        root.wifiText = "󰤨 " + obj.sig + "%";
+                    if (obj && obj.ssid) {
+                        var sig = parseInt(obj.sig || "0", 10);
+                        if (sig >= 75) root.wifiText = "󰤨";
+                        else if (sig >= 50) root.wifiText = "󰤥";
+                        else if (sig >= 25) root.wifiText = "󰤢";
+                        else root.wifiText = "󰤟";
                     } else {
                         root.wifiText = "󰤭";
                     }
-                } catch (e) {}
+                } catch (e) {
+                    root.wifiText = "󰤨";
+                }
             }
         }
     }
 
     Process {
         id: btProc
-        command: ["python3", "-c", "import subprocess, json; res = subprocess.run(['bluetoothctl', 'show'], capture_output=True, text=True).stdout; on = 'Powered: yes' in res; res2 = subprocess.run(['bluetoothctl', 'devices', 'Connected'], capture_output=True, text=True).stdout.strip(); count = len(res2.splitlines()) if res2 else 0; print(json.dumps({'on': on, 'count': count}))"]
+        command: ["python3", "-c", "import subprocess, json; res = subprocess.run(['bluetoothctl', 'show'], capture_output=True, text=True).stdout; powered = 'Powered: yes' in res; dev_res = subprocess.run(['bluetoothctl', 'devices', 'Connected'], capture_output=True, text=True).stdout.strip(); print(json.dumps({'powered': powered, 'connected': bool(dev_res)}))"]
         stdout: SplitParser {
             onRead: data => {
                 try {
                     var obj = JSON.parse(data);
-                    if (!obj.on) {
+                    if (!obj.powered) {
                         root.btText = "󰂲";
-                    } else if (obj.count > 0) {
-                        root.btText = "󰂱 " + obj.count;
+                    } else if (obj.connected) {
+                        root.btText = "󰂱";
                     } else {
                         root.btText = "󰂯";
                     }
-                } catch (e) {}
+                } catch (e) {
+                    root.btText = "󰂯";
+                }
             }
         }
     }
 
     Process {
         id: batProc
-        command: ["python3", Quickshell.env("HOME") + "/.config/waybar/scripts/battery-status.py"]
+        command: ["python3", "-c", "import glob, os, json; bats = glob.glob('/sys/class/power_supply/BAT*'); cap = 100; status = 'Full';\nif bats:\n    b = bats[0]\n    try:\n        cap = int(open(b + '/capacity').read().strip())\n        status = open(b + '/status').read().strip()\n    except: pass\nprint(json.dumps({'cap': cap, 'status': status}))"]
         stdout: SplitParser {
             onRead: data => {
                 try {
                     var obj = JSON.parse(data);
-                    if (obj && obj.text) {
-                        var cleaned = obj.text.replace(/<[^>]*>/g, "");
-                        root.batText = cleaned;
-                    }
-                } catch (e) {}
+                    var cap = obj.cap;
+                    var chg = obj.status === "Charging";
+                    var icon = "󰁹";
+                    if (cap <= 10) icon = chg ? "󰢜" : "󰂃";
+                    else if (cap <= 20) icon = chg ? "󰂆" : "󰁺";
+                    else if (cap <= 30) icon = chg ? "󰂇" : "󰁻";
+                    else if (cap <= 40) icon = chg ? "󰂈" : "󰁼";
+                    else if (cap <= 50) icon = chg ? "󰢝" : "󰁽";
+                    else if (cap <= 60) icon = chg ? "󰂉" : "󰁾";
+                    else if (cap <= 70) icon = chg ? "󰢞" : "󰁿";
+                    else if (cap <= 80) icon = chg ? "󰂊" : "󰂀";
+                    else if (cap <= 90) icon = chg ? "󰂋" : "󰂁";
+                    else icon = chg ? "󰂅" : "󰁹";
+                    root.batText = icon + " " + cap + "%";
+                } catch (e) {
+                    root.batText = "󰁹 100%";
+                }
             }
         }
     }
@@ -132,7 +155,7 @@ Rectangle {
         anchors.centerIn: parent
         spacing: 12
 
-        // Audio Item
+        // Volume Item
         Item {
             implicitWidth: volContent.implicitWidth
             implicitHeight: root.implicitHeight
@@ -166,15 +189,13 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
 
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
                         ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/volume_control.py", "mute"]);
                     } else if (mouse.button === Qt.RightButton) {
-                        ctlProc.exec(["bash", Quickshell.env("HOME") + "/.config/waybar/scripts/sound-menu.sh"]);
-                    } else if (mouse.button === Qt.MiddleButton) {
-                        ctlProc.exec(["bash", Quickshell.env("HOME") + "/.config/waybar/scripts/sound-menu.sh", "--tui"]);
+                        PluginManager.toggle("volume");
                     }
                 }
 
@@ -222,23 +243,21 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
 
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
-                        ctlProc.exec(["bash", Quickshell.env("HOME") + "/.config/waybar/scripts/brightness-menu.sh"]);
+                        PluginManager.toggle("brightness");
                     } else if (mouse.button === Qt.RightButton) {
-                        ctlProc.exec(["bash", Quickshell.env("HOME") + "/.config/waybar/scripts/brightness-menu.sh", "--nightlight"]);
-                    } else if (mouse.button === Qt.MiddleButton) {
-                        ctlProc.exec(["bash", Quickshell.env("HOME") + "/.config/waybar/scripts/brightness-menu.sh", "--tui"]);
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/sunset_idle_manager.py", "--sunset-toggle"]);
                     }
                 }
 
                 onWheel: wheel => {
                     if (wheel.angleDelta.y > 0) {
-                        ctlProc.exec(["bash", Quickshell.env("HOME") + "/.config/waybar/scripts/brightness-menu.sh", "--up", "5"]);
+                        ctlProc.exec(["brightnessctl", "set", "+5%"]);
                     } else if (wheel.angleDelta.y < 0) {
-                        ctlProc.exec(["bash", Quickshell.env("HOME") + "/.config/waybar/scripts/brightness-menu.sh", "--down", "5"]);
+                        ctlProc.exec(["brightnessctl", "set", "5%-"]);
                     }
                 }
             }
@@ -270,7 +289,7 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    ctlProc.exec(["bash", Quickshell.env("HOME") + "/.config/waybar/scripts/network-menu.sh"]);
+                    ctlProc.exec(["kitty", "--class", "nmtui-floating", "-e", "nmtui"]);
                 }
             }
         }
@@ -304,7 +323,7 @@ Rectangle {
 
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
-                        ctlProc.exec(["bash", Quickshell.env("HOME") + "/.config/waybar/scripts/bluetooth-menu.sh"]);
+                        ctlProc.exec(["kitty", "--class", "bt-floating", "-e", "bluetui"]);
                     } else if (mouse.button === Qt.RightButton) {
                         ctlProc.exec(["rfkill", "toggle", "bluetooth"]);
                     }
@@ -338,7 +357,7 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/waybar/scripts/power-profile.py"]);
+                    ctlProc.exec(["kitty", "--class", "btop", "-e", "btop"]);
                 }
             }
         }

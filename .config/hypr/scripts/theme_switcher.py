@@ -144,11 +144,8 @@ def ensure_dirs():
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     THEME_DIR.mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "hypr").mkdir(parents=True, exist_ok=True)
-    (CONFIG_DIR / "waybar").mkdir(parents=True, exist_ok=True)
+    (CONFIG_DIR / "quickshell").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "kitty").mkdir(parents=True, exist_ok=True)
-    (CONFIG_DIR / "fuzzel").mkdir(parents=True, exist_ok=True)
-    (CONFIG_DIR / "wofi").mkdir(parents=True, exist_ok=True)
-    (CONFIG_DIR / "wlogout").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "btop" / "themes").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "zellij").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "gtk-3.0").mkdir(parents=True, exist_ok=True)
@@ -370,14 +367,10 @@ def generate_hypr_conf(theme):
     if (DOTFILES_DIR / "hypr").exists():
         (DOTFILES_DIR / "hypr" / "theme.conf").write_text(content)
 
-def generate_waybar_colors(theme):
-    """Generate ~/.config/waybar/colors.css for Waybar with dynamic transparency."""
+def generate_quickshell_colors(theme):
+    """Generate ~/.config/quickshell/colors.json with full semantic and glassmorphic colors."""
     c = theme["colors"]
     is_light = theme.get("type") == "light"
-    lines = [f"/* Waybar Colors: {theme.get('name', theme['id'])} */"]
-    for k, hex_val in c.items():
-        if isinstance(hex_val, str) and hex_val.startswith("#"):
-            lines.append(f"@define-color {k} {hex_val};")
 
     cr_r, cr_g, cr_b = hex_to_rgb_tuple(c.get("crust", "#11111b"))
     ma_r, ma_g, ma_b = hex_to_rgb_tuple(c.get("mantle", "#181825"))
@@ -399,38 +392,32 @@ def generate_waybar_colors(theme):
         bg_alpha = "0.60"
         mod_alpha = "0.88"
 
-    lines.append("")
-    lines.append("/* Dynamic Glassmorphic Waybar Backgrounds & Borders */")
-    lines.append(f"@define-color waybar_bg rgba({cr_r}, {cr_g}, {cr_b}, {bg_alpha});")
-    lines.append(f"@define-color waybar_border {border_rgba};")
-    lines.append(f"@define-color waybar_shadow {shadow_rgba};")
-    lines.append(f"@define-color tooltip_bg rgba({ma_r}, {ma_g}, {ma_b}, 0.95);")
-    lines.append(f"@define-color tooltip_border rgba({ac_r}, {ac_g}, {ac_b}, 0.45);")
-    lines.append(f"@define-color module_bg rgba({ba_r}, {ba_g}, {ba_b}, {mod_alpha});")
-    lines.append(f"@define-color module_border {border_rgba};")
-    lines.append(f"@define-color module_hover_bg rgba({s0_r}, {s0_g}, {s0_b}, 0.95);")
-    lines.append(f"@define-color module_hover_border rgba({ac_r}, {ac_g}, {ac_b}, 0.50);")
-    lines.append(f"@define-color module_subtle_bg rgba({s0_r}, {s0_g}, {s0_b}, 0.45);")
-    lines.append(f"@define-color module_subtle_border {border_subtle};")
-    lines.append(f"@define-color module_active_bg rgba({s1_r}, {s1_g}, {s1_b}, 0.80);")
-    lines.append(f"@define-color accent_glow rgba({ac_r}, {ac_g}, {ac_b}, 0.40);")
+    qs_defs = {}
+    for k, hex_val in c.items():
+        if isinstance(hex_val, str):
+            qs_defs[k] = hex_val
 
-    content = "\n".join(lines) + "\n"
-    (CONFIG_DIR / "waybar" / "colors.css").write_text(content)
-    if (DOTFILES_DIR / "waybar").exists():
-        (DOTFILES_DIR / "waybar" / "colors.css").write_text(content)
+    qs_defs["waybar_bg"] = f"rgba({cr_r}, {cr_g}, {cr_b}, {bg_alpha})"
+    qs_defs["waybar_border"] = border_rgba
+    qs_defs["waybar_shadow"] = shadow_rgba
+    qs_defs["tooltip_bg"] = f"rgba({ma_r}, {ma_g}, {ma_b}, 0.95)"
+    qs_defs["tooltip_border"] = f"rgba({ac_r}, {ac_g}, {ac_b}, 0.45)"
+    qs_defs["module_bg"] = f"rgba({ba_r}, {ba_g}, {ba_b}, {mod_alpha})"
+    qs_defs["module_border"] = border_rgba
+    qs_defs["module_hover_bg"] = f"rgba({s0_r}, {s0_g}, {s0_b}, 0.95)"
+    qs_defs["module_hover_border"] = f"rgba({ac_r}, {ac_g}, {ac_b}, 0.50)"
+    qs_defs["module_subtle_bg"] = f"rgba({s0_r}, {s0_g}, {s0_b}, 0.45)"
+    qs_defs["module_subtle_border"] = border_subtle
+    qs_defs["module_active_bg"] = f"rgba({s1_r}, {s1_g}, {s1_b}, 0.80)"
+    qs_defs["accent_glow"] = f"rgba({ac_r}, {ac_g}, {ac_b}, 0.40)"
 
-    # Export colors for Quickshell
     try:
-        qs_defs = {}
-        for line in lines:
-            m = re.match(r'@define-color\s+(\w+)\s+([^;]+);', line.strip())
-            if m:
-                qs_defs[m.group(1)] = m.group(2).strip()
         (CONFIG_DIR / "quickshell").mkdir(parents=True, exist_ok=True)
         (CONFIG_DIR / "quickshell" / "colors.json").write_text(json.dumps(qs_defs, indent=2))
-    except Exception:
-        pass
+        if (DOTFILES_DIR / "quickshell").exists():
+            (DOTFILES_DIR / "quickshell" / "colors.json").write_text(json.dumps(qs_defs, indent=2))
+    except Exception as e:
+        print(f"Error updating quickshell colors: {e}", file=sys.stderr)
 
 
 def generate_wofi_colors(theme):
@@ -1453,11 +1440,8 @@ def apply_theme(theme_id, themes=None, notify=True):
     # Generate all configuration components
     generate_hypr_lua_vars(theme)
     generate_hypr_conf(theme)
-    generate_waybar_colors(theme)
-    generate_wofi_colors(theme)
-    generate_wlogout_colors(theme)
+    generate_quickshell_colors(theme)
     generate_kitty_theme(theme)
-    update_fuzzel_colors(theme)
     update_mako_colors(theme)
     generate_btop_theme(theme)
     update_starship_palette(theme)
@@ -1563,6 +1547,10 @@ def run_interactive_menu(themes):
                         break
         except Exception as e:
             print(f"Error launching wofi: {e}", file=sys.stderr)
+    else:
+        # Fall back to beautiful GTK3 visual theme manager
+        run_gui_theme_manager(themes)
+        return
 
     if selected_tid == "__LAUNCH_GUI__":
         run_gui_theme_manager(themes)

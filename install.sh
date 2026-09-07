@@ -55,10 +55,7 @@ if command -v pacman >/dev/null 2>&1; then
 
         # Bar, Launchers & Notifications
         quickshell
-        waybar
         mako
-        fuzzel
-        wofi
         nwg-look
 
         # Terminal & Modern CLI Power Suite
@@ -214,15 +211,12 @@ mkdir -p "${CONFIG_TARGET}"
 
 DOT_CONFIG_DIRS=(
     "hypr"
-    "waybar"
+    "quickshell"
     "wireplumber"
-    "fuzzel"
     "mako"
-    "wofi"
     "btop"
     "kitty"
     "nvim"
-    "wlogout"
     "zellij"
     "fastfetch"
     "lazygit"

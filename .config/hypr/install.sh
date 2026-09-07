@@ -49,11 +49,8 @@ if command -v pacman >/dev/null 2>&1; then
         xdg-desktop-portal-hyprland
         xdg-desktop-portal-gtk
         quickshell
-        waybar
         mako
         hyprpaper
-        fuzzel
-        wofi
         kitty
         yazi
         zoxide

@@ -2,10 +2,20 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import "components"
+import "plugins/appmenu"
+import "plugins/powermenu"
+import "plugins/clipboard"
+import "plugins/calc"
+import "plugins/emoji"
+import "plugins/keybinds"
+import "plugins/volume"
+import "plugins/brightness"
+import "plugins/sysinfo"
 
 ShellRoot {
     id: root
 
+    // Top Status Bar across screens
     Variants {
         model: Quickshell.screens
 
@@ -87,4 +97,15 @@ ShellRoot {
             }
         }
     }
+
+    // Modular Quickshell Plugin Windows
+    AppMenuWindow {}
+    PowerMenuWindow {}
+    ClipboardWindow {}
+    QuickCalcWindow {}
+    EmojiPickerWindow {}
+    KeybindsWindow {}
+    VolumeMixerWindow {}
+    BrightnessWindow {}
+    SysInfoWindow {}
 }

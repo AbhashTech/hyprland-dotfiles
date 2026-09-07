@@ -6,7 +6,15 @@
 local programs = {
     terminal    = "kitty",
     fileManager = "dolphin",
-    menu        = "bash " .. os.getenv("HOME") .. "/.config/hypr/scripts/fuzzel_launcher.sh",
+    menu        = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh appmenu",
+    powerMenu   = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh powermenu",
+    clipboard   = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh clipboard",
+    calc        = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh calc",
+    emoji       = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh emoji",
+    keybinds    = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh keybinds",
+    volumeMenu  = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh volume",
+    brightnessMenu = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh brightness",
+    sysinfo     = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh sysinfo",
     browser     = "firefox",
 }
 

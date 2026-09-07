@@ -16,7 +16,7 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
 ├── modules/                     # Modular configuration files
 │   ├── animations.lua           # Smooth window, workspace, layer animations & spring curves
 │   ├── appearance.lua           # Gaps, active/inactive borders, shadows & blur settings
-│   ├── autostart.lua            # Daemons & background services (Hyprpaper, Mako, Waybar, Clipboard)
+│   ├── autostart.lua            # Daemons & background services (Hyprpaper, Mako, Quickshell, Clipboard)
 │   ├── env.lua                  # Environment variables & cursor sizes
 │   ├── input.lua                # Keyboard layout, mouse sensitivity, trackpad gestures
 │   ├── keybinds.lua             # Comprehensive keybindings & shortcuts
@@ -24,17 +24,16 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
 │   ├── misc.lua                 # Wallpapers, logo, and general misc settings
 │   ├── monitors.lua             # Monitor resolution, position, and scaling definitions
 │   ├── permissions.lua          # Security and ecosystem permissions
-│   ├── programs.lua             # Default apps (terminal, browser, file manager, app launcher)
+│   ├── programs.lua             # Default apps (terminal, browser, file manager, Quickshell plugins)
 │   ├── rules.lua                # Window rules, layer rules, and workspace persistence
 │   └── theme.lua                # Dynamic theme & color variables module
 └── scripts/                     # Custom Python & Shell utilities
     ├── app_shortcut_creator.py  # Application shortcut & desktop entry creator
-    ├── brightness_control.py    # Backlight & external DDC monitor brightness with OSD & GUI menu
-    ├── clipboard_manager.py     # Image/text clipboard manager with thumbnails, pause & delete
+    ├── brightness_control.py    # Backlight & external DDC monitor brightness with OSD
+    ├── clipboard_manager.py     # Image/text clipboard manager daemon
     ├── emoji_picker.py          # Searchable emoji catalog with instant copy & auto-typing
-    ├── fuzzel_launcher.sh       # Fuzzel application launcher toggle
     ├── hyprsunset-hypridle.desktop  # Application menu entry for Night Light & Idle Manager
-    ├── keybinds_viewer.py       # Dynamic keybindings parser & interactive cheat sheet
+    ├── keybinds_viewer.py       # Dynamic keybindings parser & JSON provider
     ├── keyboard_layout.py       # Dynamic keyboard layout switcher & installer
     ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
     ├── nightlight.py            # Warm blue-light filter wrapper (delegates to sunset_idle_manager)
@@ -46,8 +45,7 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
     ├── screen_capture.py        # Screenshot & video screen recording with audio & editor support
     ├── theme_switcher.py        # Universal desktop theme switcher & palette manager (SUPER + T)
     ├── volume_control.py        # Speaker & mic volume control, OSD, and device switcher
-    ├── wallpaper_switcher.py    # Wallpaper randomizer & selector (~/Wallpaper, hyprpaper/swww)
-    └── wofi_launcher.py         # Wofi wrapper with transparent backdrop layer
+    └── wallpaper_switcher.py    # Wallpaper randomizer & selector (~/Wallpaper, hyprpaper/swww)
 ```
 
 
