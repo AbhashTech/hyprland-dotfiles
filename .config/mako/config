@@ -27,10 +27,10 @@ anchor=top-right
 layer=overlay
 
 # Catppuccin Mocha Colors
-background-color=#2e3440e6
-text-color=#eceff4
-border-color=#88c0d0
-progress-color=over #3b4252
+background-color=#fdf6e3e6
+text-color=#5c6a72
+border-color=#8da101
+progress-color=over #e5dfc5
 
 # Typography & Icons
 font=JetBrainsMono Nerd Font 10
@@ -43,16 +43,16 @@ format=<b>%s</b>\n%b
 
 # Urgency Overrides
 [urgency=low]
-border-color=#81a1c1
+border-color=#3a94c5
 default-timeout=8000
 
 [urgency=normal]
-border-color=#88c0d0
+border-color=#8da101
 default-timeout=10000
 
 [urgency=critical]
-border-color=#bf616a
-text-color=#bf616a
+border-color=#f85552
+text-color=#f85552
 default-timeout=0
 
 [mode=dnd]
