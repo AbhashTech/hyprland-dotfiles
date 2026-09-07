@@ -16,7 +16,7 @@ $cmd_duration\
 $line_break\
 $character"""
 
-palette = "everforest_light"
+palette = "catppuccin_frappe"
 
 continuation_prompt = "[▶▶ ](bold mauve)"
 
