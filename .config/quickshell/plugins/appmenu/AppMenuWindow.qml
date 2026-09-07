@@ -27,10 +27,7 @@ PanelWindow {
 
         AppMenu {
             id: appMenuItem
-            anchors.top: parent.top
-            anchors.topMargin: Theme.barHeight + 16
-            anchors.left: parent.left
-            anchors.leftMargin: 16
+            anchors.centerIn: parent
 
             MouseArea {
                 anchors.fill: parent

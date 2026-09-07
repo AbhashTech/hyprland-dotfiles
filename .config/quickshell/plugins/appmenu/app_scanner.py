@@ -47,6 +47,65 @@ ICON_ALIASES = {
     "btop": "utilities-system-monitor",
 }
 
+def get_current_icon_theme():
+    gtk3_ini = Path.home() / ".config" / "gtk-3.0" / "settings.ini"
+    if gtk3_ini.exists():
+        cp = configparser.ConfigParser()
+        try:
+            cp.read(gtk3_ini)
+            if "Settings" in cp and "gtk-icon-theme-name" in cp["Settings"]:
+                return cp["Settings"]["gtk-icon-theme-name"].strip()
+        except Exception:
+            pass
+    return "Papirus-Light"
+
+ICON_EXTS = [".svg", ".png", ".xpm"]
+
+def resolve_icon_path(icon_name):
+    if not icon_name:
+        return ""
+    if icon_name.startswith("/") or icon_name.startswith("file://"):
+        p = icon_name.replace("file://", "")
+        return f"file://{p}" if os.path.exists(p) else ""
+
+    theme = get_current_icon_theme()
+    base_name = os.path.splitext(icon_name)[0]
+
+    theme_dirs = [
+        Path.home() / ".local" / "share" / "icons",
+        Path(f"/usr/share/icons/{theme}"),
+        Path("/usr/share/icons/Papirus"),
+        Path("/usr/share/icons/Papirus-Dark"),
+        Path("/usr/share/icons/Papirus-Light"),
+        Path.home() / ".local" / "share" / "icons" / "hicolor",
+        Path("/usr/share/icons/hicolor"),
+        Path("/usr/share/pixmaps"),
+    ]
+
+    for b in theme_dirs:
+        if not b.exists():
+            continue
+        for name_variant in (icon_name, base_name):
+            for ext in ICON_EXTS:
+                cand = b / f"{name_variant}{ext}"
+                if cand.exists():
+                    return f"file://{cand}"
+
+        for sub in [
+            "48x48/apps", "scalable/apps", "64x64/apps", "32x32/apps", "128x128/apps", "256x256/apps",
+            "48x48/categories", "64x64/categories", "32x32/categories",
+            "symbolic/apps", "24x24/apps", "16x16/apps", "22x22/apps"
+        ]:
+            d = b / sub
+            if d.exists():
+                for name_variant in (icon_name, base_name):
+                    for ext in ICON_EXTS:
+                        cand = d / f"{name_variant}{ext}"
+                        if cand.exists():
+                            return f"file://{cand}"
+    return ""
+
+
 def scan_desktop_files():
     apps = []
     seen = set()
@@ -99,12 +158,15 @@ def scan_desktop_files():
                         assigned_cat = cat_label
                         break
 
+                icon_path = resolve_icon_path(icon)
+
                 apps.append({
                     "id": base,
                     "name": name,
                     "exec": clean_exec,
                     "comment": comment,
                     "icon": icon,
+                    "iconPath": icon_path,
                     "category": assigned_cat,
                     "terminal": entry.getboolean("Terminal", fallback=False)
                 })

@@ -21,39 +21,45 @@ Rectangle {
     Process {
         id: titleProc
         command: ["hyprctl", "activewindow", "-j"]
+        property string buffer: ""
         stdout: SplitParser {
             onRead: data => {
-                try {
-                    var win = JSON.parse(data);
-                    var title = win && win.title ? win.title.trim() : "";
-                    if (!title) {
-                        root.windowTitle = "Desktop";
-                        root.iconText = "󰖲";
-                        return;
-                    }
-
-                    if (title.indexOf("Mozilla Firefox") !== -1) {
-                        root.iconText = "󰈹";
-                        title = title.replace(" — Mozilla Firefox", "").replace(" - Mozilla Firefox", "");
-                    } else if (title.indexOf("Kitty") !== -1 || win.class === "kitty") {
-                        root.iconText = "󰞷";
-                        title = title.replace(" - Kitty", "");
-                    } else if (title.indexOf("Dolphin") !== -1 || win.class === "dolphin") {
-                        root.iconText = "󰉋";
-                        title = title.replace(" - Dolphin", "");
-                    } else if (title.indexOf("Visual Studio Code") !== -1 || win.class === "Code") {
-                        root.iconText = "󰨞";
-                        title = title.replace(" - Visual Studio Code", "");
-                    } else {
-                        root.iconText = "󰖲";
-                    }
-
-                    if (title.length > 28) {
-                        title = title.substring(0, 25) + "...";
-                    }
-                    root.windowTitle = title;
-                } catch (e) {}
+                titleProc.buffer += data;
             }
+        }
+        onExited: {
+            try {
+                var win = JSON.parse(buffer);
+                var title = win && win.title ? win.title.trim() : "";
+                if (!title) {
+                    root.windowTitle = "Desktop";
+                    root.iconText = "󰖲";
+                    buffer = "";
+                    return;
+                }
+
+                if (title.indexOf("Mozilla Firefox") !== -1) {
+                    root.iconText = "󰈹";
+                    title = title.replace(" — Mozilla Firefox", "").replace(" - Mozilla Firefox", "");
+                } else if (title.indexOf("Kitty") !== -1 || win.class === "kitty") {
+                    root.iconText = "󰞷";
+                    title = title.replace(" - Kitty", "");
+                } else if (title.indexOf("Dolphin") !== -1 || win.class === "dolphin") {
+                    root.iconText = "󰉋";
+                    title = title.replace(" - Dolphin", "");
+                } else if (title.indexOf("Visual Studio Code") !== -1 || win.class === "Code") {
+                    root.iconText = "󰨞";
+                    title = title.replace(" - Visual Studio Code", "");
+                } else {
+                    root.iconText = "󰖲";
+                }
+
+                if (title.length > 28) {
+                    title = title.substring(0, 25) + "...";
+                }
+                root.windowTitle = title;
+            } catch (e) {}
+            buffer = "";
         }
     }
 
@@ -78,11 +84,11 @@ Rectangle {
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         onClicked: mouse => {
             if (mouse.button === Qt.LeftButton) {
-                ctlProc.exec(["hyprctl", "dispatch", "togglefloating"]);
+                ctlProc.exec(["hyprctl", "dispatch hl.dsp.window.float({action = 'toggle'})"]);
             } else if (mouse.button === Qt.RightButton) {
-                ctlProc.exec(["hyprctl", "dispatch", "killactive"]);
+                ctlProc.exec(["hyprctl", "dispatch hl.dsp.window.close()"]);
             } else if (mouse.button === Qt.MiddleButton) {
-                ctlProc.exec(["hyprctl", "dispatch", "fullscreen", "1"]);
+                ctlProc.exec(["hyprctl", "dispatch hl.dsp.window.fullscreen()"]);
             }
         }
     }

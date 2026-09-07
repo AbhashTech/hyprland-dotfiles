@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Widgets
 import Quickshell.Io
 import "../.."
 
@@ -302,8 +303,17 @@ Rectangle {
                         border.color: Theme.moduleBorder
                         border.width: 1
 
+                        IconImage {
+                            id: appIconImage
+                            anchors.fill: parent
+                            anchors.margins: 4
+                            source: (modelData.iconPath && modelData.iconPath.length > 0) ? modelData.iconPath : (modelData.icon ? Quickshell.iconPath(modelData.icon) : "")
+                            visible: status === Image.Ready
+                        }
+
                         Text {
                             anchors.centerIn: parent
+                            visible: !appIconImage.visible
                             text: "󰣆"
                             font.family: Theme.fontFamily
                             font.pixelSize: 18

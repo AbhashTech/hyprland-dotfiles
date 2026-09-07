@@ -38,7 +38,7 @@ Rectangle {
                 execProc.exec(["systemctl", "suspend"]);
                 break;
             case "logout":
-                execProc.exec(["bash", "-c", "hyprctl dispatch exit || loginctl terminate-session ${XDG_SESSION_ID}"]);
+                execProc.exec(["bash", "-c", "hyprctl eval 'return hl.dsp.exit()' || loginctl terminate-session ${XDG_SESSION_ID}"]);
                 break;
             case "reboot":
                 execProc.exec(["systemctl", "reboot"]);

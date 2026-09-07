@@ -152,10 +152,15 @@ QtObject {
     }
 
     // File watcher for external IPC trigger (~/.cache/quickshell_plugin_trigger)
+    property bool triggerInitialized: false
     property var triggerFile: FileView {
         path: Quickshell.env("HOME") + "/.cache/quickshell_plugin_trigger"
         printErrors: false
         onLoaded: {
+            if (!root.triggerInitialized) {
+                root.triggerInitialized = true;
+                return;
+            }
             try {
                 var content = triggerFile.text();
                 if (content && content.trim().length > 0) {
