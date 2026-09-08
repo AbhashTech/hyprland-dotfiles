@@ -191,10 +191,9 @@ Rectangle {
                 title: "Clipboard History"
                 description: root.clipDndActive ? "Private Mode (Recording Paused)" : "Search and paste history entries"
                 shortcuts: [
-                    { action: "Open Clipboard", key: "SUPER + SHIFT + V" },
-                    { action: "Alternate Shortcut", key: "SUPER + ALT + V" },
-                    { action: "Wipe History", key: "Right Click" },
-                    { action: "Toggle Private Mode", key: "Middle Click" }
+                    { action: "Open Clipboard", key: "Left / Right Click" },
+                    { action: "Toggle Private Mode", key: "Middle Click" },
+                    { action: "Alternate Shortcut", key: "SUPER + SHIFT + V" }
                 ]
             }
 
@@ -206,11 +205,9 @@ Rectangle {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
                 onClicked: mouse => {
-                    if (mouse.button === Qt.LeftButton) {
+                    if (mouse.button === Qt.LeftButton || mouse.button === Qt.RightButton) {
                         PluginManager.toggle("clipboard");
                         if (!clipStatusProc.running) clipStatusProc.running = true;
-                    } else if (mouse.button === Qt.RightButton) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "wipe"]);
                     } else if (mouse.button === Qt.MiddleButton) {
                         root.clipDndActive = !root.clipDndActive;
                         ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "toggle-private"]);
@@ -262,9 +259,9 @@ Rectangle {
                 title: "Notification Center"
                 description: root.dndActive ? "Do-Not-Disturb is ON" : (root.notifCount > 0 ? (root.notifCount + " Unread Notification" + (root.notifCount > 1 ? "s" : "")) : "No unread notifications")
                 shortcuts: [
-                    { action: "Open Notifications", key: "SUPER + N" },
-                    { action: "Dismiss All", key: "Right Click" },
-                    { action: "Toggle DND", key: "Middle Click" }
+                    { action: "Open Notifications", key: "Left / Right Click" },
+                    { action: "Toggle DND", key: "Middle Click" },
+                    { action: "Alternate Shortcut", key: "SUPER + N" }
                 ]
             }
 
@@ -275,12 +272,9 @@ Rectangle {
                 cursorShape: Qt.PointingHandCursor
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                 onClicked: mouse => {
-                    if (mouse.button === Qt.LeftButton) {
+                    if (mouse.button === Qt.LeftButton || mouse.button === Qt.RightButton) {
                         PluginManager.toggle("notifications");
                         if (!notifStatusProc.running) notifStatusProc.running = true;
-                    } else if (mouse.button === Qt.RightButton) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py", "dismiss-all"]);
-                        root.notifCount = 0;
                     } else if (mouse.button === Qt.MiddleButton) {
                         root.dndActive = !root.dndActive;
                         ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py", "toggle-dnd"]);

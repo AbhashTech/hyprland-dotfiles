@@ -20,6 +20,7 @@ Rectangle {
     property int selectedIndex: 0
     property string activeCategory: "all"
     property bool dndActive: false
+    property bool confirmingClear: false
 
     function refreshClipboard() {
         if (!clipListProc.running) {
@@ -32,7 +33,7 @@ Rectangle {
 
     function toggleDnd() {
         root.dndActive = !root.dndActive;
-        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "toggle-dnd"]);
+        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "toggle-private"]);
     }
 
     function filterItems() {
@@ -65,11 +66,22 @@ Rectangle {
         root.filterItems();
     }
 
-    function clearAll() {
+    function requestClearAll() {
+        if (root.allItems.length === 0) return;
+        root.confirmingClear = true;
+    }
+
+    function confirmClearAll() {
+        root.confirmingClear = false;
         ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "wipe"]);
         root.allItems = [];
         root.filteredItems = [];
         PluginManager.closeAll();
+    }
+
+    function cancelClearAll() {
+        root.confirmingClear = false;
+        searchInput.forceActiveFocus();
     }
 
     Process {
@@ -111,11 +123,17 @@ Rectangle {
 
     focus: true
     Keys.onEscapePressed: event => {
+        if (root.confirmingClear) {
+            root.cancelClearAll();
+            event.accepted = true;
+            return;
+        }
         PluginManager.closeAll();
         event.accepted = true;
     }
 
     function grabFocus() {
+        root.confirmingClear = false;
         searchInput.text = "";
         root.activeCategory = "all";
         root.refreshClipboard();
@@ -264,7 +282,7 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.clearAll()
+                    onClicked: root.requestClearAll()
                 }
             }
         }
@@ -485,6 +503,152 @@ Rectangle {
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.overlay0
+            }
+        }
+    }
+
+    // Confirmation Overlay Dialog
+    Rectangle {
+        id: confirmOverlay
+        anchors.fill: parent
+        radius: Theme.barRadius
+        color: Qt.rgba(Theme.crust.r, Theme.crust.g, Theme.crust.b, 0.94)
+        visible: root.confirmingClear
+        z: 100
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: root.cancelClearAll()
+        }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: parent.width - 48
+            implicitHeight: confirmCol.implicitHeight + 36
+            radius: Theme.pillRadius
+            color: Theme.moduleBg
+            border.color: Theme.red
+            border.width: 1
+
+            MouseArea {
+                anchors.fill: parent
+            }
+
+            ColumnLayout {
+                id: confirmCol
+                anchors.fill: parent
+                anchors.margins: 18
+                spacing: 14
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+
+                    Rectangle {
+                        implicitWidth: 38
+                        implicitHeight: 38
+                        radius: 19
+                        color: Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.18)
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰆴"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 18
+                            color: Theme.red
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+
+                        Text {
+                            text: "Wipe Entire Clipboard History?"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeLarge
+                            font.bold: true
+                            color: Theme.text
+                        }
+
+                        Text {
+                            text: "This will permanently delete all cached text snippets, links, and screenshot images."
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            color: Theme.subtext0
+                            wrapMode: Text.Wrap
+                            Layout.fillWidth: true
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    // Cancel Button
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: 36
+                        radius: Theme.pillRadius
+                        color: cancelArea.containsMouse ? Theme.moduleHoverBg : Theme.surface0
+                        border.color: Theme.moduleBorder
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Cancel"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                            font.bold: true
+                            color: Theme.text
+                        }
+
+                        MouseArea {
+                            id: cancelArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.cancelClearAll()
+                        }
+                    }
+
+                    // Confirm Wipe Button
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: 36
+                        radius: Theme.pillRadius
+                        color: confirmBtnArea.containsMouse ? Qt.darker(Theme.red, 1.15) : Theme.red
+
+                        RowLayout {
+                            anchors.centerIn: parent
+                            spacing: 6
+
+                            Text {
+                                text: "󰆴"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize
+                                color: "#ffffff"
+                            }
+
+                            Text {
+                                text: "Wipe History"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize
+                                font.bold: true
+                                color: "#ffffff"
+                            }
+                        }
+
+                        MouseArea {
+                            id: confirmBtnArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.confirmClearAll()
+                        }
+                    }
+                }
             }
         }
     }
