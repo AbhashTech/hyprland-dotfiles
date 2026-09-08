@@ -265,6 +265,7 @@ Rectangle {
                 border.color: Theme.blue
                 border.width: 1
 
+                property int monitorBus: modelData.bus
                 property int liveBrightness: modelData.brightness
                 property int liveContrast: modelData.contrast
 
@@ -302,7 +303,7 @@ Rectangle {
                             color: Theme.moduleActiveBg
                             Text {
                                 anchors.centerIn: parent
-                                text: "I2C Bus " + modelData.bus
+                                text: "I2C Bus " + extCard.monitorBus
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 9
                                 color: Theme.accent
@@ -340,7 +341,7 @@ Rectangle {
                             value: extCard.liveBrightness
                             onMoved: {
                                 extCard.liveBrightness = Math.round(value);
-                                root.setExtBrightness(modelData.bus, Math.round(value));
+                                root.setExtBrightness(extCard.monitorBus, Math.round(value));
                             }
                         }
 
@@ -375,7 +376,7 @@ Rectangle {
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             extCard.liveBrightness = modelData;
-                                            root.setExtBrightness(modelData.bus, modelData);
+                                            root.setExtBrightness(extCard.monitorBus, modelData);
                                         }
                                     }
                                 }
@@ -413,7 +414,7 @@ Rectangle {
                             value: extCard.liveContrast
                             onMoved: {
                                 extCard.liveContrast = Math.round(value);
-                                root.setExtContrast(modelData.bus, Math.round(value));
+                                root.setExtContrast(extCard.monitorBus, Math.round(value));
                             }
                         }
 
@@ -448,7 +449,7 @@ Rectangle {
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             extCard.liveContrast = modelData;
-                                            root.setExtContrast(modelData.bus, modelData);
+                                            root.setExtContrast(extCard.monitorBus, modelData);
                                         }
                                     }
                                 }
