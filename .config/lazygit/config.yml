@@ -1,28 +1,28 @@
 # =============================================================================
-# Lazygit Configuration - Catppuccin Frappé
+# Lazygit Configuration - Everforest Dark
 # =============================================================================
 
 gui:
   theme:
     activeBorderColor:
-      - '#ca9ee6'
+      - '#a7c080'
       - bold
     inactiveBorderColor:
-      - '#626880'
+      - '#475258'
     optionsTextColor:
-      - '#8caaee'
+      - '#7fbbb3'
     selectedLineBgColor:
-      - '#414559'
+      - '#343f44'
     cherryPickedCommitBgColor:
-      - '#51576d'
+      - '#3d484d'
     cherryPickedCommitFgColor:
-      - '#ca9ee6'
+      - '#a7c080'
     unstagedChangesColor:
-      - '#e78284'
+      - '#e67e80'
     defaultFgColor:
-      - '#c6d0f5'
+      - '#d3c6aa'
     searchingActiveBorderColor:
-      - '#e5c890'
+      - '#dbbc7f'
 
 git:
   paging:
