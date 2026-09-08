@@ -7,6 +7,10 @@ Implements: org.freedesktop.impl.portal.FileChooser
 This service intercepts file open/save dialogs from XDG-portal-aware
 applications (browsers, IDEs, Electron apps) and routes them to the
 Quickshell floating file picker UI.
+
+Key design: D-Bus method calls are dispatched on the GLib main thread.
+We use async_callbacks to avoid blocking the mainloop — each request
+is handled on a background thread, and the D-Bus reply is sent when done.
 """
 
 import sys
@@ -43,6 +47,9 @@ BUS_NAME  = "org.freedesktop.impl.portal.desktop.quickshell"
 OBJ_PATH  = "/org/freedesktop/portal/desktop"
 IFACE     = "org.freedesktop.impl.portal.FileChooser"
 
+# Serialise concurrent portal calls (one file picker at a time)
+_request_lock = threading.Lock()
+
 
 def trigger_quickshell(plugin: str) -> None:
     """Write plugin name to the Quickshell IPC trigger file."""
@@ -55,8 +62,8 @@ def trigger_quickshell(plugin: str) -> None:
 
 
 def wait_for_response(timeout: int = PORTAL_TIMEOUT):
-    """Block until response.json appears or timeout. Returns (code, results)."""
-    # Clear old response
+    """Block (on background thread) until response.json appears or timeout."""
+    # Clear old response first
     try:
         os.remove(RESPONSE_F)
     except FileNotFoundError:
@@ -102,14 +109,13 @@ def parse_mime_filter(options) -> str:
 
 
 class FileChooserBackend(dbus.service.Object):
-    _lock = threading.Lock()
 
     def __init__(self, bus, path):
         dbus.service.Object.__init__(self, bus, path)
 
-    def _dispatch(self, app_id, title, options, mode):
-        """Common handler: write request, trigger Quickshell, wait for response."""
-        with self._lock:
+    def _dispatch_async(self, app_id, title, options, mode, return_cb, error_cb):
+        """Run in a background thread: write request, trigger QS, wait, reply."""
+        with _request_lock:
             multiple    = bool(options.get("multiple", False))
             mime_filter = parse_mime_filter(options)
 
@@ -127,27 +133,64 @@ class FileChooserBackend(dbus.service.Object):
                 json.dump(request, f, indent=2)
 
             print(f"[portal] Request from {app_id!r}: {mode} / {mime_filter}", file=sys.stderr)
-            trigger_quickshell("filepicker")
+            trigger_quickshell("filepicker-portal")
 
             code, results = wait_for_response()
             print(f"[portal] Response: code={code}, uris={results.get('uris', [])}", file=sys.stderr)
-            return dbus.UInt32(code), results
 
-    @dbus.service.method(IFACE, in_signature="osssa{sv}", out_signature="ua{sv}")
-    def OpenFile(self, handle, app_id, parent_window, title, options):
-        return self._dispatch(app_id, title, options, "open")
+            # Schedule the D-Bus reply back on the main GLib loop (thread-safe)
+            GLib.idle_add(return_cb, dbus.UInt32(code), results)
 
-    @dbus.service.method(IFACE, in_signature="osssa{sv}", out_signature="ua{sv}")
-    def SaveFile(self, handle, app_id, parent_window, title, options):
-        return self._dispatch(app_id, title, options, "save")
+    @dbus.service.method(
+        IFACE,
+        in_signature="osssa{sv}",
+        out_signature="ua{sv}",
+        async_callbacks=("return_cb", "error_cb"),
+    )
+    def OpenFile(self, handle, app_id, parent_window, title, options,
+                 return_cb=None, error_cb=None):
+        t = threading.Thread(
+            target=self._dispatch_async,
+            args=(app_id, title, options, "open", return_cb, error_cb),
+            daemon=True,
+        )
+        t.start()
 
-    @dbus.service.method(IFACE, in_signature="osssa{sv}", out_signature="ua{sv}")
-    def SaveFiles(self, handle, app_id, parent_window, title, options):
-        return self._dispatch(app_id, title, options, "save-multiple")
+    @dbus.service.method(
+        IFACE,
+        in_signature="osssa{sv}",
+        out_signature="ua{sv}",
+        async_callbacks=("return_cb", "error_cb"),
+    )
+    def SaveFile(self, handle, app_id, parent_window, title, options,
+                 return_cb=None, error_cb=None):
+        t = threading.Thread(
+            target=self._dispatch_async,
+            args=(app_id, title, options, "save", return_cb, error_cb),
+            daemon=True,
+        )
+        t.start()
+
+    @dbus.service.method(
+        IFACE,
+        in_signature="osssa{sv}",
+        out_signature="ua{sv}",
+        async_callbacks=("return_cb", "error_cb"),
+    )
+    def SaveFiles(self, handle, app_id, parent_window, title, options,
+                  return_cb=None, error_cb=None):
+        t = threading.Thread(
+            target=self._dispatch_async,
+            args=(app_id, title, options, "save-multiple", return_cb, error_cb),
+            daemon=True,
+        )
+        t.start()
 
 
 def main():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    GLib.threads_init()
+
     bus  = dbus.SessionBus()
     name = dbus.service.BusName(BUS_NAME, bus=bus)
     _    = FileChooserBackend(bus, OBJ_PATH)

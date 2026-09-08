@@ -199,6 +199,12 @@ QtObject {
                 closeAll();
                 filePickerVisible = !current;
                 break;
+            case "filepicker-portal":
+            case "portal-open":
+                // Always open (never toggle) — used by the XDG portal backend
+                closeAll();
+                filePickerVisible = true;
+                break;
             case "filepicker-image":
             case "picker-image":
                 closeAll();
