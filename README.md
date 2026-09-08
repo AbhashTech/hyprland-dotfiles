@@ -81,7 +81,8 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   │   ├── connectivity/    # Native Wi-Fi & Bluetooth network management
     │   │   ├── battery/         # Battery metrics & dynamic power profile selector
     │   │   ├── notifications/   # Notification center & history viewer
-    │   │   └── sysinfo/         # System hardware dashboard (CPU, RAM, Disk) with fast 800ms updates
+    │   │   ├── sysinfo/         # System hardware dashboard (CPU, RAM, Disk) with fast 800ms updates
+    │   │   └── filepicker/      # Floating File Uploader & Selector Modal with XDG Portal, preview & thumbnail grid
     │   ├── custom_plugins/      # User Custom Plugins (untracked by git, see README inside)
     │   └── scripts/             # Supervisor scripts (launch_quickshell.sh, toggle_plugin.sh)
     ├── wireplumber/             # WirePlumber Audio Session Rules
@@ -562,6 +563,18 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | `SUPER + SHIFT + V` / `ALT + V` / `SHIFT + C` | **Clipboard Browser** | Open searchable clipboard history with images and snippets (**Quickshell**) |
 | `SUPER + ALT + X` / `SUPER + SHIFT + X` | **Toggle Private Mode** | Toggle clipboard Private Mode / pause recording (`󰈉`) |
 | `SUPER + ALT + D` | **Clipboard Cleaner** | Open clipboard history with confirmation dialog to clear cache |
+
+---
+
+### 📂 Floating File Picker & Uploader Modal (**Quickshell Plugin & XDG Portal**)
+| Shortcut | Action | Description |
+| :--- | :--- | :--- |
+| `SUPER + SHIFT + F` | **File Picker Modal** | Open floating file selector/uploader modal (**Quickshell Plugin**) |
+| `SUPER + ALT + F` | **Image Grid Mode** | Open file selector directly in thumbnail grid preview mode |
+| `Ctrl + H` *(inside modal)* | **Toggle Hidden Files** | Show or hide dotfiles and hidden folders |
+| `Ctrl + P` *(inside modal)* | **Toggle Preview Panel** | Expand or collapse right-side live image/code/metadata preview |
+| `Ctrl + D` *(inside modal)* | **Bookmark Folder** | Add current directory to sidebar Bookmarks |
+| `Ctrl + L` *(inside modal)* | **Edit Path Bar** | Focus editable breadcrumb bar for direct path input |
 
 ---
 

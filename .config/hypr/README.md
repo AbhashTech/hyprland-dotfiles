@@ -280,6 +280,14 @@ sudo usermod -aG i2c $USER
 
 ---
 
+### 📂 Floating File Picker & Uploader Modal
+| Shortcut | Action |
+| :--- | :--- |
+| `SUPER + SHIFT + F` | Open Floating File Picker & Uploader Modal (Quickshell & XDG Portal) |
+| `SUPER + ALT + F` | Open File Picker in Image Thumbnail Grid Mode |
+
+---
+
 ### 🔊 Audio & Brightness Controls
 | Shortcut | Action |
 | :--- | :--- |

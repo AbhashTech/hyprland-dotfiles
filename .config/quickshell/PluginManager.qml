@@ -23,6 +23,14 @@ QtObject {
     property string connectivityTab: "wifi"
     property bool clipboardPromptClear: false
 
+    // ── File Picker plugin ────────────────────────────────────────────────────
+    property bool   filePickerVisible:    false
+    property string filePickerMode:       "open"
+    property string filePickerTitle:      "Open File"
+    property string filePickerMimeFilter: "all"
+    property string filePickerAppId:      ""
+    property bool   filePickerMultiSelect: false
+
     function setPowerProfile(profile) {
         powerProfile = profile;
     }
@@ -42,6 +50,7 @@ QtObject {
         batteryVisible = false;
         notificationVisible = false;
         connectivityVisible = false;
+        filePickerVisible = false;
     }
 
     // Toggle a plugin by name
@@ -162,6 +171,21 @@ QtObject {
                 current = root.notificationVisible;
                 root.closeAll();
                 root.notificationVisible = !current;
+                break;
+            case "filepicker":
+            case "picker":
+            case "files":
+            case "upload":
+            case "file-picker":
+                current = filePickerVisible;
+                closeAll();
+                filePickerVisible = !current;
+                break;
+            case "filepicker-image":
+            case "picker-image":
+                closeAll();
+                filePickerMimeFilter = "image";
+                filePickerVisible = true;
                 break;
             case "close":
             case "hide":

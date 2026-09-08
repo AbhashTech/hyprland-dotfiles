@@ -1,0 +1,19 @@
+[Unit]
+Description=Quickshell File Picker XDG Desktop Portal Backend
+Documentation=https://flatpak.github.io/xdg-desktop-portal/
+After=graphical-session.target
+PartOf=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.config/quickshell/plugins/filepicker/portal_service.py
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+# Ensure the service uses the user session D-Bus
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus
+
+[Install]
+WantedBy=xdg-desktop-portal.service

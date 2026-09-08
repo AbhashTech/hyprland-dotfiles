@@ -274,6 +274,12 @@ hl.bind(mainMod .. " + ALT + X", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME")
 -- Open Clipboard Delete & Wipe Menu (Prompts with confirmation)
 hl.bind(mainMod .. " + ALT + D",   hl.dsp.exec_cmd(programs.clipClear))
 
+-- Open Floating File Picker / Uploader Modal (Quickshell Plugin)
+hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd(programs.filePicker))
+
+-- Open File Picker in Image Thumbnail Mode (Quickshell Plugin)
+hl.bind(mainMod .. " + ALT + F",   hl.dsp.exec_cmd(programs.filePickerImg))
+
 -- =============================================================================
 -- 🔊 Audio & Media Controls
 -- =============================================================================

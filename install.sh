@@ -185,6 +185,7 @@ if command -v pacman >/dev/null 2>&1; then
         libnotify
         python
         python-gobject
+        python-dbus
         gtk3
         gtk4
         gtk-layer-shell
@@ -228,6 +229,7 @@ DOT_CONFIG_DIRS=(
     "xdg-desktop-portal"
     "xsettingsd"
     "environment.d"
+    "systemd"
 )
 
 
@@ -284,11 +286,26 @@ log_success "Script permissions configured."
 # 4. Create Cache & User Directories
 log_info "Ensuring user media, cache, tessdata, and custom plugin directories exist..."
 mkdir -p "${HOME}/.cache/cliphist_thumbs"
+mkdir -p "${HOME}/.cache/qs_filepicker/thumbnails"
 mkdir -p "${HOME}/Pictures/Screenshots"
 mkdir -p "${HOME}/Videos/Recordings"
 mkdir -p "${HOME}/.local/share/tessdata"
+mkdir -p "${HOME}/.local/share/xdg-desktop-portal/portals"
+mkdir -p "${HOME}/.local/share/dbus-1/services"
 mkdir -p "${DOTFILES_DIR}/.config/quickshell/custom_plugins"
-log_success "Media, cache, OCR model, and custom plugin directories initialized."
+
+# Register Quickshell FileChooser portal backend and D-Bus auto-activation service
+if [ -f "${DOTFILES_DIR}/.config/quickshell/plugins/filepicker/quickshell.portal" ]; then
+    ln -sf "${DOTFILES_DIR}/.config/quickshell/plugins/filepicker/quickshell.portal" "${HOME}/.local/share/xdg-desktop-portal/portals/quickshell.portal"
+fi
+cat > "${HOME}/.local/share/dbus-1/services/org.freedesktop.impl.portal.desktop.quickshell.service" << 'EOF'
+[D-BUS Service]
+Name=org.freedesktop.impl.portal.desktop.quickshell
+Exec=/usr/bin/python3 %h/.config/quickshell/plugins/filepicker/portal_service.py
+SystemdService=quickshell-filepicker-portal.service
+EOF
+
+log_success "Media, cache, portal backend, and custom plugin directories initialized."
 
 # 5. Kernel DDC Permissions
 if ! lsmod | grep -q "i2c_dev"; then
@@ -414,6 +431,6 @@ echo -e "  • Hyprland Reload:   ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"
 echo -e "  • Status Bar Toggle: ${COLOR_BOLD}SUPER + SHIFT + W${COLOR_RESET} (or ${COLOR_BOLD}~/.config/quickshell/scripts/launch_quickshell.sh --toggle${COLOR_RESET})"
 echo -e "  • Power Menu:        ${COLOR_BOLD}SUPER + ESCAPE${COLOR_RESET} / ${COLOR_BOLD}SUPER + M${COLOR_RESET} (Quickshell Power Menu)"
 echo -e "  • Git TUI Overlay:   ${COLOR_BOLD}SUPER + G${COLOR_RESET} (lazygit)"
+echo -e "  • File Picker Modal: ${COLOR_BOLD}SUPER + SHIFT + F${COLOR_RESET} (or ${COLOR_BOLD}SUPER + ALT + F${COLOR_RESET} for Image Grid)"
 echo -e "  • Notification Mako: ${COLOR_BOLD}makoctl reload${COLOR_RESET}"
 echo -e "  • Test SDDM Theme:   ${COLOR_BOLD}~/.dotfiles/sddm/test-theme.sh${COLOR_RESET}"
-

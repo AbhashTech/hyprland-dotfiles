@@ -19,6 +19,8 @@ local programs = {
     wifiMenu    = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh wifi",
     bluetoothMenu = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh bluetooth",
     notifications = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh notifications",
+    filePicker    = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh filepicker",
+    filePickerImg = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh filepicker-image",
     browser     = "firefox",
 }
 
