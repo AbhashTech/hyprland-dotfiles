@@ -269,10 +269,11 @@ sudo usermod -aG i2c $USER
 ### 🔔 Notifications & Clipboard History
 | Shortcut | Action |
 | :--- | :--- |
-| `SUPER + N` | Open Notification History Center |
-| `SUPER + SHIFT + N` | Toggle Do-Not-Disturb (DND) Mode |
-| `SUPER + SHIFT + V` / `ALT + V` / `SHIFT + C` | Open Searchable Clipboard History Browser |
-| `SUPER + ALT + D` / `SUPER + CTRL + V` | Open Delete Item / Wipe Clipboard History Menu |
+| `SUPER + N` | Open Notification History & Management Center (Quickshell) |
+| `SUPER + SHIFT + N` | Toggle Do-Not-Disturb (DND) Mode (`󰂛`) |
+| `SUPER + SHIFT + V` / `ALT + V` / `SHIFT + C` | Open Searchable Clipboard History Browser (Quickshell) |
+| `SUPER + ALT + X` / `SUPER + SHIFT + X` | Toggle Clipboard Private Mode / Pause Recording (`󰈉`) |
+| `SUPER + ALT + D` / `SUPER + CTRL + V` | Open Delete Item / Wipe Clipboard History Menu (with Confirmation) |
 
 ---
 

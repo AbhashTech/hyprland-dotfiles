@@ -252,8 +252,8 @@ hl.bind(mainMod .. " + ALT + K",   hl.dsp.exec_cmd(kbLayoutScript .. " --add-men
 -- 🔔 Notifications & Clipboard History
 -- =============================================================================
 
--- Open Notification History Center (Mako restore)
-hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("makoctl restore"))
+-- Open Notification History & Management Center (Quickshell Plugin)
+hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd(programs.notifications))
 
 -- Toggle Do-Not-Disturb (DND) Mode (Mako)
 hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("makoctl set-mode dnd 2>/dev/null || makoctl mode -t dnd"))

@@ -17,6 +17,7 @@ local programs = {
     sysinfo     = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh sysinfo",
     wifiMenu    = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh wifi",
     bluetoothMenu = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh bluetooth",
+    notifications = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh notifications",
     browser     = "firefox",
 }
 

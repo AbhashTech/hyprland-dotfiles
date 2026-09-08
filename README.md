@@ -546,9 +546,10 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
 | `SUPER + N` | **Notifications Center** | Open notification history and management center (**Quickshell**) |
-| `SUPER + SHIFT + N` | **Toggle DND** | Toggle Do-Not-Disturb notification silencing mode |
+| `SUPER + SHIFT + N` | **Toggle DND** | Toggle Do-Not-Disturb notification silencing mode (`󰂛`) |
 | `SUPER + SHIFT + V` / `ALT + V` / `SHIFT + C` | **Clipboard Browser** | Open searchable clipboard history with images and snippets (**Quickshell**) |
-| `SUPER + ALT + D` / `SUPER + CTRL + V` | **Clipboard Cleaner** | Open menu to delete individual entries or wipe clipboard cache |
+| `SUPER + ALT + X` / `SUPER + SHIFT + X` | **Toggle Private Mode** | Toggle clipboard Private Mode / pause recording (`󰈉`) |
+| `SUPER + ALT + D` / `SUPER + CTRL + V` | **Clipboard Cleaner** | Open interactive menu to delete items or wipe clipboard cache with confirmation |
 
 ---
 
