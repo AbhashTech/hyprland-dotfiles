@@ -8,8 +8,8 @@ local c = theme.colors
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
 hl.config({
     general = {
-        gaps_in  = 5,
-        gaps_out = 20,
+        gaps_in  = 2,
+        gaps_out = 2,
 
         border_size = 2,
 
