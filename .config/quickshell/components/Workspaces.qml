@@ -125,7 +125,7 @@ Rectangle {
     }
 
     Timer {
-        interval: 200
+        interval: 600
         running: true
         repeat: true
         onTriggered: {
