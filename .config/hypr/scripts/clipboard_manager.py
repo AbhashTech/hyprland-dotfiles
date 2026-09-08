@@ -188,10 +188,51 @@ def get_image_thumbnail(clip_id, raw_line):
     return None
 
 
+def is_code_snippet(txt):
+    txt_strip = txt.strip()
+    if not txt_strip:
+        return False
+    # Shebang / Comment syntax
+    if txt_strip.startswith(("#!", "//", "/*", "<!--")):
+        return True
+    # HTML / XML / JSX tags
+    if re.search(r"^<(!DOCTYPE|[a-zA-Z0-9_\-]+)(>|\s+[^>]*>)", txt_strip, re.IGNORECASE) or re.search(r"</[a-zA-Z0-9_\-]+>$", txt_strip):
+        return True
+    # JSON / structured object
+    if (txt_strip.startswith("{") and txt_strip.endswith("}")) or (txt_strip.startswith("[") and txt_strip.endswith("]")):
+        if ":" in txt_strip or "," in txt_strip or '"' in txt_strip:
+            return True
+    # Common code declarations & keywords
+    code_patterns = [
+        r"\b(def|class|async\s+def|lambda|elif|except)\b",
+        r"\b(function|const|let|var|export|import|console\.log|require\(|interface|type\s+\w+\s*=)\b",
+        r"\b(fn|pub\s+fn|pub\s+struct|impl|let\s+mut|match|enum)\b",
+        r"\b(func|package|type\s+\w+\s+struct|go\s+func)\b",
+        r"\b(#include|int\s+main|void\s+|std::|namespace|nullptr|constexpr)\b",
+        r"\b(public|private|protected|static|final|class|interface|throws)\b",
+        r"(?i)\b(SELECT\s+.+\s+FROM|INSERT\s+INTO|UPDATE\s+.+\s+SET|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE)\b",
+        r"\b(echo|grep|sed|awk|sudo|chmod|chown|systemctl|journalctl|docker|kubectl|git|cargo|npm|pnpm|pip|pip3|yay|pacman|curl|wget)\s+[-a-zA-Z0-9]",
+    ]
+    for pattern in code_patterns:
+        if re.search(pattern, txt):
+            return True
+    # Function calls / arrow functions / block syntax: `foo() {` or `() =>` or `->`
+    if re.search(r"\w+\s*\([^)]*\)\s*\{", txt) or re.search(r"\(\s*\)\s*=>", txt) or "=>" in txt or "->" in txt:
+        if any(c in txt for c in ["{", "}", ";", "(", ")", "$", ":"]):
+            return True
+    # Code operators with semicolons/brackets
+    if (";" in txt or "{" in txt or "}" in txt) and any(op in txt for op in ["=", "==", "===", "!=", "!==", "&&", "||", "++", "--", "+=", "-="]):
+        return True
+    # Shell syntax like variables, pipes, redirections
+    if re.search(r"\$\{?\w+\}?", txt) and any(c in txt for c in ["echo", "{", "|", "=", ">", "$"]):
+        return True
+    return False
+
+
 def format_clip_item(raw_line, create_thumb=True):
     """Parse cliphist line 'id\tcontent' and return metadata, type, icon, and thumbnail."""
     if "\t" not in raw_line:
-        return raw_line, "", "text", "󰅍", None
+        return raw_line, "", "text", "󰘳", None
     
     clip_id, content = raw_line.split("\t", 1)
     content_clean = content.strip()
@@ -208,15 +249,15 @@ def format_clip_item(raw_line, create_thumb=True):
     elif re.match(r'^https?:\/\/', content_clean):
         item_type = "url"
         icon = "󰖟"
-    elif any(kw in content_clean for kw in ["function", "const ", "let ", "var ", "class ", "def ", "import ", "select ", "return "]) and ("{" in content_clean or ";" in content_clean or ":" in content_clean):
+    elif is_code_snippet(content_clean):
         item_type = "code"
-        icon = "󰅪"
-    elif "\n" in content or len(content_clean) > 80:
+        icon = ""
+    elif "\n" in content or len(content_clean) > 70:
         item_type = "multiline"
         icon = "󰉿"
     else:
         item_type = "text"
-        icon = "󰅍"
+        icon = "󰘳"
 
     return clip_id, content_clean, item_type, icon, thumb_path
 

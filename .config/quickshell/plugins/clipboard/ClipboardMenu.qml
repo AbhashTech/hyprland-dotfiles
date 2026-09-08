@@ -307,9 +307,10 @@ Rectangle {
                 model: [
                     { id: "all", label: "All", icon: "󰅍" },
                     { id: "image", label: "Images", icon: "󰋩" },
-                    { id: "code", label: "Code", icon: "󰅪" },
+                    { id: "code", label: "Code", icon: "" },
+                    { id: "multiline", label: "Multiline", icon: "󰉿" },
                     { id: "url", label: "Links", icon: "󰖟" },
-                    { id: "text", label: "Text", icon: "󰉿" }
+                    { id: "text", label: "Text", icon: "󰘳" }
                 ]
 
                 Rectangle {
