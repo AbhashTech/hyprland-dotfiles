@@ -27,9 +27,7 @@ PanelWindow {
 
         KeybindsViewer {
             id: keybindsViewerItem
-            anchors.top: parent.top
-            anchors.topMargin: Theme.barHeight + 20
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.centerIn: parent
 
             MouseArea {
                 anchors.fill: parent

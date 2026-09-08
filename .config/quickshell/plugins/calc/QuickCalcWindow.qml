@@ -27,9 +27,7 @@ PanelWindow {
 
         QuickCalc {
             id: quickCalcItem
-            anchors.top: parent.top
-            anchors.topMargin: Theme.barHeight + 40
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.centerIn: parent
 
             // Prevent clicks inside popup from dismissing
             MouseArea {

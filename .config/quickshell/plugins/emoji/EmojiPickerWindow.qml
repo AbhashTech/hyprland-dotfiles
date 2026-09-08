@@ -27,9 +27,7 @@ PanelWindow {
 
         EmojiPicker {
             id: emojiPickerItem
-            anchors.top: parent.top
-            anchors.topMargin: Theme.barHeight + 30
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.centerIn: parent
 
             MouseArea {
                 anchors.fill: parent
