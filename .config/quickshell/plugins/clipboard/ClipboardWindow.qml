@@ -38,13 +38,4 @@ PanelWindow {
             }
         }
     }
-
-    Connections {
-        target: PluginManager
-        function onClipboardVisibleChanged() {
-            if (PluginManager.clipboardVisible) {
-                clipboardMenuItem.grabFocus();
-            }
-        }
-    }
 }

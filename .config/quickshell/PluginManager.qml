@@ -64,16 +64,19 @@ QtObject {
                 break;
             case "clipboard":
             case "clip":
-                current = clipboardVisible;
+                current = clipboardVisible && !clipboardPromptClear;
                 closeAll();
                 clipboardVisible = !current;
                 break;
             case "clipboard-clear":
             case "clip-clear":
             case "clipclear":
+                current = clipboardVisible && clipboardPromptClear;
                 closeAll();
-                clipboardPromptClear = true;
-                clipboardVisible = true;
+                if (!current) {
+                    clipboardPromptClear = true;
+                    clipboardVisible = true;
+                }
                 break;
             case "calc":
             case "calculator":

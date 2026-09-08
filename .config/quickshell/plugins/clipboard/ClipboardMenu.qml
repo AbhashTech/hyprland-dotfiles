@@ -135,14 +135,15 @@ Rectangle {
     function grabFocus() {
         if (PluginManager.clipboardPromptClear) {
             root.confirmingClear = true;
-            PluginManager.clipboardPromptClear = false;
         } else {
             root.confirmingClear = false;
         }
         searchInput.text = "";
         root.activeCategory = "all";
         root.refreshClipboard();
-        searchInput.forceActiveFocus();
+        if (!root.confirmingClear) {
+            searchInput.forceActiveFocus();
+        }
     }
 
     Component.onCompleted: root.grabFocus()
@@ -152,6 +153,11 @@ Rectangle {
         function onClipboardVisibleChanged() {
             if (PluginManager.clipboardVisible) {
                 root.grabFocus();
+            }
+        }
+        function onClipboardPromptClearChanged() {
+            if (PluginManager.clipboardPromptClear) {
+                root.confirmingClear = true;
             }
         }
     }

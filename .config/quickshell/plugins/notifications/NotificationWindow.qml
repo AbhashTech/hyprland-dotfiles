@@ -38,13 +38,4 @@ PanelWindow {
             }
         }
     }
-
-    Connections {
-        target: PluginManager
-        function onNotificationVisibleChanged() {
-            if (PluginManager.notificationVisible) {
-                notificationMenuItem.grabFocus();
-            }
-        }
-    }
 }
