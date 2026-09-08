@@ -52,15 +52,27 @@ hl.workspace_rule({
 --     rounding    = 0,
 -- })
 
--- Example window rules that are useful
-local suppressMaximizeRule = hl.window_rule({
-    -- Ignore maximize requests from all apps. You'll probably like this.
-    name  = "suppress-maximize-events",
-    match = { class = ".*" },
-
+-- Global rules applied to all windows
+hl.window_rule({
+    -- Ignore maximize requests from all apps
+    name           = "suppress-maximize-events",
+    match          = { class = ".*" },
     suppress_event = "maximize",
 })
--- suppressMaximizeRule:set_enabled(false)
+
+hl.window_rule({
+    -- Force all windows to tile
+    name  = "force-tile-global",
+    match = { class = ".*" },
+    tile  = true,
+})
+
+hl.window_rule({
+    -- Strip window decorations globally
+    name     = "strip-decorations-global",
+    match    = { class = ".*" },
+    decorate = false,
+})
 
 hl.window_rule({
     -- Fix some dragging issues with XWayland

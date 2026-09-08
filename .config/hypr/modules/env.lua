@@ -18,6 +18,7 @@ hl.env("SDL_VIDEODRIVER", "wayland")
 hl.env("MOZ_ENABLE_WAYLAND", "1")
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 hl.env("GTK_USE_PORTAL", "1")
+hl.env("GTK_CSD", "0")
 hl.env("QT_USE_PORTAL", "1")
 hl.env("_JAVA_AWT_WM_NONREPARENTING", "1")
 
