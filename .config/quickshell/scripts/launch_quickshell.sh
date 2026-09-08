@@ -46,8 +46,14 @@ start_quickshell() {
     pkill -x waybar 2>/dev/null
     pkill -f launch_waybar.py 2>/dev/null
     rm -f "${HOME}/.cache/quickshell_plugin_trigger" 2>/dev/null
+
+    # Auto-discover and generate QML loader manifests for custom plugins
+    if [ -f "${HOME}/.config/quickshell/scripts/plugin_loader.sh" ]; then
+        bash "${HOME}/.config/quickshell/scripts/plugin_loader.sh" >/dev/null 2>&1 || true
+    fi
+
     QS_BIN="$(command -v quickshell || echo /usr/bin/quickshell)"
-    nohup "$QS_BIN" -d -p "$HOME/.config/quickshell/shell.qml" "${PASSTHROUGH_ARGS[@]}" >/dev/null 2>&1 &
+    "$QS_BIN" -d -p "$HOME/.config/quickshell" "${PASSTHROUGH_ARGS[@]}" >/dev/null 2>&1
 }
 
 case "$ACTION" in

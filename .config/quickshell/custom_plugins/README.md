@@ -1,40 +1,74 @@
-# Quickshell Custom Plugins & Modules Guide
+# Quickshell Custom Plugins & Auto-Discovery Guide
 
 Welcome to the **Quickshell Custom Plugins** directory (`~/.config/quickshell/custom_plugins/`).
-This directory is untracked by version control (`.gitignore`), giving you complete freedom to develop, test, and maintain your own custom topbar modules, popup panels, and interactive widgets without getting overwritten by dotfiles updates.
+This directory is untracked by Git (`.gitignore`). **No code modification in this dotfiles repository is required** to add or use your own custom plugins, topbar widgets, or popup windows.
+
+Plugins placed in this directory are **automatically discovered, registered, and activated** upon shell startup or reload via `manifest.json`.
 
 ---
 
-## 📁 Directory Structure Overview
+## 📁 Directory & Plugin Structure
 
-A standard custom plugin/widget can be organized as follows:
+Create a subdirectory under `custom_plugins/` for your plugin with a `manifest.json` file:
 
 ```text
-~/.config/quickshell/
-├── custom_plugins/            <-- YOU ARE HERE (Untracked)
-│   ├── README.md              <-- This documentation guide
-│   ├── sample_widget/         <-- Example: custom topbar widget
-│   │   └── SampleWidget.qml
-│   └── weather/               <-- Example: custom popup plugin
-│       ├── WeatherModule.qml  (Topbar pill/button)
-│       ├── WeatherWindow.qml  (Floating popup panel)
-│       └── WeatherCard.qml    (Popup content UI)
-├── components/                <-- Built-in topbar components
-├── plugins/                   <-- Built-in popup plugins (appmenu, volume, etc.)
-├── PluginManager.qml          <-- State manager singleton for toggles & IPC
-├── Theme.qml                  <-- Theme singleton (colors, fonts, metrics)
-└── shell.qml                  <-- Main shell layout (topbar & windows)
+~/.config/quickshell/custom_plugins/
+├── README.md                   <-- This documentation
+└── my_plugin/                  <-- Your custom plugin folder
+    ├── manifest.json           <-- Plugin metadata, position & entrypoints (Automatic discovery!)
+    ├── MyBarWidget.qml         <-- Topbar widget (optional)
+    ├── MyWindow.qml            <-- Floating popup panel (optional)
+    └── MyService.qml           <-- Background service (optional)
 ```
 
 ---
 
-## 🧩 1. Creating a Custom Topbar Widget
+## 📋 The `manifest.json` Specification
 
-Topbar widgets sit inside the status bar in `shell.qml`.
+Every custom plugin should contain a `manifest.json` file at its root. This instructs Quickshell where to place your widget and which windows or services to activate.
 
-### Step 1: Create your Widget QML file
-Create a folder and file: `custom_plugins/my_widget/MyWidget.qml`
+### Example `manifest.json`:
 
+```json
+{
+  "schemaVersion": 1,
+  "id": "my_weather",
+  "name": "Weather Widget",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "Live weather widget and 7-day forecast drawer",
+  "kinds": ["bar-widget", "window"],
+  "position": "center",
+  "entryPoints": {
+    "barWidget": "WeatherModule.qml",
+    "windows": ["WeatherWindow.qml"],
+    "service": "WeatherService.qml"
+  }
+}
+```
+
+### Manifest Fields:
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `string` | Unique identifier for your plugin. Used for IPC triggers and toggles. |
+| `name` | `string` | Human-readable name. |
+| `position` | `string` | Where the topbar widget appears: `"left"`, `"center"`, or `"right"` (default: `"center"`). |
+| `kinds` | `array` | Types of components provided: `["bar-widget", "window", "service"]`. |
+| `entryPoints.barWidget` | `string` | QML file for the topbar capsule (e.g. `Widget.qml`, `WeatherModule.qml`). |
+| `entryPoints.windows` | `array` / `string` | Floating popup window QML file(s) (e.g. `["WeatherWindow.qml"]`). |
+| `entryPoints.service` | `string` | Background QML service file (e.g. `WeatherService.qml`). |
+| `enabled` | `boolean` | Set to `false` to disable the plugin without deleting it (default: `true`). |
+
+*(Note: If `manifest.json` is omitted, the auto-discovery engine will look for standard filenames like `*Module.qml` or `Widget.qml` for topbar widgets and `*Window.qml` for popup windows).*
+
+---
+
+## 🧩 1. Creating a Topbar Widget (`barWidget`)
+
+Topbar widgets are automatically injected into the status bar according to the `position` defined in your manifest (`"left"`, `"center"`, or `"right"`).
+
+### Example `MyBarWidget.qml`:
 ```qml
 import QtQuick
 import Quickshell
@@ -44,7 +78,7 @@ import "../.." // Access Theme and components
 Rectangle {
     id: root
 
-    // Reference to parent bar window for tooltips
+    // Injected automatically by the shell loader
     property var barWindow: null
 
     implicitHeight: Theme.barHeight - 8
@@ -66,11 +100,10 @@ Rectangle {
         isHovered: root.isHovered
         icon: ""
         iconColor: Theme.yellow
-        title: "My Custom Widget"
-        description: "Click to do something awesome!"
+        title: "My Custom Plugin"
+        description: "Click to toggle custom window"
         shortcuts: [
-            { action: "Trigger Action", key: "Left Click" },
-            { action: "Secondary Action", key: "Right Click" }
+            { action: "Toggle Window", key: "Left Click" }
         ]
     }
 
@@ -81,7 +114,7 @@ Rectangle {
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            text: "" // Nerd Font icon
+            text: ""
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeIcon
             color: Theme.yellow
@@ -97,25 +130,13 @@ Rectangle {
         }
     }
 
-    // Optional: Run CLI commands on action
-    Process {
-        id: cmdProc
-    }
-
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-
-        onClicked: mouse => {
-            if (mouse.button === Qt.LeftButton) {
-                // Execute a command or toggle a popup
-                cmdProc.exec(["notify-send", "Custom Plugin", "Left clicked!"]);
-            } else if (mouse.button === Qt.RightButton) {
-                cmdProc.exec(["kitty", "-e", "htop"]);
-            }
+        onClicked: {
+            PluginManager.toggle("my_weather");
         }
     }
 }
@@ -123,85 +144,11 @@ Rectangle {
 
 ---
 
-## 📍 2. Placing Your Widget in the Topbar (`shell.qml`)
+## 🪟 2. Creating a Popup Window (`window`)
 
-Open `~/.config/quickshell/shell.qml`:
+Popup windows are automatically instantiated in the shell root and can be toggled using `PluginManager.toggle("<plugin-id>")` or keybinds.
 
-1. **Import your custom plugin directory** at the top:
-   ```qml
-   import "custom_plugins/my_widget"
-   ```
-
-2. **Add it into your preferred group in the topbar**:
-   The topbar has three alignment sections:
-
-   ### A. Left Section (`leftGroup`):
-   Ideal for launchers, workspace indicators, window title, music player.
-   ```qml
-   // Left Modules
-   Row {
-       id: leftGroup
-       anchors.left: parent.left
-       anchors.leftMargin: 6
-       anchors.verticalCenter: parent.verticalCenter
-       spacing: 6
-
-       LauncherButton { barWindow: barWindow }
-       Workspaces { barWindow: barWindow }
-       ActiveWindow { barWindow: barWindow }
-       MprisModule { barWindow: barWindow }
-
-       // ⭐ YOUR CUSTOM WIDGET HERE (Left aligned)
-       MyWidget { barWindow: barWindow }
-   }
-   ```
-
-   ### B. Center Section (`centerGroup`):
-   Ideal for clocks, calendars, weather tickers, active indicators.
-   ```qml
-   // Center Modules
-   Row {
-       id: centerGroup
-       anchors.centerIn: parent
-       spacing: 6
-
-       ClockModule { barWindow: barWindow }
-       LanguageModule { barWindow: barWindow }
-
-       // ⭐ YOUR CUSTOM WIDGET HERE (Center aligned)
-       MyWidget { barWindow: barWindow }
-   }
-   ```
-
-   ### C. Right Section (`rightGroup`):
-   Ideal for system stats, volume, battery, system tray, quick actions.
-   ```qml
-   // Right Modules
-   Row {
-       id: rightGroup
-       anchors.right: parent.right
-       anchors.rightMargin: 6
-       anchors.verticalCenter: parent.verticalCenter
-       spacing: 6
-
-       // ⭐ YOUR CUSTOM WIDGET HERE (Right aligned, before status pills)
-       MyWidget { barWindow: barWindow }
-
-       RecordingModule { barWindow: barWindow }
-       TrayNotifGroup { barWindow: barWindow }
-       StatusGroup { ... }
-       StatsModule { barWindow: barWindow }
-       PowerModule { barWindow: barWindow }
-   }
-   ```
-
----
-
-## 🪟 3. Creating a Full Popup Panel / Window Plugin
-
-If you want a floating modal popup (similar to App Menu, Volume Mixer, Quick Calc, Emoji Picker):
-
-### 1. Define your Popup Window (`MyPopupWindow.qml`)
+### Example `MyWindow.qml`:
 ```qml
 import QtQuick
 import Quickshell
@@ -209,10 +156,10 @@ import Quickshell.Wayland
 import "../.."
 
 PanelWindow {
-    id: popupWindow
+    id: myWindow
 
-    // Bind visibility to PluginManager property or custom boolean
-    visible: PluginManager.myPluginVisible
+    // Listen to PluginManager visibility or custom service state
+    visible: PluginManager.isPluginVisible("my_weather")
 
     anchors {
         top: true
@@ -224,19 +171,19 @@ PanelWindow {
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "quickshell:myplugin"
-    WlrLayershell.keyboardFocus: PluginManager.myPluginVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.namespace: "quickshell:my_weather"
+    WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    // Backdrop click-outside-to-dismiss
+    // Backdrop click to dismiss
     MouseArea {
         anchors.fill: parent
         onClicked: PluginManager.closeAll()
 
-        // Main card popup
+        // Main modal card
         Rectangle {
             anchors.centerIn: parent
-            implicitWidth: 400
-            implicitHeight: 300
+            implicitWidth: 420
+            implicitHeight: 320
             radius: Theme.barRadius
             color: Theme.barBg
             border.color: Theme.barBorder
@@ -250,7 +197,7 @@ PanelWindow {
 
             Text {
                 anchors.centerIn: parent
-                text: "Hello from Custom Popup Plugin!"
+                text: "Hello from Custom Plugin!"
                 color: Theme.text
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeLarge
@@ -260,75 +207,30 @@ PanelWindow {
 }
 ```
 
-### 2. Register State in `PluginManager.qml`
-1. Add visibility property:
-   ```qml
-   property bool myPluginVisible: false
-   ```
-2. Reset it in `closeAll()`:
-   ```qml
-   myPluginVisible = false;
-   ```
-3. Add toggle case in `toggle(name)`:
-   ```qml
-   case "myplugin":
-       current = myPluginVisible;
-       closeAll();
-       myPluginVisible = !current;
-       break;
-   ```
+---
 
-### 3. Instantiate Window in `shell.qml`
-At the bottom of `shell.qml`:
-```qml
-MyPopupWindow {}
-```
+## ⚡ 3. Activating and Reloading Plugins
+
+Because plugins are auto-discovered dynamically:
+
+1. Place your plugin folder in `~/.config/quickshell/custom_plugins/<your-plugin>/`.
+2. Reload quickshell:
+   ```bash
+   bash ~/.config/quickshell/scripts/launch_quickshell.sh --restart
+   ```
+3. Your topbar widget will appear in its specified position (`left`, `center`, or `right`), and windows/services will be active!
 
 ---
 
-## ⌨️ 4. Triggering via Keybinds & Hyprland
+## ⌨️ 4. Keybindings and IPC
 
-You can trigger your custom plugin from anywhere via terminal, Hyprland keybinds, or scripts:
+You can toggle your plugin from the terminal, scripts, or Hyprland keybinds using:
 
-### Using the toggle script:
 ```bash
-bash ~/.config/quickshell/scripts/toggle_plugin.sh myplugin
+bash ~/.config/quickshell/scripts/toggle_plugin.sh <plugin-id>
 ```
 
-### Adding a Hyprland Shortcut:
 In `~/.config/hypr/modules/keybinds.lua`:
 ```lua
-hl.bind("SUPER + ALT + P", hl.dsp.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh myplugin"))
-```
-
----
-
-## 🎨 Useful Theme Tokens (`Theme.qml`)
-
-Always use `Theme` properties for consistent styling across dynamic light/dark/Nord themes:
-
-| Property | Description | Example Usage |
-| :--- | :--- | :--- |
-| `Theme.barBg` | Main glassmorphic background | `color: Theme.barBg` |
-| `Theme.moduleBg` | Default pill/capsule background | `color: Theme.moduleBg` |
-| `Theme.moduleHoverBg` | Hovered pill/capsule background | `color: Theme.moduleHoverBg` |
-| `Theme.accent` | Active dynamic accent color | `color: Theme.accent` |
-| `Theme.text` | Primary foreground text color | `color: Theme.text` |
-| `Theme.subtext0` / `1` | Secondary muted text | `color: Theme.subtext0` |
-| `Theme.barHeight` | Bar height metric (default: 38) | `implicitHeight: Theme.barHeight - 8` |
-| `Theme.capsuleRadius` | Radius for capsules (default: 12) | `radius: Theme.capsuleRadius` |
-| `Theme.fontFamily` | Configured Nerd Font family | `font.family: Theme.fontFamily` |
-| `Theme.blue`, `Theme.mauve`, `Theme.green`, etc. | Palette accent colors | `color: Theme.peach` |
-
----
-
-## 🔄 Live Reloading Quickshell
-
-To test your changes, restart quickshell:
-```bash
-bash ~/.config/quickshell/scripts/launch_quickshell.sh --restart
-```
-Or check errors with:
-```bash
-quickshell -p ~/.config/quickshell
+hl.bind("SUPER + ALT + P", hl.dsp.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh my_weather"))
 ```

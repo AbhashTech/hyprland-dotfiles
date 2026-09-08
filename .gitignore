@@ -19,3 +19,4 @@ __pycache__/
 .config/hypr/recorder_settings.json
 .config/quickshell/custom_plugins/*
 !.config/quickshell/custom_plugins/README.md
+.config/quickshell/.generated/

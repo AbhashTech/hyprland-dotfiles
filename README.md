@@ -344,14 +344,14 @@ The dotfiles include a dedicated **Power Profile & Battery Management** system (
 
 ---
 
-## 🧩 User Custom Quickshell Plugins & Widgets (`custom_plugins/`)
+## 🧩 User Custom Quickshell Plugins & Auto-Discovery (`custom_plugins/`)
 
-The dotfiles include a dedicated, git-ignored directory for user-defined Quickshell plugins and topbar widgets at [`~/.config/quickshell/custom_plugins/`](file:///home/kunal/.dotfiles/.config/quickshell/custom_plugins):
+The dotfiles include an **automated plugin discovery engine** for Quickshell at [`~/.config/quickshell/custom_plugins/`](file:///home/kunal/.dotfiles/.config/quickshell/custom_plugins):
 
-- **Untracked by Git**: Any custom widgets or popup panels you add to `custom_plugins/` will never conflict with upstream dotfile updates.
-- **Topbar Placement**: Easily place widgets in the Left (`leftGroup`), Center (`centerGroup`), or Right (`rightGroup`) zones in `shell.qml`.
-- **Full Popup Plugins**: Create floating modal panels with click-outside dismissal, keybind triggers, and IPC support via `PluginManager.qml`.
-- **Built-in Guide**: Check out the comprehensive guide in [`custom_plugins/README.md`](file:///home/kunal/.dotfiles/.config/quickshell/custom_plugins/README.md) with boilerplate templates, Theme tokens, and step-by-step instructions.
+- **Zero Code Modification Required**: Users can drop any custom plugin directory with a `manifest.json` into `custom_plugins/` without modifying any repository files or QML code.
+- **Untracked by Git**: The `custom_plugins/` directory is ignored by Git, ensuring user plugins remain intact across dotfile updates.
+- **Dynamic Bar Placement & Window Loading**: Declaring `"position": "left" | "center" | "right"` in `manifest.json` automatically injects the widget into that topbar zone, while popup windows and background services are loaded on startup.
+- **Built-in Guide**: Complete specification and boilerplate templates are provided in [`custom_plugins/README.md`](file:///home/kunal/.dotfiles/.config/quickshell/custom_plugins/README.md).
 
 ---
 

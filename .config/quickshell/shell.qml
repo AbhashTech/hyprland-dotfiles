@@ -17,6 +17,7 @@ import "plugins/connectivity"
 import "plugins/battery"
 import "plugins/notifications"
 import "plugins/filepicker"
+import ".generated"
 
 ShellRoot {
     id: root
@@ -91,6 +92,9 @@ ShellRoot {
                         MprisModule {
                             barWindow: barWindow
                         }
+                        CustomWidgetsLeft {
+                            barWindow: barWindow
+                        }
                     }
 
                     // Center Modules
@@ -100,6 +104,9 @@ ShellRoot {
                         spacing: 6
 
                         ClockModule {
+                            barWindow: barWindow
+                        }
+                        CustomWidgetsCenter {
                             barWindow: barWindow
                         }
                         LanguageModule {
@@ -115,6 +122,9 @@ ShellRoot {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 6
 
+                        CustomWidgetsRight {
+                            barWindow: barWindow
+                        }
                         RecordingModule {
                             barWindow: barWindow
                         }
@@ -151,4 +161,5 @@ ShellRoot {
     BatteryWindow {}
     NotificationWindow {}
     FilePickerWindow {}
+    CustomWindows {}
 }

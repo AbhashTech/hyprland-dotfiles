@@ -23,6 +23,22 @@ QtObject {
     property string connectivityTab: "wifi"
     property bool clipboardPromptClear: false
 
+    // ── Dynamic Custom Plugins State ──────────────────────────────────────────
+    property var customPluginStates: ({})
+    property int customPluginVersion: 0
+
+    function isPluginVisible(pluginId) {
+        var v = customPluginVersion;
+        return customPluginStates[pluginId] === true;
+    }
+
+    function setPluginVisible(pluginId, isVis) {
+        var copy = Object.assign({}, customPluginStates);
+        copy[pluginId] = isVis;
+        customPluginStates = copy;
+        customPluginVersion++;
+    }
+
     // ── File Picker plugin ────────────────────────────────────────────────────
     property bool   filePickerVisible:    false
     property string filePickerMode:       "open"
@@ -51,6 +67,8 @@ QtObject {
         notificationVisible = false;
         connectivityVisible = false;
         filePickerVisible = false;
+        customPluginStates = ({});
+        customPluginVersion++;
     }
 
     // Toggle a plugin by name
@@ -192,6 +210,12 @@ QtObject {
                 closeAll();
                 break;
             default:
+                // Dynamically toggle any custom plugin by ID
+                if (name && name.length > 0) {
+                    var vis = root.isPluginVisible(name);
+                    root.closeAll();
+                    root.setPluginVisible(name, !vis);
+                }
                 break;
         }
     }
