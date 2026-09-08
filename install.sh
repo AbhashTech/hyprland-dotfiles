@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # Unified Hyprland Desktop Dotfiles - Automated Installer & Symlinker
-# (Hyprland, Quickshell, Fuzzel, Mako, Wofi, Btop, Kitty, Audio, Modern CLI Tools)
+# (Hyprland, Quickshell, Mako, Btop, Kitty, Audio, Modern CLI Power Tools)
 # =============================================================================
 
 set -e
@@ -202,7 +202,7 @@ if command -v pacman >/dev/null 2>&1; then
 
 else
     log_warn "Non-Arch Linux distribution detected."
-    log_info "Ensure Hyprland, Quickshell, Mako, Fuzzel, Cliphist, Grim, Slurp, Pipewire, SDDM, and Python dependencies are installed."
+    log_info "Ensure Hyprland, Quickshell, Mako, Cliphist, Grim, Slurp, Pipewire, SDDM, and Python dependencies are installed."
 fi
 
 # 2. Symlink Configs to ~/.config

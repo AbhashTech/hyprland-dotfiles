@@ -28,24 +28,27 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
 │   ├── rules.lua                # Window rules, layer rules, and workspace persistence
 │   └── theme.lua                # Dynamic theme & color variables module
 └── scripts/                     # Custom Python & Shell utilities
+    ├── app-shortcut-creator.desktop # Application shortcut desktop entry
     ├── app_shortcut_creator.py  # Application shortcut & desktop entry creator
+    ├── bluetooth_agent.py       # Background Bluetooth auto-pairing DBus agent
     ├── brightness_control.py    # Backlight & external DDC monitor brightness with OSD
-    ├── clipboard_manager.py     # Image/text clipboard manager daemon
-    ├── emoji_picker.py          # Searchable emoji catalog with instant copy & auto-typing
+    ├── clipboard_manager.py     # Image/text clipboard manager daemon & thumbnail cache
     ├── hyprsunset-hypridle.desktop  # Application menu entry for Night Light & Idle Manager
     ├── keybinds_viewer.py       # Dynamic keybindings parser & JSON provider
     ├── keyboard_layout.py       # Dynamic keyboard layout switcher & installer
     ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
-    ├── nightlight.py            # Warm blue-light filter wrapper (delegates to sunset_idle_manager)
-    ├── sunset_idle_manager.py   # Hyprsunset & Hypridle display power, monitor turn-off & idle manager
+    ├── ocr-language-manager.desktop # Application menu entry for OCR Language Manager
     ├── ocr_grab.py              # Screen OCR text extraction via Tesseract
-    ├── quick_calc.py            # Interactive math expression evaluator
+    ├── ocr_language_manager.py  # Tesseract OCR language model downloader & manager (GTK3/CLI)
+    ├── qr_reader.py             # Screen QR / 2D barcode scanner & decoder
     ├── resolution_menu.py       # Interactive display resolution & UI scale switcher
     ├── scale_window.py          # Window resizing with on-screen dimensions overlay
     ├── screen_capture.py        # Screenshot & video screen recording with audio & editor support
+    ├── sunset_idle_manager.py   # Hyprsunset & Hypridle display power, monitor turn-off & idle manager
+    ├── theme-manager.desktop    # Application menu entry for graphical Theme Manager
     ├── theme_switcher.py        # Universal desktop theme switcher & palette manager (SUPER + T)
     ├── volume_control.py        # Speaker & mic volume control, OSD, and device switcher
-    └── wallpaper_switcher.py    # Wallpaper randomizer & selector (~/Wallpaper, hyprpaper/swww)
+    └── wallpaper_switcher.py    # Wallpaper randomizer & selector (~/Wallpaper, hyprpaper)
 ```
 
 

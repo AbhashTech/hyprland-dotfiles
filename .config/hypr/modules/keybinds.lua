@@ -16,7 +16,7 @@ hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(programs.terminal))
 -- Toggle Dropdown Scratchpad Terminal
 hl.bind(mainMod .. " + grave", hl.dsp.exec_cmd(programs.terminal .. " --class=dropdown-terminal"))
 
--- Open Fuzzel Application Launcher
+-- Open Application Launcher (Quickshell App Menu)
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(programs.menu))
 hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd(programs.menu))
 
@@ -214,10 +214,14 @@ hl.bind(mainMod .. " + ALT + Q",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME
 -- Toggle Warm Blue-Light Night Filter (Hyprsunset)
 local sunsetIdleScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/sunset_idle_manager.py"
 hl.bind(mainMod .. " + ALT + N",   hl.dsp.exec_cmd(sunsetIdleScript .. " --sunset-toggle"))
+
+-- Open Night Filter & Temperature Menu (Hyprsunset)
 hl.bind(mainMod .. " + CTRL + N",  hl.dsp.exec_cmd(sunsetIdleScript .. " --menu"))
 
--- Open Display Power, Monitor Turn-Off & Idle Manager (Hypridle)
+-- Open Display Power, Monitor Turn-Off & Idle Manager GUI (Hypridle)
 hl.bind(mainMod .. " + ALT + I",   hl.dsp.exec_cmd(sunsetIdleScript .. " --gui"))
+
+-- Open Display Power & Idle Preset Selector Menu (Hypridle)
 hl.bind(mainMod .. " + CTRL + I",  hl.dsp.exec_cmd(sunsetIdleScript .. " --menu"))
 
 -- Open Quick Math Calculator Prompt (Quickshell Plugin)
@@ -328,8 +332,10 @@ hl.bind(mainMod .. " + XF86MonBrightnessUp",   hl.dsp.exec_cmd(brightnessScript 
 hl.bind("SHIFT + XF86MonBrightnessDown",       hl.dsp.exec_cmd(brightnessScript .. " ddc-down"), { locked = true, repeating = true })
 hl.bind(mainMod .. " + XF86MonBrightnessDown", hl.dsp.exec_cmd(brightnessScript .. " ddc-down"), { locked = true, repeating = true })
 
--- External Monitor Contrast Up/Down (DDC)
+-- External Monitor Contrast Up (DDC)
 hl.bind("CTRL + SHIFT + XF86MonBrightnessUp",   hl.dsp.exec_cmd(brightnessScript .. " ddc-contrast-up"),   { locked = true, repeating = true })
+
+-- External Monitor Contrast Down (DDC)
 hl.bind("CTRL + SHIFT + XF86MonBrightnessDown", hl.dsp.exec_cmd(brightnessScript .. " ddc-contrast-down"), { locked = true, repeating = true })
 
 -- Open Display Brightness & Contrast Control Center (Quickshell Brightness Plugin)
@@ -338,6 +344,8 @@ hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd(programs.brightnessMenu))
 
 -- Open Wireless & Wi-Fi Management Control Center (Quickshell Connectivity Plugin)
 hl.bind(mainMod .. " + CTRL + W",  hl.dsp.exec_cmd(programs.wifiMenu))
+
+-- Open Bluetooth Management Control Center (Quickshell Connectivity Plugin)
 hl.bind(mainMod .. " + CTRL + B",  hl.dsp.exec_cmd(programs.bluetoothMenu))
 
 -- =============================================================================

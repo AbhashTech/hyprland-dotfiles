@@ -194,11 +194,7 @@ DOTFILES_ROOT = HOME / ".dotfiles"
 THEME_TRACKED_REL_PATHS = [
     ".config/hypr/theme.conf",
     ".config/hypr/theme_vars.lua",
-    ".config/waybar/colors.css",
-    ".config/wofi/colors.css",
-    ".config/wlogout/colors.css",
     ".config/kitty/theme.conf",
-    ".config/fuzzel/fuzzel.ini",
     ".config/mako/config",
     ".config/btop/btop.conf",
     ".config/starship.toml",

@@ -114,7 +114,7 @@ if command -v pacman >/dev/null 2>&1; then
 
 else
     log_warn "Non-Arch Linux distribution detected."
-    log_info "Please ensure the required packages (Hyprland, Quickshell, Mako, Fuzzel, Cliphist, Grim, Slurp, Pipewire, Brightnessctl) are installed with your package manager."
+    log_info "Please ensure the required packages (Hyprland, Quickshell, Mako, Cliphist, Grim, Slurp, Pipewire, Brightnessctl) are installed with your package manager."
 fi
 
 # 2. Make scripts executable

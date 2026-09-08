@@ -113,11 +113,11 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | :--- | :--- | :--- |
 | **Display Manager (SDDM)**| `sddm`, `qt6-declarative`, `qt6-svg`, `qt6-5compat` | Qt6 display manager & Catppuccin Mocha glassmorphic greeter |
 | **Compositor & Portals** | `hyprland`, `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk`, `xdg-utils`, `xdg-user-dirs`, `hyprpolkitagent` | Wayland compositor, XDG portals for screen sharing & file dialogs, and Polkit agent |
-| **Session, Lock & Logout** | `hyprlock`, `hypridle`, `wlogout` | Catppuccin Mocha lockscreen, idle management, and Wayland power modal |
-| **Status Bar & Power** | `quickshell`, `waybar`, `power-profiles-daemon`, `upower` | Modern Quickshell status bar, Waybar fallback, hardware stats, power profile selector & battery metrics |
+| **Session, Lock & Logout** | `hyprlock`, `hypridle`, `quickshell` | Catppuccin Mocha lockscreen, idle management, and Quickshell Power Menu plugin |
+| **Status Bar & Desktop Suite** | `quickshell`, `power-profiles-daemon`, `upower` | Modern Quickshell status bar, modular capsules, hardware stats, power profile selector & battery metrics |
 | **Notifications** | `mako`, `libnotify` | Notification daemon & `notify-send` for OSDs (with click-to-focus) |
 | **Wallpaper** | `hyprpaper` | Fast Wayland wallpaper daemon |
-| **App Launchers & Theming** | `fuzzel`, `wofi`, `nwg-look`, `gsettings-desktop-schemas`, `dconf`, `xsettingsd` | Fast Wayland launcher, GTK dmenu, and GTK3/4 & DConf settings sync |
+| **App Launchers & Theming** | `quickshell`, `nwg-look`, `gsettings-desktop-schemas`, `dconf`, `xsettingsd` | Fast Quickshell Application Menu plugin and GTK3/4 & DConf settings sync |
 | **Qt/GTK Unified Integration** | `qt5-wayland`, `qt6-wayland`, `qt5ct`, `qt6ct`, `kvantum`, `kvantum-qt5` | Native Wayland runtime and uniform theme/font/icon syncing across Qt5/Qt6 & GTK apps |
 | **File Pickers, Mounts & Thumbs** | `dolphin`, `yazi`, `gvfs`, `gvfs-mtp`, `gvfs-smb`, `tumbler`, `ffmpegthumbnailer`, `poppler-glib`, `webp-pixbuf-loader`, `trash-cli` | File managers, external drive mounting, trash bin support, and PDF/video/image thumbnail previews |
 | **Default Media & App Viewers** | `loupe`, `mpv`, `zathura`, `zathura-pdf-mupdf`, `file-roller` | Fast image viewer, media player, minimalist PDF reader, and archive manager |
@@ -449,7 +449,7 @@ The dotfiles include a comprehensive, native Wayland suite for extracting text a
 
 The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewer.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/keybinds_viewer.py)) that parses doc-comments directly from [`keybinds.lua`](file:///home/kunal/.dotfiles/.config/hypr/modules/keybinds.lua):
 
-- **Desktop GUI**: Press **`SUPER + /`**, **`SUPER + ?`**, or **`SUPER + F1`** to open an interactive, fuzzy-searchable Fuzzel overlay. Selecting any shortcut automatically copies the key combination to your clipboard.
+- **Desktop GUI**: Press **`SUPER + /`**, **`SUPER + ?`**, or **`SUPER + F1`** to open the interactive **Quickshell** dynamic keybindings viewer with category filters and search. Selecting any shortcut automatically copies the key combination to your clipboard.
 - **Terminal CLI**: Run `python3 ~/.config/hypr/scripts/keybinds_viewer.py --cli` for categorized, ANSI-colored tables.
 - **Export Formats**: Supports `--json` and `--markdown` for automated documentation generation.
 
@@ -462,7 +462,7 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | :--- | :--- | :--- |
 | `SUPER + Q` / `SUPER + Return` | **Open Terminal** | Launch Kitty GPU-accelerated terminal emulator |
 | `SUPER + grave (~)` | **Dropdown Terminal** | Fast floating scratchpad terminal (`dropdown-terminal`) |
-| `SUPER + R` / `SUPER + Space` | **App Launcher** | Open **Fuzzel** application launcher (with outside-click dismissal) |
+| `SUPER + R` / `SUPER + Space` | **App Launcher** | Open **Quickshell** application menu (with category tabs & search) |
 | `SUPER + B` | **Web Browser** | Launch default web browser (Firefox) |
 | `SUPER + E` | **Dolphin File Manager** | Launch KDE GUI file manager |
 | `SUPER + SHIFT + E` | **Yazi File Manager** | Launch terminal file manager in Kitty |
