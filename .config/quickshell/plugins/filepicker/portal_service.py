@@ -52,11 +52,24 @@ _request_lock = threading.Lock()
 
 
 def trigger_quickshell(plugin: str) -> None:
-    """Write plugin name to the Quickshell IPC trigger file."""
+    """Trigger Quickshell via native IPC or atomic trigger file write."""
     try:
-        with open(TRIGGER_F, "w") as f:
-            f.write(plugin)
-        os.utime(TRIGGER_F, None)  # touch to fire FileView watcher
+        # Try quickshell native IPC first
+        res = subprocess.run(
+            ["quickshell", "ipc", "call", "pluginManager", "toggle", plugin],
+            capture_output=True,
+            timeout=1
+        )
+        if res.returncode == 0:
+            return
+    except Exception:
+        pass
+
+    try:
+        tmp_f = TRIGGER_F + ".tmp"
+        with open(tmp_f, "w") as f:
+            f.write(f"{plugin} {time.time_ns()}\n")
+        os.replace(tmp_f, TRIGGER_F)
     except Exception as e:
         print(f"[portal] Failed to trigger quickshell: {e}", file=sys.stderr)
 
