@@ -282,12 +282,13 @@ chmod +x "${DOTFILES_DIR}/install.sh" 2>/dev/null || true
 log_success "Script permissions configured."
 
 # 4. Create Cache & User Directories
-log_info "Ensuring user media, cache, and tessdata directories exist..."
+log_info "Ensuring user media, cache, tessdata, and custom plugin directories exist..."
 mkdir -p "${HOME}/.cache/cliphist_thumbs"
 mkdir -p "${HOME}/Pictures/Screenshots"
 mkdir -p "${HOME}/Videos/Recordings"
 mkdir -p "${HOME}/.local/share/tessdata"
-log_success "Media, cache, and OCR model directories initialized."
+mkdir -p "${DOTFILES_DIR}/.config/quickshell/custom_plugins"
+log_success "Media, cache, OCR model, and custom plugin directories initialized."
 
 # 5. Kernel DDC Permissions
 if ! lsmod | grep -q "i2c_dev"; then

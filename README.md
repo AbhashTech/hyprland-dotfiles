@@ -69,7 +69,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   ├── Theme.qml            # Dynamic palette provider connected to colors.json
     │   ├── PluginManager.qml    # Singleton managing plugin visibility & IPC state
     │   ├── components/          # Modular bar capsules (Launcher, Workspaces, Window, MPRIS, Clock, Status, Tray)
-    │   ├── plugins/             # Native Quickshell Plugins (Folderwise)
+    │   ├── plugins/             # Built-in Quickshell Plugins (Folderwise)
     │   │   ├── appmenu/         # Searchable Application Launcher with categories & desktop scanning
     │   │   ├── powermenu/       # Glassmorphic session menu (Lock, Suspend, Logout, Reboot, Shutdown)
     │   │   ├── clipboard/       # Live searchable clipboard history drawer (cliphist & wl-copy)
@@ -82,6 +82,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   │   ├── battery/         # Battery metrics & dynamic power profile selector
     │   │   ├── notifications/   # Notification center & history viewer
     │   │   └── sysinfo/         # System hardware dashboard (CPU, RAM, Disk) with fast 800ms updates
+    │   ├── custom_plugins/      # User Custom Plugins (untracked by git, see README inside)
     │   └── scripts/             # Supervisor scripts (launch_quickshell.sh, toggle_plugin.sh)
     ├── wireplumber/             # WirePlumber Audio Session Rules
     │   └── wireplumber.conf.d/  # Software DSP mixing (51-alsa-soft-mixer.conf) & profile priority routing (52-alsa-routes.conf)
@@ -339,6 +340,17 @@ The dotfiles include a dedicated **Power Profile & Battery Management** system (
   - High-contrast power profile cards for instant 1-click switching over DBus (`powerprofilesctl`).
   - Live power consumption in Watts (`power_now`), battery health percentage, and charging state.
   - Instant outside-click backdrop dismissal and `Escape` key handling.
+
+---
+
+## 🧩 User Custom Quickshell Plugins & Widgets (`custom_plugins/`)
+
+The dotfiles include a dedicated, git-ignored directory for user-defined Quickshell plugins and topbar widgets at [`~/.config/quickshell/custom_plugins/`](file:///home/kunal/.dotfiles/.config/quickshell/custom_plugins):
+
+- **Untracked by Git**: Any custom widgets or popup panels you add to `custom_plugins/` will never conflict with upstream dotfile updates.
+- **Topbar Placement**: Easily place widgets in the Left (`leftGroup`), Center (`centerGroup`), or Right (`rightGroup`) zones in `shell.qml`.
+- **Full Popup Plugins**: Create floating modal panels with click-outside dismissal, keybind triggers, and IPC support via `PluginManager.qml`.
+- **Built-in Guide**: Check out the comprehensive guide in [`custom_plugins/README.md`](file:///home/kunal/.dotfiles/.config/quickshell/custom_plugins/README.md) with boilerplate templates, Theme tokens, and step-by-step instructions.
 
 ---
 
