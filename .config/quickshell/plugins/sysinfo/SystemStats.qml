@@ -47,7 +47,7 @@ Rectangle {
     }
 
     Timer {
-        interval: 800
+        interval: 2000
         running: PluginManager.sysinfoVisible
         repeat: true
         onTriggered: root.refreshStats()

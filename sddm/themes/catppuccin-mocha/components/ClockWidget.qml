@@ -16,16 +16,33 @@ Item {
     implicitWidth: clockColumn.implicitWidth
     implicitHeight: clockColumn.implicitHeight
 
+    function updateTime() {
+        var date = new Date()
+        timeLabel.text = Qt.formatTime(date, clockRoot.timeFormat)
+        dateLabel.text = Qt.formatDate(date, clockRoot.dateFormat)
+    }
+
+    function scheduleNextMinute() {
+        var now = new Date()
+        var msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 50
+        if (msToNextMinute < 500) msToNextMinute = 60000
+        timer.interval = msToNextMinute
+        timer.restart()
+    }
+
+    Component.onCompleted: {
+        updateTime()
+        scheduleNextMinute()
+    }
+
     Timer {
         id: timer
-        interval: 1000
-        repeat: true
-        running: true
-        triggeredOnStart: true
+        interval: 60000
+        repeat: false
+        running: clockRoot.visible
         onTriggered: {
-            var date = new Date()
-            timeLabel.text = Qt.formatTime(date, clockRoot.timeFormat)
-            dateLabel.text = Qt.formatDate(date, clockRoot.dateFormat)
+            clockRoot.updateTime()
+            clockRoot.scheduleNextMinute()
         }
     }
 

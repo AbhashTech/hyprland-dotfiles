@@ -104,7 +104,7 @@ PopupWindow {
 
         Timer {
             interval: 1000
-            running: true
+            running: calPop.visible && calCard.opacity > 0
             repeat: true
             onTriggered: calCard.updateClock()
         }

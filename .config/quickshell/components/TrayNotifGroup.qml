@@ -114,6 +114,7 @@ Rectangle {
                     Image {
                         anchors.fill: parent
                         source: modelData.icon || ""
+                        sourceSize: Qt.size(24, 24)
                         fillMode: Image.PreserveAspectFit
                     }
 

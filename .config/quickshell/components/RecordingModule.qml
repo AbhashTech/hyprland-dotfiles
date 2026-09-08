@@ -60,7 +60,7 @@ Rectangle {
     }
 
     Timer {
-        interval: 1000
+        interval: root.isRecording ? 1000 : 3000
         running: true
         repeat: true
         onTriggered: {

@@ -288,6 +288,7 @@ PopupWindow {
                             anchors.fill: parent
                             anchors.margins: 1
                             source: "file://" + Quickshell.env("HOME") + "/.cache/quickshell/window_previews/" + previewPop.cleanAddress(client.address) + ".png"
+                            sourceSize: Qt.size(240, 135)
                             fillMode: Image.PreserveAspectCrop
                             smooth: true
                             asynchronous: true
@@ -421,6 +422,7 @@ PopupWindow {
                                     id: cardThumb
                                     anchors.fill: parent
                                     source: "file://" + Quickshell.env("HOME") + "/.cache/quickshell/window_previews/" + previewPop.cleanAddress(client.address) + ".png"
+                                    sourceSize: Qt.size(48, 48)
                                     fillMode: Image.PreserveAspectCrop
                                     smooth: true
                                     asynchronous: true
