@@ -60,6 +60,30 @@ Item {
                 }
             }
 
+            Rectangle {
+                id: suspendTip
+                visible: suspendArea.containsMouse
+                z: 100
+                anchors.bottom: parent.top
+                anchors.bottomMargin: 8
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: suspendTipText.implicitWidth + 14
+                height: suspendTipText.implicitHeight + 8
+                radius: 6
+                color: "#11111b"
+                border.color: "#313244"
+                border.width: 1
+
+                Text {
+                    id: suspendTipText
+                    anchors.centerIn: parent
+                    text: "Suspend System"
+                    color: "#cdd6f4"
+                    font.family: powerMenuRoot.fontFamily
+                    font.pixelSize: 11
+                }
+            }
+
             MouseArea {
                 id: suspendArea
                 anchors.fill: parent
@@ -106,6 +130,30 @@ Item {
                 }
             }
 
+            Rectangle {
+                id: rebootTip
+                visible: rebootArea.containsMouse
+                z: 100
+                anchors.bottom: parent.top
+                anchors.bottomMargin: 8
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: rebootTipText.implicitWidth + 14
+                height: rebootTipText.implicitHeight + 8
+                radius: 6
+                color: "#11111b"
+                border.color: "#313244"
+                border.width: 1
+
+                Text {
+                    id: rebootTipText
+                    anchors.centerIn: parent
+                    text: "Restart System"
+                    color: "#cdd6f4"
+                    font.family: powerMenuRoot.fontFamily
+                    font.pixelSize: 11
+                }
+            }
+
             MouseArea {
                 id: rebootArea
                 anchors.fill: parent
@@ -149,6 +197,30 @@ Item {
                     height: 1
                     anchors.horizontalCenter: parent.horizontalCenter
                     color: shutdownArea.containsMouse ? powerMenuRoot.hoverColor : Qt.rgba(166/255, 173/255, 200/255, 0.4)
+                }
+            }
+
+            Rectangle {
+                id: shutdownTip
+                visible: shutdownArea.containsMouse
+                z: 100
+                anchors.bottom: parent.top
+                anchors.bottomMargin: 8
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: shutdownTipText.implicitWidth + 14
+                height: shutdownTipText.implicitHeight + 8
+                radius: 6
+                color: "#11111b"
+                border.color: "#313244"
+                border.width: 1
+
+                Text {
+                    id: shutdownTipText
+                    anchors.centerIn: parent
+                    text: "Shut Down System"
+                    color: "#cdd6f4"
+                    font.family: powerMenuRoot.fontFamily
+                    font.pixelSize: 11
                 }
             }
 

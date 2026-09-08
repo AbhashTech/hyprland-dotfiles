@@ -109,6 +109,30 @@ Item {
                     opacity: eyeMouseArea.containsMouse ? 1.0 : 0.6
                 }
 
+                Rectangle {
+                    id: eyeTip
+                    visible: eyeMouseArea.containsMouse
+                    z: 100
+                    anchors.bottom: parent.top
+                    anchors.bottomMargin: 8
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: eyeTipText.implicitWidth + 14
+                    height: eyeTipText.implicitHeight + 8
+                    radius: 6
+                    color: "#11111b"
+                    border.color: "#313244"
+                    border.width: 1
+
+                    Text {
+                        id: eyeTipText
+                        anchors.centerIn: parent
+                        text: passwordFieldRoot.isPasswordHidden ? "Show password" : "Hide password"
+                        color: "#cdd6f4"
+                        font.family: "JetBrainsMono Nerd Font"
+                        font.pixelSize: 11
+                    }
+                }
+
                 MouseArea {
                     id: eyeMouseArea
                     anchors.fill: parent

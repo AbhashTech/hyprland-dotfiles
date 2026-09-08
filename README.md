@@ -650,10 +650,10 @@ A sleek, modern split-screen design layout unifying both the **SDDM Display Mana
 - **Top Greeting & Live Clock**: Bold `"Welcome!"` greeting, large digital clock (`HH:mm`), and formatted date (`Monday, d of MMMM`).
 - **Username Input**: Pill-outlined input container with a dark user silhouette badge on the left, auto-filled with the current user and supporting multi-user dropdown switching.
 - **Password Input**: Matching pill-outlined container with dot masking, Caps Lock warning banner, and error shake animation on failed authentication.
-- **Show Password Checkbox**: Interactive checkbox toggle to reveal or hide password characters.
+- **Show Password Checkbox & Toggle**: Interactive checkbox and eye icon toggle to reveal or hide password characters with interactive hover tooltips.
 - **Log In Button**: Prominent solid pill button (`#ffffff` / `#e0def4`) with interactive hover and click feedback.
 - **Session Selector**: Clean `"Session: <SessionName>"` dropdown to easily select between Wayland and X11 sessions (e.g. Hyprland).
-- **Power Menu & Confirmation**: Pinned at the bottom with **Suspend**, **Reboot**, and **Shutdown** actions featuring icons, text labels, and safety confirmation modals.
+- **Power Menu & Confirmation**: Pinned at the bottom with **Suspend**, **Reboot**, and **Shutdown** actions featuring icons, text labels, interactive hover tooltips ("Suspend System", "Restart System", "Shut Down System"), and safety confirmation modals.
 
 ### 🧪 Live Preview & SDDM Deployment
 ```bash
