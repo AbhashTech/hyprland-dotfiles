@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Keyboard Layout Manager
+GenericName=Input Layouts & Regional Variant Switcher
+Comment=Switch and configure keyboard layouts, Indian regional variants, and XKB options
+Exec=python3 /home/kunal/.config/hypr/scripts/keyboard_layout.py --gui
+Icon=preferences-desktop-keyboard
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;HardwareSettings;
+StartupWMClass=keyboard_layout.py
+StartupNotify=true
+Keywords=keyboard;layout;variant;language;typing;input;xkb;hindi;tamil;telugu;dvorak;colemak;marathi;bengali;kannada;malayalam;gujarati;

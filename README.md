@@ -49,8 +49,8 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │       ├── brightness_control.py # Panel & external DDC brightness with OSD & presets
     │       ├── clipboard_manager.py  # Image/text clipboard manager daemon & thumbnailer
     │       ├── hyprsunset-hypridle.desktop # Application menu entry for Night Light & Idle Manager
-    │       ├── keybinds_viewer.py    # Dynamic keybinds parser & JSON provider
-    │       ├── keyboard_layout.py    # Dynamic keyboard layout switcher & installer
+    │       ├── keyboard-layout-manager.desktop # Application menu entry for Keyboard Layout & Variant Manager
+    │       ├── keyboard_layout.py    # Dynamic keyboard layout switcher, regional installer & GTK3 Manager
     │       ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
     │       ├── ocr-language-manager.desktop # Application menu entry for OCR Language Manager
     │       ├── ocr_grab.py           # Optical character recognition text grabber
