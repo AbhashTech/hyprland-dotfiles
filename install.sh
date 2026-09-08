@@ -298,12 +298,37 @@ mkdir -p "${DOTFILES_DIR}/.config/quickshell/custom_plugins"
 if [ -f "${DOTFILES_DIR}/.config/quickshell/plugins/filepicker/quickshell.portal" ]; then
     ln -sf "${DOTFILES_DIR}/.config/quickshell/plugins/filepicker/quickshell.portal" "${HOME}/.local/share/xdg-desktop-portal/portals/quickshell.portal"
 fi
-cat > "${HOME}/.local/share/dbus-1/services/org.freedesktop.impl.portal.desktop.quickshell.service" << 'EOF'
+# Note: D-Bus activation files do NOT support systemd specifiers like %h - use literal $HOME
+cat > "${HOME}/.local/share/dbus-1/services/org.freedesktop.impl.portal.desktop.quickshell.service" << EOF
 [D-BUS Service]
 Name=org.freedesktop.impl.portal.desktop.quickshell
-Exec=/usr/bin/python3 %h/.config/quickshell/plugins/filepicker/portal_service.py
+Exec=/usr/bin/python3 ${HOME}/.config/quickshell/plugins/filepicker/portal_service.py
 SystemdService=quickshell-filepicker-portal.service
 EOF
+
+# Install and enable the systemd user service for the portal backend
+# (The ~/.config/systemd dir may be a real directory, not a symlink — so we copy explicitly)
+SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
+mkdir -p "${SYSTEMD_USER_DIR}"
+if [ -f "${DOTFILES_DIR}/.config/systemd/user/quickshell-filepicker-portal.service" ]; then
+    cp "${DOTFILES_DIR}/.config/systemd/user/quickshell-filepicker-portal.service" \
+       "${SYSTEMD_USER_DIR}/quickshell-filepicker-portal.service"
+    systemctl --user daemon-reload
+    systemctl --user enable --now quickshell-filepicker-portal.service 2>/dev/null || true
+    log_success "Quickshell file picker portal backend service enabled and started."
+fi
+
+# Also symlink the portal config files explicitly (in case ~/.config/xdg-desktop-portal is a real dir)
+XDP_CONF_DIR="${HOME}/.config/xdg-desktop-portal"
+mkdir -p "${XDP_CONF_DIR}"
+for conf in hyprland-portals.conf portals.conf; do
+    if [ -f "${DOTFILES_DIR}/.config/xdg-desktop-portal/${conf}" ]; then
+        ln -sf "${DOTFILES_DIR}/.config/xdg-desktop-portal/${conf}" "${XDP_CONF_DIR}/${conf}"
+    fi
+done
+
+# Restart xdg-desktop-portal so it picks up the new FileChooser backend routing
+systemctl --user restart xdg-desktop-portal 2>/dev/null || true
 
 log_success "Media, cache, portal backend, and custom plugin directories initialized."
 
