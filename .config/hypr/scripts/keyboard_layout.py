@@ -3,7 +3,7 @@
 =============================================================================
 Hyprland Keyboard Layout & Variant Manager Utility (Desktop GUI & CLI)
 =============================================================================
-A modern, native graphical (GTK3) and CLI/Fuzzel utility to:
+A modern, native graphical (GTK3) and CLI utility to:
 - Dynamically adapt the active system theme palette (Catppuccin, Gruvbox, Tokyo Night, etc.)
 - Switch and cycle active keyboard layouts & variants live across all keyboards
 - Search, browse, and add regional layouts & ergonomic variants (Indian languages,
@@ -112,15 +112,22 @@ CURATED_POPULAR = [
 ]
 
 POPULAR_OPTIONS = [
-    ("grp:alt_shift_toggle", "Alt + Shift Toggle", "Toggle layout using Left Alt + Left Shift"),
-    ("grp:win_space_toggle", "Super + Space Toggle", "Toggle layout using Super (Windows key) + Space"),
-    ("grp:ctrl_shift_toggle", "Ctrl + Shift Toggle", "Toggle layout using Ctrl + Shift"),
-    ("grp:caps_toggle", "CapsLock Toggle", "Toggle layout using CapsLock key"),
-    ("caps:swapescape", "Swap CapsLock & Escape", "Swap Escape and CapsLock positions (popular for Vim)"),
-    ("caps:escape", "CapsLock as Escape", "Make CapsLock act as an additional Escape key"),
-    ("caps:ctrl_modifier", "CapsLock as Ctrl", "Make CapsLock act as an additional Ctrl key"),
-    ("compose:ralt", "Compose Key on Right Alt", "Right Alt acts as Compose key for special accents & symbols"),
-    ("terminate:ctrl_alt_bksp", "Kill X/Wayland on Ctrl+Alt+Bksp", "Emergency restart of graphical session"),
+    ("grp:alt_shift_toggle", "Alt + Shift Layout Toggle", "Switch between layouts instantly using Left Alt + Left Shift"),
+    ("grp:win_space_toggle", "Super + Space Layout Toggle", "Switch between layouts using Super (Windows key) + Space"),
+    ("grp:ctrl_shift_toggle", "Ctrl + Shift Layout Toggle", "Switch between layouts using Ctrl + Shift"),
+    ("grp:caps_toggle", "CapsLock Layout Toggle", "Use CapsLock key to toggle active keyboard layout"),
+    ("caps:swapescape", "Swap CapsLock & Escape", "Swap Escape and CapsLock positions (ideal for modal editors)"),
+    ("caps:escape", "CapsLock as Additional Escape", "Make CapsLock act as an additional Escape key"),
+    ("caps:ctrl_modifier", "CapsLock as Additional Ctrl", "Make CapsLock act as an additional Control key"),
+    ("compose:ralt", "Compose Key on Right Alt", "Right Alt acts as Compose key for international accents & symbols"),
+    ("terminate:ctrl_alt_bksp", "Kill Session on Ctrl+Alt+Bksp", "Emergency restart of graphical session with Ctrl+Alt+Backspace"),
+]
+
+# Non-keyboard dummy ACPI/virtual devices to exclude from hardware listing
+IGNORED_DEVICE_KEYWORDS = [
+    "power-button", "video-bus", "sleep-button", "ideapad-extra-buttons",
+    "volume-button", "lid-switch", "rfkill", "sysrq", "audio-control",
+    "consumer-control", "system-control"
 ]
 
 
@@ -215,12 +222,7 @@ def show_notification(title, body, icon="preferences-desktop-keyboard", urgency=
 # =============================================================================
 
 def parse_all_xkb_catalog():
-    """
-    Parse base layouts and all layout variants from XKB rules.
-    Returns:
-      layouts: dict of code -> description
-      variants: dict of (lay_code, var_code) -> description
-    """
+    """Parse base layouts and all layout variants from XKB rules."""
     lst_path = XKB_BASE_LST if XKB_BASE_LST.exists() else XKB_EVDEV_LST
     layouts = {}
     variants = {}
@@ -298,13 +300,20 @@ def parse_layout_arg(arg):
 
 
 def get_hypr_keyboards():
-    """Get all keyboard devices from hyprctl."""
+    """Get keyboard devices from hyprctl, filtering out non-keyboard dummy ACPI events."""
     raw = run_cmd(["hyprctl", "devices", "-j"])
     if not raw:
         return []
     try:
         data = json.loads(raw)
-        return data.get("keyboards", [])
+        all_kbs = data.get("keyboards", [])
+        clean_kbs = []
+        for kb in all_kbs:
+            name = kb.get("name", "").lower()
+            if any(ign in name for ign in IGNORED_DEVICE_KEYWORDS):
+                continue
+            clean_kbs.append(kb)
+        return clean_kbs if clean_kbs else all_kbs
     except Exception:
         return []
 
@@ -427,7 +436,6 @@ def save_and_apply_config(layouts, variants, options=None):
         try:
             content = config_file.read_text(encoding="utf-8")
 
-            # Replace kb_layout
             if re.search(r'kb_layout\s*=\s*["\'][^"\']*["\']', content):
                 content = re.sub(
                     r'kb_layout\s*=\s*["\'][^"\']*["\']',
@@ -435,7 +443,6 @@ def save_and_apply_config(layouts, variants, options=None):
                     content
                 )
 
-            # Replace kb_variant
             if re.search(r'kb_variant\s*=\s*["\'][^"\']*["\']', content):
                 content = re.sub(
                     r'kb_variant\s*=\s*["\'][^"\']*["\']',
@@ -443,7 +450,6 @@ def save_and_apply_config(layouts, variants, options=None):
                     content
                 )
 
-            # Replace kb_options if given
             if options is not None and re.search(r'kb_options\s*=\s*["\'][^"\']*["\']', content):
                 content = re.sub(
                     r'kb_options\s*=\s*["\'][^"\']*["\']',
@@ -467,7 +473,7 @@ def switch_next_layout():
     if len(info["pairs"]) <= 1:
         show_notification(
             "󰌌  Single Layout Configured",
-            f"Current: <b>{html.escape(info['active_keymap'])}</b>\nOpen <b>Keyboard Layout Manager</b> to add more layouts!"
+            f"Current: <b>{html.escape(info['active_keymap'])}</b>\nPress <b>Super+Shift+K</b> to add more layouts!"
         )
         print("Only 1 layout is configured.")
         return
@@ -827,7 +833,7 @@ def gui_fuzzel_main_menu():
     menu_lines.append("─────────────────────────────────────────────")
     action_map[menu_lines[-1]] = ("noop", None)
 
-    line_cycle = "󰑐  Cycle Next Layout (Super+Ctrl+Space)"
+    line_cycle = "󰑐  Cycle Next Layout (Super+Alt+Space)"
     menu_lines.append(line_cycle)
     action_map[line_cycle] = ("cycle_next", None)
 
@@ -861,16 +867,16 @@ def gui_fuzzel_main_menu():
 
 
 # =============================================================================
-# 🖥️ Full Graphical GTK3 Desktop Application (Dynamic Theme Adaptation)
+# 🖥️ Sleek Native GTK3 Desktop Application
 # =============================================================================
 
 def launch_gtk_gui(initial_tab=0):
-    """Launch full GTK3 desktop interface with theme styling."""
+    """Launch clean, native GTK3 desktop interface styled to active theme."""
     try:
         import gi
         gi.require_version("Gtk", "3.0")
         gi.require_version("Gdk", "3.0")
-        from gi.repository import Gtk, Gdk, GLib
+        from gi.repository import Gtk, Gdk
     except Exception as e:
         print(f"GTK3 initialization error: {e}", file=sys.stderr)
         return
@@ -892,13 +898,11 @@ def launch_gtk_gui(initial_tab=0):
     c_blue = colors.get("blue", "#89b4fa")
     c_sapphire = colors.get("sapphire", "#74c7ec")
     c_yellow = colors.get("yellow", "#f9e2af")
-    c_peach = colors.get("peach", "#fab387")
 
     accent_fg = get_contrast_color(c_accent)
     sapphire_fg = get_contrast_color(c_sapphire)
-    blue_fg = get_contrast_color(c_blue)
-    red_fg = get_contrast_color(c_red)
     green_fg = get_contrast_color(c_green)
+    red_fg = get_contrast_color(c_red)
 
     css_provider = Gtk.CssProvider()
     css_data = f"""
@@ -906,262 +910,210 @@ def launch_gtk_gui(initial_tab=0):
         font-family: system-ui, -apple-system, 'Inter', 'Roboto', 'Noto Sans', 'JetBrainsMono Nerd Font', sans-serif;
     }}
 
-    window, viewport, scrolledwindow, box, notebook, notebook > stack, notebook > stack > * {{
+    window {{
         background-color: {c_base};
         color: {c_text};
     }}
 
-    .header-box {{
+    /* Clean subtle window header */
+    .top-header {{
         background-color: {c_mantle};
-        border-bottom: 2px solid {c_surface0};
-        padding: 16px 24px;
+        border-bottom: 1px solid {c_surface0};
+        padding: 12px 18px;
     }}
 
-    .title-label {{
-        font-size: 20px;
-        font-weight: 800;
-        color: {c_accent};
+    .window-title {{
+        font-size: 15px;
+        font-weight: 700;
+        color: {c_text};
     }}
 
-    .subtitle-label {{
-        font-size: 12px;
-        color: {c_subtext1};
+    .window-subtitle {{
+        font-size: 11px;
+        color: {c_subtext0};
     }}
 
-    /* Global button overrides */
+    /* Native-feeling buttons */
     button {{
         background-image: none;
         box-shadow: none;
         text-shadow: none;
-        border-radius: 8px;
-        font-weight: bold;
+        border-radius: 6px;
+        font-weight: 600;
         font-size: 12px;
-        transition: all 120ms ease-in-out;
-    }}
-
-    button.btn-primary {{
-        background-color: {c_accent};
-        background-image: none;
-        border: 1px solid {c_accent};
-        color: {accent_fg};
-        font-weight: 800;
-        padding: 8px 18px;
-    }}
-    button.btn-primary label {{
-        color: {accent_fg};
-        font-weight: 800;
-    }}
-    button.btn-primary:hover {{
-        background-color: {c_surface1};
-        border-color: {c_accent};
-        color: {c_text};
-    }}
-    button.btn-primary:hover label {{
-        color: {c_text};
-    }}
-
-    button.btn-secondary {{
-        background-color: {c_surface0};
-        background-image: none;
-        border: 1px solid {c_surface2};
-        color: {c_text};
-        padding: 6px 14px;
-    }}
-    button.btn-secondary label {{
-        color: {c_text};
-        font-weight: bold;
-    }}
-    button.btn-secondary:hover {{
-        background-color: {c_surface1};
-        border-color: {c_accent};
-        color: {c_text};
-    }}
-    button.btn-secondary:hover label {{
-        color: {c_text};
-    }}
-
-    button.btn-active-switch {{
-        background-color: {c_sapphire};
-        background-image: none;
-        border: 1px solid {c_sapphire};
-        color: {sapphire_fg};
-        padding: 6px 14px;
-    }}
-    button.btn-active-switch label {{
-        color: {sapphire_fg};
-        font-weight: 800;
-    }}
-    button.btn-active-switch:hover {{
-        background-color: {c_blue};
-        color: {blue_fg};
-    }}
-    button.btn-active-switch:hover label {{
-        color: {blue_fg};
-    }}
-
-    button.btn-danger {{
-        background-color: {c_surface0};
-        background-image: none;
-        border: 1px solid {c_red};
-        color: {c_red};
-        padding: 6px 12px;
-    }}
-    button.btn-danger label {{
-        color: {c_red};
-        font-weight: bold;
-    }}
-    button.btn-danger:hover {{
-        background-color: {c_red};
-        color: {red_fg};
-    }}
-    button.btn-danger:hover label {{
-        color: {red_fg};
-    }}
-
-    /* Card Styling */
-    .card-item {{
+        padding: 5px 12px;
+        border: 1px solid {c_surface1};
         background-color: {c_mantle};
-        border: 1px solid {c_surface0};
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin: 6px 16px;
+        color: {c_text};
+        transition: all 100ms ease-in-out;
     }}
-    .card-item:hover {{
+    button label {{
+        color: {c_text};
+        font-weight: 600;
+    }}
+    button:hover {{
+        background-color: {c_surface0};
+        border-color: {c_surface2};
+    }}
+
+    button.btn-accent {{
+        background-color: {c_accent};
+        border-color: {c_accent};
+        color: {accent_fg};
+    }}
+    button.btn-accent label {{
+        color: {accent_fg};
+        font-weight: 700;
+    }}
+    button.btn-accent:hover {{
+        background-color: {c_surface1};
+        border-color: {c_accent};
+        color: {c_text};
+    }}
+    button.btn-accent:hover label {{
+        color: {c_text};
+    }}
+
+    button.btn-icon {{
+        padding: 4px 8px;
+        font-size: 11px;
+        background-color: transparent;
+        border-color: transparent;
+    }}
+    button.btn-icon:hover {{
         background-color: {c_surface0};
         border-color: {c_surface1};
     }}
-    .card-active {{
+
+    button.btn-icon-danger:hover {{
+        background-color: rgba(243, 139, 168, 0.2);
+        border-color: {c_red};
+        color: {c_red};
+    }}
+    button.btn-icon-danger:hover label {{
+        color: {c_red};
+    }}
+
+    /* Card styling */
+    .layout-card {{
+        background-color: {c_mantle};
+        border: 1px solid {c_surface0};
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin: 3px 12px;
+    }}
+    .layout-card:hover {{
         background-color: {c_surface0};
-        border: 2px solid {c_accent};
+        border-color: {c_surface1};
+    }}
+    .layout-card-active {{
+        background-color: {c_mantle};
+        border: 1.5px solid {c_accent};
     }}
 
-    .tag-badge {{
-        background-color: {c_surface1};
-        border: 1px solid {c_surface2};
-        border-radius: 6px;
-        padding: 2px 8px;
-        font-size: 11px;
-        font-weight: bold;
-        color: {c_accent};
+    /* Tag & Badges */
+    .pill-badge {{
+        background-color: {c_surface0};
+        border: 1px solid {c_surface1};
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 10px;
+        font-weight: 700;
+        color: {c_text};
     }}
 
-    .active-badge {{
+    .active-pill {{
         background-color: {c_accent};
-        border-radius: 6px;
-        padding: 2px 10px;
-        font-size: 11px;
-        font-weight: 800;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 10px;
+        font-weight: 700;
         color: {accent_fg};
     }}
 
-    /* Live Testing Area */
-    .typing-box {{
-        background-color: {c_mantle};
-        border: 1px solid {c_surface1};
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin: 12px 16px;
+    .configured-pill {{
+        background-color: {c_surface0};
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 10px;
+        font-weight: 600;
+        color: {c_subtext0};
     }}
 
-    entry.typing-entry {{
+    /* Search & Input Boxes */
+    entry {{
+        background-color: {c_mantle};
+        color: {c_text};
+        border: 1px solid {c_surface1};
+        border-radius: 6px;
+        padding: 7px 10px;
+        font-size: 12px;
+    }}
+    entry:focus {{
+        border-color: {c_accent};
         background-color: {c_base};
         color: {c_text};
-        border: 1px solid {c_surface2};
-        border-radius: 8px;
-        padding: 10px 14px;
-        font-size: 14px;
-    }}
-    entry.typing-entry:focus {{
-        border-color: {c_accent};
-        background-color: {c_crust};
-        color: {c_text};
     }}
 
-    /* Search Bar */
-    entry.search-entry {{
+    /* Category Filter Buttons */
+    .filter-chip {{
         background-color: {c_mantle};
-        color: {c_text};
-        border: 1px solid {c_surface1};
-        border-radius: 10px;
-        padding: 9px 14px;
-        font-size: 13px;
-    }}
-    entry.search-entry:focus {{
-        border-color: {c_accent};
-        background-color: {c_crust};
-        color: {c_text};
-    }}
-
-    /* Filter Pills */
-    .filter-pill {{
-        background-color: {c_mantle};
-        color: {c_subtext1};
+        color: {c_subtext0};
         border: 1px solid {c_surface0};
-        border-radius: 14px;
-        padding: 5px 12px;
+        border-radius: 12px;
+        padding: 3px 10px;
         font-size: 11px;
-        font-weight: bold;
+        font-weight: 600;
     }}
-    .filter-pill:checked {{
+    .filter-chip label {{
+        color: {c_subtext0};
+        font-weight: 600;
+    }}
+    .filter-chip:checked {{
         background-color: {c_accent};
         color: {accent_fg};
         border-color: {c_accent};
     }}
-    .filter-pill label {{
-        color: {c_subtext1};
-        font-weight: bold;
-    }}
-    .filter-pill:checked label {{
+    .filter-chip:checked label {{
         color: {accent_fg};
-        font-weight: 800;
+        font-weight: 700;
     }}
 
-    /* Notebook Tabs */
+    /* Notebook Navigation */
     notebook header {{
         background-color: {c_mantle};
         border-bottom: 1px solid {c_surface0};
-        padding: 4px 12px;
+        padding: 0px 12px;
     }}
     notebook tab {{
         background-color: transparent;
-        color: {c_subtext1};
-        padding: 10px 20px;
-        font-size: 13px;
-        font-weight: bold;
+        color: {c_subtext0};
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
         border: none;
-        border-bottom: 3px solid transparent;
+        border-bottom: 2px solid transparent;
     }}
     notebook tab label {{
-        color: {c_subtext1};
-        font-weight: bold;
+        color: {c_subtext0};
+        font-weight: 600;
     }}
     notebook tab:checked {{
         background-color: {c_base};
-        border-bottom: 3px solid {c_accent};
+        border-bottom: 2px solid {c_accent};
     }}
     notebook tab:checked label {{
         color: {c_accent};
-        font-weight: 800;
+        font-weight: 700;
+    }}
+    notebook stack {{
+        background-color: {c_base};
     }}
 
-    /* Checkbuttons */
-    checkbutton {{
-        color: {c_text};
-    }}
+    /* Modern Switch & Checkbox */
     checkbutton label {{
         color: {c_text};
-    }}
-    checkbutton check {{
-        min-width: 18px;
-        min-height: 18px;
-        border-radius: 5px;
-        border: 2px solid {c_surface2};
-        background-color: {c_surface0};
-    }}
-    checkbutton check:checked {{
-        background-color: {c_accent};
-        border-color: {c_accent};
-        color: {accent_fg};
+        font-size: 12px;
     }}
     """
 
@@ -1173,42 +1125,38 @@ def launch_gtk_gui(initial_tab=0):
 
     class KeyboardLayoutWindow(Gtk.Window):
         def __init__(self, start_tab=0):
-            super().__init__(title="Keyboard Layout Manager")
-            self.set_default_size(780, 680)
+            super().__init__(title="Keyboard Layouts")
+            self.set_default_size(620, 520)
             self.set_position(Gtk.WindowPosition.CENTER)
             self.l_map, self.v_map = parse_all_xkb_catalog()
 
-            # Root vertical container
+            # Main vertical box
             main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
             self.add(main_box)
 
             # 1. Header Bar
-            header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-            header.get_style_context().add_class("header-box")
+            header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            header.get_style_context().add_class("top-header")
 
-            title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-            lbl_title = Gtk.Label(label="⌨️  Keyboard Layout & Variant Manager", xalign=0)
-            lbl_title.get_style_context().add_class("title-label")
-            lbl_sub = Gtk.Label(
-                label=f"Theme: {theme_name.replace('-', ' ').title()} • Live Hyprland XKB Switcher & Regional Installer",
-                xalign=0
-            )
-            lbl_sub.get_style_context().add_class("subtitle-label")
+            title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+            lbl_title = Gtk.Label(label="Keyboard Layouts", xalign=0)
+            lbl_title.get_style_context().add_class("window-title")
+            
+            info = get_active_layout_info()
+            curr_desc = get_entry_description(info["current_lay"], info["current_var"], self.l_map, self.v_map)
+            self.lbl_sub = Gtk.Label(label=f"Active: {curr_desc} ({info['current_tag'].upper()})", xalign=0)
+            self.lbl_sub.get_style_context().add_class("window-subtitle")
+            
             title_box.pack_start(lbl_title, False, False, 0)
-            title_box.pack_start(lbl_sub, False, False, 0)
+            title_box.pack_start(self.lbl_sub, False, False, 0)
             header.pack_start(title_box, True, True, 0)
 
-            # Cycle Next Quick Button
+            # Quick Cycle Layout button
             btn_cycle = Gtk.Button(label="󰑐  Cycle Layout")
-            btn_cycle.get_style_context().add_class("btn-primary")
+            btn_cycle.get_style_context().add_class("btn-accent")
+            btn_cycle.set_tooltip_text("Cycle to next configured keyboard layout (Super+Alt+Space)")
             btn_cycle.connect("clicked", self.on_cycle_clicked)
-            header.pack_start(btn_cycle, False, False, 4)
-
-            # Refresh Button
-            btn_refresh = Gtk.Button(label="🔄 Refresh")
-            btn_refresh.get_style_context().add_class("btn-secondary")
-            btn_refresh.connect("clicked", lambda b: self.refresh_all())
-            header.pack_start(btn_refresh, False, False, 0)
+            header.pack_start(btn_cycle, False, False, 2)
 
             main_box.pack_start(header, False, False, 0)
 
@@ -1222,11 +1170,11 @@ def launch_gtk_gui(initial_tab=0):
 
             # Tab 2: Layout Catalog
             self.tab_catalog = self.build_catalog_tab()
-            self.notebook.append_page(self.tab_catalog, Gtk.Label(label="󰐕  Browse & Add Catalog"))
+            self.notebook.append_page(self.tab_catalog, Gtk.Label(label="󰐕  Add Layout"))
 
             # Tab 3: Options & Hardware
             self.tab_options = self.build_options_tab()
-            self.notebook.append_page(self.tab_options, Gtk.Label(label="⚙️  Options & Devices"))
+            self.notebook.append_page(self.tab_options, Gtk.Label(label="⚙️  Options & Keyboards"))
 
             self.refresh_all()
 
@@ -1238,20 +1186,24 @@ def launch_gtk_gui(initial_tab=0):
             self.refresh_all()
 
         def refresh_all(self):
+            info = get_active_layout_info()
+            curr_desc = get_entry_description(info["current_lay"], info["current_var"], self.l_map, self.v_map)
+            self.lbl_sub.set_text(f"Active: {curr_desc} ({info['current_tag'].upper()})")
+
             self.refresh_configured_list()
             self.refresh_catalog_list()
             self.refresh_devices_list()
             self.refresh_options_list()
 
         # =========================================================================
-        # TAB 1: Configured Layouts & Active Switcher
+        # TAB 1: Configured Layouts & Quick Switcher
         # =========================================================================
         def build_configured_tab(self):
-            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-            box.set_margin_top(12)
-            box.set_margin_bottom(12)
-            box.set_margin_start(8)
-            box.set_margin_end(8)
+            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+            box.set_margin_top(10)
+            box.set_margin_bottom(10)
+            box.set_margin_start(6)
+            box.set_margin_end(6)
 
             # Scrolled list of configured layout cards
             scroller = Gtk.ScrolledWindow()
@@ -1261,27 +1213,20 @@ def launch_gtk_gui(initial_tab=0):
             scroller.add(self.configured_listbox)
             box.pack_start(scroller, True, True, 0)
 
-            # Live Typing Test Box
-            test_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-            test_card.get_style_context().add_class("typing-box")
-
-            t_head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-            self.lbl_test_title = Gtk.Label(label="⌨️  Interactive Typing Test Area", xalign=0)
-            self.lbl_test_title.get_style_context().add_class("subtitle-label")
-            t_head.pack_start(self.lbl_test_title, True, True, 0)
-
-            btn_clear = Gtk.Button(label="Clear")
-            btn_clear.get_style_context().add_class("btn-secondary")
-            t_head.pack_start(btn_clear, False, False, 0)
-            test_card.pack_start(t_head, False, False, 0)
+            # Compact Testing Input Row
+            test_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            test_row.set_margin_start(12)
+            test_row.set_margin_end(12)
 
             self.typing_entry = Gtk.Entry()
-            self.typing_entry.get_style_context().add_class("typing-entry")
-            self.typing_entry.set_placeholder_text("Click here and type to immediately test active layout characters & dead keys...")
-            btn_clear.connect("clicked", lambda b: self.typing_entry.set_text(""))
-            test_card.pack_start(self.typing_entry, False, False, 0)
+            self.typing_entry.set_placeholder_text("⌨️  Type here to test active layout keys & symbols...")
+            test_row.pack_start(self.typing_entry, True, True, 0)
 
-            box.pack_start(test_card, False, False, 0)
+            btn_clear = Gtk.Button(label="Clear")
+            btn_clear.connect("clicked", lambda b: self.typing_entry.set_text(""))
+            test_row.pack_start(btn_clear, False, False, 0)
+
+            box.pack_start(test_row, False, False, 0)
             return box
 
         def refresh_configured_list(self):
@@ -1292,87 +1237,72 @@ def launch_gtk_gui(initial_tab=0):
             pairs = info["pairs"]
             active_idx = info["active_index"]
 
-            # Update typing test label
-            curr_desc = get_entry_description(info["current_lay"], info["current_var"], self.l_map, self.v_map)
-            self.lbl_test_title.set_markup(
-                f"<b>⌨️ Interactive Typing Test Area</b> — Active: <span foreground='{c_accent}'><b>{html.escape(curr_desc)} ({html.escape(info['current_tag'].upper())})</b></span>"
-            )
-
             for idx, (lay, var) in enumerate(pairs):
                 is_active = (idx == active_idx)
                 desc = get_entry_description(lay, var, self.l_map, self.v_map)
                 tag = format_entry_tag(lay, var).upper()
                 flag = get_entry_flag(lay, var)
 
-                card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-                card.get_style_context().add_class("card-item")
+                card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+                card.get_style_context().add_class("layout-card")
                 if is_active:
-                    card.get_style_context().add_class("card-active")
+                    card.get_style_context().add_class("layout-card-active")
 
-                # Flag & Info
+                # Flag
                 flag_lbl = Gtk.Label()
-                flag_lbl.set_markup(f"<span size='16000'>{flag}</span>")
-                card.pack_start(flag_lbl, False, False, 4)
+                flag_lbl.set_markup(f"<span size='13000'>{flag}</span>")
+                card.pack_start(flag_lbl, False, False, 2)
 
-                info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-                row_top = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-                
+                # Name & Tag
                 name_lbl = Gtk.Label(label=desc, xalign=0)
-                name_lbl.get_style_context().add_class("subtitle-label")
-                name_lbl.set_markup(f"<span size='12000' weight='bold'>{html.escape(desc)}</span>")
-                row_top.pack_start(name_lbl, False, False, 0)
+                name_lbl.set_markup(f"<span weight='bold'>{html.escape(desc)}</span>")
+                card.pack_start(name_lbl, False, False, 4)
 
                 tag_lbl = Gtk.Label(label=tag)
-                tag_lbl.get_style_context().add_class("tag-badge")
-                row_top.pack_start(tag_lbl, False, False, 0)
+                tag_lbl.get_style_context().add_class("pill-badge")
+                card.pack_start(tag_lbl, False, False, 2)
 
+                # Active badge or switch button
                 if is_active:
                     act_badge = Gtk.Label(label="● Active")
-                    act_badge.get_style_context().add_class("active-badge")
-                    row_top.pack_start(act_badge, False, False, 0)
+                    act_badge.get_style_context().add_class("active-pill")
+                    card.pack_start(act_badge, False, False, 4)
 
-                info_box.pack_start(row_top, False, False, 0)
+                # Spacer
+                spacer = Gtk.Box()
+                card.pack_start(spacer, True, True, 0)
 
-                variant_text = f"Layout Code: <tt>{html.escape(lay)}</tt>" + (f" • Variant: <tt>{html.escape(var)}</tt>" if var else "")
-                sub_lbl = Gtk.Label(xalign=0)
-                sub_lbl.set_markup(f"<span size='10000' foreground='{c_subtext0}'>{variant_text}</span>")
-                info_box.pack_start(sub_lbl, False, False, 0)
-
-                card.pack_start(info_box, True, True, 0)
-
-                # Action Buttons
-                actions_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-
+                # Actions
                 if not is_active:
-                    btn_switch = Gtk.Button(label="Switch to this")
-                    btn_switch.get_style_context().add_class("btn-active-switch")
+                    btn_switch = Gtk.Button(label="Switch")
+                    btn_switch.set_tooltip_text("Switch active keyboard layout to this")
                     btn_switch.connect("clicked", lambda b, i=idx: self.on_switch_layout(i))
-                    actions_box.pack_start(btn_switch, False, False, 0)
+                    card.pack_start(btn_switch, False, False, 2)
 
-                # Reorder buttons
+                # Reorder
                 if idx > 0:
                     btn_up = Gtk.Button(label="▲")
-                    btn_up.get_style_context().add_class("btn-secondary")
-                    btn_up.set_tooltip_text("Move layout up in switching order")
+                    btn_up.get_style_context().add_class("btn-icon")
+                    btn_up.set_tooltip_text("Move up")
                     btn_up.connect("clicked", lambda b, i=idx: self.on_reorder(i, i - 1))
-                    actions_box.pack_start(btn_up, False, False, 0)
+                    card.pack_start(btn_up, False, False, 0)
 
                 if idx < len(pairs) - 1:
                     btn_down = Gtk.Button(label="▼")
-                    btn_down.get_style_context().add_class("btn-secondary")
-                    btn_down.set_tooltip_text("Move layout down in switching order")
+                    btn_down.get_style_context().add_class("btn-icon")
+                    btn_down.set_tooltip_text("Move down")
                     btn_down.connect("clicked", lambda b, i=idx: self.on_reorder(i, i + 1))
-                    actions_box.pack_start(btn_down, False, False, 0)
+                    card.pack_start(btn_down, False, False, 0)
 
-                # Delete button (disabled if only 1 layout)
+                # Delete
                 if len(pairs) > 1:
                     btn_del = Gtk.Button(label="✕")
-                    btn_del.get_style_context().add_class("btn-danger")
-                    btn_del.set_tooltip_text("Remove this layout")
+                    btn_del.get_style_context().add_class("btn-icon")
+                    btn_del.get_style_context().add_class("btn-icon-danger")
+                    btn_del.set_tooltip_text("Remove layout")
                     btn_del.connect("clicked", lambda b, l=lay, v=var: self.on_remove_layout(l, v))
-                    actions_box.pack_start(btn_del, False, False, 0)
+                    card.pack_start(btn_del, False, False, 0)
 
-                card.pack_start(actions_box, False, False, 0)
                 self.configured_listbox.add(card)
 
             self.configured_listbox.show_all()
@@ -1393,36 +1323,35 @@ def launch_gtk_gui(initial_tab=0):
         # TAB 2: Browse & Add Catalog
         # =========================================================================
         def build_catalog_tab(self):
-            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-            box.set_margin_top(12)
-            box.set_margin_bottom(12)
-            box.set_margin_start(12)
-            box.set_margin_end(12)
+            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+            box.set_margin_top(10)
+            box.set_margin_bottom(10)
+            box.set_margin_start(10)
+            box.set_margin_end(10)
 
             # Search Bar
             self.search_entry = Gtk.Entry()
-            self.search_entry.get_style_context().add_class("search-entry")
-            self.search_entry.set_placeholder_text("🔍 Search by language, country, variant (e.g. Hindi, Bolnagri, Tamil, Dvorak, German)...")
+            self.search_entry.set_placeholder_text("🔍 Search language or variant (e.g. Hindi, Tamil, Dvorak, German)...")
             self.search_entry.connect("changed", lambda e: self.filter_catalog())
             box.pack_start(self.search_entry, False, False, 0)
 
-            # Category filter pills
-            pills_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            # Filter pills
+            pills_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
             self.current_category = "All"
             self.cat_buttons = {}
 
             categories = [
                 ("All", "All"),
                 ("Popular", "⭐ Popular"),
-                ("Indic", "🇮🇳 Indic & Regional"),
+                ("Indic", "🇮🇳 Indic"),
                 ("European", "🌍 European"),
-                ("Asian & Middle East", "🌏 Asian & Middle East"),
+                ("Asian & Middle East", "🌏 Asian"),
                 ("Ergonomic", "⌨️ Ergonomic"),
             ]
 
             for cat_id, cat_title in categories:
                 btn = Gtk.ToggleButton(label=cat_title)
-                btn.get_style_context().add_class("filter-pill")
+                btn.get_style_context().add_class("filter-chip")
                 if cat_id == "All":
                     btn.set_active(True)
                 btn.connect("toggled", lambda b, c=cat_id: self.on_category_toggled(b, c))
@@ -1431,7 +1360,7 @@ def launch_gtk_gui(initial_tab=0):
 
             box.pack_start(pills_box, False, False, 2)
 
-            # Scrolled list of catalog items
+            # Scroller
             scroller = Gtk.ScrolledWindow()
             scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
             self.catalog_listbox = Gtk.ListBox()
@@ -1462,7 +1391,6 @@ def launch_gtk_gui(initial_tab=0):
 
             self.catalog_items = []
 
-            # 1. Curated list
             for item in CURATED_POPULAR:
                 lay, var, desc, group, flag = item["lay"], item["var"], item["desc"], item["group"], item.get("flag", "⌨️")
                 self.catalog_items.append({
@@ -1471,7 +1399,6 @@ def launch_gtk_gui(initial_tab=0):
                 })
                 seen.add((lay, var))
 
-            # 2. XKB Variants
             for (lay, var), desc in sorted(self.v_map.items(), key=lambda x: (x[0][0], x[1])):
                 if (lay, var) not in seen:
                     self.catalog_items.append({
@@ -1480,7 +1407,6 @@ def launch_gtk_gui(initial_tab=0):
                     })
                     seen.add((lay, var))
 
-            # 3. Base Layouts
             for lay, desc in sorted(self.l_map.items()):
                 if (lay, "") not in seen:
                     self.catalog_items.append({
@@ -1499,12 +1425,10 @@ def launch_gtk_gui(initial_tab=0):
             count = 0
 
             for item in self.catalog_items:
-                # Category match
                 if self.current_category != "All":
                     if item["group"] != self.current_category:
                         continue
 
-                # Query match
                 if query:
                     tag = format_entry_tag(item["lay"], item["var"]).lower()
                     desc = item["desc"].lower()
@@ -1512,7 +1436,7 @@ def launch_gtk_gui(initial_tab=0):
                         continue
 
                 count += 1
-                if count > 80:
+                if count > 75:
                     break
 
                 card = self.create_catalog_card(item)
@@ -1525,42 +1449,33 @@ def launch_gtk_gui(initial_tab=0):
             is_conf = item["is_configured"]
             tag = format_entry_tag(lay, var).upper()
 
-            card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-            card.get_style_context().add_class("card-item")
+            card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            card.get_style_context().add_class("layout-card")
 
             flag_lbl = Gtk.Label()
-            flag_lbl.set_markup(f"<span size='15000'>{flag}</span>")
+            flag_lbl.set_markup(f"<span size='12000'>{flag}</span>")
             card.pack_start(flag_lbl, False, False, 2)
 
-            info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-            row_top = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-
             name_lbl = Gtk.Label(xalign=0)
-            name_lbl.set_markup(f"<span size='11500' weight='bold'>{html.escape(desc)}</span>")
-            row_top.pack_start(name_lbl, False, False, 0)
+            name_lbl.set_markup(f"<span weight='bold'>{html.escape(desc)}</span>")
+            card.pack_start(name_lbl, False, False, 4)
 
             tag_lbl = Gtk.Label(label=tag)
-            tag_lbl.get_style_context().add_class("tag-badge")
-            row_top.pack_start(tag_lbl, False, False, 0)
+            tag_lbl.get_style_context().add_class("pill-badge")
+            card.pack_start(tag_lbl, False, False, 2)
 
-            info_box.pack_start(row_top, False, False, 0)
-
-            detail_text = f"Code: <tt>{html.escape(lay)}</tt>" + (f" • Variant: <tt>{html.escape(var)}</tt>" if var else "")
-            sub_lbl = Gtk.Label(xalign=0)
-            sub_lbl.set_markup(f"<span size='9500' foreground='{c_subtext0}'>{detail_text}</span>")
-            info_box.pack_start(sub_lbl, False, False, 0)
-
-            card.pack_start(info_box, True, True, 0)
+            spacer = Gtk.Box()
+            card.pack_start(spacer, True, True, 0)
 
             if is_conf:
-                badge = Gtk.Label(label="✓ Configured")
-                badge.get_style_context().add_class("tag-badge")
-                card.pack_start(badge, False, False, 0)
+                badge = Gtk.Label(label="✓ Added")
+                badge.get_style_context().add_class("configured-pill")
+                card.pack_start(badge, False, False, 2)
             else:
-                btn_add = Gtk.Button(label="󰐕  Add Layout")
-                btn_add.get_style_context().add_class("btn-primary")
+                btn_add = Gtk.Button(label="+ Add")
+                btn_add.get_style_context().add_class("btn-accent")
                 btn_add.connect("clicked", lambda b, l=lay, v=var: self.on_add_layout_from_catalog(l, v))
-                card.pack_start(btn_add, False, False, 0)
+                card.pack_start(btn_add, False, False, 2)
 
             return card
 
@@ -1573,60 +1488,60 @@ def launch_gtk_gui(initial_tab=0):
         # TAB 3: Options, Keybinds & Hardware
         # =========================================================================
         def build_options_tab(self):
-            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
-            box.set_margin_top(14)
-            box.set_margin_bottom(14)
-            box.set_margin_start(14)
-            box.set_margin_end(14)
+            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+            box.set_margin_top(12)
+            box.set_margin_bottom(12)
+            box.set_margin_start(12)
+            box.set_margin_end(12)
 
             scroller = Gtk.ScrolledWindow()
             scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-            content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+            content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
             scroller.add(content_box)
             box.pack_start(scroller, True, True, 0)
 
-            # Section 1: Connected Hardware Keyboards
+            # Section 1: Detected Physical Keyboards
             sec1_title = Gtk.Label(xalign=0)
-            sec1_title.set_markup(f"<span size='13000' weight='bold' foreground='{c_accent}'>⌨️ Detected Keyboard Hardware Devices</span>")
+            sec1_title.set_markup(f"<span size='11500' weight='bold' foreground='{c_accent}'>⌨️ Detected Keyboard Hardware</span>")
             content_box.pack_start(sec1_title, False, False, 0)
 
-            self.devices_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            self.devices_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
             content_box.pack_start(self.devices_box, False, False, 0)
 
-            # Section 2: Layout Switching & XKB Options
+            # Section 2: XKB Options
             sec2_title = Gtk.Label(xalign=0)
-            sec2_title.set_markup(f"<span size='13000' weight='bold' foreground='{c_accent}'>⚙️ XKB Input Switching &amp; Modifier Options</span>")
-            content_box.pack_start(sec2_title, False, False, 4)
+            sec2_title.set_markup(f"<span size='11500' weight='bold' foreground='{c_accent}'>⚙️ Switching Shortcuts &amp; Modifier Rules</span>")
+            content_box.pack_start(sec2_title, False, False, 2)
 
-            self.options_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            self.options_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
             content_box.pack_start(self.options_box, False, False, 0)
 
-            # Section 3: Keybinding Shortcuts Reference
+            # Section 3: Shortcuts reference
             sec3_title = Gtk.Label(xalign=0)
-            sec3_title.set_markup(f"<span size='13000' weight='bold' foreground='{c_accent}'>⚡ Configured Desktop Keybindings</span>")
-            content_box.pack_start(sec3_title, False, False, 4)
+            sec3_title.set_markup(f"<span size='11500' weight='bold' foreground='{c_accent}'>⚡ Active Hyprland Keybindings</span>")
+            content_box.pack_start(sec3_title, False, False, 2)
 
-            keybinds_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-            keybinds_card.get_style_context().add_class("card-item")
+            shortcuts_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+            shortcuts_card.get_style_context().add_class("layout-card")
 
             shortcuts = [
-                ("SUPER + CTRL + Space", "Cycle Next Keyboard Layout"),
-                ("SUPER + CTRL + K", "Open Layout Switcher Menu"),
-                ("SUPER + CTRL + SHIFT + K", "Search & Add Regional Layout Catalog"),
-                ("Waybar / Quickshell Language Module", "Click to cycle layout, right-click for manager menu"),
+                ("SUPER + ALT + Space", "Cycle Next Keyboard Layout"),
+                ("SUPER + ALT + K", "Open Keyboard Layout Switcher & Manager"),
+                ("SUPER + SHIFT + K", "Search & Add Regional Layout Catalog"),
+                ("Status Bar Language Module", "Click to cycle, right-click for manager"),
             ]
             for key, act in shortcuts:
-                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
                 lbl_k = Gtk.Label(xalign=0)
                 lbl_k.set_markup(f"<span weight='bold' foreground='{c_yellow}'><tt>{html.escape(key)}</tt></span>")
                 row.pack_start(lbl_k, False, False, 0)
 
                 lbl_a = Gtk.Label(xalign=0)
-                lbl_a.set_markup(f"<span foreground='{c_text}'>➜  {html.escape(act)}</span>")
+                lbl_a.set_markup(f"<span foreground='{c_subtext0}'>➜  {html.escape(act)}</span>")
                 row.pack_start(lbl_a, True, True, 0)
-                keybinds_card.pack_start(row, False, False, 2)
+                shortcuts_card.pack_start(row, False, False, 1)
 
-            content_box.pack_start(keybinds_card, False, False, 0)
+            content_box.pack_start(shortcuts_card, False, False, 0)
 
             return box
 
@@ -1636,31 +1551,34 @@ def launch_gtk_gui(initial_tab=0):
 
             keyboards = get_hypr_keyboards()
             if not keyboards:
-                empty_lbl = Gtk.Label(label="No keyboard devices detected.", xalign=0)
+                empty_lbl = Gtk.Label(label="No physical keyboard detected.", xalign=0)
                 self.devices_box.pack_start(empty_lbl, False, False, 0)
                 return
 
             for kb in keyboards:
-                card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-                card.get_style_context().add_class("card-item")
+                card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+                card.get_style_context().add_class("layout-card")
 
                 icon_lbl = Gtk.Label()
-                icon_lbl.set_markup("<span size='14000'>⌨️</span>")
-                card.pack_start(icon_lbl, False, False, 0)
+                icon_lbl.set_markup("<span size='12000'>⌨️</span>")
+                card.pack_start(icon_lbl, False, False, 2)
 
-                info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
                 name_lbl = Gtk.Label(xalign=0)
-                name_lbl.set_markup(f"<span weight='bold'>{html.escape(kb.get('name', 'Unknown Keyboard'))}</span>")
-                info_box.pack_start(name_lbl, False, False, 0)
+                name_lbl.set_markup(f"<span weight='bold'>{html.escape(kb.get('name', 'Keyboard'))}</span>")
+                card.pack_start(name_lbl, False, False, 2)
 
-                sub_text = f"Keymap: <b>{html.escape(kb.get('active_keymap', 'Default'))}</b>"
                 if kb.get("main"):
-                    sub_text += f" • <span foreground='{c_green}'><b>[Main Primary Keyboard]</b></span>"
-                sub_lbl = Gtk.Label(xalign=0)
-                sub_lbl.set_markup(f"<span size='10000' foreground='{c_subtext0}'>{sub_text}</span>")
-                info_box.pack_start(sub_lbl, False, False, 0)
+                    main_badge = Gtk.Label(label="[Primary]")
+                    main_badge.get_style_context().add_class("pill-badge")
+                    card.pack_start(main_badge, False, False, 2)
 
-                card.pack_start(info_box, True, True, 0)
+                spacer = Gtk.Box()
+                card.pack_start(spacer, True, True, 0)
+
+                km_lbl = Gtk.Label(xalign=1)
+                km_lbl.set_markup(f"<span size='10000' foreground='{c_subtext0}'>Keymap: {html.escape(kb.get('active_keymap', 'Default'))}</span>")
+                card.pack_start(km_lbl, False, False, 2)
+
                 self.devices_box.pack_start(card, False, False, 0)
 
             self.devices_box.show_all()
@@ -1673,17 +1591,17 @@ def launch_gtk_gui(initial_tab=0):
             current_options = set([o.strip() for o in conf.get("options", "").split(",") if o.strip()])
 
             for opt_code, opt_title, opt_desc in POPULAR_OPTIONS:
-                card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-                card.get_style_context().add_class("card-item")
+                card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+                card.get_style_context().add_class("layout-card")
 
                 chk = Gtk.CheckButton()
                 chk.set_active(opt_code in current_options)
                 chk.connect("toggled", lambda b, c=opt_code: self.on_option_toggled(c, b.get_active()))
-                card.pack_start(chk, False, False, 0)
+                card.pack_start(chk, False, False, 2)
 
-                info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
                 title_lbl = Gtk.Label(xalign=0)
-                title_lbl.set_markup(f"<span weight='bold'>{html.escape(opt_title)}</span> <tt>({html.escape(opt_code)})</tt>")
+                title_lbl.set_markup(f"<span weight='bold'>{html.escape(opt_title)}</span>")
                 info_box.pack_start(title_lbl, False, False, 0)
 
                 desc_lbl = Gtk.Label(xalign=0)
@@ -1760,7 +1678,7 @@ def main():
   keyboard_layout.py --add "in(eng)"         Add Indian English with ₹ layout
   keyboard_layout.py --add "us(dvorak)"      Add US Dvorak layout
   keyboard_layout.py --remove "in(bolnagri)" Remove Hindi Bolnagri layout
-  keyboard_layout.py --menu                  Open interactive Fuzzel menu
+  keyboard_layout.py --menu                  Open interactive layout switcher
   keyboard_layout.py --add-menu              Open interactive layout/variant catalog
   keyboard_layout.py --list                  List configured layouts & active variant
 """
@@ -1772,9 +1690,9 @@ def main():
     parser.add_argument("-s", "--set", metavar="LAYOUT", help="Switch to layout by index or tag (e.g. 'in(bolnagri)')")
     parser.add_argument("-a", "--add", metavar="LAYOUT", help="Add layout/variant (e.g. 'in(bolnagri)', 'tam', 'de')")
     parser.add_argument("-r", "--remove", metavar="LAYOUT", help="Remove layout/variant")
-    parser.add_argument("-m", "--menu", action="store_true", help="Open interactive Fuzzel layout manager menu")
-    parser.add_argument("--add-menu", action="store_true", help="Open interactive Fuzzel add layout/variant menu")
-    parser.add_argument("--remove-menu", action="store_true", help="Open interactive Fuzzel remove layout menu")
+    parser.add_argument("-m", "--menu", action="store_true", help="Open interactive layout switcher")
+    parser.add_argument("--add-menu", action="store_true", help="Open interactive add layout/variant menu")
+    parser.add_argument("--remove-menu", action="store_true", help="Open interactive remove layout menu")
     parser.add_argument("-l", "--list", action="store_true", help="Print active and configured layouts with variants")
     parser.add_argument("--status", action="store_true", help="Output JSON status for Waybar")
 

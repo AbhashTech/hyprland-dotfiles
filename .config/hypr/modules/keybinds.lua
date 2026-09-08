@@ -244,13 +244,13 @@ hl.bind(mainMod .. " + CTRL + SHIFT + B", hl.dsp.exec_cmd(programs.bluetoothMenu
 
 -- Cycle to Next Active Keyboard Layout
 local kbLayoutScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/keyboard_layout.py"
-hl.bind(mainMod .. " + CTRL + Space",     hl.dsp.exec_cmd(kbLayoutScript .. " --next"))
+hl.bind(mainMod .. " + ALT + Space",     hl.dsp.exec_cmd(kbLayoutScript .. " --next"))
 
--- Open Keyboard Layout Switcher Menu
-hl.bind(mainMod .. " + CTRL + K",         hl.dsp.exec_cmd(kbLayoutScript .. " --menu"))
+-- Open Keyboard Layout Switcher Menu & Manager
+hl.bind(mainMod .. " + ALT + K",         hl.dsp.exec_cmd(kbLayoutScript .. " --menu"))
 
 -- Search & Add Regional Keyboard Layout
-hl.bind(mainMod .. " + CTRL + SHIFT + K", hl.dsp.exec_cmd(kbLayoutScript .. " --add-menu"))
+hl.bind(mainMod .. " + SHIFT + K",       hl.dsp.exec_cmd(kbLayoutScript .. " --add-menu"))
 
 -- Open Printer Settings
 hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("system-config-printer"))
