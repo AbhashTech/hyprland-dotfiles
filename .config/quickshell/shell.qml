@@ -17,7 +17,7 @@ import "plugins/connectivity"
 import "plugins/battery"
 import "plugins/notifications"
 import "plugins/filepicker"
-import ".generated"
+import "generated"
 
 ShellRoot {
     id: root

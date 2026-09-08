@@ -5,7 +5,7 @@
 # =============================================================================
 
 CUSTOM_PLUGINS_DIR="${HOME}/.config/quickshell/custom_plugins"
-GEN_DIR="${HOME}/.config/quickshell/.generated"
+GEN_DIR="${HOME}/.config/quickshell/generated"
 
 mkdir -p "$GEN_DIR"
 
@@ -14,7 +14,7 @@ import os
 import json
 
 custom_dir = os.path.expanduser("~/.config/quickshell/custom_plugins")
-gen_dir = os.path.expanduser("~/.config/quickshell/.generated")
+gen_dir = os.path.expanduser("~/.config/quickshell/generated")
 os.makedirs(gen_dir, exist_ok=True)
 
 left_widgets = []

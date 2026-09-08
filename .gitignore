@@ -20,3 +20,4 @@ __pycache__/
 .config/quickshell/custom_plugins/*
 !.config/quickshell/custom_plugins/README.md
 .config/quickshell/.generated/
+.config/quickshell/generated/

@@ -144,6 +144,7 @@ Rectangle {
 
     // ── Inline: Sidebar row delegate ─────────────────────────────────────────
     component SidebarEntry: Item {
+        id: entryRoot
         property string entryName:  ""
         property string entryPath:  ""
         property string entryIcon:  "󰉋"
@@ -202,7 +203,7 @@ Rectangle {
                         cursorShape:   Qt.PointingHandCursor
                         onClicked: (mouse) => {
                             mouse.accepted = true
-                            remove()
+                            entryRoot.remove()
                         }
                     }
                 }
@@ -213,7 +214,7 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape:  Qt.PointingHandCursor
-                onClicked:    clicked()
+                onClicked:    entryRoot.clicked()
             }
         }
     }

@@ -1,17 +1,43 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
+import Quickshell.Services.Mpris
 import ".."
 
 Rectangle {
     id: root
 
     property var barWindow: null
-    property string playerStatus: ""
-    property string mediaText: ""
-    property string fullMediaText: ""
-    property bool isPlaying: playerStatus === "Playing"
-    property bool hasMedia: mediaText.length > 0
+
+    readonly property var activePlayer: {
+        const list = Mpris.players.values;
+        if (!list || list.length === 0) return null;
+        for (let i = 0; i < list.length; i++) {
+            if (list[i] && list[i].playbackState === MprisPlaybackState.Playing) return list[i];
+        }
+        return list[0] || null;
+    }
+
+    readonly property bool isPlaying: activePlayer ? activePlayer.playbackState === MprisPlaybackState.Playing : false
+
+    readonly property string fullMediaText: {
+        if (!activePlayer) return "";
+        const title = (activePlayer.trackTitle || "").trim();
+        const artist = (activePlayer.trackArtist || (activePlayer.trackArtists && activePlayer.trackArtists.length > 0 ? activePlayer.trackArtists.join(", ") : "")).trim();
+        if (artist && title) return `${artist} - ${title}`;
+        if (title) return title;
+        if (artist) return artist;
+        return "";
+    }
+
+    readonly property string mediaText: {
+        const raw = fullMediaText;
+        if (raw.length > 26) {
+            return raw.substring(0, 23) + "...";
+        }
+        return raw;
+    }
+
+    readonly property bool hasMedia: mediaText.length > 0
 
     visible: hasMedia
     implicitHeight: Theme.barHeight - 8
@@ -38,46 +64,6 @@ Rectangle {
             { action: "Next Track", key: "Scroll Up" },
             { action: "Previous Track", key: "Scroll Down" }
         ]
-    }
-
-    Process {
-        id: mprisStatusProc
-        command: ["playerctl", "status"]
-        stdout: SplitParser {
-            onRead: data => {
-                root.playerStatus = data.trim();
-            }
-        }
-    }
-
-    Process {
-        id: mprisMetaProc
-        command: ["playerctl", "metadata", "--format", "{{artist}} - {{title}}"]
-        stdout: SplitParser {
-            onRead: data => {
-                var raw = data.trim();
-                root.fullMediaText = raw;
-                var txt = raw;
-                if (txt.length > 26) {
-                    txt = txt.substring(0, 23) + "...";
-                }
-                root.mediaText = txt;
-            }
-        }
-    }
-
-    Process {
-        id: ctlProc
-    }
-
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: {
-            if (!mprisStatusProc.running) mprisStatusProc.running = true;
-            if (!mprisMetaProc.running) mprisMetaProc.running = true;
-        }
     }
 
     Row {
@@ -113,14 +99,17 @@ Rectangle {
         cursorShape: Qt.PointingHandCursor
 
         onClicked: {
-            ctlProc.exec(["playerctl", "play-pause"]);
+            if (root.activePlayer) {
+                root.activePlayer.togglePlaying();
+            }
         }
 
         onWheel: wheel => {
+            if (!root.activePlayer) return;
             if (wheel.angleDelta.y > 0) {
-                ctlProc.exec(["playerctl", "next"]);
+                root.activePlayer.next();
             } else if (wheel.angleDelta.y < 0) {
-                ctlProc.exec(["playerctl", "previous"]);
+                root.activePlayer.previous();
             }
         }
     }
