@@ -344,7 +344,38 @@ The dotfiles include a dedicated **Power Profile & Battery Management** system (
 
 ---
 
-## 🧩 User Custom Quickshell Plugins & Auto-Discovery (`custom_plugins/`)
+## 🔔 Notification Center & Mako Daemon (Quickshell Plugin)
+
+The dotfiles include a full-featured, glassmorphic **Notification Center & History Drawer** (`~/.config/quickshell/plugins/notifications/`) backed by **Mako**:
+
+- **Status Bar Integration (`TrayNotifGroup.qml`)**:
+  - **Dynamic Unread Badge**: Live unread count badge displaying active and historical notifications.
+  - **Left-Click / `SUPER + N`**: Opens the glassmorphic Notification Center drawer.
+  - **Middle-Click**: Toggles **Do-Not-Disturb (DND)** mode on/off systemwide.
+- **Extended 500-Entry History Buffer**:
+  - Configured with `max-history=500` in [`~/.config/mako/config`](file:///home/kunal/.config/mako/config) to preserve up to **500** notifications across your entire desktop session.
+  - Automatically sanitizes large message payloads and command bodies for high-performance rendering.
+- **Interactive Controls & Actions**:
+  - **Live Search & Filter**: Real-time fuzzy filtering of notifications by application name, title summary, or body text.
+  - **1-Click Invoke Action**: Clicking any notification card invokes its primary action (e.g. opens link, views file, focuses application).
+  - **Individual Dismissal**: Per-card close (`󰅖`) button with instant optimistic UI removal and persistent state caching.
+  - **Protected Clear All**: Dedicated "Clear All" trash icon with a glassmorphic confirmation dialog to prevent accidental deletion.
+  - **Do-Not-Disturb (DND) Switch**: In-drawer toggle button to silence notifications during presentations or focus sessions.
+- **Keyboard Shortcuts & CLI Commands**:
+  - **`SUPER + N`**: Open / toggle the Notification Center drawer.
+  - **`Escape`**: Close notification drawer or dismiss the Clear All confirmation dialog.
+  - **`Up / Down` & `Enter`**: Keyboard navigation through notification cards.
+  - **CLI Controls**:
+    ```bash
+    makoctl list -j                          # List active visible notifications
+    makoctl history -j                       # List historical notifications
+    makoctl dismiss -a                       # Dismiss all visible notifications
+    makoctl mode -t dnd                      # Toggle Do-Not-Disturb (DND) mode
+    makoctl reload                           # Reload Mako daemon configuration
+    python3 ~/.config/quickshell/plugins/notifications/notification_helper.py list
+    ```
+
+---
 
 The dotfiles include an **automated plugin discovery engine** for Quickshell at [`~/.config/quickshell/custom_plugins/`](file:///home/kunal/.dotfiles/.config/quickshell/custom_plugins):
 

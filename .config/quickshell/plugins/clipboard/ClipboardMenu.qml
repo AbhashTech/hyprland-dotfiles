@@ -106,18 +106,30 @@ Rectangle {
 
     Process {
         id: clipListProc
+        property string buffer: ""
         command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "list"]
+        onStarted: {
+            buffer = "";
+        }
         stdout: SplitParser {
             splitMarker: ""
             onRead: data => {
+                clipListProc.buffer += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0 && clipListProc.buffer.length > 0) {
                 try {
-                    var parsed = JSON.parse(data);
+                    var parsed = JSON.parse(clipListProc.buffer);
                     if (Array.isArray(parsed)) {
                         root.allItems = parsed;
                         root.filterItems();
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.log("Error parsing clipboard JSON: " + e);
+                }
             }
+            clipListProc.buffer = "";
         }
     }
 

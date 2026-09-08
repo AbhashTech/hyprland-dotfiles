@@ -430,6 +430,7 @@ echo -e "  • Theme Manager GUI: ${COLOR_BOLD}SUPER + ALT + T${COLOR_RESET} (or
 echo -e "  • Hyprland Reload:   ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"
 echo -e "  • Status Bar Toggle: ${COLOR_BOLD}SUPER + SHIFT + W${COLOR_RESET} (or ${COLOR_BOLD}~/.config/quickshell/scripts/launch_quickshell.sh --toggle${COLOR_RESET})"
 echo -e "  • Power Menu:        ${COLOR_BOLD}SUPER + ESCAPE${COLOR_RESET} / ${COLOR_BOLD}SUPER + M${COLOR_RESET} (Quickshell Power Menu)"
+echo -e "  • Notification Center: ${COLOR_BOLD}SUPER + N${COLOR_RESET} (or top bar bell, history: 500 entries)"
 echo -e "  • Git TUI Overlay:   ${COLOR_BOLD}SUPER + G${COLOR_RESET} (lazygit)"
 echo -e "  • File Picker Modal: ${COLOR_BOLD}SUPER + SHIFT + F${COLOR_RESET} (or ${COLOR_BOLD}SUPER + ALT + F${COLOR_RESET} for Image Grid)"
 echo -e "  • Notification Mako: ${COLOR_BOLD}makoctl reload${COLOR_RESET}"

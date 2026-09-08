@@ -15,7 +15,7 @@ def get_dismissed_ids():
         if DISMISSED_FILE.exists():
             data = json.loads(DISMISSED_FILE.read_text())
             if isinstance(data, list):
-                return set(data)
+                return set(int(x) for x in data if str(x).isdigit())
     except Exception:
         pass
     return set()
@@ -35,6 +35,15 @@ def restart_mako():
         subprocess.Popen(["mako"], start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception:
         pass
+
+def clean_text(t, max_len=500):
+    if not t:
+        return ""
+    clean = re.sub(r'<[^>]+>', '', str(t))
+    clean = html.unescape(clean).strip()
+    if len(clean) > max_len:
+        clean = clean[:max_len] + "..."
+    return clean
 
 def get_notifications():
     # 1. Fetch live notifications
@@ -63,22 +72,19 @@ def get_notifications():
     seen_ids = set()
     notifs = []
 
-    def clean_text(t):
-        if not t:
-            return ""
-        clean = re.sub(r'<[^>]+>', '', t)
-        return html.unescape(clean).strip()
-
     # Process live first
     for item in live_data:
-        nid = item.get("id")
+        try:
+            nid = int(item.get("id"))
+        except (ValueError, TypeError):
+            continue
         if nid in dismissed:
             continue
         seen_ids.add(nid)
-        app = item.get("app_name") or "System"
-        summary = clean_text(item.get("summary"))
-        body = clean_text(item.get("body"))
-        urgency = item.get("urgency") or "normal"
+        app = str(item.get("app_name") or "System")
+        summary = clean_text(item.get("summary"), max_len=150)
+        body = clean_text(item.get("body"), max_len=400)
+        urgency = str(item.get("urgency") or "normal")
         actions = item.get("actions") or {}
         notifs.append({
             "id": nid,
@@ -90,16 +96,19 @@ def get_notifications():
             "hasActions": bool(actions)
         })
 
-    # Process history
-    for item in hist_data:
-        nid = item.get("id")
+    # Process history (up to max history capacity: 500 items)
+    for item in hist_data[:500]:
+        try:
+            nid = int(item.get("id"))
+        except (ValueError, TypeError):
+            continue
         if nid in seen_ids or nid in dismissed:
             continue
         seen_ids.add(nid)
-        app = item.get("app_name") or "System"
-        summary = clean_text(item.get("summary"))
-        body = clean_text(item.get("body"))
-        urgency = item.get("urgency") or "normal"
+        app = str(item.get("app_name") or "System")
+        summary = clean_text(item.get("summary"), max_len=150)
+        body = clean_text(item.get("body"), max_len=400)
+        urgency = str(item.get("urgency") or "normal")
         actions = item.get("actions") or {}
         notifs.append({
             "id": nid,
@@ -140,14 +149,26 @@ def dismiss_all():
         subprocess.run(["makoctl", "dismiss", "-a"], timeout=2)
     except Exception:
         pass
-    # Restart mako to wipe history buffer completely
-    restart_mako()
-    # Clear local dismissed tracking file
+
     try:
-        if DISMISSED_FILE.exists():
-            DISMISSED_FILE.unlink()
+        p_live = subprocess.run(["makoctl", "list", "-j"], capture_output=True, text=True, timeout=2)
+        p_hist = subprocess.run(["makoctl", "history", "-j"], capture_output=True, text=True, timeout=2)
+        live = json.loads(p_live.stdout) if p_live.stdout.strip() else []
+        hist = json.loads(p_hist.stdout) if p_hist.stdout.strip() else []
+        all_ids = set()
+        for x in live + hist:
+            try:
+                all_ids.add(int(x.get("id")))
+            except (ValueError, TypeError):
+                pass
+        dismissed = get_dismissed_ids()
+        dismissed.update(all_ids)
+        save_dismissed_ids(dismissed)
     except Exception:
         pass
+
+    # Restart mako to wipe history buffer completely
+    restart_mako()
 
 def toggle_dnd():
     try:
@@ -164,7 +185,14 @@ def get_status():
         live = json.loads(p_live.stdout) if p_live.stdout.strip() else []
         hist = json.loads(p_hist.stdout) if p_hist.stdout.strip() else []
         dismissed = get_dismissed_ids()
-        all_ids = set([x.get("id") for x in live if x.get("id") not in dismissed] + [x.get("id") for x in hist if x.get("id") not in dismissed])
+        all_ids = set()
+        for x in live + hist:
+            try:
+                i = int(x.get("id"))
+                if i not in dismissed:
+                    all_ids.add(i)
+            except (ValueError, TypeError):
+                pass
         count = len(all_ids)
     except Exception:
         count = 0
@@ -188,14 +216,20 @@ if __name__ == "__main__":
     elif cmd == "status":
         get_status()
     elif cmd == "count":
-        # Fast output count
         try:
             p_live = subprocess.run(["makoctl", "list", "-j"], capture_output=True, text=True, timeout=2)
             p_hist = subprocess.run(["makoctl", "history", "-j"], capture_output=True, text=True, timeout=2)
             live = json.loads(p_live.stdout) if p_live.stdout.strip() else []
             hist = json.loads(p_hist.stdout) if p_hist.stdout.strip() else []
             dismissed = get_dismissed_ids()
-            all_ids = set([x.get("id") for x in live if x.get("id") not in dismissed] + [x.get("id") for x in hist if x.get("id") not in dismissed])
+            all_ids = set()
+            for x in live + hist:
+                try:
+                    i = int(x.get("id"))
+                    if i not in dismissed:
+                        all_ids.add(i)
+                except (ValueError, TypeError):
+                    pass
             print(len(all_ids))
         except Exception:
             print(0)

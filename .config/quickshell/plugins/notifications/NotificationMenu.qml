@@ -86,19 +86,31 @@ Rectangle {
 
     Process {
         id: notifProc
+        property string buffer: ""
         command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py", "list"]
+        onStarted: {
+            buffer = "";
+        }
         stdout: SplitParser {
             splitMarker: ""
             onRead: data => {
+                notifProc.buffer += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0 && notifProc.buffer.length > 0) {
                 try {
-                    var parsed = JSON.parse(data);
+                    var parsed = JSON.parse(notifProc.buffer);
                     if (parsed && Array.isArray(parsed.notifications)) {
                         root.allNotifications = parsed.notifications;
                         root.dndActive = !!parsed.dnd;
                         root.filterNotifications();
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.log("Error parsing notifications JSON: " + e);
+                }
             }
+            notifProc.buffer = "";
         }
     }
 
