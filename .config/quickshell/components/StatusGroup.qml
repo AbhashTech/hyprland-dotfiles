@@ -15,6 +15,7 @@ Rectangle {
     border.color: isHovered ? Theme.moduleHoverBorder : Theme.moduleBorder
     border.width: 1
 
+    property string screenName: ""
     property int volume: 50
     property bool muted: false
     property int brightness: 50
@@ -47,7 +48,9 @@ Rectangle {
 
     Process {
         id: brightProc
-        command: ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", "get-active"]
+        command: root.screenName !== ""
+            ? ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", "get-screen", root.screenName]
+            : ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", "get-active"]
         stdout: SplitParser {
             onRead: data => {
                 try {
@@ -266,11 +269,14 @@ Rectangle {
                 }
 
                 onWheel: wheel => {
+                    var act = wheel.angleDelta.y > 0 ? (root.screenName !== "" ? "screen-up" : "active-up") : (root.screenName !== "" ? "screen-down" : "active-down");
+                    var args = root.screenName !== ""
+                        ? ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", act, root.screenName, "5"]
+                        : ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", act, "5"];
+                    ctlProc.exec(args);
                     if (wheel.angleDelta.y > 0) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", "active-up", "5"]);
                         root.brightness = Math.min(100, root.brightness + 5);
                     } else if (wheel.angleDelta.y < 0) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", "active-down", "5"]);
                         root.brightness = Math.max(0, root.brightness - 5);
                     }
                 }

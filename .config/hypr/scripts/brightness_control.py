@@ -390,6 +390,41 @@ def get_active_state():
             "label": model
         }
 
+def get_screen_state(screen_name=None):
+    """Return JSON state for a specific screen (e.g. eDP-1 or HDMI-A-1) or active display."""
+    if not screen_name:
+        return get_active_state()
+
+    if is_internal_name(screen_name):
+        pct, label = get_brightness_info()
+        return {
+            "brightness": pct,
+            "is_internal": True,
+            "device": "internal",
+            "name": screen_name,
+            "label": label
+        }
+    else:
+        bus, model, b_val, c_val = get_ddc_bus()
+        return {
+            "brightness": b_val,
+            "contrast": c_val,
+            "is_internal": False,
+            "device": "external",
+            "bus": bus,
+            "name": screen_name,
+            "label": model
+        }
+
+def change_screen_brightness(screen_name, delta):
+    """Adjust brightness for a specific screen or fall back to active screen."""
+    if not screen_name:
+        change_active_brightness(delta)
+    elif is_internal_name(screen_name):
+        change_brightness(delta)
+    else:
+        change_ddc_brightness(delta)
+
 # ---------------------------------------------------------
 # Interactive Menu
 # ---------------------------------------------------------
@@ -509,8 +544,21 @@ def main():
         except ValueError:
             pass
 
+    # Screen-specific controls (per-monitor bar)
+    if cmd in ["get-screen", "screen-status"]:
+        sname = sys.argv[2] if len(sys.argv) >= 3 else None
+        print(json.dumps(get_screen_state(sname)))
+    elif cmd in ["screen-up", "screen-scroll-up"]:
+        sname = sys.argv[2] if len(sys.argv) >= 3 else None
+        step_val = int(sys.argv[3]) if len(sys.argv) >= 4 else step
+        change_screen_brightness(sname, step_val)
+    elif cmd in ["screen-down", "screen-scroll-down"]:
+        sname = sys.argv[2] if len(sys.argv) >= 3 else None
+        step_val = int(sys.argv[3]) if len(sys.argv) >= 4 else step
+        change_screen_brightness(sname, -step_val)
+
     # Screen-aware controls (active display)
-    if cmd in ["active-up", "scroll-up"]:
+    elif cmd in ["active-up", "scroll-up"]:
         change_active_brightness(step)
     elif cmd in ["active-down", "scroll-down"]:
         change_active_brightness(-step)

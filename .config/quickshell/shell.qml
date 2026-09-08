@@ -106,7 +106,9 @@ ShellRoot {
                         TrayNotifGroup {
                             barWindow: barWindow
                         }
-                        StatusGroup {}
+                        StatusGroup {
+                            screenName: (barWindow && barWindow.screen && barWindow.screen.name) ? barWindow.screen.name : (modelData && modelData.name ? modelData.name : "")
+                        }
                         StatsModule {}
                         PowerModule {}
                     }
