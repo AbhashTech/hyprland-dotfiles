@@ -74,6 +74,9 @@ hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 -- Cycle Focus to Next Window
 hl.bind("ALT + Tab", hl.dsp.focus({ direction = "right" }))
 
+-- Open Workspace Overview & App Viewer (Quickshell Plugin)
+hl.bind(mainMod .. " + Tab", hl.dsp.exec_cmd(programs.workspaces))
+
 -- Switch to Workspace 1–10 / Move Window
 for i = 1, 10 do
     local key = i % 10 -- 10 maps to key 0

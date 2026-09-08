@@ -18,6 +18,7 @@ QtObject {
     property bool sysinfoVisible: false
     property bool batteryVisible: false
     property bool notificationVisible: false
+    property bool workspaceViewerVisible: false
     property string powerProfile: "balanced"
     property bool connectivityVisible: false
     property string connectivityTab: "wifi"
@@ -65,6 +66,7 @@ QtObject {
         sysinfoVisible = false;
         batteryVisible = false;
         notificationVisible = false;
+        workspaceViewerVisible = false;
         connectivityVisible = false;
         filePickerVisible = false;
         customPluginStates = ({});
@@ -189,6 +191,16 @@ QtObject {
                 current = root.notificationVisible;
                 root.closeAll();
                 root.notificationVisible = !current;
+                break;
+            case "workspaces":
+            case "workspace":
+            case "workspaceviewer":
+            case "workspace_viewer":
+            case "ws":
+            case "overview":
+                current = root.workspaceViewerVisible;
+                root.closeAll();
+                root.workspaceViewerVisible = !current;
                 break;
             case "filepicker":
             case "picker":

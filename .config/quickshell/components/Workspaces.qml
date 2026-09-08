@@ -17,21 +17,18 @@ Rectangle {
     property var barWindow: null
     property int activeWorkspaceId: 1
     property var activeIds: [1]
+    property var allClients: []
     readonly property bool isHovered: wheelMa.containsMouse
 
-    BarTooltip {
-        barWindow: root.barWindow
-        targetItem: root
-        isHovered: root.isHovered
-        icon: "󰮯"
-        iconColor: Theme.blue
-        title: "Workspaces"
-        description: "Hyprland virtual workspaces"
-        shortcuts: [
-            { action: "Switch Workspace", key: "SUPER + 1..0" },
-            { action: "Move Window", key: "SUPER + SHIFT + 1..0" },
-            { action: "Cycle Workspaces", key: "SUPER + Scroll" }
-        ]
+    function getClientsForWs(wsId) {
+        var list = [];
+        for (var i = 0; i < root.allClients.length; i++) {
+            var c = root.allClients[i];
+            if (c.workspace && c.workspace.id === wsId) {
+                list.push(c);
+            }
+        }
+        return list;
     }
 
     readonly property var workspaceList: {
@@ -95,17 +92,36 @@ Rectangle {
     }
 
     Process {
+        id: hyprClientsProc
+        command: ["hyprctl", "clients", "-j"]
+        property string buffer: ""
+        stdout: SplitParser {
+            onRead: data => {
+                hyprClientsProc.buffer += data;
+            }
+        }
+        onExited: {
+            try {
+                var list = JSON.parse(buffer);
+                root.allClients = list || [];
+            } catch (e) {}
+            buffer = "";
+        }
+    }
+
+    Process {
         id: dispatchProc
     }
 
     function focusWorkspace(wsId) {
         root.activeWorkspaceId = wsId;
-        dispatchProc.exec(["hyprctl", "dispatch hl.dsp.focus({workspace = " + wsId + "})"]);
+        dispatchProc.exec(["bash", "-c", "hyprctl dispatch workspace " + wsId + " 2>/dev/null || hyprctl dispatch 'hl.dsp.focus({workspace = " + wsId + "})' 2>/dev/null || hyprctl dispatch focusworkspaceoncurrentmonitor " + wsId]);
     }
 
     function scrollWorkspace(delta) {
-        var arg = delta > 0 ? "'e-1'" : "'e+1'";
-        dispatchProc.exec(["hyprctl", "dispatch hl.dsp.focus({workspace = " + arg + "})"]);
+        var arg = delta > 0 ? "e-1" : "e+1";
+        var luaArg = delta > 0 ? "'e-1'" : "'e+1'";
+        dispatchProc.exec(["bash", "-c", "hyprctl dispatch workspace " + arg + " 2>/dev/null || hyprctl dispatch 'hl.dsp.focus({workspace = " + luaArg + "})' 2>/dev/null"]);
     }
 
     Timer {
@@ -115,6 +131,7 @@ Rectangle {
         onTriggered: {
             if (!hyprWsProc.running) hyprWsProc.running = true;
             if (!hyprActiveWsProc.running) hyprActiveWsProc.running = true;
+            if (!hyprClientsProc.running) hyprClientsProc.running = true;
         }
     }
 
@@ -163,13 +180,27 @@ Rectangle {
                     color: isActive ? "#ffffff" : (btnArea.containsMouse ? Theme.text : (isOccupied ? Theme.text : Theme.subtext0))
                 }
 
+                WorkspacePreviewPopup {
+                    barWindow: root.barWindow
+                    targetItem: wsBtn
+                    isHovered: btnArea.containsMouse
+                    workspaceId: wsBtn.wsNum
+                    isActiveWs: wsBtn.isActive
+                    clientsList: root.getClientsForWs(wsBtn.wsNum)
+                }
+
                 MouseArea {
                     id: btnArea
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        root.focusWorkspace(wsNum);
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: mouse => {
+                        if (mouse.button === Qt.LeftButton) {
+                            root.focusWorkspace(wsNum);
+                        } else if (mouse.button === Qt.RightButton) {
+                            PluginManager.toggle("workspaces");
+                        }
                     }
                 }
             }

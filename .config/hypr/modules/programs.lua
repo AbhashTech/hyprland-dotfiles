@@ -21,6 +21,7 @@ local programs = {
     notifications = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh notifications",
     filePicker    = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh filepicker",
     filePickerImg = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh filepicker-image",
+    workspaces    = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh workspaces",
     browser     = "firefox",
 }
 

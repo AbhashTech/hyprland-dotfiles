@@ -526,7 +526,8 @@ The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewe
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
 | `SUPER + Left / Right / Up / Down` | **Focus Window** | Move focus directionally between windows |
-| `ALT + Tab` / `SUPER + Tab` | **Cycle Focus** | Cycle focus forward to next window |
+| `ALT + Tab` | **Cycle Focus** | Cycle focus forward to next window |
+| `SUPER + Tab` | **Workspace Overview** | Open interactive **Quickshell** multi-workspace app viewer & layout HUD |
 | `SUPER + [1-9, 0]` | **Switch Workspace** | Jump directly to workspace 1 through 10 |
 | `SUPER + SHIFT + [1-9, 0]` | **Move Window to Workspace** | Move focused window to workspace 1 through 10 |
 | `SUPER + S` | **Toggle Special Workspace** | Toggle magic scratchpad workspace |
