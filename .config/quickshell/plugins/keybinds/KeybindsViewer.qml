@@ -8,8 +8,8 @@ import "../.."
 Rectangle {
     id: root
 
-    implicitWidth: 860
-    implicitHeight: 580
+    implicitWidth: 880
+    implicitHeight: 620
     radius: Theme.barRadius
     color: Theme.barBg
     border.color: Theme.barBorder
@@ -217,98 +217,111 @@ Rectangle {
                 required property int index
 
                 width: bindListView.width - (vbar.visible ? 8 : 0)
-                implicitHeight: 46
+                implicitHeight: itemCol.implicitHeight + 20
                 radius: Theme.pillRadius
-                color: root.selectedIndex === index ? Theme.moduleHoverBg : "transparent"
-                border.color: root.selectedIndex === index ? Theme.accent : "transparent"
+                color: root.selectedIndex === index ? Theme.moduleHoverBg : Qt.rgba(Theme.moduleBg.r, Theme.moduleBg.g, Theme.moduleBg.b, 0.45)
+                border.color: root.selectedIndex === index ? Theme.accent : Qt.rgba(Theme.moduleBorder.r, Theme.moduleBorder.g, Theme.moduleBorder.b, 0.4)
                 border.width: 1
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 14
-                    anchors.rightMargin: 14
-                    spacing: 12
+                ColumnLayout {
+                    id: itemCol
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 10
+                    spacing: 8
 
-                    // Key combo pill badges
-                    Row {
-                        spacing: 4
-                        Layout.alignment: Qt.AlignVCenter
+                    // Top Row: Keycaps (Left) + Category Pill (Right)
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
 
-                        Repeater {
-                            model: {
-                                var rawKey = rowDelegate.modelData.key || "";
-                                var keys = rawKey.split("+");
-                                var result = [];
-                                for (var k = 0; k < keys.length; k++) {
-                                    var trimmed = keys[k].trim();
-                                    if (trimmed.length > 0) {
-                                        result.push(trimmed);
+                        // Key combo pill badges
+                        Row {
+                            spacing: 4
+                            Layout.alignment: Qt.AlignVCenter
+
+                            Repeater {
+                                model: {
+                                    var rawKey = rowDelegate.modelData.key || "";
+                                    var keys = rawKey.split("+");
+                                    var result = [];
+                                    for (var k = 0; k < keys.length; k++) {
+                                        var trimmed = keys[k].trim();
+                                        if (trimmed.length > 0) {
+                                            result.push(trimmed);
+                                        }
+                                    }
+                                    return result;
+                                }
+
+                                Rectangle {
+                                    required property var modelData
+                                    required property int index
+
+                                    implicitWidth: keyTxt.implicitWidth + 12
+                                    implicitHeight: 24
+                                    radius: 5
+                                    color: root.selectedIndex === rowDelegate.index ? Theme.surface1 : Theme.surface0
+                                    border.color: root.selectedIndex === rowDelegate.index ? Theme.accent : Theme.surface2
+                                    border.width: 1
+
+                                    Text {
+                                        id: keyTxt
+                                        anchors.centerIn: parent
+                                        text: parent.modelData
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSizeSmall
+                                        font.bold: true
+                                        color: root.selectedIndex === rowDelegate.index ? Theme.accent : Theme.text
                                     }
                                 }
-                                return result;
                             }
+                        }
 
-                            Rectangle {
-                                required property var modelData
-                                required property int index
+                        Item { Layout.fillWidth: true }
 
-                                implicitWidth: keyTxt.implicitWidth + 12
-                                implicitHeight: 26
-                                radius: 6
-                                color: root.selectedIndex === rowDelegate.index ? Theme.surface1 : Theme.surface0
-                                border.color: root.selectedIndex === rowDelegate.index ? Theme.accent : Theme.surface2
-                                border.width: 1
+                        // Category Tag Badge
+                        Rectangle {
+                            implicitWidth: catTxt.implicitWidth + 16
+                            implicitHeight: 22
+                            radius: 6
+                            color: root.selectedIndex === index ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.18) : Qt.rgba(Theme.surface0.r, Theme.surface0.g, Theme.surface0.b, 0.7)
+                            border.color: root.selectedIndex === index ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.4) : Theme.surface1
+                            border.width: 1
 
-                                Text {
-                                    id: keyTxt
-                                    anchors.centerIn: parent
-                                    text: parent.modelData
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    font.bold: true
-                                    color: root.selectedIndex === rowDelegate.index ? Theme.accent : Theme.text
-                                }
+                            Text {
+                                id: catTxt
+                                anchors.centerIn: parent
+                                text: modelData.category.replace(/^[^\w\s]+/, '').trim()
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                font.weight: Font.Medium
+                                color: root.selectedIndex === index ? Theme.accent : Theme.subtext0
                             }
                         }
                     }
 
-                    Text {
-                        text: "➜"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: root.selectedIndex === index ? Theme.accent : Theme.overlay0
-                    }
-
-                    // Description
-                    Text {
+                    // Bottom Row: Arrow + Action Description
+                    RowLayout {
                         Layout.fillWidth: true
-                        text: modelData.desc
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
-                        font.weight: root.selectedIndex === index ? Font.DemiBold : Font.Normal
-                        color: root.selectedIndex === index ? Theme.text : Theme.subtext1
-                        elide: Text.ElideRight
-                    }
-
-                    // Category Tag Badge
-                    Rectangle {
-                        implicitWidth: Math.min(220, catTxt.implicitWidth + 16)
-                        implicitHeight: 22
-                        radius: 6
-                        color: root.selectedIndex === index ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.16) : Qt.rgba(Theme.surface0.r, Theme.surface0.g, Theme.surface0.b, 0.6)
-                        border.color: root.selectedIndex === index ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.35) : Theme.surface1
-                        border.width: 1
+                        spacing: 8
 
                         Text {
-                            id: catTxt
-                            anchors.centerIn: parent
-                            width: parent.width - 12
-                            text: modelData.category.replace(/^[^\w\s]+/, '').trim()
+                            text: "➜"
                             font.family: Theme.fontFamily
-                            font.pixelSize: 11
-                            color: root.selectedIndex === index ? Theme.accent : Theme.subtext0
-                            elide: Text.ElideRight
-                            horizontalAlignment: Text.AlignHCenter
+                            font.pixelSize: Theme.fontSizeSmall
+                            color: root.selectedIndex === index ? Theme.accent : Theme.overlay0
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: modelData.desc
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                            font.weight: root.selectedIndex === index ? Font.DemiBold : Font.Normal
+                            color: root.selectedIndex === index ? Theme.text : Theme.subtext1
+                            wrapMode: Text.WordWrap
                         }
                     }
                 }
