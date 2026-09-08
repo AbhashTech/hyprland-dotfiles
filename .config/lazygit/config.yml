@@ -1,28 +1,28 @@
 # =============================================================================
-# Lazygit Configuration - Everforest Dark
+# Lazygit Configuration - Gruvbox Light
 # =============================================================================
 
 gui:
   theme:
     activeBorderColor:
-      - '#a7c080'
+      - '#af3a03'
       - bold
     inactiveBorderColor:
-      - '#475258'
+      - '#a89984'
     optionsTextColor:
-      - '#7fbbb3'
+      - '#076678'
     selectedLineBgColor:
-      - '#343f44'
+      - '#d5c4a1'
     cherryPickedCommitBgColor:
-      - '#3d484d'
+      - '#bdae93'
     cherryPickedCommitFgColor:
-      - '#a7c080'
+      - '#af3a03'
     unstagedChangesColor:
-      - '#e67e80'
+      - '#9d0006'
     defaultFgColor:
-      - '#d3c6aa'
+      - '#3c3836'
     searchingActiveBorderColor:
-      - '#dbbc7f'
+      - '#b57614'
 
 git:
   paging:
