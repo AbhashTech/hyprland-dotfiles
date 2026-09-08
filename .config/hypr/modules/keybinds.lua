@@ -10,14 +10,12 @@ local mainMod = "SUPER" -- Sets "Windows / Meta" key as main modifier
 -- =============================================================================
 
 -- Open Kitty Terminal
-hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(programs.terminal))
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(programs.terminal))
 
 -- Toggle Dropdown Scratchpad Terminal
 hl.bind(mainMod .. " + grave", hl.dsp.exec_cmd(programs.terminal .. " --class=dropdown-terminal"))
 
 -- Open Application Launcher (Quickshell App Menu)
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(programs.menu))
 hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd(programs.menu))
 
 -- Launch Web Browser (Firefox)
@@ -31,8 +29,7 @@ hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd(programs.terminal .. " -e yaz
 
 -- Close Active Focused Window
 hl.bind(mainMod .. " + C", hl.dsp.window.close())
-hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.close())
-hl.bind("ALT + F4", hl.dsp.window.close())
+hl.bind("ALT + F4",        hl.dsp.window.close())
 
 -- Toggle Window Fullscreen Mode
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
@@ -48,18 +45,14 @@ hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))
 
 -- Lock Screen Immediately
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
-hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("hyprlock"))
 
 -- Open Power & Session Menu (Quickshell Power Plugin)
 hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd(programs.powerMenu))
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd(programs.powerMenu))
 
 -- Toggle Status Bar (Quickshell)
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/launch_quickshell.sh --toggle"))
 
 -- Open Keyboard Shortcuts Cheat Sheet (Quickshell Plugin)
-hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd(programs.keybinds))
-hl.bind(mainMod .. " + question", hl.dsp.exec_cmd(programs.keybinds))
 hl.bind(mainMod .. " + F1", hl.dsp.exec_cmd(programs.keybinds))
 
 -- =============================================================================
@@ -79,8 +72,7 @@ hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 
 -- Cycle Focus to Next Window
-hl.bind("ALT + Tab",         hl.dsp.focus({ direction = "right" }))
-hl.bind(mainMod .. " + Tab", hl.dsp.focus({ direction = "right" }))
+hl.bind("ALT + Tab", hl.dsp.focus({ direction = "right" }))
 
 -- Switch to Workspace 1–10 / Move Window
 for i = 1, 10 do
@@ -114,13 +106,10 @@ hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 local scaleScript = os.getenv("HOME") .. "/.config/hypr/scripts/scale_window.py"
 
 -- Scale Window Up (+40px) with OSD
-hl.bind(mainMod .. " + CTRL + equal",       hl.dsp.exec_cmd(scaleScript .. " scale_up"),   { repeating = true })
-hl.bind(mainMod .. " + CTRL + plus",        hl.dsp.exec_cmd(scaleScript .. " scale_up"),   { repeating = true })
-hl.bind(mainMod .. " + CTRL + KP_Add",      hl.dsp.exec_cmd(scaleScript .. " scale_up"),   { repeating = true })
+hl.bind(mainMod .. " + CTRL + equal", hl.dsp.exec_cmd(scaleScript .. " scale_up"),   { repeating = true })
 
 -- Scale Window Down (-40px) with OSD
-hl.bind(mainMod .. " + CTRL + minus",       hl.dsp.exec_cmd(scaleScript .. " scale_down"), { repeating = true })
-hl.bind(mainMod .. " + CTRL + KP_Subtract", hl.dsp.exec_cmd(scaleScript .. " scale_down"), { repeating = true })
+hl.bind(mainMod .. " + CTRL + minus", hl.dsp.exec_cmd(scaleScript .. " scale_down"), { repeating = true })
 
 -- Resize Width Right (+40px)
 hl.bind(mainMod .. " + CTRL + right", hl.dsp.exec_cmd(scaleScript .. " right"), { repeating = true })
@@ -143,22 +132,19 @@ hl.bind(mainMod .. " + CTRL + 0", hl.dsp.exec_cmd(scaleScript .. " show"))
 
 -- Open Screen Resolution & Scaling Menu
 local resScript = os.getenv("HOME") .. "/.config/hypr/scripts/resolution_menu.py"
-hl.bind(mainMod .. " + SHIFT + R",       hl.dsp.exec_cmd(resScript))
-hl.bind(mainMod .. " + SHIFT + D",       hl.dsp.exec_cmd(resScript))
+hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd(resScript))
 
 -- Increment Display Scale (+0.1)
-hl.bind(mainMod .. " + ALT + equal",     hl.dsp.exec_cmd(resScript .. " scale_up"),   { repeating = true })
-hl.bind(mainMod .. " + ALT + plus",      hl.dsp.exec_cmd(resScript .. " scale_up"),   { repeating = true })
+hl.bind(mainMod .. " + ALT + equal", hl.dsp.exec_cmd(resScript .. " scale_up"),   { repeating = true })
 
 -- Decrement Display Scale (-0.1)
-hl.bind(mainMod .. " + ALT + minus",     hl.dsp.exec_cmd(resScript .. " scale_down"), { repeating = true })
+hl.bind(mainMod .. " + ALT + minus", hl.dsp.exec_cmd(resScript .. " scale_down"), { repeating = true })
 
 -- Show Display Resolution & Scale OSD
-hl.bind(mainMod .. " + ALT + 0",         hl.dsp.exec_cmd(resScript .. " show"))
+hl.bind(mainMod .. " + ALT + 0", hl.dsp.exec_cmd(resScript .. " show"))
 
 -- Set Display Scale to 1.0x (100%)
-hl.bind(mainMod .. " + ALT + 1",         hl.dsp.exec_cmd(resScript .. " 1.0"))
-hl.bind(mainMod .. " + ALT + BackSpace", hl.dsp.exec_cmd(resScript .. " 1.0"))
+hl.bind(mainMod .. " + ALT + 1", hl.dsp.exec_cmd(resScript .. " 1.0"))
 
 -- Set Display Scale to 1.25x (125%)
 hl.bind(mainMod .. " + ALT + 2",         hl.dsp.exec_cmd(resScript .. " 1.25"))
@@ -187,7 +173,6 @@ hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd(programs.terminal .. " --clas
 
 -- Pick Color from Screen & Copy Hex (Hyprpicker)
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprpicker -a -f hex && notify-send -a Hyprpicker -i color-picker 'Color Picked' \"$(wl-paste)\""))
-hl.bind(mainMod .. " + ALT + P",   hl.dsp.exec_cmd("hyprpicker -a -f hex && notify-send -a Hyprpicker -i color-picker 'Color Picked' \"$(wl-paste)\""))
 
 -- Open Universal Theme Switcher Menu (19 Themes)
 local themeScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/theme_switcher.py"
@@ -225,8 +210,7 @@ hl.bind(mainMod .. " + ALT + I",   hl.dsp.exec_cmd(sunsetIdleScript .. " --gui")
 hl.bind(mainMod .. " + CTRL + I",  hl.dsp.exec_cmd(sunsetIdleScript .. " --menu"))
 
 -- Open Quick Math Calculator Prompt (Quickshell Plugin)
-hl.bind(mainMod .. " + equal",     hl.dsp.exec_cmd(programs.calc))
-hl.bind(mainMod .. " + ALT + C",   hl.dsp.exec_cmd(programs.calc))
+hl.bind(mainMod .. " + equal", hl.dsp.exec_cmd(programs.calc))
 
 -- Search & Paste Emojis (Quickshell Plugin)
 hl.bind(mainMod .. " + period",    hl.dsp.exec_cmd(programs.emoji))
@@ -242,15 +226,34 @@ hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd(wallpaperScript .. " --random
 -- Open Graphical Wallpaper Selector Menu
 hl.bind(mainMod .. " + ALT + W",   hl.dsp.exec_cmd(wallpaperScript .. " --menu"))
 
+-- =============================================================================
+-- ⚙️ System Controls  (SUPER+CTRL = system / hardware settings)
+-- =============================================================================
+
+-- Open Sound Control Center & Device Switcher (Quickshell Audio Mixer Plugin)
+hl.bind(mainMod .. " + CTRL + A", hl.dsp.exec_cmd(programs.volumeMenu))
+
+-- Open Display Brightness & Contrast Control Center (Quickshell Brightness Plugin)
+hl.bind(mainMod .. " + CTRL + B", hl.dsp.exec_cmd(programs.brightnessMenu))
+
+-- Open Wireless & Wi-Fi Management Control Center (Quickshell Connectivity Plugin)
+hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd(programs.wifiMenu))
+
+-- Open Bluetooth Management Control Center (Quickshell Connectivity Plugin)
+hl.bind(mainMod .. " + CTRL + SHIFT + B", hl.dsp.exec_cmd(programs.bluetoothMenu))
+
 -- Cycle to Next Active Keyboard Layout
 local kbLayoutScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/keyboard_layout.py"
-hl.bind(mainMod .. " + ALT + Space", hl.dsp.exec_cmd(kbLayoutScript .. " --next"))
+hl.bind(mainMod .. " + CTRL + Space",     hl.dsp.exec_cmd(kbLayoutScript .. " --next"))
 
 -- Open Keyboard Layout Switcher Menu
-hl.bind(mainMod .. " + SHIFT + K", hl.dsp.exec_cmd(kbLayoutScript .. " --menu"))
+hl.bind(mainMod .. " + CTRL + K",         hl.dsp.exec_cmd(kbLayoutScript .. " --menu"))
 
 -- Search & Add Regional Keyboard Layout
-hl.bind(mainMod .. " + ALT + K",   hl.dsp.exec_cmd(kbLayoutScript .. " --add-menu"))
+hl.bind(mainMod .. " + CTRL + SHIFT + K", hl.dsp.exec_cmd(kbLayoutScript .. " --add-menu"))
+
+-- Open Printer Settings
+hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("system-config-printer"))
 
 -- =============================================================================
 -- 🔔 Notifications & Clipboard History
@@ -264,12 +267,9 @@ hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("makoctl set-mode dnd 2>/dev/
 
 -- Open Searchable Clipboard History Browser (Quickshell Plugin)
 hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(programs.clipboard))
-hl.bind(mainMod .. " + ALT + V",   hl.dsp.exec_cmd(programs.clipboard))
-hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd(programs.clipboard))
 
 -- Toggle Clipboard Private Mode / Pause Recording
-hl.bind(mainMod .. " + ALT + X",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --toggle-private"))
-hl.bind(mainMod .. " + SHIFT + X", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --toggle-private"))
+hl.bind(mainMod .. " + ALT + X", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --toggle-private"))
 
 -- Open Clipboard Delete & Wipe Menu (Prompts with confirmation)
 hl.bind(mainMod .. " + ALT + D",   hl.dsp.exec_cmd(programs.clipClear))
@@ -298,10 +298,6 @@ hl.bind("SHIFT + XF86AudioRaiseVolume", hl.dsp.exec_cmd(volumeScript .. " mic-up
 -- Microphone Gain Down (-5%)
 hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd(volumeScript .. " mic-down"), { locked = true, repeating = true })
 
--- Open Sound Control Center & Device Switcher (Quickshell Audio Mixer Plugin)
-hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd(programs.volumeMenu))
-hl.bind(mainMod .. " + ALT + A",   hl.dsp.exec_cmd(programs.volumeMenu))
-
 -- Skip to Next Audio Track
 hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })
 
@@ -326,27 +322,15 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(brightnessScript .. " active-do
 
 -- External Monitor Brightness Up (DDC)
 hl.bind("SHIFT + XF86MonBrightnessUp",         hl.dsp.exec_cmd(brightnessScript .. " ddc-up"),   { locked = true, repeating = true })
-hl.bind(mainMod .. " + XF86MonBrightnessUp",   hl.dsp.exec_cmd(brightnessScript .. " ddc-up"),   { locked = true, repeating = true })
 
 -- External Monitor Brightness Down (DDC)
 hl.bind("SHIFT + XF86MonBrightnessDown",       hl.dsp.exec_cmd(brightnessScript .. " ddc-down"), { locked = true, repeating = true })
-hl.bind(mainMod .. " + XF86MonBrightnessDown", hl.dsp.exec_cmd(brightnessScript .. " ddc-down"), { locked = true, repeating = true })
 
 -- External Monitor Contrast Up (DDC)
 hl.bind("CTRL + SHIFT + XF86MonBrightnessUp",   hl.dsp.exec_cmd(brightnessScript .. " ddc-contrast-up"),   { locked = true, repeating = true })
 
 -- External Monitor Contrast Down (DDC)
 hl.bind("CTRL + SHIFT + XF86MonBrightnessDown", hl.dsp.exec_cmd(brightnessScript .. " ddc-contrast-down"), { locked = true, repeating = true })
-
--- Open Display Brightness & Contrast Control Center (Quickshell Brightness Plugin)
-hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd(programs.brightnessMenu))
-hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd(programs.brightnessMenu))
-
--- Open Wireless & Wi-Fi Management Control Center (Quickshell Connectivity Plugin)
-hl.bind(mainMod .. " + CTRL + W",  hl.dsp.exec_cmd(programs.wifiMenu))
-
--- Open Bluetooth Management Control Center (Quickshell Connectivity Plugin)
-hl.bind(mainMod .. " + CTRL + B",  hl.dsp.exec_cmd(programs.bluetoothMenu))
 
 -- =============================================================================
 -- 📸 Screenshots & Screen Recording
