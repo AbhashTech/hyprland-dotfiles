@@ -14,6 +14,7 @@ PopupWindow {
     property var clientsList: [] // Array of { address, class, title, at, size, floating, fullscreen }
     property int showDelay: 150
     property int hideDelay: 120
+    property int previewVersion: 0
 
     anchor.window: previewPop.barWindow
     anchor.item: previewPop.targetItem
@@ -26,6 +27,11 @@ PopupWindow {
 
     color: "transparent"
     visible: previewContainer.opacity > 0
+
+    function cleanAddress(addr) {
+        if (!addr) return "none";
+        return addr.toString().replace(/^0x/, "");
+    }
 
     function getAppIcon(appClass, appTitle) {
         var c = (appClass || "").toLowerCase();
@@ -74,6 +80,8 @@ PopupWindow {
         repeat: false
         onTriggered: {
             if (previewPop.isHovered || popMa.containsMouse) {
+                previewPop.previewVersion++;
+                captureProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/workspace_viewer/window_preview_capture.py", "capture-now"]);
                 previewContainer.opacity = 1;
             }
         }
@@ -112,7 +120,7 @@ PopupWindow {
             NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
         }
 
-        implicitWidth: 320
+        implicitWidth: 350
         implicitHeight: contentCol.implicitHeight + 24
 
         MouseArea {
@@ -172,8 +180,8 @@ PopupWindow {
 
                     Text {
                         text: previewPop.clientsList.length > 0 
-                              ? (previewPop.clientsList.length + (previewPop.clientsList.length === 1 ? " application active" : " applications active"))
-                              : "No active applications"
+                              ? (previewPop.clientsList.length + (previewPop.clientsList.length === 1 ? " application open" : " applications open"))
+                              : "No open applications"
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeSmall - 1
                         color: Theme.subtext0
@@ -210,31 +218,41 @@ PopupWindow {
                 color: Theme.surface1
             }
 
+            // Section Label for Layout Blueprint
+            Row {
+                visible: previewPop.clientsList.length > 0
+                width: parent.width
+                spacing: 6
+
+                Text {
+                    text: "󰮯"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 11
+                    color: Theme.accent
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Text {
+                    text: "SCREEN LAYOUT & LIVE INTERFACES"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 9
+                    font.bold: true
+                    color: Theme.subtext0
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+
             // Mini Screen Wireframe Layout (if clients exist)
             Rectangle {
                 id: wireframeBox
                 visible: previewPop.clientsList.length > 0
                 width: parent.width
-                height: 90
+                height: 115
                 radius: 8
                 color: Theme.crust
                 border.color: Theme.surface1
                 border.width: 1
                 clip: true
-
-                // Subtitle in wireframe
-                Text {
-                    anchors.top: parent.top
-                    anchors.topMargin: 4
-                    anchors.left: parent.left
-                    anchors.leftMargin: 6
-                    text: "LAYOUT BLUEPRINT"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 8
-                    font.bold: true
-                    color: Theme.overlay0
-                    opacity: 0.7
-                }
 
                 // Calculate bounding box bounds
                 Repeater {
@@ -245,7 +263,7 @@ PopupWindow {
                         readonly property var client: modelData
                         readonly property real refW: 1920.0
                         readonly property real refH: 1080.0
-                        readonly property real padding: 6
+                        readonly property real padding: 5
 
                         readonly property real rawX: (client.at && client.at.length > 0) ? client.at[0] : 0
                         readonly property real rawY: (client.at && client.at.length > 1) ? client.at[1] : 0
@@ -255,24 +273,102 @@ PopupWindow {
                         // Mapped to wireframe canvas
                         x: padding + Math.max(0, Math.min(wireframeBox.width - 2 * padding, (rawX / refW) * (wireframeBox.width - 2 * padding)))
                         y: padding + Math.max(0, Math.min(wireframeBox.height - 2 * padding, (rawY / refH) * (wireframeBox.height - 2 * padding)))
-                        width: Math.max(16, Math.min(wireframeBox.width - x - padding, (rawW / refW) * (wireframeBox.width - 2 * padding)))
-                        height: Math.max(14, Math.min(wireframeBox.height - y - padding, (rawH / refH) * (wireframeBox.height - 2 * padding)))
-                        radius: 4
+                        width: Math.max(24, Math.min(wireframeBox.width - x - padding, (rawW / refW) * (wireframeBox.width - 2 * padding)))
+                        height: Math.max(22, Math.min(wireframeBox.height - y - padding, (rawH / refH) * (wireframeBox.height - 2 * padding)))
+                        radius: 5
+                        clip: true
 
-                        color: Qt.rgba(previewPop.getAppColor(client.class).r, previewPop.getAppColor(client.class).g, previewPop.getAppColor(client.class).b, 0.25)
+                        color: Theme.mantle
                         border.color: previewPop.getAppColor(client.class)
                         border.width: 1
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: previewPop.getAppIcon(client.class, client.title)
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 11
-                            color: previewPop.getAppColor(client.class)
+                        // Actual application screenshot image
+                        Image {
+                            id: snapImg
+                            anchors.fill: parent
+                            anchors.margins: 1
+                            source: "file://" + Quickshell.env("HOME") + "/.cache/quickshell/window_previews/" + previewPop.cleanAddress(client.address) + ".png"
+                            fillMode: Image.PreserveAspectCrop
+                            smooth: true
+                            asynchronous: true
+                            visible: status === Image.Ready
+                            opacity: 0.92
+                        }
+
+                        // Simulated application interface UI when image is not loaded
+                        Item {
+                            anchors.fill: parent
+                            visible: snapImg.status !== Image.Ready
+
+                            Column {
+                                anchors.fill: parent
+
+                                // Simulated window title bar
+                                Rectangle {
+                                    width: parent.width
+                                    height: Math.max(7, Math.min(13, parent.height * 0.2))
+                                    color: Qt.rgba(previewPop.getAppColor(client.class).r, previewPop.getAppColor(client.class).g, previewPop.getAppColor(client.class).b, 0.3)
+
+                                    Row {
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 3
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 2
+                                        visible: clientRect.width > 40
+
+                                        Rectangle { width: 3; height: 3; radius: 1.5; color: "#f38ba8" }
+                                        Rectangle { width: 3; height: 3; radius: 1.5; color: "#f9e2af" }
+                                        Rectangle { width: 3; height: 3; radius: 1.5; color: "#a6e3a1" }
+                                    }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: client.class || ""
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 6
+                                        font.bold: true
+                                        color: Theme.text
+                                        elide: Text.ElideRight
+                                        width: parent.width - 24
+                                        visible: clientRect.width > 60
+                                    }
+                                }
+
+                                // Simulated application content body
+                                Rectangle {
+                                    width: parent.width
+                                    height: parent.height - Math.max(7, Math.min(13, parent.height * 0.2))
+                                    color: (client.class && (client.class.toLowerCase().indexOf("kitty") !== -1 || client.class.toLowerCase().indexOf("terminal") !== -1)) ? "#11111b" : Theme.surface0
+
+                                    // App Icon & Lines
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 3
+
+                                        Text {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: previewPop.getAppIcon(client.class, client.title)
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: Math.max(8, Math.min(14, clientRect.height * 0.35))
+                                            color: previewPop.getAppColor(client.class)
+                                        }
+
+                                        Column {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: 2
+                                            visible: clientRect.width > 55
+
+                                            Rectangle { width: Math.min(45, clientRect.width - 26); height: 2; radius: 1; color: Theme.surface2 }
+                                            Rectangle { width: Math.min(30, clientRect.width - 34); height: 2; radius: 1; color: Theme.surface1 }
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         MouseArea {
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 if (client.address) {
@@ -298,7 +394,7 @@ PopupWindow {
                         id: appCard
                         readonly property var client: modelData
                         width: parent.width
-                        implicitHeight: 38
+                        implicitHeight: 44
                         radius: 8
                         color: cardArea.containsMouse ? Theme.surface1 : Theme.surface0
                         border.color: cardArea.containsMouse ? previewPop.getAppColor(client.class) : Theme.surface2
@@ -312,16 +408,28 @@ PopupWindow {
                             anchors.margins: 6
                             spacing: 8
 
-                            // App Icon Box
+                            // App Snapshot / Icon Box
                             Rectangle {
-                                implicitWidth: 26
-                                implicitHeight: 26
+                                implicitWidth: 32
+                                implicitHeight: 32
                                 radius: 6
                                 color: Qt.rgba(previewPop.getAppColor(client.class).r, previewPop.getAppColor(client.class).g, previewPop.getAppColor(client.class).b, 0.2)
                                 anchors.verticalCenter: parent.verticalCenter
+                                clip: true
+
+                                Image {
+                                    id: cardThumb
+                                    anchors.fill: parent
+                                    source: "file://" + Quickshell.env("HOME") + "/.cache/quickshell/window_previews/" + previewPop.cleanAddress(client.address) + ".png"
+                                    fillMode: Image.PreserveAspectCrop
+                                    smooth: true
+                                    asynchronous: true
+                                    visible: status === Image.Ready
+                                }
 
                                 Text {
                                     anchors.centerIn: parent
+                                    visible: cardThumb.status !== Image.Ready
                                     text: previewPop.getAppIcon(client.class, client.title)
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSizeLarge
@@ -332,7 +440,7 @@ PopupWindow {
                             // App Title & Class
                             Column {
                                 anchors.verticalCenter: parent.verticalCenter
-                                width: parent.width - 95
+                                width: parent.width - 100
                                 spacing: 1
 
                                 Text {
@@ -465,5 +573,9 @@ PopupWindow {
 
     Process {
         id: dispatchProc
+    }
+
+    Process {
+        id: captureProc
     }
 }

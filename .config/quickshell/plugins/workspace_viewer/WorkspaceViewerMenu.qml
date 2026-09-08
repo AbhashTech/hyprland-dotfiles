@@ -20,7 +20,13 @@ Rectangle {
     property var allClients: [] // Array of all clients from hyprctl clients -j
     property string searchQuery: ""
 
+    function cleanAddress(addr) {
+        if (!addr) return "none";
+        return addr.toString().replace(/^0x/, "");
+    }
+
     function grabFocus() {
+        captureProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/workspace_viewer/window_preview_capture.py", "capture-now"]);
         searchInput.forceActiveFocus();
     }
 
@@ -149,6 +155,10 @@ Rectangle {
 
     Process {
         id: dispatchProc
+    }
+
+    Process {
+        id: captureProc
     }
 
     Timer {
@@ -427,16 +437,52 @@ Rectangle {
                                         height: Math.max(10, Math.min(cardWireframe.height - y - p, (rawH / refH) * (cardWireframe.height - 2 * p)))
                                         radius: 3
 
-                                        color: Qt.rgba(root.getAppColor(client.class).r, root.getAppColor(client.class).g, root.getAppColor(client.class).b, 0.25)
+                                        color: Theme.mantle
                                         border.color: root.getAppColor(client.class)
                                         border.width: 1
+                                        clip: true
 
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: root.getAppIcon(client.class, client.title)
-                                            font.family: Theme.fontFamily
-                                            font.pixelSize: 9
-                                            color: root.getAppColor(client.class)
+                                        // Actual application screenshot image
+                                        Image {
+                                            id: snapImg
+                                            anchors.fill: parent
+                                            anchors.margins: 1
+                                            source: "file://" + Quickshell.env("HOME") + "/.cache/quickshell/window_previews/" + root.cleanAddress(client.address) + ".png"
+                                            fillMode: Image.PreserveAspectCrop
+                                            smooth: true
+                                            asynchronous: true
+                                            visible: status === Image.Ready
+                                            opacity: 0.92
+                                        }
+
+                                        // Simulated interface when image is loading
+                                        Item {
+                                            anchors.fill: parent
+                                            visible: snapImg.status !== Image.Ready
+
+                                            Column {
+                                                anchors.fill: parent
+
+                                                Rectangle {
+                                                    width: parent.width
+                                                    height: Math.max(5, Math.min(10, parent.height * 0.2))
+                                                    color: Qt.rgba(root.getAppColor(client.class).r, root.getAppColor(client.class).g, root.getAppColor(client.class).b, 0.3)
+                                                }
+
+                                                Rectangle {
+                                                    width: parent.width
+                                                    height: parent.height - Math.max(5, Math.min(10, parent.height * 0.2))
+                                                    color: Theme.surface0
+
+                                                    Text {
+                                                        anchors.centerIn: parent
+                                                        text: root.getAppIcon(client.class, client.title)
+                                                        font.family: Theme.fontFamily
+                                                        font.pixelSize: 8
+                                                        color: root.getAppColor(client.class)
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
