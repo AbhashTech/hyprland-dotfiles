@@ -9,6 +9,7 @@ Rectangle {
     implicitWidth: 38
     radius: Theme.capsuleRadius
 
+    property var barWindow: null
     readonly property bool isHovered: mouseArea.containsMouse
 
     color: isHovered || PluginManager.appMenuVisible ? Theme.moduleHoverBg : Theme.moduleBg
@@ -25,6 +26,21 @@ Rectangle {
         font.pixelSize: Theme.fontSizeIcon
         font.bold: true
         color: root.isHovered || PluginManager.appMenuVisible ? "#ffffff" : Theme.mauve
+    }
+
+    BarTooltip {
+        barWindow: root.barWindow
+        targetItem: root
+        isHovered: root.isHovered
+        icon: "󰣇"
+        iconColor: Theme.mauve
+        title: "Application Launcher"
+        description: "Search and launch installed applications"
+        shortcuts: [
+            { action: "Open App Menu", key: "SUPER + Space" },
+            { action: "Quick Menu", key: "SUPER + R" },
+            { action: "Power Menu", key: "Right Click" }
+        ]
     }
 
     MouseArea {

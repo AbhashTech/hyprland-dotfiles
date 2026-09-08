@@ -6,6 +6,7 @@ import ".."
 Rectangle {
     id: root
 
+    property var barWindow: null
     property bool isRecording: false
     property string displayText: ""
 
@@ -14,9 +15,25 @@ Rectangle {
     implicitWidth: visible ? row.implicitWidth + 18 : 0
     radius: Theme.capsuleRadius
 
+    readonly property bool isHovered: mouseArea.containsMouse
     color: Theme.moduleBg
     border.color: Theme.red
     border.width: 1
+
+    BarTooltip {
+        barWindow: root.barWindow
+        targetItem: root
+        isHovered: root.isHovered
+        icon: "󰻃"
+        iconColor: Theme.red
+        title: "Screen Recording"
+        description: root.displayText !== "" ? ("Status: " + root.displayText) : "Active Screen Recording"
+        shortcuts: [
+            { action: "Stop Recording", key: "SUPER + CTRL + R" },
+            { action: "Recording Hub", key: "SUPER + Print" },
+            { action: "Toggle Indicator", key: "Right Click" }
+        ]
+    }
 
     Process {
         id: statusProc
@@ -76,6 +93,7 @@ Rectangle {
     }
 
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton

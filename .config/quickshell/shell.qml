@@ -78,10 +78,18 @@ ShellRoot {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 6
 
-                        LauncherButton {}
-                        Workspaces {}
-                        ActiveWindow {}
-                        MprisModule {}
+                        LauncherButton {
+                            barWindow: barWindow
+                        }
+                        Workspaces {
+                            barWindow: barWindow
+                        }
+                        ActiveWindow {
+                            barWindow: barWindow
+                        }
+                        MprisModule {
+                            barWindow: barWindow
+                        }
                     }
 
                     // Center Modules
@@ -90,8 +98,12 @@ ShellRoot {
                         anchors.centerIn: parent
                         spacing: 6
 
-                        ClockModule {}
-                        LanguageModule {}
+                        ClockModule {
+                            barWindow: barWindow
+                        }
+                        LanguageModule {
+                            barWindow: barWindow
+                        }
                     }
 
                     // Right Modules
@@ -102,15 +114,22 @@ ShellRoot {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 6
 
-                        RecordingModule {}
+                        RecordingModule {
+                            barWindow: barWindow
+                        }
                         TrayNotifGroup {
                             barWindow: barWindow
                         }
                         StatusGroup {
+                            barWindow: barWindow
                             screenName: (barWindow && barWindow.screen && barWindow.screen.name) ? barWindow.screen.name : (modelData && modelData.name ? modelData.name : "")
                         }
-                        StatsModule {}
-                        PowerModule {}
+                        StatsModule {
+                            barWindow: barWindow
+                        }
+                        PowerModule {
+                            barWindow: barWindow
+                        }
                     }
                 }
             }

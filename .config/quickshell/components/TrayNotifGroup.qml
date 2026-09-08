@@ -118,6 +118,7 @@ Rectangle {
                     }
 
                     MouseArea {
+                        id: trayMa
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
@@ -146,12 +147,26 @@ Rectangle {
                             }
                         }
                     }
+
+                    BarTooltip {
+                        barWindow: root.barWindow
+                        targetItem: trayItemWrapper
+                        isHovered: trayMa.containsMouse
+                        icon: "󰍜"
+                        title: (modelData.title && modelData.title.length > 0) ? modelData.title : (modelData.id ? modelData.id : "System Tray Application")
+                        description: "Background status indicator"
+                        shortcuts: [
+                            { action: "Activate", key: "Left Click" },
+                            { action: "Menu", key: "Right Click" }
+                        ]
+                    }
                 }
             }
         }
 
         // Clipboard Manager Button (Quickshell Plugin)
         Rectangle {
+            id: clipBtn
             anchors.verticalCenter: parent.verticalCenter
             implicitWidth: 20
             implicitHeight: 20
@@ -165,6 +180,22 @@ Rectangle {
                 font.pixelSize: Theme.fontSize
                 font.bold: true
                 color: root.clipDndActive ? Theme.peach : Theme.lavender
+            }
+
+            BarTooltip {
+                barWindow: root.barWindow
+                targetItem: clipBtn
+                isHovered: clipArea.containsMouse
+                icon: root.clipDndActive ? "󰈉" : "󰅌"
+                iconColor: root.clipDndActive ? Theme.peach : Theme.lavender
+                title: "Clipboard History"
+                description: root.clipDndActive ? "Private Mode (Recording Paused)" : "Search and paste history entries"
+                shortcuts: [
+                    { action: "Open Clipboard", key: "SUPER + SHIFT + V" },
+                    { action: "Alternate Shortcut", key: "SUPER + ALT + V" },
+                    { action: "Wipe History", key: "Right Click" },
+                    { action: "Toggle Private Mode", key: "Middle Click" }
+                ]
             }
 
             MouseArea {
@@ -190,6 +221,7 @@ Rectangle {
 
         // Notifications / Mako Button
         Rectangle {
+            id: notifBtn
             anchors.verticalCenter: parent.verticalCenter
             implicitWidth: notifRow.implicitWidth + 8
             implicitHeight: 22
@@ -219,6 +251,21 @@ Rectangle {
                     font.bold: true
                     color: Theme.peach
                 }
+            }
+
+            BarTooltip {
+                barWindow: root.barWindow
+                targetItem: notifBtn
+                isHovered: notifArea.containsMouse
+                icon: root.dndActive ? "󰂛" : (root.notifCount > 0 ? "󱅫" : "󰂚")
+                iconColor: root.dndActive ? Theme.peach : Theme.accent
+                title: "Notification Center"
+                description: root.dndActive ? "Do-Not-Disturb is ON" : (root.notifCount > 0 ? (root.notifCount + " Unread Notification" + (root.notifCount > 1 ? "s" : "")) : "No unread notifications")
+                shortcuts: [
+                    { action: "Open Notifications", key: "SUPER + N" },
+                    { action: "Dismiss All", key: "Right Click" },
+                    { action: "Toggle DND", key: "Middle Click" }
+                ]
             }
 
             MouseArea {

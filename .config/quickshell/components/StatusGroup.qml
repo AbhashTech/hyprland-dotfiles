@@ -15,6 +15,7 @@ Rectangle {
     border.color: isHovered ? Theme.moduleHoverBorder : Theme.moduleBorder
     border.width: 1
 
+    property var barWindow: null
     property string screenName: ""
     property int volume: 50
     property bool muted: false
@@ -172,6 +173,7 @@ Rectangle {
 
         // Volume Item
         Item {
+            id: volItem
             implicitWidth: volContent.implicitWidth
             implicitHeight: root.implicitHeight
             anchors.verticalCenter: parent.verticalCenter
@@ -200,7 +202,23 @@ Rectangle {
                 }
             }
 
+            BarTooltip {
+                barWindow: root.barWindow
+                targetItem: volItem
+                isHovered: volArea.containsMouse
+                icon: root.muted ? "󰝟" : (root.volume > 50 ? "󰕾" : "󰖀")
+                iconColor: root.muted ? Theme.red : Theme.blue
+                title: "Audio Volume"
+                description: root.muted ? "Audio is currently Muted" : ("Level: " + root.volume + "%")
+                shortcuts: [
+                    { action: "Toggle Mute", key: "Left Click" },
+                    { action: "Audio Mixer Menu", key: "SUPER + SHIFT + A" },
+                    { action: "Volume Up / Down", key: "Scroll" }
+                ]
+            }
+
             MouseArea {
+                id: volArea
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
@@ -226,6 +244,7 @@ Rectangle {
 
         // Brightness Item
         Item {
+            id: brightItem
             implicitWidth: brightContent.implicitWidth
             implicitHeight: root.implicitHeight
             anchors.verticalCenter: parent.verticalCenter
@@ -254,7 +273,23 @@ Rectangle {
                 }
             }
 
+            BarTooltip {
+                barWindow: root.barWindow
+                targetItem: brightItem
+                isHovered: brightArea.containsMouse
+                icon: "󰃠"
+                iconColor: Theme.yellow
+                title: "Screen Brightness"
+                description: "Display brightness: " + root.brightness + "%"
+                shortcuts: [
+                    { action: "Brightness Center", key: "SUPER + SHIFT + B" },
+                    { action: "Night Light Filter", key: "SUPER + ALT + N" },
+                    { action: "Brightness Up / Down", key: "Scroll" }
+                ]
+            }
+
             MouseArea {
+                id: brightArea
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
@@ -285,6 +320,7 @@ Rectangle {
 
         // Network Item
         Rectangle {
+            id: netItem
             implicitWidth: Math.max(22, netContent.implicitWidth + 8)
             implicitHeight: root.implicitHeight
             radius: 4
@@ -306,6 +342,20 @@ Rectangle {
                 }
             }
 
+            BarTooltip {
+                barWindow: root.barWindow
+                targetItem: netItem
+                isHovered: netArea.containsMouse
+                icon: root.wifiText
+                iconColor: Theme.teal
+                title: "Wireless Network"
+                description: "Wi-Fi connections & network manager"
+                shortcuts: [
+                    { action: "Wi-Fi Control Center", key: "SUPER + CTRL + W" },
+                    { action: "Toggle Wi-Fi Radio", key: "Right Click" }
+                ]
+            }
+
             MouseArea {
                 id: netArea
                 anchors.fill: parent
@@ -324,6 +374,7 @@ Rectangle {
 
         // Bluetooth Item
         Rectangle {
+            id: btItem
             implicitWidth: Math.max(22, btContent.implicitWidth + 8)
             implicitHeight: root.implicitHeight
             radius: 4
@@ -345,6 +396,20 @@ Rectangle {
                 }
             }
 
+            BarTooltip {
+                barWindow: root.barWindow
+                targetItem: btItem
+                isHovered: btArea.containsMouse
+                icon: root.btText
+                iconColor: Theme.blue
+                title: "Bluetooth Manager"
+                description: "Paired devices & bluetooth settings"
+                shortcuts: [
+                    { action: "Bluetooth Control Center", key: "SUPER + CTRL + B" },
+                    { action: "Toggle Bluetooth Radio", key: "Right Click" }
+                ]
+            }
+
             MouseArea {
                 id: btArea
                 anchors.fill: parent
@@ -364,6 +429,7 @@ Rectangle {
 
         // Battery Item
         Item {
+            id: batItem
             implicitWidth: batContent.implicitWidth
             implicitHeight: root.implicitHeight
             anchors.verticalCenter: parent.verticalCenter
@@ -394,7 +460,22 @@ Rectangle {
                 }
             }
 
+            BarTooltip {
+                barWindow: root.barWindow
+                targetItem: batItem
+                isHovered: batArea.containsMouse
+                icon: root.batIcon
+                iconColor: root.batColor
+                title: "Battery & Power (" + root.batPercent + ")"
+                description: "Power Profile: " + root.batProfile.charAt(0).toUpperCase() + root.batProfile.slice(1)
+                shortcuts: [
+                    { action: "Power Profiles Menu", key: "Left Click" },
+                    { action: "Task Manager (btop)", key: "Right Click" }
+                ]
+            }
+
             MouseArea {
+                id: batArea
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor

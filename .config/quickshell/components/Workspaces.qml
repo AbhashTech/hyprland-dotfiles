@@ -14,8 +14,25 @@ Rectangle {
     border.color: Theme.moduleBorder
     border.width: 1
 
+    property var barWindow: null
     property int activeWorkspaceId: 1
     property var activeIds: [1]
+    readonly property bool isHovered: wheelMa.containsMouse
+
+    BarTooltip {
+        barWindow: root.barWindow
+        targetItem: root
+        isHovered: root.isHovered
+        icon: "󰮯"
+        iconColor: Theme.blue
+        title: "Workspaces"
+        description: "Hyprland virtual workspaces"
+        shortcuts: [
+            { action: "Switch Workspace", key: "SUPER + 1..0" },
+            { action: "Move Window", key: "SUPER + SHIFT + 1..0" },
+            { action: "Cycle Workspaces", key: "SUPER + Scroll" }
+        ]
+    }
 
     readonly property var workspaceList: {
         var defaultCount = 4;
@@ -103,7 +120,9 @@ Rectangle {
 
     // Wheel area underneath the row
     MouseArea {
+        id: wheelMa
         anchors.fill: parent
+        hoverEnabled: true
         acceptedButtons: Qt.NoButton
         onWheel: wheel => {
             root.scrollWorkspace(wheel.angleDelta.y);

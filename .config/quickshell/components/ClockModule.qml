@@ -6,6 +6,7 @@ import ".."
 Rectangle {
     id: root
 
+    property var barWindow: null
     property bool showDate: false
     property string timeStr: ""
     property string dateStr: ""
@@ -18,6 +19,12 @@ Rectangle {
     color: isHovered ? Theme.moduleHoverBg : Theme.moduleBg
     border.color: isHovered ? Theme.moduleHoverBorder : Theme.moduleBorder
     border.width: 1
+
+    CalendarTooltip {
+        barWindow: root.barWindow
+        targetItem: root
+        isHovered: root.isHovered
+    }
 
     function updateTime() {
         var now = new Date();

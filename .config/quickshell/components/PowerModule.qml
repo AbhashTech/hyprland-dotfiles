@@ -9,6 +9,7 @@ Rectangle {
     implicitWidth: 38
     radius: Theme.capsuleRadius
 
+    property var barWindow: null
     readonly property bool isHovered: mouseArea.containsMouse
     color: isHovered || PluginManager.powerMenuVisible ? Theme.red : Theme.moduleBg
     border.color: isHovered || PluginManager.powerMenuVisible ? Theme.red : Theme.moduleBorder
@@ -24,6 +25,21 @@ Rectangle {
         font.pixelSize: Theme.fontSizeIcon
         font.bold: true
         color: root.isHovered || PluginManager.powerMenuVisible ? "#ffffff" : Theme.red
+    }
+
+    BarTooltip {
+        barWindow: root.barWindow
+        targetItem: root
+        isHovered: root.isHovered
+        icon: "󰐥"
+        iconColor: Theme.red
+        title: "Power & Session"
+        description: "Shutdown, restart, lock, or sleep"
+        shortcuts: [
+            { action: "Power Menu", key: "SUPER + Escape" },
+            { action: "Quick Power", key: "SUPER + M" },
+            { action: "Lock Screen", key: "SUPER + L" }
+        ]
     }
 
     MouseArea {

@@ -10,6 +10,7 @@ Rectangle {
     implicitWidth: 38
     radius: Theme.capsuleRadius
 
+    property var barWindow: null
     readonly property bool isHovered: mouseArea.containsMouse
     color: isHovered || PluginManager.sysinfoVisible ? Theme.moduleHoverBg : Theme.moduleBg
     border.color: isHovered || PluginManager.sysinfoVisible ? Theme.moduleHoverBorder : Theme.moduleBorder
@@ -25,6 +26,20 @@ Rectangle {
         font.pixelSize: Theme.fontSizeIcon
         font.bold: true
         color: root.isHovered || PluginManager.sysinfoVisible ? Theme.accent : Theme.text
+    }
+
+    BarTooltip {
+        barWindow: root.barWindow
+        targetItem: root
+        isHovered: root.isHovered
+        icon: "󰍛"
+        iconColor: Theme.accent
+        title: "System Resources"
+        description: "CPU, RAM, Disk & Hardware Monitor"
+        shortcuts: [
+            { action: "System Info Center", key: "Left Click" },
+            { action: "Task Manager (btop)", key: "Right Click" }
+        ]
     }
 
     Process {

@@ -6,6 +6,7 @@ import ".."
 Rectangle {
     id: root
 
+    property var barWindow: null
     property string layoutName: "US"
 
     implicitHeight: Theme.barHeight - 8
@@ -16,6 +17,21 @@ Rectangle {
     color: isHovered ? Theme.moduleHoverBg : Theme.moduleBg
     border.color: isHovered ? Theme.moduleHoverBorder : Theme.moduleBorder
     border.width: 1
+
+    BarTooltip {
+        barWindow: root.barWindow
+        targetItem: root
+        isHovered: root.isHovered
+        icon: "󰌌"
+        iconColor: Theme.accent
+        title: "Keyboard Layout"
+        description: "Active Layout: " + root.layoutName
+        shortcuts: [
+            { action: "Cycle Next Layout", key: "SUPER + ALT + Space" },
+            { action: "Layout Switcher Menu", key: "SUPER + SHIFT + K" },
+            { action: "Add Regional Layout", key: "SUPER + ALT + K" }
+        ]
+    }
 
     Process {
         id: langProc

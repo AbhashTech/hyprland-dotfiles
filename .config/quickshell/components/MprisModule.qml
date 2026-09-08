@@ -6,8 +6,10 @@ import ".."
 Rectangle {
     id: root
 
+    property var barWindow: null
     property string playerStatus: ""
     property string mediaText: ""
+    property string fullMediaText: ""
     property bool isPlaying: playerStatus === "Playing"
     property bool hasMedia: mediaText.length > 0
 
@@ -22,6 +24,21 @@ Rectangle {
     border.width: 1
 
     Behavior on implicitWidth { NumberAnimation { duration: 150 } }
+
+    BarTooltip {
+        barWindow: root.barWindow
+        targetItem: root
+        isHovered: root.isHovered
+        icon: root.isPlaying ? "󰐊" : "󰏤"
+        iconColor: root.isPlaying ? Theme.green : Theme.subtext0
+        title: root.fullMediaText !== "" ? root.fullMediaText : "Media Player"
+        description: root.isPlaying ? "Currently Playing" : "Playback Paused"
+        shortcuts: [
+            { action: "Play / Pause", key: "Left Click" },
+            { action: "Next Track", key: "Scroll Up" },
+            { action: "Previous Track", key: "Scroll Down" }
+        ]
+    }
 
     Process {
         id: mprisStatusProc
@@ -38,7 +55,9 @@ Rectangle {
         command: ["playerctl", "metadata", "--format", "{{artist}} - {{title}}"]
         stdout: SplitParser {
             onRead: data => {
-                var txt = data.trim();
+                var raw = data.trim();
+                root.fullMediaText = raw;
+                var txt = raw;
                 if (txt.length > 26) {
                     txt = txt.substring(0, 23) + "...";
                 }

@@ -10,13 +10,30 @@ Rectangle {
     implicitWidth: Math.min(row.implicitWidth + 20, 260)
     radius: Theme.capsuleRadius
 
+    property var barWindow: null
     readonly property bool isHovered: mouseArea.containsMouse
     color: isHovered ? Theme.moduleHoverBg : Theme.moduleBg
     border.color: isHovered ? Theme.moduleHoverBorder : Theme.moduleBorder
     border.width: 1
 
     property string windowTitle: "󰖲 Desktop"
+    property string fullTitle: "Desktop"
     property string iconText: "󰖲"
+
+    BarTooltip {
+        barWindow: root.barWindow
+        targetItem: root
+        isHovered: root.isHovered
+        icon: root.iconText
+        iconColor: Theme.accent
+        title: root.fullTitle
+        description: "Active window controls"
+        shortcuts: [
+            { action: "Toggle Float", key: "SUPER + V" },
+            { action: "Close Window", key: "SUPER + C" },
+            { action: "Toggle Fullscreen", key: "SUPER + F" }
+        ]
+    }
 
     Process {
         id: titleProc
@@ -33,6 +50,7 @@ Rectangle {
                 var title = win && win.title ? win.title.trim() : "";
                 if (!title) {
                     root.windowTitle = "Desktop";
+                    root.fullTitle = "Desktop";
                     root.iconText = "󰖲";
                     buffer = "";
                     return;
@@ -54,6 +72,7 @@ Rectangle {
                     root.iconText = "󰖲";
                 }
 
+                root.fullTitle = title;
                 if (title.length > 28) {
                     title = title.substring(0, 25) + "...";
                 }
