@@ -91,7 +91,7 @@ def toggle_pause():
         except Exception:
             pass
         stop_daemon_watchers()
-        notify("󰂛 Clipboard Paused", "Private mode active. Copying is not recorded.", "security-high", urgency="normal")
+        notify("󰈉 Clipboard Private Mode", "Private mode active. Copying is not recorded.", "security-high", urgency="normal")
     notify_waybar()
 
 
@@ -436,7 +436,7 @@ def open_history_menu():
     items = get_clip_list()
     count = len(items)
 
-    pause_label = "󰅍  Pause State: PAUSED (Click to Resume)" if paused else "󰂛  Pause State: ACTIVE (Click to Pause)"
+    pause_label = "󰅍  Private Mode: ACTIVE (Click to Resume)" if paused else "󰈉  Private Mode: OFF (Click to Enable)"
 
     options = [
         "─── 󰅍 CLIPBOARD CONTROLS ───",
@@ -473,7 +473,7 @@ def open_history_menu():
 
     chosen_clean = chosen.split("\0")[0].strip()
 
-    if "Pause State:" in chosen_clean:
+    if "Private Mode:" in chosen_clean or "Pause State:" in chosen_clean:
         toggle_pause()
     elif "Delete Individual Item" in chosen_clean:
         open_delete_menu()
@@ -503,8 +503,8 @@ def waybar_status():
     count = len(items)
 
     if paused:
-        icon = "󰂛"
-        text = f"{icon} Off"
+        icon = "󰈉"
+        text = f"{icon} Private"
         alt = "paused"
         css_class = "paused"
     elif count > 0:
@@ -520,7 +520,7 @@ def waybar_status():
 
     tooltip_lines = []
     if paused:
-        tooltip_lines.append("<b>󰂛 Clipboard Recording: PAUSED (Private)</b>")
+        tooltip_lines.append("<b>󰈉 Clipboard Recording: PRIVATE MODE (Paused)</b>")
     else:
         tooltip_lines.append(f"<b>󰅍 Clipboard History ({count} items)</b>")
 
@@ -565,7 +565,7 @@ def main():
         elif arg in ["--daemon", "-d", "daemon"]:
             start_daemon(silent=True)
             return
-        elif arg in ["--toggle-pause", "-p", "toggle-pause"]:
+        elif arg in ["--toggle-private", "toggle-private", "--private", "private", "--toggle-pause", "-p", "toggle-pause", "--toggle-dnd", "toggle-dnd", "--dnd", "dnd"]:
             toggle_pause()
             return
         elif arg in ["--clear", "--wipe", "-c", "clear"]:

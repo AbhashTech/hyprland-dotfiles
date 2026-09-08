@@ -263,6 +263,10 @@ hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(programs.clipboard))
 hl.bind(mainMod .. " + ALT + V",   hl.dsp.exec_cmd(programs.clipboard))
 hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd(programs.clipboard))
 
+-- Toggle Clipboard Private Mode / Pause Recording
+hl.bind(mainMod .. " + ALT + X",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --toggle-private"))
+hl.bind(mainMod .. " + SHIFT + X", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --toggle-private"))
+
 -- Open Clipboard Delete & Wipe Menu
 hl.bind(mainMod .. " + ALT + D",   hl.dsp.exec_cmd("cliphist wipe && notify-send -a 'Clipboard' 'Clipboard History Cleared'"))
 hl.bind(mainMod .. " + CTRL + V",  hl.dsp.exec_cmd("cliphist wipe && notify-send -a 'Clipboard' 'Clipboard History Cleared'"))

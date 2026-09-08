@@ -20,21 +20,49 @@ Rectangle {
     property var barWindow: null
     property string notifIcon: "󰂚"
     property int notifCount: 0
+    property bool dndActive: false
+    property bool clipDndActive: false
 
     Process {
         id: ctlProc
     }
 
     Process {
-        id: notifCountProc
-        command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py", "count"]
+        id: notifStatusProc
+        command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py", "status"]
         stdout: SplitParser {
             splitMarker: ""
             onRead: data => {
                 try {
-                    root.notifCount = parseInt(data.trim(), 10) || 0;
+                    var obj = JSON.parse(data.trim());
+                    if (obj) {
+                        root.notifCount = obj.count !== undefined ? obj.count : 0;
+                        root.dndActive = !!obj.dnd;
+                    }
                 } catch (e) {
-                    root.notifCount = 0;
+                    try {
+                        root.notifCount = parseInt(data.trim(), 10) || 0;
+                    } catch (e2) {
+                        root.notifCount = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    Process {
+        id: clipStatusProc
+        command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "status"]
+        stdout: SplitParser {
+            splitMarker: ""
+            onRead: data => {
+                try {
+                    var obj = JSON.parse(data.trim());
+                    if (obj) {
+                        root.clipDndActive = !!obj.dnd;
+                    }
+                } catch (e) {
+                    root.clipDndActive = false;
                 }
             }
         }
@@ -46,7 +74,8 @@ Rectangle {
         repeat: true
         triggeredOnStart: true
         onTriggered: {
-            if (!notifCountProc.running) notifCountProc.running = true;
+            if (!notifStatusProc.running) notifStatusProc.running = true;
+            if (!clipStatusProc.running) clipStatusProc.running = true;
         }
     }
 
@@ -131,11 +160,11 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
-                text: "󰅌"
+                text: root.clipDndActive ? "󰈉" : "󰅌"
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize
                 font.bold: true
-                color: Theme.lavender
+                color: root.clipDndActive ? Theme.peach : Theme.lavender
             }
 
             MouseArea {
@@ -143,13 +172,17 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
                         PluginManager.toggle("clipboard");
+                        if (!clipStatusProc.running) clipStatusProc.running = true;
                     } else if (mouse.button === Qt.RightButton) {
                         ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "wipe"]);
+                    } else if (mouse.button === Qt.MiddleButton) {
+                        root.clipDndActive = !root.clipDndActive;
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "toggle-private"]);
                     }
                 }
             }
@@ -170,11 +203,11 @@ Rectangle {
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: root.notifCount > 0 ? "󱅫" : "󰂚"
+                    text: root.dndActive ? "󰂛" : (root.notifCount > 0 ? "󱅫" : "󰂚")
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize
                     font.bold: true
-                    color: root.notifCount > 0 ? Theme.peach : Theme.accent
+                    color: root.dndActive ? Theme.peach : (root.notifCount > 0 ? Theme.peach : Theme.accent)
                 }
 
                 Text {
@@ -193,14 +226,17 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
                         PluginManager.toggle("notifications");
-                        if (!notifCountProc.running) notifCountProc.running = true;
+                        if (!notifStatusProc.running) notifStatusProc.running = true;
                     } else if (mouse.button === Qt.RightButton) {
                         ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py", "dismiss-all"]);
                         root.notifCount = 0;
+                    } else if (mouse.button === Qt.MiddleButton) {
+                        root.dndActive = !root.dndActive;
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py", "toggle-dnd"]);
                     }
                 }
             }

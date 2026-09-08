@@ -19,11 +19,20 @@ Rectangle {
     property var filteredItems: []
     property int selectedIndex: 0
     property string activeCategory: "all"
+    property bool dndActive: false
 
     function refreshClipboard() {
         if (!clipListProc.running) {
             clipListProc.running = true;
         }
+        if (!clipStatusProc.running) {
+            clipStatusProc.running = true;
+        }
+    }
+
+    function toggleDnd() {
+        root.dndActive = !root.dndActive;
+        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "toggle-dnd"]);
     }
 
     function filterItems() {
@@ -65,6 +74,22 @@ Rectangle {
 
     Process {
         id: ctlProc
+    }
+
+    Process {
+        id: clipStatusProc
+        command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/clipboard/clip_helper.py", "status"]
+        stdout: SplitParser {
+            splitMarker: ""
+            onRead: data => {
+                try {
+                    var obj = JSON.parse(data.trim());
+                    if (obj) {
+                        root.dndActive = !!obj.dnd;
+                    }
+                } catch (e) {}
+            }
+        }
     }
 
     Process {
@@ -175,6 +200,45 @@ Rectangle {
                             }
                         }
                     }
+                }
+            }
+
+            // Private Mode Toggle Button
+            Rectangle {
+                implicitWidth: dndRow.implicitWidth + 16
+                implicitHeight: 40
+                radius: Theme.pillRadius
+                color: root.dndActive ? Theme.peach : (dndArea.containsMouse ? Theme.moduleHoverBg : Theme.moduleBg)
+                border.color: root.dndActive ? Theme.peach : Theme.moduleBorder
+                border.width: 1
+
+                RowLayout {
+                    id: dndRow
+                    anchors.centerIn: parent
+                    spacing: 6
+
+                    Text {
+                        text: "󰈉"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 13
+                        color: root.dndActive ? Theme.crust : (dndArea.containsMouse ? Theme.text : Theme.subtext0)
+                    }
+
+                    Text {
+                        text: root.dndActive ? "Private On" : "Private"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.bold: true
+                        color: root.dndActive ? Theme.crust : (dndArea.containsMouse ? Theme.text : Theme.subtext0)
+                    }
+                }
+
+                MouseArea {
+                    id: dndArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.toggleDnd()
                 }
             }
 
@@ -403,6 +467,15 @@ Rectangle {
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.overlay0
+            }
+
+            Text {
+                visible: root.dndActive
+                text: "• 󰈉 Private Mode Active (Paused)"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                font.bold: true
+                color: Theme.peach
             }
 
             Item { Layout.fillWidth: true }

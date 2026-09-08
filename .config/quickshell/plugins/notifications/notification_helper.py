@@ -155,6 +155,28 @@ def toggle_dnd():
     except Exception:
         pass
 
+def get_status():
+    count = 0
+    dnd = False
+    try:
+        p_live = subprocess.run(["makoctl", "list", "-j"], capture_output=True, text=True, timeout=2)
+        p_hist = subprocess.run(["makoctl", "history", "-j"], capture_output=True, text=True, timeout=2)
+        live = json.loads(p_live.stdout) if p_live.stdout.strip() else []
+        hist = json.loads(p_hist.stdout) if p_hist.stdout.strip() else []
+        dismissed = get_dismissed_ids()
+        all_ids = set([x.get("id") for x in live if x.get("id") not in dismissed] + [x.get("id") for x in hist if x.get("id") not in dismissed])
+        count = len(all_ids)
+    except Exception:
+        count = 0
+
+    try:
+        p_mode = subprocess.run(["makoctl", "mode"], capture_output=True, text=True, timeout=2)
+        dnd = "dnd" in p_mode.stdout.splitlines()
+    except Exception:
+        dnd = False
+
+    print(json.dumps({"count": count, "dnd": dnd}))
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         get_notifications()
@@ -163,6 +185,8 @@ if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "list":
         get_notifications()
+    elif cmd == "status":
+        get_status()
     elif cmd == "count":
         # Fast output count
         try:

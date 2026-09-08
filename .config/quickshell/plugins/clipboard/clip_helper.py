@@ -144,6 +144,46 @@ def wipe():
     except Exception as e:
         sys.stderr.write(f"Wipe error: {e}\n")
 
+PAUSE_STATE_FILE = Path.home() / ".cache" / "cliphist_paused"
+
+def is_paused():
+    return PAUSE_STATE_FILE.exists()
+
+def toggle_private():
+    try:
+        mgr_script = Path.home() / ".config" / "hypr" / "scripts" / "clipboard_manager.py"
+        if mgr_script.exists():
+            subprocess.run(["python3", str(mgr_script), "--toggle-private"], timeout=3)
+        else:
+            if is_paused():
+                try:
+                    PAUSE_STATE_FILE.unlink()
+                except Exception:
+                    pass
+                subprocess.Popen(["notify-send", "-r", "9920", "-t", "2500", "-a", "Clipboard Manager", "-i", "edit-paste", "󰅍 Clipboard Private Mode Inactive", "Clipboard recording is now ACTIVE."], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            else:
+                PAUSE_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+                PAUSE_STATE_FILE.write_text("1")
+                subprocess.Popen(["notify-send", "-r", "9920", "-t", "2500", "-a", "Clipboard Manager", "-i", "security-high", "󰈉 Clipboard Private Mode Active", "Private mode active. Copying is not recorded."], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as e:
+        sys.stderr.write(f"Toggle Private Mode error: {e}\n")
+
+def get_status():
+    dnd = is_paused()
+    try:
+        res = subprocess.run(
+            ["cliphist", "list"],
+            capture_output=True,
+            text=True,
+            errors="replace",
+            timeout=3
+        )
+        lines = [l for l in res.stdout.splitlines() if l.strip()]
+        count = len(lines)
+    except Exception:
+        count = 0
+    print(json.dumps({"dnd": dnd, "private": dnd, "count": count}))
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         list_clips()
@@ -152,6 +192,12 @@ if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "list":
         list_clips()
+    elif cmd == "status":
+        get_status()
+    elif cmd in ["toggle-private", "private", "toggle-dnd", "toggle-pause", "dnd"]:
+        toggle_private()
+    elif cmd in ["is-private", "is-dnd"]:
+        print("1" if is_paused() else "0")
     elif cmd == "copy":
         cid = sys.argv[2] if len(sys.argv) > 2 else ""
         raw = sys.argv[3] if len(sys.argv) > 3 else ""
