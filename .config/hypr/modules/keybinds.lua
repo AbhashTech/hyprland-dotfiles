@@ -268,8 +268,7 @@ hl.bind(mainMod .. " + ALT + X",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME
 hl.bind(mainMod .. " + SHIFT + X", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --toggle-private"))
 
 -- Open Clipboard Delete & Wipe Menu (Prompts with confirmation)
-hl.bind(mainMod .. " + ALT + D",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --clear"))
-hl.bind(mainMod .. " + CTRL + V",  hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --clear"))
+hl.bind(mainMod .. " + ALT + D",   hl.dsp.exec_cmd(programs.clipClear))
 
 -- =============================================================================
 -- 🔊 Audio & Media Controls

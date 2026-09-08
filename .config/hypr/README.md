@@ -273,7 +273,7 @@ sudo usermod -aG i2c $USER
 | `SUPER + SHIFT + N` | Toggle Do-Not-Disturb (DND) Mode (`󰂛`) |
 | `SUPER + SHIFT + V` / `ALT + V` / `SHIFT + C` | Open Searchable Clipboard History Browser (Quickshell) |
 | `SUPER + ALT + X` / `SUPER + SHIFT + X` | Toggle Clipboard Private Mode / Pause Recording (`󰈉`) |
-| `SUPER + ALT + D` / `SUPER + CTRL + V` | Open Delete Item / Wipe Clipboard History Menu (with Confirmation) |
+| `SUPER + ALT + D` | Open Clipboard History & Clear Confirmation Dialog |
 
 ---
 

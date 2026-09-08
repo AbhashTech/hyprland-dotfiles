@@ -21,6 +21,7 @@ QtObject {
     property string powerProfile: "balanced"
     property bool connectivityVisible: false
     property string connectivityTab: "wifi"
+    property bool clipboardPromptClear: false
 
     function setPowerProfile(profile) {
         powerProfile = profile;
@@ -31,6 +32,7 @@ QtObject {
         appMenuVisible = false;
         powerMenuVisible = false;
         clipboardVisible = false;
+        clipboardPromptClear = false;
         calcVisible = false;
         emojiVisible = false;
         keybindsVisible = false;
@@ -65,6 +67,13 @@ QtObject {
                 current = clipboardVisible;
                 closeAll();
                 clipboardVisible = !current;
+                break;
+            case "clipboard-clear":
+            case "clip-clear":
+            case "clipclear":
+                closeAll();
+                clipboardPromptClear = true;
+                clipboardVisible = true;
                 break;
             case "calc":
             case "calculator":

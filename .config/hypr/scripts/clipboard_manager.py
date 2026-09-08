@@ -309,6 +309,15 @@ def delete_item(raw_line):
 
 def clear_history():
     """Wipe all clipboard history and clear thumbnail cache with confirmation."""
+    toggle_script = Path.home() / ".config" / "quickshell" / "scripts" / "toggle_plugin.sh"
+    if toggle_script.exists():
+        try:
+            res = subprocess.run(["bash", str(toggle_script), "clipboard-clear"], check=False)
+            if res.returncode == 0:
+                return
+        except Exception:
+            pass
+
     confirm_options = [
         "󰅖  Cancel (Keep History)",
         "󰃢  Yes, Clear All Clipboard History",

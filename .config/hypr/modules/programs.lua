@@ -9,6 +9,7 @@ local programs = {
     menu        = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh appmenu",
     powerMenu   = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh powermenu",
     clipboard   = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh clipboard",
+    clipClear   = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh clipboard-clear",
     calc        = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh calc",
     emoji       = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh emoji",
     keybinds    = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh keybinds",

@@ -133,7 +133,12 @@ Rectangle {
     }
 
     function grabFocus() {
-        root.confirmingClear = false;
+        if (PluginManager.clipboardPromptClear) {
+            root.confirmingClear = true;
+            PluginManager.clipboardPromptClear = false;
+        } else {
+            root.confirmingClear = false;
+        }
         searchInput.text = "";
         root.activeCategory = "all";
         root.refreshClipboard();
