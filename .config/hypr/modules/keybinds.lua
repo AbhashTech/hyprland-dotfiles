@@ -53,7 +53,7 @@ hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd(programs.powerMenu))
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/launch_quickshell.sh --toggle"))
 
 -- Open Keyboard Shortcuts Cheat Sheet (Quickshell Plugin)
-hl.bind(mainMod .. " + F1", hl.dsp.exec_cmd(programs.keybinds))
+hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd(programs.keybinds))
 
 -- =============================================================================
 -- 🗂️ Workspaces & Window Navigation
@@ -207,7 +207,7 @@ hl.bind(mainMod .. " + CTRL + N",  hl.dsp.exec_cmd(sunsetIdleScript .. " --menu"
 hl.bind(mainMod .. " + ALT + I",   hl.dsp.exec_cmd(sunsetIdleScript .. " --gui"))
 
 -- Open Display Power & Idle Preset Selector Menu (Hypridle)
-hl.bind(mainMod .. " + CTRL + I",  hl.dsp.exec_cmd(sunsetIdleScript .. " --menu"))
+hl.bind(mainMod .. " + CTRL + I",  hl.dsp.exec_cmd(sunsetIdleScript .. " --idle-menu"))
 
 -- Open Quick Math Calculator Prompt (Quickshell Plugin)
 hl.bind(mainMod .. " + equal", hl.dsp.exec_cmd(programs.calc))
@@ -247,10 +247,10 @@ local kbLayoutScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts
 hl.bind(mainMod .. " + CTRL + Space",     hl.dsp.exec_cmd(kbLayoutScript .. " --next"))
 
 -- Open Keyboard Layout Switcher Menu & Manager
-hl.bind(mainMod .. " + CTRL + K",         hl.dsp.exec_cmd(kbLayoutScript .. " --menu"))
+hl.bind(mainMod .. " + ALT + K",          hl.dsp.exec_cmd(kbLayoutScript .. " --menu"))
 
 -- Search & Add Regional Keyboard Layout
-hl.bind(mainMod .. " + CTRL + SHIFT + K", hl.dsp.exec_cmd(kbLayoutScript .. " --add-menu"))
+hl.bind(mainMod .. " + ALT + SHIFT + K",  hl.dsp.exec_cmd(kbLayoutScript .. " --add-menu"))
 
 -- Open Printer Settings
 hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("system-config-printer"))
