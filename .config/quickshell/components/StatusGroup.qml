@@ -169,7 +169,7 @@ Rectangle {
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: 12
+        spacing: 6
 
         // Volume Item
         Item {
@@ -319,27 +319,20 @@ Rectangle {
         }
 
         // Network Item
-        Rectangle {
+        Item {
             id: netItem
-            implicitWidth: Math.max(22, netContent.implicitWidth + 8)
+            implicitWidth: netText.implicitWidth
             implicitHeight: root.implicitHeight
-            radius: 4
-            color: netArea.containsMouse ? Theme.moduleActiveBg : "transparent"
             anchors.verticalCenter: parent.verticalCenter
 
-            Row {
-                id: netContent
-                anchors.centerIn: parent
-                spacing: 4
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.wifiText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
-                    font.bold: true
-                    color: Theme.teal
-                }
+            Text {
+                id: netText
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.wifiText
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize
+                font.bold: true
+                color: Theme.teal
             }
 
             BarTooltip {
@@ -373,27 +366,20 @@ Rectangle {
         }
 
         // Bluetooth Item
-        Rectangle {
+        Item {
             id: btItem
-            implicitWidth: Math.max(22, btContent.implicitWidth + 8)
+            implicitWidth: btText.implicitWidth
             implicitHeight: root.implicitHeight
-            radius: 4
-            color: btArea.containsMouse ? Theme.moduleActiveBg : "transparent"
             anchors.verticalCenter: parent.verticalCenter
 
-            Row {
-                id: btContent
-                anchors.centerIn: parent
-                spacing: 4
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.btText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
-                    font.bold: true
-                    color: Theme.blue
-                }
+            Text {
+                id: btText
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.btText
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize
+                font.bold: true
+                color: Theme.blue
             }
 
             BarTooltip {
