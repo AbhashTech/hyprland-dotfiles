@@ -9,7 +9,7 @@ Rectangle {
     id: root
 
     implicitWidth: 440
-    implicitHeight: Math.min(620, contentCol.implicitHeight + 36)
+    implicitHeight: Math.min(720, contentCol.implicitHeight + 36)
     radius: Theme.barRadius
     color: Theme.barBg
     border.color: Theme.barBorder
@@ -257,8 +257,9 @@ Rectangle {
         Repeater {
             model: root.externalMonitors
             delegate: Rectangle {
+                id: extCard
                 Layout.fillWidth: true
-                implicitHeight: 168
+                implicitHeight: extCol.implicitHeight + 24
                 radius: 10
                 color: Theme.surface0
                 border.color: Theme.blue
@@ -268,6 +269,7 @@ Rectangle {
                 property int liveContrast: modelData.contrast
 
                 ColumnLayout {
+                    id: extCol
                     anchors.fill: parent
                     anchors.margins: 12
                     spacing: 8
@@ -308,10 +310,10 @@ Rectangle {
                         }
                     }
 
-                    // Brightness Slider Row
+                    // Brightness Slider & Presets Row
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: 4
 
                         RowLayout {
                             Layout.fillWidth: true
@@ -323,7 +325,7 @@ Rectangle {
                             }
                             Item { Layout.fillWidth: true }
                             Text {
-                                text: parent.parent.parent.parent.liveBrightness + "%"
+                                text: extCard.liveBrightness + "%"
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 11
                                 font.bold: true
@@ -335,18 +337,56 @@ Rectangle {
                             Layout.fillWidth: true
                             from: 0
                             to: 100
-                            value: modelData.brightness
+                            value: extCard.liveBrightness
                             onMoved: {
-                                parent.parent.parent.liveBrightness = Math.round(value);
+                                extCard.liveBrightness = Math.round(value);
                                 root.setExtBrightness(modelData.bus, Math.round(value));
+                            }
+                        }
+
+                        // External Brightness Presets
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
+
+                            Repeater {
+                                model: [25, 50, 75, 100]
+                                delegate: Rectangle {
+                                    Layout.fillWidth: true
+                                    implicitHeight: 22
+                                    radius: 4
+                                    color: extBPresetMouse.containsMouse ? Theme.moduleHoverBg : Theme.surface1
+                                    border.color: extCard.liveBrightness === modelData ? Theme.yellow : Theme.moduleBorder
+                                    border.width: 1
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: modelData + "%"
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 10
+                                        font.bold: extCard.liveBrightness === modelData
+                                        color: extCard.liveBrightness === modelData ? Theme.yellow : Theme.text
+                                    }
+
+                                    MouseArea {
+                                        id: extBPresetMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            extCard.liveBrightness = modelData;
+                                            root.setExtBrightness(modelData.bus, modelData);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
 
-                    // Contrast Slider Row
+                    // Contrast Slider & Presets Row
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: 4
 
                         RowLayout {
                             Layout.fillWidth: true
@@ -358,7 +398,7 @@ Rectangle {
                             }
                             Item { Layout.fillWidth: true }
                             Text {
-                                text: parent.parent.parent.parent.liveContrast + "%"
+                                text: extCard.liveContrast + "%"
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 11
                                 font.bold: true
@@ -370,10 +410,48 @@ Rectangle {
                             Layout.fillWidth: true
                             from: 0
                             to: 100
-                            value: modelData.contrast
+                            value: extCard.liveContrast
                             onMoved: {
-                                parent.parent.parent.liveContrast = Math.round(value);
+                                extCard.liveContrast = Math.round(value);
                                 root.setExtContrast(modelData.bus, Math.round(value));
+                            }
+                        }
+
+                        // External Contrast Presets
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
+
+                            Repeater {
+                                model: [25, 50, 75, 100]
+                                delegate: Rectangle {
+                                    Layout.fillWidth: true
+                                    implicitHeight: 22
+                                    radius: 4
+                                    color: extCPresetMouse.containsMouse ? Theme.moduleHoverBg : Theme.surface1
+                                    border.color: extCard.liveContrast === modelData ? Theme.teal : Theme.moduleBorder
+                                    border.width: 1
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: modelData + "%"
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 10
+                                        font.bold: extCard.liveContrast === modelData
+                                        color: extCard.liveContrast === modelData ? Theme.teal : Theme.text
+                                    }
+
+                                    MouseArea {
+                                        id: extCPresetMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            extCard.liveContrast = modelData;
+                                            root.setExtContrast(modelData.bus, modelData);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

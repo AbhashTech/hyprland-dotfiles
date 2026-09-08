@@ -47,16 +47,13 @@ Rectangle {
 
     Process {
         id: brightProc
-        command: ["brightnessctl", "-m"]
+        command: ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", "get-active"]
         stdout: SplitParser {
             onRead: data => {
                 try {
-                    var lines = data.trim().split("\n");
-                    if (lines.length > 0) {
-                        var parts = lines[0].split(",");
-                        if (parts.length >= 4) {
-                            root.brightness = parseInt(parts[3].replace("%", ""), 10);
-                        }
+                    var obj = JSON.parse(data);
+                    if (obj && obj.brightness !== undefined) {
+                        root.brightness = obj.brightness;
                     }
                 } catch (e) {}
             }
@@ -270,9 +267,11 @@ Rectangle {
 
                 onWheel: wheel => {
                     if (wheel.angleDelta.y > 0) {
-                        ctlProc.exec(["brightnessctl", "set", "+5%"]);
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", "active-up", "5"]);
+                        root.brightness = Math.min(100, root.brightness + 5);
                     } else if (wheel.angleDelta.y < 0) {
-                        ctlProc.exec(["brightnessctl", "set", "5%-"]);
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", "active-down", "5"]);
+                        root.brightness = Math.max(0, root.brightness - 5);
                     }
                 }
             }

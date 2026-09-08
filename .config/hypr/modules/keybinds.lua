@@ -309,13 +309,13 @@ hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = tr
 -- ☀️ Screen Brightness & External DDC Controls
 -- =============================================================================
 
-local brightnessScript = os.getenv("HOME") .. "/.config/hypr/scripts/brightness_control.py"
+local brightnessScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/brightness_control.py"
 
--- Laptop Brightness Up (+5%) with OSD
-hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd(brightnessScript .. " up"),   { locked = true, repeating = true })
+-- Screen-Aware Brightness Up (+5%) with OSD (Adjusts active display: laptop or external)
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd(brightnessScript .. " active-up"),   { locked = true, repeating = true })
 
--- Laptop Brightness Down (-5%) with OSD
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(brightnessScript .. " down"), { locked = true, repeating = true })
+-- Screen-Aware Brightness Down (-5%) with OSD (Adjusts active display: laptop or external)
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(brightnessScript .. " active-down"), { locked = true, repeating = true })
 
 -- External Monitor Brightness Up (DDC)
 hl.bind("SHIFT + XF86MonBrightnessUp",         hl.dsp.exec_cmd(brightnessScript .. " ddc-up"),   { locked = true, repeating = true })
@@ -324,6 +324,10 @@ hl.bind(mainMod .. " + XF86MonBrightnessUp",   hl.dsp.exec_cmd(brightnessScript 
 -- External Monitor Brightness Down (DDC)
 hl.bind("SHIFT + XF86MonBrightnessDown",       hl.dsp.exec_cmd(brightnessScript .. " ddc-down"), { locked = true, repeating = true })
 hl.bind(mainMod .. " + XF86MonBrightnessDown", hl.dsp.exec_cmd(brightnessScript .. " ddc-down"), { locked = true, repeating = true })
+
+-- External Monitor Contrast Up/Down (DDC)
+hl.bind("CTRL + SHIFT + XF86MonBrightnessUp",   hl.dsp.exec_cmd(brightnessScript .. " ddc-contrast-up"),   { locked = true, repeating = true })
+hl.bind("CTRL + SHIFT + XF86MonBrightnessDown", hl.dsp.exec_cmd(brightnessScript .. " ddc-contrast-down"), { locked = true, repeating = true })
 
 -- Open Display Brightness & Contrast Control Center (Quickshell Brightness Plugin)
 hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd(programs.brightnessMenu))
