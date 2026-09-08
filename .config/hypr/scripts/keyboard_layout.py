@@ -4,7 +4,7 @@
 Hyprland Keyboard Layout & Variant Manager Utility (Desktop GUI & CLI)
 =============================================================================
 A modern, native graphical (GTK3) and CLI/Fuzzel utility to:
-- Dynamically adapt the active system theme palette (Catppuccin, Tokyo Night, etc.)
+- Dynamically adapt the active system theme palette (Catppuccin, Gruvbox, Tokyo Night, etc.)
 - Switch and cycle active keyboard layouts & variants live across all keyboards
 - Search, browse, and add regional layouts & ergonomic variants (Indian languages,
   Dvorak, Colemak, French Bépo, European, Asian, etc.)
@@ -18,6 +18,7 @@ import os
 import sys
 import re
 import json
+import html
 import shutil
 import argparse
 import subprocess
@@ -131,7 +132,7 @@ def get_active_theme_colors():
     """Load colors from active theme JSON file with fallback."""
     cache_state = HOME / ".cache" / "hypr_theme_state.json"
     current_txt = HOME / ".cache" / "current_theme"
-    theme_id = "catppuccin-mocha"
+    theme_id = "gruvbox-light"
 
     if cache_state.exists():
         try:
@@ -194,7 +195,7 @@ def run_cmd(cmd, check=False):
         return ""
 
 
-def show_notification(title, body, icon="input-keyboard", urgency="low"):
+def show_notification(title, body, icon="preferences-desktop-keyboard", urgency="low"):
     """Display a desktop notification."""
     run_cmd([
         "notify-send",
@@ -466,7 +467,7 @@ def switch_next_layout():
     if len(info["pairs"]) <= 1:
         show_notification(
             "󰌌  Single Layout Configured",
-            f"Current: <b>{info['active_keymap']}</b>\nOpen <b>Keyboard Layout Manager</b> to add more layouts!"
+            f"Current: <b>{html.escape(info['active_keymap'])}</b>\nOpen <b>Keyboard Layout Manager</b> to add more layouts!"
         )
         print("Only 1 layout is configured.")
         return
@@ -482,13 +483,13 @@ def switch_next_layout():
     curr_desc = get_entry_description(new_info["current_lay"], new_info["current_var"], l_map, v_map)
 
     layouts_display = " • ".join([
-        f"<b><u>{format_entry_tag(l, v).upper()}</u></b>" if i == new_info["active_index"] else format_entry_tag(l, v).upper()
+        f"<b><u>{html.escape(format_entry_tag(l, v).upper())}</u></b>" if i == new_info["active_index"] else html.escape(format_entry_tag(l, v).upper())
         for i, (l, v) in enumerate(new_info["pairs"])
     ])
 
     show_notification(
         "󰌌  Keyboard Layout Switched",
-        f"Active: <b>{curr_desc}</b>\nLayouts: {layouts_display}"
+        f"Active: <b>{html.escape(curr_desc)}</b>\nLayouts: {layouts_display}"
     )
     print(f"Switched to: {curr_desc} [{format_entry_tag(new_info['current_lay'], new_info['current_var'])}]")
 
@@ -511,7 +512,7 @@ def switch_prev_layout():
 
     show_notification(
         "󰌌  Keyboard Layout Switched",
-        f"Active: <b>{curr_desc}</b>"
+        f"Active: <b>{html.escape(curr_desc)}</b>"
     )
     print(f"Switched to: {curr_desc} [{format_entry_tag(new_info['current_lay'], new_info['current_var'])}]")
 
@@ -549,7 +550,7 @@ def set_layout_by_index_or_tag(target):
         desc = get_entry_description(new_info["current_lay"], new_info["current_var"], l_map, v_map)
         show_notification(
             "󰌌  Keyboard Layout Changed",
-            f"Active: <b>{desc}</b>"
+            f"Active: <b>{html.escape(desc)}</b>"
         )
         print(f"Switched to layout {target_idx}: {desc}")
     else:
@@ -575,7 +576,7 @@ def add_layout(layout_arg, variant_arg=""):
             tag = format_entry_tag(lay, var)
             show_notification(
                 "󰌌  Keyboard Layout Info",
-                f"Layout <b>{tag.upper()}</b> is already configured."
+                f"Layout <b>{html.escape(tag.upper())}</b> is already configured."
             )
             print(f"Layout '{tag}' is already configured.")
             set_layout_by_index_or_tag(str(i))
@@ -593,7 +594,7 @@ def add_layout(layout_arg, variant_arg=""):
 
     show_notification(
         "󰐕  Keyboard Layout Added",
-        f"Added: <b>{desc}</b>\nActive layouts: <b>{all_tags}</b>"
+        f"Added: <b>{html.escape(desc)}</b>\nActive layouts: <b>{html.escape(all_tags)}</b>"
     )
     print(f"Successfully added layout '{format_entry_tag(lay, var)}' ({desc}). Active: {all_tags}")
     return True
@@ -644,7 +645,7 @@ def remove_layout(layout_arg, variant_arg=""):
     all_tags = ", ".join([format_entry_tag(l, v).upper() for l, v in zip(layouts, variants)])
     show_notification(
         "󰍵  Keyboard Layout Removed",
-        f"Removed: <b>{removed_tag.upper()}</b>\nRemaining: <b>{all_tags}</b>"
+        f"Removed: <b>{html.escape(removed_tag.upper())}</b>\nRemaining: <b>{html.escape(all_tags)}</b>"
     )
     print(f"Successfully removed layout '{removed_tag}'. Active: {all_tags}")
     return True
@@ -668,7 +669,7 @@ def reorder_layout(from_idx, to_idx):
 
 
 # =============================================================================
-# 🚀 Interactive Fuzzel / Dmenu Menu Mode
+# 🚀 Interactive Fuzzel / Dmenu Menu Mode (with seamless GTK fallback)
 # =============================================================================
 
 def run_fuzzel_menu(prompt, lines_list):
@@ -716,7 +717,11 @@ def run_fuzzel_menu(prompt, lines_list):
 
 
 def gui_add_layout_menu():
-    """Interactive Fuzzel search menu to add any layout or variant."""
+    """Interactive search menu to add any layout or variant."""
+    if not shutil.which("fuzzel") and not shutil.which("wofi"):
+        launch_gtk_gui(initial_tab=1)
+        return
+
     l_map, v_map = parse_all_xkb_catalog()
     conf = get_configured_from_file()
     configured_pairs = set(zip(conf["layouts"], conf["variants"]))
@@ -762,7 +767,11 @@ def gui_add_layout_menu():
 
 
 def gui_remove_layout_menu():
-    """Interactive Fuzzel menu to remove a configured layout."""
+    """Interactive menu to remove a configured layout."""
+    if not shutil.which("fuzzel") and not shutil.which("wofi"):
+        launch_gtk_gui(initial_tab=0)
+        return
+
     conf = get_configured_from_file()
     pairs = list(zip(conf["layouts"], conf["variants"]))
     l_map, v_map = parse_all_xkb_catalog()
@@ -770,7 +779,7 @@ def gui_remove_layout_menu():
     if len(pairs) <= 1:
         show_notification(
             "⚠️  Cannot Remove Layout",
-            f"Only 1 layout ({format_entry_tag(pairs[0][0], pairs[0][1]).upper()}) is configured. You cannot remove it.",
+            f"Only 1 layout ({html.escape(format_entry_tag(pairs[0][0], pairs[0][1]).upper())}) is configured. You cannot remove it.",
             urgency="normal"
         )
         return
@@ -793,7 +802,11 @@ def gui_remove_layout_menu():
 
 
 def gui_fuzzel_main_menu():
-    """Main interactive Fuzzel layout manager menu."""
+    """Main interactive layout manager menu with seamless GTK fallback."""
+    if not shutil.which("fuzzel") and not shutil.which("wofi"):
+        launch_gtk_gui(initial_tab=0)
+        return
+
     info = get_active_layout_info()
     l_map, v_map = parse_all_xkb_catalog()
 
@@ -851,7 +864,7 @@ def gui_fuzzel_main_menu():
 # 🖥️ Full Graphical GTK3 Desktop Application (Dynamic Theme Adaptation)
 # =============================================================================
 
-def launch_gtk_gui():
+def launch_gtk_gui(initial_tab=0):
     """Launch full GTK3 desktop interface with theme styling."""
     try:
         import gi
@@ -963,6 +976,9 @@ def launch_gtk_gui():
         border-color: {c_accent};
         color: {c_text};
     }}
+    button.btn-secondary:hover label {{
+        color: {c_text};
+    }}
 
     button.btn-active-switch {{
         background-color: {c_sapphire};
@@ -972,19 +988,19 @@ def launch_gtk_gui():
         padding: 6px 14px;
     }}
     button.btn-active-switch label {{
-        color: {c_crust};
+        color: {sapphire_fg};
         font-weight: 800;
     }}
     button.btn-active-switch:hover {{
         background-color: {c_blue};
-        color: #000000;
+        color: {blue_fg};
     }}
     button.btn-active-switch:hover label {{
-        color: #000000;
+        color: {blue_fg};
     }}
 
     button.btn-danger {{
-        background-color: rgba(243, 139, 168, 0.12);
+        background-color: {c_surface0};
         background-image: none;
         border: 1px solid {c_red};
         color: {c_red};
@@ -1058,6 +1074,7 @@ def launch_gtk_gui():
     entry.typing-entry:focus {{
         border-color: {c_accent};
         background-color: {c_crust};
+        color: {c_text};
     }}
 
     /* Search Bar */
@@ -1072,6 +1089,7 @@ def launch_gtk_gui():
     entry.search-entry:focus {{
         border-color: {c_accent};
         background-color: {c_crust};
+        color: {c_text};
     }}
 
     /* Filter Pills */
@@ -1127,6 +1145,12 @@ def launch_gtk_gui():
     }}
 
     /* Checkbuttons */
+    checkbutton {{
+        color: {c_text};
+    }}
+    checkbutton label {{
+        color: {c_text};
+    }}
     checkbutton check {{
         min-width: 18px;
         min-height: 18px;
@@ -1137,7 +1161,7 @@ def launch_gtk_gui():
     checkbutton check:checked {{
         background-color: {c_accent};
         border-color: {c_accent};
-        color: {c_crust};
+        color: {accent_fg};
     }}
     """
 
@@ -1148,7 +1172,7 @@ def launch_gtk_gui():
     )
 
     class KeyboardLayoutWindow(Gtk.Window):
-        def __init__(self):
+        def __init__(self, start_tab=0):
             super().__init__(title="Keyboard Layout Manager")
             self.set_default_size(780, 680)
             self.set_position(Gtk.WindowPosition.CENTER)
@@ -1205,6 +1229,9 @@ def launch_gtk_gui():
             self.notebook.append_page(self.tab_options, Gtk.Label(label="⚙️  Options & Devices"))
 
             self.refresh_all()
+
+            if start_tab and 0 <= start_tab < 3:
+                self.notebook.set_current_page(start_tab)
 
         def on_cycle_clicked(self, btn):
             switch_next_layout()
@@ -1268,7 +1295,7 @@ def launch_gtk_gui():
             # Update typing test label
             curr_desc = get_entry_description(info["current_lay"], info["current_var"], self.l_map, self.v_map)
             self.lbl_test_title.set_markup(
-                f"<b>⌨️ Interactive Typing Test Area</b> — Active: <span foreground='{c_accent}'><b>{curr_desc} ({info['current_tag'].upper()})</b></span>"
+                f"<b>⌨️ Interactive Typing Test Area</b> — Active: <span foreground='{c_accent}'><b>{html.escape(curr_desc)} ({html.escape(info['current_tag'].upper())})</b></span>"
             )
 
             for idx, (lay, var) in enumerate(pairs):
@@ -1292,7 +1319,7 @@ def launch_gtk_gui():
                 
                 name_lbl = Gtk.Label(label=desc, xalign=0)
                 name_lbl.get_style_context().add_class("subtitle-label")
-                name_lbl.set_markup(f"<span size='12000' weight='bold'>{desc}</span>")
+                name_lbl.set_markup(f"<span size='12000' weight='bold'>{html.escape(desc)}</span>")
                 row_top.pack_start(name_lbl, False, False, 0)
 
                 tag_lbl = Gtk.Label(label=tag)
@@ -1306,7 +1333,7 @@ def launch_gtk_gui():
 
                 info_box.pack_start(row_top, False, False, 0)
 
-                variant_text = f"Layout Code: <code>{lay}</code>" + (f" • Variant: <code>{var}</code>" if var else "")
+                variant_text = f"Layout Code: <tt>{html.escape(lay)}</tt>" + (f" • Variant: <tt>{html.escape(var)}</tt>" if var else "")
                 sub_lbl = Gtk.Label(xalign=0)
                 sub_lbl.set_markup(f"<span size='10000' foreground='{c_subtext0}'>{variant_text}</span>")
                 info_box.pack_start(sub_lbl, False, False, 0)
@@ -1485,7 +1512,7 @@ def launch_gtk_gui():
                         continue
 
                 count += 1
-                if count > 80:  # Prevent UI overload
+                if count > 80:
                     break
 
                 card = self.create_catalog_card(item)
@@ -1509,7 +1536,7 @@ def launch_gtk_gui():
             row_top = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
 
             name_lbl = Gtk.Label(xalign=0)
-            name_lbl.set_markup(f"<span size='11500' weight='bold'>{desc}</span>")
+            name_lbl.set_markup(f"<span size='11500' weight='bold'>{html.escape(desc)}</span>")
             row_top.pack_start(name_lbl, False, False, 0)
 
             tag_lbl = Gtk.Label(label=tag)
@@ -1518,7 +1545,7 @@ def launch_gtk_gui():
 
             info_box.pack_start(row_top, False, False, 0)
 
-            detail_text = f"Code: <code>{lay}</code>" + (f" • Variant: <code>{var}</code>" if var else "")
+            detail_text = f"Code: <tt>{html.escape(lay)}</tt>" + (f" • Variant: <tt>{html.escape(var)}</tt>" if var else "")
             sub_lbl = Gtk.Label(xalign=0)
             sub_lbl.set_markup(f"<span size='9500' foreground='{c_subtext0}'>{detail_text}</span>")
             info_box.pack_start(sub_lbl, False, False, 0)
@@ -1568,7 +1595,7 @@ def launch_gtk_gui():
 
             # Section 2: Layout Switching & XKB Options
             sec2_title = Gtk.Label(xalign=0)
-            sec2_title.set_markup(f"<span size='13000' weight='bold' foreground='{c_accent}'>⚙️ XKB Input Switching & Modifier Options</span>")
+            sec2_title.set_markup(f"<span size='13000' weight='bold' foreground='{c_accent}'>⚙️ XKB Input Switching &amp; Modifier Options</span>")
             content_box.pack_start(sec2_title, False, False, 4)
 
             self.options_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
@@ -1591,11 +1618,11 @@ def launch_gtk_gui():
             for key, act in shortcuts:
                 row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
                 lbl_k = Gtk.Label(xalign=0)
-                lbl_k.set_markup(f"<span weight='bold' foreground='{c_yellow}'><code>{key}</code></span>")
+                lbl_k.set_markup(f"<span weight='bold' foreground='{c_yellow}'><tt>{html.escape(key)}</tt></span>")
                 row.pack_start(lbl_k, False, False, 0)
 
                 lbl_a = Gtk.Label(xalign=0)
-                lbl_a.set_markup(f"<span foreground='{c_text}'>➜  {act}</span>")
+                lbl_a.set_markup(f"<span foreground='{c_text}'>➜  {html.escape(act)}</span>")
                 row.pack_start(lbl_a, True, True, 0)
                 keybinds_card.pack_start(row, False, False, 2)
 
@@ -1623,10 +1650,10 @@ def launch_gtk_gui():
 
                 info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
                 name_lbl = Gtk.Label(xalign=0)
-                name_lbl.set_markup(f"<span weight='bold'>{kb.get('name', 'Unknown Keyboard')}</span>")
+                name_lbl.set_markup(f"<span weight='bold'>{html.escape(kb.get('name', 'Unknown Keyboard'))}</span>")
                 info_box.pack_start(name_lbl, False, False, 0)
 
-                sub_text = f"Keymap: <b>{kb.get('active_keymap', 'Default')}</b>"
+                sub_text = f"Keymap: <b>{html.escape(kb.get('active_keymap', 'Default'))}</b>"
                 if kb.get("main"):
                     sub_text += f" • <span foreground='{c_green}'><b>[Main Primary Keyboard]</b></span>"
                 sub_lbl = Gtk.Label(xalign=0)
@@ -1656,11 +1683,11 @@ def launch_gtk_gui():
 
                 info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
                 title_lbl = Gtk.Label(xalign=0)
-                title_lbl.set_markup(f"<span weight='bold'>{opt_title}</span> <code>({opt_code})</code>")
+                title_lbl.set_markup(f"<span weight='bold'>{html.escape(opt_title)}</span> <tt>({html.escape(opt_code)})</tt>")
                 info_box.pack_start(title_lbl, False, False, 0)
 
                 desc_lbl = Gtk.Label(xalign=0)
-                desc_lbl.set_markup(f"<span size='10000' foreground='{c_subtext0}'>{opt_desc}</span>")
+                desc_lbl.set_markup(f"<span size='10000' foreground='{c_subtext0}'>{html.escape(opt_desc)}</span>")
                 info_box.pack_start(desc_lbl, False, False, 0)
 
                 card.pack_start(info_box, True, True, 0)
@@ -1681,10 +1708,10 @@ def launch_gtk_gui():
             save_and_apply_config(conf["layouts"], conf["variants"], options=new_options_str)
             show_notification(
                 "⚙️  XKB Options Updated",
-                f"Configured options: <b>{new_options_str or 'None'}</b>"
+                f"Configured options: <b>{html.escape(new_options_str or 'None')}</b>"
             )
 
-    win = KeyboardLayoutWindow()
+    win = KeyboardLayoutWindow(start_tab=initial_tab)
     win.connect("destroy", Gtk.main_quit)
     win.show_all()
     Gtk.main()
@@ -1766,11 +1793,17 @@ def main():
     elif args.remove:
         remove_layout(args.remove)
     elif args.add_menu:
-        gui_add_layout_menu()
+        if shutil.which("fuzzel") or shutil.which("wofi"):
+            gui_add_layout_menu()
+        else:
+            launch_gtk_gui(initial_tab=1)
     elif args.remove_menu:
         gui_remove_layout_menu()
     elif args.menu:
-        gui_fuzzel_main_menu()
+        if shutil.which("fuzzel") or shutil.which("wofi"):
+            gui_fuzzel_main_menu()
+        else:
+            launch_gtk_gui(initial_tab=0)
     elif args.status:
         print_status_json()
     elif args.list:
@@ -1786,7 +1819,7 @@ def main():
             print(f"  [{i}] {format_entry_tag(l, v):<16} : {d}{act}")
     else:
         # Default when launched directly from App Menu without arguments: open GUI
-        launch_gtk_gui()
+        launch_gtk_gui(initial_tab=0)
 
 
 if __name__ == "__main__":
