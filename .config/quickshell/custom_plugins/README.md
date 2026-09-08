@@ -14,6 +14,7 @@ Create a subdirectory under `custom_plugins/` for your plugin with a `manifest.j
 ```text
 ~/.config/quickshell/custom_plugins/
 ├── README.md                   <-- This documentation
+├── plugin-manager/             <-- Built-in GUI & CLI Plugin Manager
 └── my_plugin/                  <-- Your custom plugin folder
     ├── manifest.json           <-- Plugin metadata, position & entrypoints (Automatic discovery!)
     ├── MyBarWidget.qml         <-- Topbar widget (optional)
@@ -39,6 +40,8 @@ Every custom plugin should contain a `manifest.json` file at its root. This inst
   "description": "Live weather widget and 7-day forecast drawer",
   "kinds": ["bar-widget", "window"],
   "position": "center",
+  "dependencies": ["curl", "python3"],
+  "enabled": true,
   "entryPoints": {
     "barWidget": "WeatherModule.qml",
     "windows": ["WeatherWindow.qml"],
@@ -55,12 +58,46 @@ Every custom plugin should contain a `manifest.json` file at its root. This inst
 | `name` | `string` | Human-readable name. |
 | `position` | `string` | Where the topbar widget appears: `"left"`, `"center"`, or `"right"` (default: `"center"`). |
 | `kinds` | `array` | Types of components provided: `["bar-widget", "window", "service"]`. |
+| `dependencies` | `array` | Optional list of required system CLI binaries (e.g. `["curl", "playerctl"]`). |
 | `entryPoints.barWidget` | `string` | QML file for the topbar capsule (e.g. `Widget.qml`, `WeatherModule.qml`). |
 | `entryPoints.windows` | `array` / `string` | Floating popup window QML file(s) (e.g. `["WeatherWindow.qml"]`). |
 | `entryPoints.service` | `string` | Background QML service file (e.g. `WeatherService.qml`). |
 | `enabled` | `boolean` | Set to `false` to disable the plugin without deleting it (default: `true`). |
 
 *(Note: If `manifest.json` is omitted, the auto-discovery engine will look for standard filenames like `*Module.qml` or `Widget.qml` for topbar widgets and `*Window.qml` for popup windows).*
+
+---
+
+## 🔌 Enabling and Disabling Plugins
+
+You can enable or disable any custom plugin using any of the following 3 methods:
+
+### Method 1: Via Graphical UI (Plugin Manager)
+1. Click the **Plugin Manager capsule** on the top status bar or press the toggle keybinding.
+2. Find your plugin in the list.
+3. Click the **toggle switch** to enable or disable it.
+4. Quickshell will automatically update the manifests and reload widgets in real-time.
+
+### Method 2: Via `manifest.json`
+1. Open `~/.config/quickshell/custom_plugins/<your-plugin>/manifest.json`.
+2. Modify the `"enabled"` boolean:
+   ```json
+   "enabled": false
+   ```
+3. Regenerate loader manifests and restart Quickshell:
+   ```bash
+   bash ~/.config/quickshell/scripts/launch_quickshell.sh --restart
+   ```
+
+### Method 3: Via CLI (`plugin_helper.py`)
+Use the backend helper script to toggle plugins from scripts or terminal:
+```bash
+# Enable a plugin
+python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py toggle <plugin-id> true
+
+# Disable a plugin
+python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py toggle <plugin-id> false
+```
 
 ---
 

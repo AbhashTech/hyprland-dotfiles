@@ -27,6 +27,13 @@ def save_dismissed_ids(ids_set):
     except Exception:
         pass
 
+def clear_dismissed_cache():
+    try:
+        if DISMISSED_FILE.exists():
+            DISMISSED_FILE.unlink()
+    except Exception:
+        pass
+
 def restart_mako():
     """Restart mako daemon in background to completely flush mako internal buffer."""
     try:
@@ -35,6 +42,7 @@ def restart_mako():
         subprocess.Popen(["mako"], start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception:
         pass
+    clear_dismissed_cache()
 
 def clean_text(t, max_len=500):
     if not t:
@@ -45,18 +53,53 @@ def clean_text(t, max_len=500):
         clean = clean[:max_len] + "..."
     return clean
 
+def extract_items(raw_data):
+    """Normalize makoctl JSON output into a flat list of dict items."""
+    if not raw_data:
+        return []
+    if isinstance(raw_data, dict):
+        # makoctl often returns {"data": [[{...}, ...]]} or {"data": [{...}]}
+        if "data" in raw_data:
+            data_val = raw_data["data"]
+            if isinstance(data_val, list):
+                if len(data_val) > 0 and isinstance(data_val[0], list):
+                    return [x for sub in data_val if isinstance(sub, list) for x in sub if isinstance(x, dict)]
+                return [x for x in data_val if isinstance(x, dict)]
+        return []
+    if isinstance(raw_data, list):
+        items = []
+        for x in raw_data:
+            if isinstance(x, list):
+                items.extend([i for i in x if isinstance(i, dict)])
+            elif isinstance(x, dict):
+                items.append(x)
+        return items
+    return []
+
+def get_field_val(item, *keys, default=""):
+    """Extract a value from a notification item, checking multiple key names and nested 'data' wrappers."""
+    for k in keys:
+        if k in item:
+            val = item[k]
+            if isinstance(val, dict) and "data" in val:
+                return val["data"]
+            return val
+    return default
+
 def get_notifications():
     # 1. Fetch live notifications
     try:
         p_live = subprocess.run(["makoctl", "list", "-j"], capture_output=True, text=True, timeout=3)
-        live_data = json.loads(p_live.stdout) if p_live.stdout.strip() else []
+        live_json = json.loads(p_live.stdout) if p_live.stdout.strip() else []
+        live_data = extract_items(live_json)
     except Exception:
         live_data = []
 
     # 2. Fetch history notifications
     try:
         p_hist = subprocess.run(["makoctl", "history", "-j"], capture_output=True, text=True, timeout=3)
-        hist_data = json.loads(p_hist.stdout) if p_hist.stdout.strip() else []
+        hist_json = json.loads(p_hist.stdout) if p_hist.stdout.strip() else []
+        hist_data = extract_items(hist_json)
     except Exception:
         hist_data = []
 
@@ -74,18 +117,19 @@ def get_notifications():
 
     # Process live first
     for item in live_data:
+        raw_id = get_field_val(item, "id", default=None)
         try:
-            nid = int(item.get("id"))
+            nid = int(raw_id)
         except (ValueError, TypeError):
             continue
         if nid in dismissed:
             continue
         seen_ids.add(nid)
-        app = str(item.get("app_name") or "System")
-        summary = clean_text(item.get("summary"), max_len=150)
-        body = clean_text(item.get("body"), max_len=400)
-        urgency = str(item.get("urgency") or "normal")
-        actions = item.get("actions") or {}
+        app = str(get_field_val(item, "app-name", "app_name", default="System"))
+        summary = clean_text(get_field_val(item, "summary", default=""), max_len=150)
+        body = clean_text(get_field_val(item, "body", default=""), max_len=400)
+        urgency = str(get_field_val(item, "urgency", default="normal"))
+        actions = get_field_val(item, "actions", default={})
         notifs.append({
             "id": nid,
             "appName": app,
@@ -98,18 +142,19 @@ def get_notifications():
 
     # Process history (up to max history capacity: 500 items)
     for item in hist_data[:500]:
+        raw_id = get_field_val(item, "id", default=None)
         try:
-            nid = int(item.get("id"))
+            nid = int(raw_id)
         except (ValueError, TypeError):
             continue
         if nid in seen_ids or nid in dismissed:
             continue
         seen_ids.add(nid)
-        app = str(item.get("app_name") or "System")
-        summary = clean_text(item.get("summary"), max_len=150)
-        body = clean_text(item.get("body"), max_len=400)
-        urgency = str(item.get("urgency") or "normal")
-        actions = item.get("actions") or {}
+        app = str(get_field_val(item, "app-name", "app_name", default="System"))
+        summary = clean_text(get_field_val(item, "summary", default=""), max_len=150)
+        body = clean_text(get_field_val(item, "body", default=""), max_len=400)
+        urgency = str(get_field_val(item, "urgency", default="normal"))
+        actions = get_field_val(item, "actions", default={})
         notifs.append({
             "id": nid,
             "appName": app,
@@ -150,22 +195,8 @@ def dismiss_all():
     except Exception:
         pass
 
-    try:
-        p_live = subprocess.run(["makoctl", "list", "-j"], capture_output=True, text=True, timeout=2)
-        p_hist = subprocess.run(["makoctl", "history", "-j"], capture_output=True, text=True, timeout=2)
-        live = json.loads(p_live.stdout) if p_live.stdout.strip() else []
-        hist = json.loads(p_hist.stdout) if p_hist.stdout.strip() else []
-        all_ids = set()
-        for x in live + hist:
-            try:
-                all_ids.add(int(x.get("id")))
-            except (ValueError, TypeError):
-                pass
-        dismissed = get_dismissed_ids()
-        dismissed.update(all_ids)
-        save_dismissed_ids(dismissed)
-    except Exception:
-        pass
+    # Clear dismissed tracking file so newly arriving notifications starting at low IDs aren't blocked
+    clear_dismissed_cache()
 
     # Restart mako to wipe history buffer completely
     restart_mako()
@@ -182,13 +213,14 @@ def get_status():
     try:
         p_live = subprocess.run(["makoctl", "list", "-j"], capture_output=True, text=True, timeout=2)
         p_hist = subprocess.run(["makoctl", "history", "-j"], capture_output=True, text=True, timeout=2)
-        live = json.loads(p_live.stdout) if p_live.stdout.strip() else []
-        hist = json.loads(p_hist.stdout) if p_hist.stdout.strip() else []
+        live = extract_items(json.loads(p_live.stdout) if p_live.stdout.strip() else [])
+        hist = extract_items(json.loads(p_hist.stdout) if p_hist.stdout.strip() else [])
         dismissed = get_dismissed_ids()
         all_ids = set()
         for x in live + hist:
+            raw_id = get_field_val(x, "id", default=None)
             try:
-                i = int(x.get("id"))
+                i = int(raw_id)
                 if i not in dismissed:
                     all_ids.add(i)
             except (ValueError, TypeError):
@@ -219,13 +251,14 @@ if __name__ == "__main__":
         try:
             p_live = subprocess.run(["makoctl", "list", "-j"], capture_output=True, text=True, timeout=2)
             p_hist = subprocess.run(["makoctl", "history", "-j"], capture_output=True, text=True, timeout=2)
-            live = json.loads(p_live.stdout) if p_live.stdout.strip() else []
-            hist = json.loads(p_hist.stdout) if p_hist.stdout.strip() else []
+            live = extract_items(json.loads(p_live.stdout) if p_live.stdout.strip() else [])
+            hist = extract_items(json.loads(p_hist.stdout) if p_hist.stdout.strip() else [])
             dismissed = get_dismissed_ids()
             all_ids = set()
             for x in live + hist:
+                raw_id = get_field_val(x, "id", default=None)
                 try:
-                    i = int(x.get("id"))
+                    i = int(raw_id)
                     if i not in dismissed:
                         all_ids.add(i)
                 except (ValueError, TypeError):
