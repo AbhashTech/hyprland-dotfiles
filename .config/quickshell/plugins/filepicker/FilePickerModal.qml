@@ -57,6 +57,8 @@ Rectangle {
     property string  requestTitle:   "Open File"
     property string  requestAppId:   ""
     property string  requestMime:    "all"
+    property string  requestSuggestedName: ""  // suggested filename from portal (current_name)
+    property string  saveFileName:   ""        // editable filename for save mode
 
     // ── Computed ──────────────────────────────────────────────────────────────
     property bool    canGoBack:    historyIdx > 0
@@ -155,7 +157,10 @@ Rectangle {
         if (entry.isDir) {
             navigate(entry.path)
         } else {
-            if (multiSelect) {
+            if (requestMode === "save") {
+                // In save mode, clicking a file pre-fills the filename field
+                saveFileName = entry.name
+            } else if (multiSelect) {
                 toggleSelection(entry.path)
             } else {
                 selectedPaths = [entry.path]
@@ -185,8 +190,18 @@ Rectangle {
 
     // ── Confirm / Cancel ──────────────────────────────────────────────────────
     function confirmSelection() {
+        if (requestMode === "save") {
+            // Save mode: confirm currentPath + typed filename
+            var fname = saveFileName.trim()
+            if (fname.length === 0) return
+            var savePath = currentPath.replace(/\/+$/, "") + "/" + fname
+            ctlProc.command = ["python3", helper, "confirm", savePath]
+            if (!ctlProc.running) ctlProc.running = true
+            PluginManager.closeAll()
+            return
+        }
+        // Open mode: existing selection logic
         if (selectedPaths.length === 0) {
-            // Confirm currently focused entry
             if (focusIndex >= 0 && focusIndex < filteredEntries.length) {
                 var e = filteredEntries[focusIndex]
                 if (!e.isDir) {
@@ -245,6 +260,7 @@ Rectangle {
         focusIndex     = 0
         previewEntry   = null
         previewContent = ""
+        saveFileName   = ""   // will be overwritten by requestProc once request.json is read
         // Set starting path
         var startPath  = Quickshell.env("HOME")
         // If portal specified a MIME, auto-set filter
@@ -327,6 +343,12 @@ Rectangle {
                         modal.multiSelect   = !!obj.multiple
                         if (modal.requestMime !== "all") {
                             modal.mimeFilter = modal.requestMime
+                        }
+                        // Populate suggested filename for save mode
+                        var suggested = obj.current_name || ""
+                        modal.requestSuggestedName = suggested
+                        if (modal.requestMode === "save" && suggested.length > 0) {
+                            modal.saveFileName = suggested
                         }
                     }
                 } catch(e) {}
@@ -792,7 +814,7 @@ Rectangle {
                 // Bottom status + action bar
                 Rectangle {
                     Layout.fillWidth:  true
-                    implicitHeight:    52
+                    implicitHeight:    modal.requestMode === "save" ? 90 : 52
                     color:             Qt.rgba(Theme.crust.r, Theme.crust.g, Theme.crust.b, 0.5)
                     radius:            Theme.barRadius
 
@@ -805,11 +827,70 @@ Rectangle {
                         color:         parent.color
                     }
 
-                    RowLayout {
+                    ColumnLayout {
                         anchors.fill:        parent
                         anchors.leftMargin:  14
                         anchors.rightMargin: 14
-                        spacing: 10
+                        anchors.topMargin:   8
+                        anchors.bottomMargin: 4
+                        spacing: 6
+
+                        // ── Save mode: filename input row ─────────────────────
+                        RowLayout {
+                            visible:          modal.requestMode === "save"
+                            Layout.fillWidth: true
+                            spacing:          8
+
+                            Text {
+                                text:           "File name:"
+                                font.family:    Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color:          Theme.subtext0
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth:  true
+                                implicitHeight:    30
+                                radius:            Theme.pillRadius
+                                color:             Theme.moduleBg
+                                border.color:      filenameInput.activeFocus ? Theme.accent : Theme.moduleBorder
+                                border.width:      1
+
+                                TextInput {
+                                    id:             filenameInput
+                                    anchors.fill:   parent
+                                    anchors.leftMargin:  10
+                                    anchors.rightMargin: 10
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    font.family:    Theme.fontFamily
+                                    font.pixelSize: Theme.fontSizeSmall
+                                    color:          Theme.text
+                                    clip:           true
+                                    selectByMouse:  true
+                                    text:           modal.saveFileName
+
+                                    onTextChanged:  modal.saveFileName = text
+
+                                    Text {
+                                        text:    "Enter filename…"
+                                        font.family:    Theme.fontFamily
+                                        font.pixelSize: Theme.fontSizeSmall
+                                        color:          Theme.overlay0
+                                        visible:        !filenameInput.text && !filenameInput.activeFocus
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.left: parent.left
+                                    }
+
+                                    Keys.onReturnPressed:  modal.confirmSelection()
+                                    Keys.onEnterPressed:   modal.confirmSelection()
+                                }
+                            }
+                        }
+
+                        // ── Status + action buttons row ───────────────────────
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
 
                         // Status info
                         Text {
@@ -843,14 +924,22 @@ Rectangle {
                         }
 
                         // Keyboard shortcuts hint
-                        Text {
-                            visible:        modal.selectedPaths.length === 0
-                            text:           "↑↓ Navigate  •  Enter to open  •  Ctrl+H dotfiles  •  Ctrl+P preview"
-                            font.family:    Theme.fontFamily
-                            font.pixelSize: 10
-                            color:          Theme.overlay0
-                            opacity:        0.7
-                        }
+                            Text {
+                                visible:        modal.selectedPaths.length === 0 && modal.requestMode !== "save"
+                                text:           "↑↓ Navigate  •  Enter to open  •  Ctrl+H dotfiles  •  Ctrl+P preview"
+                                font.family:    Theme.fontFamily
+                                font.pixelSize: 10
+                                color:          Theme.overlay0
+                                opacity:        0.7
+                            }
+                            Text {
+                                visible:        modal.requestMode === "save"
+                                text:           "Navigate to folder  •  Enter filename above  •  Press Enter or Save"
+                                font.family:    Theme.fontFamily
+                                font.pixelSize: 10
+                                color:          Theme.overlay0
+                                opacity:        0.7
+                            }
 
                         Item { Layout.fillWidth: true }
 
@@ -888,7 +977,9 @@ Rectangle {
                             radius:         Theme.pillRadius
                             color:          openMouse.containsMouse
                                                 ? Qt.darker(Theme.accent, 1.12)
-                                                : (modal.selectedPaths.length > 0 ? Theme.accent : Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.6))
+                                                : (modal.requestMode === "save"
+                                                    ? (modal.saveFileName.trim().length > 0 ? Theme.accent : Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.6))
+                                                    : (modal.selectedPaths.length > 0 ? Theme.accent : Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.6)))
 
                             RowLayout {
                                 id:              openBtnRow
@@ -922,7 +1013,8 @@ Rectangle {
                                 onClicked:    modal.confirmSelection()
                             }
                         }
-                    }
+                    }       // end inner RowLayout (status row)
+                    }       // end outer ColumnLayout
                 }
             }
 

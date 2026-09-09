@@ -134,12 +134,13 @@ class FileChooserBackend(dbus.service.Object):
             mime_filter = parse_mime_filter(options)
 
             request = {
-                "mode":        mode,
-                "app_id":      str(app_id),
-                "title":       str(title),
-                "multiple":    multiple,
-                "mime_filter": mime_filter,
-                "timestamp":   time.time(),
+                "mode":         mode,
+                "app_id":       str(app_id),
+                "title":        str(title),
+                "multiple":     multiple,
+                "mime_filter":  mime_filter,
+                "current_name": str(options.get("current_name", "")),
+                "timestamp":    time.time(),
             }
 
             os.makedirs(CACHE_DIR, exist_ok=True)
