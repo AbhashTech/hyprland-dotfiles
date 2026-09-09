@@ -18,6 +18,7 @@ Rectangle {
     property var activeIds: [1]
     property int activeWorkspaceId: 1
     property var allClients: [] // Array of all clients from hyprctl clients -j
+    property var monitorsList: []
     property string searchQuery: ""
 
     function cleanAddress(addr) {
@@ -25,7 +26,30 @@ Rectangle {
         return addr.toString().replace(/^0x/, "");
     }
 
+    function getMonitorForClient(client) {
+        if (!root.monitorsList || root.monitorsList.length === 0) {
+            return { x: 0, y: 0, width: 1920, height: 1080 };
+        }
+        if (client.monitor !== undefined) {
+            for (var i = 0; i < root.monitorsList.length; i++) {
+                var m = root.monitorsList[i];
+                if (m.id === client.monitor || m.name === client.monitor) {
+                    return m;
+                }
+            }
+        }
+        var rawX = (client.at && client.at.length > 0) ? client.at[0] : 0;
+        for (var j = 0; j < root.monitorsList.length; j++) {
+            var mon = root.monitorsList[j];
+            if (rawX >= mon.x && rawX < (mon.x + (mon.width || 1920))) {
+                return mon;
+            }
+        }
+        return root.monitorsList[0] || { x: 0, y: 0, width: 1920, height: 1080 };
+    }
+
     function grabFocus() {
+        if (!hyprMonitorsProc.running) hyprMonitorsProc.running = true;
         captureProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/workspace_viewer/window_preview_capture.py", "capture-now"]);
         searchInput.forceActiveFocus();
     }
@@ -161,6 +185,21 @@ Rectangle {
         id: captureProc
     }
 
+    Process {
+        id: hyprMonitorsProc
+        command: ["hyprctl", "monitors", "-j"]
+        property string buffer: ""
+        stdout: SplitParser {
+            onRead: data => { hyprMonitorsProc.buffer += data; }
+        }
+        onExited: {
+            try {
+                root.monitorsList = JSON.parse(buffer) || [];
+            } catch (e) {}
+            buffer = "";
+        }
+    }
+
     Timer {
         interval: 250
         running: PluginManager.workspaceViewerVisible
@@ -170,6 +209,7 @@ Rectangle {
             if (!hyprWsProc.running) hyprWsProc.running = true;
             if (!hyprActiveWsProc.running) hyprActiveWsProc.running = true;
             if (!hyprClientsProc.running) hyprClientsProc.running = true;
+            if (!hyprMonitorsProc.running) hyprMonitorsProc.running = true;
         }
     }
 
@@ -422,19 +462,33 @@ Rectangle {
 
                                     Rectangle {
                                         readonly property var client: modelData
-                                        readonly property real refW: 1920.0
-                                        readonly property real refH: 1080.0
+                                        readonly property var mon: root.getMonitorForClient(client)
+                                        readonly property real monX: (mon && mon.x !== undefined) ? mon.x : 0
+                                        readonly property real monY: (mon && mon.y !== undefined) ? mon.y : 0
+                                        readonly property real monW: (mon && mon.width && mon.width > 0) ? mon.width : 1920.0
+                                        readonly property real monH: (mon && mon.height && mon.height > 0) ? mon.height : 1080.0
                                         readonly property real p: 4
+
+                                        readonly property real canvasW: Math.max(10, cardWireframe.width - 2 * p)
+                                        readonly property real canvasH: Math.max(10, cardWireframe.height - 2 * p)
 
                                         readonly property real rawX: (client.at && client.at.length > 0) ? client.at[0] : 0
                                         readonly property real rawY: (client.at && client.at.length > 1) ? client.at[1] : 0
-                                        readonly property real rawW: (client.size && client.size.length > 0) ? client.size[0] : (refW / Math.max(1, clients.length))
-                                        readonly property real rawH: (client.size && client.size.length > 1) ? client.size[1] : (refH - 40)
+                                        readonly property real rawW: (client.size && client.size.length > 0) ? client.size[0] : monW
+                                        readonly property real rawH: (client.size && client.size.length > 1) ? client.size[1] : (monH - 50)
 
-                                        x: p + Math.max(0, Math.min(cardWireframe.width - 2 * p, (rawX / refW) * (cardWireframe.width - 2 * p)))
-                                        y: p + Math.max(0, Math.min(cardWireframe.height - 2 * p, (rawY / refH) * (cardWireframe.height - 2 * p)))
-                                        width: Math.max(12, Math.min(cardWireframe.width - x - p, (rawW / refW) * (cardWireframe.width - 2 * p)))
-                                        height: Math.max(10, Math.min(cardWireframe.height - y - p, (rawH / refH) * (cardWireframe.height - 2 * p)))
+                                        readonly property real relX: Math.max(0, rawX - monX)
+                                        readonly property real relY: Math.max(0, rawY - monY)
+
+                                        readonly property real normX: Math.max(0.0, Math.min(0.92, relX / monW))
+                                        readonly property real normY: Math.max(0.0, Math.min(0.92, relY / monH))
+                                        readonly property real normW: Math.max(0.06, Math.min(1.0 - normX, rawW / monW))
+                                        readonly property real normH: Math.max(0.06, Math.min(1.0 - normY, rawH / monH))
+
+                                        x: p + Math.round(normX * canvasW)
+                                        y: p + Math.round(normY * canvasH)
+                                        width: Math.max(16, Math.min(canvasW - (x - p), Math.round(normW * canvasW)))
+                                        height: Math.max(14, Math.min(canvasH - (y - p), Math.round(normH * canvasH)))
                                         radius: 3
 
                                         color: Theme.mantle

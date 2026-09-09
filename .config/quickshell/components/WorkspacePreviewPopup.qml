@@ -15,6 +15,7 @@ PopupWindow {
     property int showDelay: 150
     property int hideDelay: 120
     property int previewVersion: 0
+    property var monitorsList: []
 
     anchor.window: previewPop.barWindow
     anchor.item: previewPop.targetItem
@@ -31,6 +32,28 @@ PopupWindow {
     function cleanAddress(addr) {
         if (!addr) return "none";
         return addr.toString().replace(/^0x/, "");
+    }
+
+    function getMonitorForClient(client) {
+        if (!previewPop.monitorsList || previewPop.monitorsList.length === 0) {
+            return { x: 0, y: 0, width: 1920, height: 1080 };
+        }
+        if (client.monitor !== undefined) {
+            for (var i = 0; i < previewPop.monitorsList.length; i++) {
+                var m = previewPop.monitorsList[i];
+                if (m.id === client.monitor || m.name === client.monitor) {
+                    return m;
+                }
+            }
+        }
+        var rawX = (client.at && client.at.length > 0) ? client.at[0] : 0;
+        for (var j = 0; j < previewPop.monitorsList.length; j++) {
+            var mon = previewPop.monitorsList[j];
+            if (rawX >= mon.x && rawX < (mon.x + (mon.width || 1920))) {
+                return mon;
+            }
+        }
+        return previewPop.monitorsList[0] || { x: 0, y: 0, width: 1920, height: 1080 };
     }
 
     function getAppIcon(appClass, appTitle) {
@@ -81,6 +104,7 @@ PopupWindow {
         onTriggered: {
             if (previewPop.isHovered || popMa.containsMouse) {
                 previewPop.previewVersion++;
+                if (!hyprMonitorsProc.running) hyprMonitorsProc.running = true;
                 captureProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/workspace_viewer/window_preview_capture.py", "capture-now"]);
                 previewContainer.opacity = 1;
             }
@@ -261,20 +285,37 @@ PopupWindow {
                     Rectangle {
                         id: clientRect
                         readonly property var client: modelData
-                        readonly property real refW: 1920.0
-                        readonly property real refH: 1080.0
+                        readonly property var mon: previewPop.getMonitorForClient(client)
+                        readonly property real monX: (mon && mon.x !== undefined) ? mon.x : 0
+                        readonly property real monY: (mon && mon.y !== undefined) ? mon.y : 0
+                        readonly property real monW: (mon && mon.width && mon.width > 0) ? mon.width : 1920.0
+                        readonly property real monH: (mon && mon.height && mon.height > 0) ? mon.height : 1080.0
                         readonly property real padding: 5
+
+                        // Usable area
+                        readonly property real canvasW: Math.max(10, wireframeBox.width - 2 * padding)
+                        readonly property real canvasH: Math.max(10, wireframeBox.height - 2 * padding)
 
                         readonly property real rawX: (client.at && client.at.length > 0) ? client.at[0] : 0
                         readonly property real rawY: (client.at && client.at.length > 1) ? client.at[1] : 0
-                        readonly property real rawW: (client.size && client.size.length > 0) ? client.size[0] : (refW / Math.max(1, previewPop.clientsList.length))
-                        readonly property real rawH: (client.size && client.size.length > 1) ? client.size[1] : (refH - 40)
+                        readonly property real rawW: (client.size && client.size.length > 0) ? client.size[0] : monW
+                        readonly property real rawH: (client.size && client.size.length > 1) ? client.size[1] : (monH - 50)
 
-                        // Mapped to wireframe canvas
-                        x: padding + Math.max(0, Math.min(wireframeBox.width - 2 * padding, (rawX / refW) * (wireframeBox.width - 2 * padding)))
-                        y: padding + Math.max(0, Math.min(wireframeBox.height - 2 * padding, (rawY / refH) * (wireframeBox.height - 2 * padding)))
-                        width: Math.max(24, Math.min(wireframeBox.width - x - padding, (rawW / refW) * (wireframeBox.width - 2 * padding)))
-                        height: Math.max(22, Math.min(wireframeBox.height - y - padding, (rawH / refH) * (wireframeBox.height - 2 * padding)))
+                        // Offset relative to monitor
+                        readonly property real relX: Math.max(0, rawX - monX)
+                        readonly property real relY: Math.max(0, rawY - monY)
+
+                        // Normalized (0.0 to 1.0)
+                        readonly property real normX: Math.max(0.0, Math.min(0.92, relX / monW))
+                        readonly property real normY: Math.max(0.0, Math.min(0.92, relY / monH))
+                        readonly property real normW: Math.max(0.06, Math.min(1.0 - normX, rawW / monW))
+                        readonly property real normH: Math.max(0.06, Math.min(1.0 - normY, rawH / monH))
+
+                        // Scaled to canvas
+                        x: padding + Math.round(normX * canvasW)
+                        y: padding + Math.round(normY * canvasH)
+                        width: Math.max(20, Math.min(canvasW - (x - padding), Math.round(normW * canvasW)))
+                        height: Math.max(18, Math.min(canvasH - (y - padding), Math.round(normH * canvasH)))
                         radius: 5
                         clip: true
 
@@ -579,5 +620,20 @@ PopupWindow {
 
     Process {
         id: captureProc
+    }
+
+    Process {
+        id: hyprMonitorsProc
+        command: ["hyprctl", "monitors", "-j"]
+        property string buffer: ""
+        stdout: SplitParser {
+            onRead: data => { hyprMonitorsProc.buffer += data; }
+        }
+        onExited: {
+            try {
+                previewPop.monitorsList = JSON.parse(buffer) || [];
+            } catch (e) {}
+            buffer = "";
+        }
     }
 }
