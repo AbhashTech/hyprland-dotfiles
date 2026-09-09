@@ -962,81 +962,106 @@ def run_gtk_gui():
             else:
                 self.icon_preview.set_from_icon_name("application-x-executable", Gtk.IconSize.DND)
 
+        def _pick_file(self, title, action=Gtk.FileChooserAction.OPEN, filters=None, initial_folder=None):
+            selected = None
+            try:
+                accept_label = "_Open" if action == Gtk.FileChooserAction.OPEN else "_Select"
+                dialog = Gtk.FileChooserNative.new(
+                    title,
+                    self,
+                    action,
+                    accept_label,
+                    "_Cancel",
+                )
+                if initial_folder and os.path.exists(initial_folder):
+                    dialog.set_current_folder(initial_folder)
+                else:
+                    dialog.set_current_folder(str(Path.home()))
+
+                if filters:
+                    for name, patterns, mimes in filters:
+                        f = Gtk.FileFilter()
+                        f.set_name(name)
+                        for p in patterns:
+                            f.add_pattern(p)
+                        for m in mimes:
+                            f.add_mime_type(m)
+                        dialog.add_filter(f)
+
+                filter_any = Gtk.FileFilter()
+                filter_any.set_name("All Files")
+                filter_any.add_pattern("*")
+                dialog.add_filter(filter_any)
+
+                res = dialog.run()
+                if res in (Gtk.ResponseType.ACCEPT, Gtk.ResponseType.OK):
+                    selected = dialog.get_filename()
+                dialog.destroy()
+            except Exception as e:
+                print(f"FileChooserNative error: {e}", file=sys.stderr)
+
+            if not selected and shutil.which("zenity"):
+                try:
+                    cmd = ["zenity", "--file-selection", f"--title={title}"]
+                    if action == Gtk.FileChooserAction.SELECT_FOLDER:
+                        cmd.append("--directory")
+                    if initial_folder and os.path.exists(initial_folder):
+                        cmd.append(f"--filename={initial_folder}/")
+                    out = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
+                    if out:
+                        selected = out
+                except Exception:
+                    pass
+
+            return selected
+
         def _on_browse_exec(self, button):
-            dialog = Gtk.FileChooserDialog(
+            filters = [
+                (
+                    "Executable Files & Scripts",
+                    ["*.sh", "*.py", "*.AppImage", "*.bin", "*.jar"],
+                    ["application/x-executable", "application/x-shellscript"],
+                )
+            ]
+            path = self._pick_file(
                 title="Select Executable / Script",
-                parent=self,
                 action=Gtk.FileChooserAction.OPEN,
+                filters=filters,
+                initial_folder=str(Path.home()),
             )
-            dialog.add_buttons(
-                Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                Gtk.STOCK_OPEN, Gtk.ResponseType.OK,
-            )
-            dialog.set_current_folder(str(Path.home()))
-
-            filter_all = Gtk.FileFilter()
-            filter_all.set_name("Executable Files & Scripts")
-            filter_all.add_pattern("*.sh")
-            filter_all.add_pattern("*.py")
-            filter_all.add_pattern("*.AppImage")
-            filter_all.add_pattern("*.bin")
-            filter_all.add_pattern("*.jar")
-            filter_all.add_mime_type("application/x-executable")
-            filter_all.add_mime_type("application/x-shellscript")
-            dialog.add_filter(filter_all)
-
-            filter_any = Gtk.FileFilter()
-            filter_any.set_name("All Files")
-            filter_any.add_pattern("*")
-            dialog.add_filter(filter_any)
-
-            if dialog.run() == Gtk.ResponseType.OK:
-                path = dialog.get_filename()
+            if path:
                 self.entry_exec.set_text(path)
                 # Auto-set name if empty
                 if not self.entry_name.get_text():
                     base = Path(path).stem.replace("_", " ").replace("-", " ").title()
                     self.entry_name.set_text(base)
-            dialog.destroy()
 
         def _on_browse_cwd(self, button):
-            dialog = Gtk.FileChooserDialog(
+            path = self._pick_file(
                 title="Select Working Directory",
-                parent=self,
                 action=Gtk.FileChooserAction.SELECT_FOLDER,
+                initial_folder=str(Path.home()),
             )
-            dialog.add_buttons(
-                Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                Gtk.STOCK_OPEN, Gtk.ResponseType.OK,
-            )
-            dialog.set_current_folder(str(Path.home()))
-            if dialog.run() == Gtk.ResponseType.OK:
-                self.entry_cwd.set_text(dialog.get_filename())
-            dialog.destroy()
+            if path:
+                self.entry_cwd.set_text(path)
 
         def _on_browse_icon(self, button):
-            dialog = Gtk.FileChooserDialog(
+            icon_dir = "/usr/share/icons" if os.path.exists("/usr/share/icons") else str(Path.home())
+            filters = [
+                (
+                    "Image Files (*.png, *.svg, *.ico, *.xpm)",
+                    ["*.png", "*.svg", "*.ico", "*.xpm"],
+                    ["image/png", "image/svg+xml", "image/x-icon", "image/x-xpixmap"],
+                )
+            ]
+            path = self._pick_file(
                 title="Select Application Icon",
-                parent=self,
                 action=Gtk.FileChooserAction.OPEN,
+                filters=filters,
+                initial_folder=icon_dir,
             )
-            dialog.add_buttons(
-                Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                Gtk.STOCK_OPEN, Gtk.ResponseType.OK,
-            )
-            dialog.set_current_folder("/usr/share/icons")
-
-            filter_img = Gtk.FileFilter()
-            filter_img.set_name("Image Files (*.png, *.svg, *.ico)")
-            filter_img.add_pattern("*.png")
-            filter_img.add_pattern("*.svg")
-            filter_img.add_pattern("*.ico")
-            filter_img.add_pattern("*.xpm")
-            dialog.add_filter(filter_img)
-
-            if dialog.run() == Gtk.ResponseType.OK:
-                self.entry_icon.set_text(dialog.get_filename())
-            dialog.destroy()
+            if path:
+                self.entry_icon.set_text(path)
 
         def _get_active_categories(self):
             return [cat for cat, chk in self.cat_checks.items() if chk.get_active()]
