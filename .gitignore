@@ -17,7 +17,9 @@ __pycache__/
 # User local runtime state
 .config/hypr/ocr_config.json
 .config/hypr/recorder_settings.json
+.config/quickshell/colors.json
 .config/quickshell/custom_plugins/*
 !.config/quickshell/custom_plugins/README.md
 .config/quickshell/.generated/
 .config/quickshell/generated/
+

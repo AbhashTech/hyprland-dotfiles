@@ -155,6 +155,7 @@ if command -v pacman >/dev/null 2>&1; then
         tesseract
         tesseract-data-eng
         zbar
+        imagemagick
 
         # Authentication, Keyring & Security
         gnome-keyring
@@ -251,7 +252,7 @@ for pkg in "${DOT_CONFIG_DIRS[@]}"; do
 done
 
 # Symlink standalone config files
-for cfg_file in "starship.toml" "mimeapps.list"; do
+for cfg_file in "starship.toml" "mimeapps.list" "dolphinrc" "kdeglobals" "kwinrc"; do
     if [ -f "${DOTFILES_DIR}/.config/${cfg_file}" ]; then
         FILE_DEST="${CONFIG_TARGET}/${cfg_file}"
         if [ -L "$FILE_DEST" ]; then
@@ -287,6 +288,7 @@ log_success "Script permissions configured."
 log_info "Ensuring user media, cache, tessdata, and custom plugin directories exist..."
 mkdir -p "${HOME}/.cache/cliphist_thumbs"
 mkdir -p "${HOME}/.cache/qs_filepicker/thumbnails"
+mkdir -p "${HOME}/.cache/quickshell/window_previews"
 mkdir -p "${HOME}/Pictures/Screenshots"
 mkdir -p "${HOME}/Videos/Recordings"
 mkdir -p "${HOME}/.local/share/tessdata"
@@ -371,12 +373,104 @@ fi
 # 8. User Desktop Shortcuts (App Menu)
 log_info "Deploying custom desktop application shortcuts..."
 mkdir -p "${HOME}/.local/share/applications"
-for desktop_file in app-shortcut-creator.desktop theme-manager.desktop ocr-language-manager.desktop hyprsunset-hypridle.desktop keyboard-layout-manager.desktop; do
-    if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/${desktop_file}" ]; then
-        cp "${DOTFILES_DIR}/.config/hypr/scripts/${desktop_file}" "${HOME}/.local/share/applications/"
-        chmod +x "${HOME}/.local/share/applications/${desktop_file}"
-    fi
-done
+
+cat > "${HOME}/.local/share/applications/app-shortcut-creator.desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=App Shortcut Creator
+GenericName=Desktop Entry Creator
+Comment=Create and manage application shortcuts for your App menu
+Exec=python3 ${HOME}/.config/hypr/scripts/app_shortcut_creator.py
+Icon=preferences-desktop-keyboard-shortcuts
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;Development;
+StartupWMClass=app-shortcut-creator
+StartupNotify=true
+EOF
+
+cat > "${HOME}/.local/share/applications/theme-manager.desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Theme Manager
+GenericName=Desktop Theme & Palette Switcher
+Comment=Select and apply custom color palettes across Hyprland, Quickshell, and applications
+Exec=python3 ${HOME}/.config/hypr/scripts/theme_switcher.py --gui
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;Appearance;
+StartupWMClass=theme-manager
+StartupNotify=true
+Keywords=theme;palette;colorscheme;hyprland;catppuccin;dracula;nord;gruvbox;
+EOF
+
+cat > "${HOME}/.local/share/applications/ocr-language-manager.desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OCR Language Manager
+GenericName=Tesseract OCR Language Manager & Model Installer
+Comment=Install language models, manage active OCR recognition languages, and test capture
+Exec=python3 ${HOME}/.config/hypr/scripts/ocr_language_manager.py --gui
+Icon=ocr-language-manager
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;Office;
+StartupWMClass=ocr-language-manager
+StartupNotify=true
+Keywords=ocr;tesseract;language;text;grab;scanner;translate;
+EOF
+
+cat > "${HOME}/.local/share/applications/hyprsunset-hypridle.desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Night Light & Idle Manager
+GenericName=Display Power & Night Light Control
+Comment=Configure Hyprsunset color temperature, Hypridle timeouts, monitor turn-off, and Caffeine mode
+Exec=python3 ${HOME}/.config/hypr/scripts/sunset_idle_manager.py --gui
+Icon=preferences-desktop-display
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;HardwareSettings;
+StartupWMClass=sunset-idle-manager
+StartupNotify=true
+Keywords=hyprsunset;hypridle;nightlight;bluelight;display;screen;idle;dpms;sleep;caffeine;brightness;temperature;
+Actions=ToggleNightLight;TurnOffMonitor;CaffeineMode;OpenMenu;
+
+[Desktop Action ToggleNightLight]
+Name=Toggle Night Light (On/Off)
+Exec=python3 ${HOME}/.config/hypr/scripts/sunset_idle_manager.py --sunset-toggle
+
+[Desktop Action TurnOffMonitor]
+Name=Turn Off Displays Now (DPMS)
+Exec=python3 ${HOME}/.config/hypr/scripts/sunset_idle_manager.py --dpms-off
+
+[Desktop Action CaffeineMode]
+Name=Toggle Caffeine Mode (Inhibit Sleep)
+Exec=python3 ${HOME}/.config/hypr/scripts/sunset_idle_manager.py --caffeine-toggle
+
+[Desktop Action OpenMenu]
+Name=Open Interactive Idle & Power Menu
+Exec=python3 ${HOME}/.config/hypr/scripts/sunset_idle_manager.py --menu
+EOF
+
+cat > "${HOME}/.local/share/applications/keyboard-layout-manager.desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Keyboard Layout Manager
+GenericName=Input Layouts & Regional Variant Switcher
+Comment=Switch and configure keyboard layouts, Indian regional variants, and XKB options
+Exec=python3 ${HOME}/.config/hypr/scripts/keyboard_layout.py --gui
+Icon=preferences-desktop-keyboard
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;HardwareSettings;
+StartupWMClass=keyboard_layout.py
+StartupNotify=true
+Keywords=keyboard;layout;variant;language;typing;input;xkb;hindi;tamil;telugu;dvorak;colemak;marathi;bengali;kannada;malayalam;gujarati;
+EOF
+
+chmod +x "${HOME}/.local/share/applications/"*.desktop 2>/dev/null || true
 
 if [ -f "${DOTFILES_DIR}/.config/hypr/assets/ocr-language-manager.png" ]; then
     mkdir -p "${HOME}/.local/share/icons/hicolor/512x512/apps" "${HOME}/.local/share/icons"
@@ -450,8 +544,10 @@ echo -e "  ${COLOR_BOLD}source ~/.config/shell/aliases.sh${COLOR_RESET}"
 echo ""
 echo -e "To apply or reload desktop components:"
 echo -e "  • Shortcuts Cheat:   ${COLOR_BOLD}SUPER + /${COLOR_RESET} or ${COLOR_BOLD}SUPER + F1${COLOR_RESET} (interactive search)"
+echo -e "  • Workspace Overview: ${COLOR_BOLD}SUPER + Tab${COLOR_RESET} (or hover on workspace bar)"
 echo -e "  • Theme Menu:        ${COLOR_BOLD}SUPER + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --menu${COLOR_RESET})"
 echo -e "  • Theme Manager GUI: ${COLOR_BOLD}SUPER + ALT + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --gui${COLOR_RESET})"
+echo -e "  • Shortcut Creator:  ${COLOR_BOLD}SUPER + ALT + S${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/app_shortcut_creator.py${COLOR_RESET})"
 echo -e "  • Hyprland Reload:   ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"
 echo -e "  • Status Bar Toggle: ${COLOR_BOLD}SUPER + SHIFT + W${COLOR_RESET} (or ${COLOR_BOLD}~/.config/quickshell/scripts/launch_quickshell.sh --toggle${COLOR_RESET})"
 echo -e "  • Power Menu:        ${COLOR_BOLD}SUPER + ESCAPE${COLOR_RESET} / ${COLOR_BOLD}SUPER + M${COLOR_RESET} (Quickshell Power Menu)"
@@ -460,3 +556,4 @@ echo -e "  • Git TUI Overlay:   ${COLOR_BOLD}SUPER + G${COLOR_RESET} (lazygit)
 echo -e "  • File Picker Modal: ${COLOR_BOLD}SUPER + SHIFT + F${COLOR_RESET} (or ${COLOR_BOLD}SUPER + ALT + F${COLOR_RESET} for Image Grid)"
 echo -e "  • Notification Mako: ${COLOR_BOLD}makoctl reload${COLOR_RESET}"
 echo -e "  • Test SDDM Theme:   ${COLOR_BOLD}~/.dotfiles/sddm/test-theme.sh${COLOR_RESET}"
+

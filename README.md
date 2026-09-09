@@ -82,7 +82,8 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   │   ├── battery/         # Battery metrics & dynamic power profile selector
     │   │   ├── notifications/   # Notification center & history viewer
     │   │   ├── sysinfo/         # System hardware dashboard (CPU, RAM, Disk) with fast 800ms updates
-    │   │   └── filepicker/      # Floating File Uploader & Selector Modal with XDG Portal, preview & thumbnail grid
+    │   │   ├── filepicker/      # Floating File Uploader & Selector Modal with XDG Portal, preview & thumbnail grid
+    │   │   └── workspace_viewer/# Interactive multi-workspace layout viewer & hover snapshot previews
     │   ├── custom_plugins/      # User Custom Plugins (untracked by git, see README inside)
     │   └── scripts/             # Supervisor scripts (launch_quickshell.sh, toggle_plugin.sh)
     ├── wireplumber/             # WirePlumber Audio Session Rules
@@ -377,6 +378,25 @@ The dotfiles include a full-featured, glassmorphic **Notification Center & Histo
 
 ---
 
+## 🗂️ Quickshell Workspace Viewer & Live Window Snapshot Previews
+
+The dotfiles include a dedicated **Workspace Viewer HUD & Workspace Hover Preview** plugin (`~/.config/quickshell/plugins/workspace_viewer/`):
+
+- **Interactive Fullscreen Overlay (`SUPER + Tab`)**:
+  - Displays all active workspaces across connected monitors in a visual grid layout.
+  - Multi-monitor coordinate normalization ensures preview blocks align accurately without overflow.
+  - Interactive window cards show running application icons, window titles, and live snapshot previews.
+  - Click any window card or workspace block to instantly switch focus and jump to that workspace.
+- **Top Bar Workspace Hover Previews (`WorkspacePreviewPopup.qml`)**:
+  - Hovering over any workspace pill on the top bar displays a floating glassmorphic preview popup showing all windows open on that workspace with their positions and thumbnails.
+- **Live Snapshot Capture Daemon (`window_preview_capture.py`)**:
+  - Asynchronously captures window snapshots via `grim` into `~/.cache/quickshell/window_previews/`.
+  - Automatically updates thumbnails when active windows change or focus shifts without freezing the UI.
+
+---
+
+## 🧩 User Custom Plugins Discovery Engine
+
 The dotfiles include an **automated plugin discovery engine** for Quickshell at [`~/.config/quickshell/custom_plugins/`](file:///home/kunal/.dotfiles/.config/quickshell/custom_plugins):
 
 - **Zero Code Modification Required**: Users can drop any custom plugin directory with a `manifest.json` into `custom_plugins/` without modifying any repository files or QML code.
@@ -413,8 +433,8 @@ The dotfiles include a centralized, modular **Theming System** ([`theme_switcher
     - **One Light Pro** (Atom Balanced Bright Development Theme)
     - **Solarized Light** (Warm Precision Calibrated Light Palette)
 
-- **Dynamic Color Variables & Transparent Waybar Architecture**:
-  - **Waybar Dynamic Backdrop**: Waybar's root glassmorphic background, shadow, module containers, borders, and tooltips automatically adjust their transparency, tint, and borders based on the active theme's palette and dark/light mode (`@waybar_bg`, `@waybar_border`, `@module_bg`, `@module_hover_bg`).
+- **Dynamic Color Variables & Quickshell Theming Architecture**:
+  - **Quickshell Dynamic Theme Singleton (`Theme.qml`)**: The status bar and native plugins consume dynamic colors synchronized directly with the active palette. User-customized palette overrides are loaded from `~/.config/quickshell/colors.json` (untracked in git, preserving your personal desktop aesthetics).
   - **Hyprland**: Border colors and shadows consume variables from [`modules/theme.lua`](file:///home/kunal/.dotfiles/.config/hypr/modules/theme.lua).
   - **Dolphin, Kate & KWrite**: KDE color schemes ([`kdeglobals`](file:///home/kunal/.dotfiles/.config/kdeglobals)), editor syntax highlighting themes ([`org.kde.syntax-highlighting`](file:///home/kunal/.local/share/org.kde.syntax-highlighting/themes)), and UI configs ([`katerc`](file:///home/kunal/.config/katerc), [`kwriterc`](file:///home/kunal/.config/kwriterc)) synchronized live across all 19 themes.
   - **Starship, Zellij, Btop, Lazygit & Swappy**: Palettes and accents dynamically synchronized.
@@ -466,12 +486,12 @@ The dotfiles include a comprehensive, native Wayland suite for extracting text a
 - **Usage & Shortcuts**:
   - **`SUPER + ALT + Q`**: Drag cursor to scan any QR code on screen.
   - **`SUPER + Print`**: Screen Capture Dashboard -> select **"📱 Read QR Code from Screen"**.
-### 3. Screen Recording & Live Waybar Indicator Hub ([`screen_capture.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/screen_capture.py))
-- **Live Waybar Recording Indicator**: When screen recording begins, a glowing red badge (`󰻃 REC 00:12`) appears in Waybar showing the real-time recording timer.
-- **1-Click Stop**: Left-clicking the Waybar recording capsule immediately stops the recording, finalizes the MP4/MKV video container, and sends a notification with instant Play / Folder actions.
-- **Configurable Visibility**: Toggle the Waybar indicator on or off at any time:
-  - **Fuzzel/Wofi GUI**: Press **`SUPER + Print`** and select **`⚙️  Waybar Recording Icon: [Enabled/Disabled]`**.
-  - **Right-Click**: Right-clicking the Waybar recording badge toggles its visibility.
+### 3. Screen Recording & Live Quickshell Indicator Hub ([`screen_capture.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/screen_capture.py))
+- **Live Quickshell Recording Indicator**: When screen recording begins, a glowing red capsule (`󰻃 REC 00:12`) appears in the top status bar showing the real-time recording timer.
+- **1-Click Stop**: Left-clicking the recording capsule immediately stops the recording, finalizes the MP4/MKV video container, and sends a notification with instant Play / Folder actions.
+- **Configurable Visibility**: Toggle the recording indicator on or off at any time:
+  - **Fuzzel/Wofi GUI**: Press **`SUPER + Print`** and select **`⚙️  Recording Indicator Icon: [Enabled/Disabled]`**.
+  - **Right-Click**: Right-clicking the recording capsule toggles its visibility.
   - **CLI Command**: `python3 ~/.config/hypr/scripts/screen_capture.py --toggle-indicator` or `screen_capture.py --indicator on|off`.
 - **Usage & Shortcuts**:
   - **`SUPER + ALT + R`**: Toggle video screen recording for selected region.
@@ -483,19 +503,38 @@ The dotfiles include a comprehensive, native Wayland suite for extracting text a
     python3 ~/.config/hypr/scripts/screen_capture.py record --full --mic      # Full screen + microphone
     python3 ~/.config/hypr/scripts/screen_capture.py record --desktop         # Region + desktop audio
     python3 ~/.config/hypr/scripts/screen_capture.py stop                     # Stop recording
-    python3 ~/.config/hypr/scripts/screen_capture.py --toggle-indicator       # Toggle Waybar icon
+    python3 ~/.config/hypr/scripts/screen_capture.py --toggle-indicator       # Toggle recording icon
     ```
 
 ---
 
 ## ⚡ Dynamic Keybindings Viewer & Cheat Sheet
 
-
 The repository includes an intelligent dynamic shortcut viewer ([`keybinds_viewer.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/keybinds_viewer.py)) that parses doc-comments directly from [`keybinds.lua`](file:///home/kunal/.dotfiles/.config/hypr/modules/keybinds.lua):
 
 - **Desktop GUI**: Press **`SUPER + /`**, **`SUPER + ?`**, or **`SUPER + F1`** to open the interactive **Quickshell** dynamic keybindings viewer with category filters and search. Selecting any shortcut automatically copies the key combination to your clipboard.
 - **Terminal CLI**: Run `python3 ~/.config/hypr/scripts/keybinds_viewer.py --cli` for categorized, ANSI-colored tables.
 - **Export Formats**: Supports `--json` and `--markdown` for automated documentation generation.
+
+---
+
+## 🚀 Application Shortcut & Desktop Entry Creator
+
+The dotfiles include a dedicated GUI and CLI utility ([`app_shortcut_creator.py`](file:///home/kunal/.dotfiles/.config/hypr/scripts/app_shortcut_creator.py)) to easily create, edit, test, and manage standard `.desktop` application launchers in `~/.local/share/applications/`:
+
+- **Interactive GTK GUI (`SUPER + ALT + S`)**:
+  - Full-featured form to configure Application Name, Executable / Command, Arguments, Working Directory, Categories, and Terminal requirements.
+  - Native file and directory browsing with `Gtk.FileChooserNative` (preventing modal hangs or portal crashes).
+  - Built-in system icon picker and custom image loader.
+  - Live `.desktop` file syntax preview and instant launch test button.
+  - Manage and edit existing custom application shortcuts with one click.
+- **Terminal CLI Support**:
+  ```bash
+  python3 ~/.config/hypr/scripts/app_shortcut_creator.py --gui                     # Launch GTK3 shortcut creator GUI
+  python3 ~/.config/hypr/scripts/app_shortcut_creator.py --list                    # List all custom .desktop entries
+  python3 ~/.config/hypr/scripts/app_shortcut_creator.py --create "My App" -e "/usr/bin/myapp" -i "terminal"
+  python3 ~/.config/hypr/scripts/app_shortcut_creator.py --delete "custom-app.desktop"
+  ```
 
 ---
 
