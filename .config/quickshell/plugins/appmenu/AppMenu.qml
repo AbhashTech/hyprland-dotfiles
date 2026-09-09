@@ -121,6 +121,7 @@ Rectangle {
         target: PluginManager
         function onAppMenuVisibleChanged() {
             if (PluginManager.appMenuVisible) {
+                scannerProc.running = true;
                 root.grabFocus();
             }
         }

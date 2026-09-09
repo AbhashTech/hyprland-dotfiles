@@ -185,8 +185,23 @@ def scan_desktop_files():
 def load_apps():
     if CACHE_FILE.exists():
         try:
-            with open(CACHE_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+            cache_mtime = CACHE_FILE.stat().st_mtime
+            dirs = [
+                Path.home() / ".local" / "share" / "applications",
+                Path("/usr/local/share/applications"),
+                Path("/usr/share/applications"),
+                Path("/var/lib/flatpak/exports/share/applications"),
+            ]
+            stale = any(
+                d.exists() and (
+                    d.stat().st_mtime > cache_mtime or
+                    any(f.stat().st_mtime > cache_mtime for f in d.glob("*.desktop"))
+                )
+                for d in dirs
+            )
+            if not stale:
+                with open(CACHE_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
         except Exception:
             pass
     return scan_desktop_files()
