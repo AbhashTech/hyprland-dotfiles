@@ -74,7 +74,7 @@ Rectangle {
         if (app.terminal) {
             cmd = "kitty -e " + cmd;
         }
-        launcherProc.exec(["bash", "-c", cmd + " &"]);
+        launcherProc.exec(["env", "-u", "LD_PRELOAD", "bash", "-c", "nohup " + cmd + " </dev/null >/dev/null 2>&1 &"]);
         PluginManager.closeAll();
     }
 

@@ -214,7 +214,7 @@ def main():
 
     if len(sys.argv) > 1 and sys.argv[1] == "--launch" and len(sys.argv) > 2:
         exec_str = " ".join(sys.argv[2:])
-        os.system(f"{exec_str} &")
+        os.system(f"env -u LD_PRELOAD nohup {exec_str} </dev/null >/dev/null 2>&1 &")
         return
 
     apps = load_apps()

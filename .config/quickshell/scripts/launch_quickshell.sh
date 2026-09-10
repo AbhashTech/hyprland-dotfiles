@@ -59,15 +59,6 @@ start_quickshell() {
     export QT_QUICK_BACKEND="${QT_QUICK_BACKEND:-wayland}"
     export MALLOC_TRIM_THRESHOLD_="${MALLOC_TRIM_THRESHOLD_:-131072}"
     
-    # Optional jemalloc / mimalloc preload for reduced heap fragmentation if installed
-    if [ -z "$LD_PRELOAD" ]; then
-        if [ -f "/usr/lib/libjemalloc.so" ]; then
-            export LD_PRELOAD="/usr/lib/libjemalloc.so"
-        elif [ -f "/usr/lib/libmimalloc.so" ]; then
-            export LD_PRELOAD="/usr/lib/libmimalloc.so"
-        fi
-    fi
-
     "$QS_BIN" -d -p "$HOME/.config/quickshell" "${PASSTHROUGH_ARGS[@]}" >/dev/null 2>&1
 }
 
