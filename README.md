@@ -771,3 +771,32 @@ Hyprland's screen locker is styled with the exact same left-sidebar aesthetic:
 - **Power Status Hints**: Bottom action hints for Suspend, Reboot, and Shutdown.
 - **Lockscreen Shortcut**: Press **`SUPER + L`** or **`SUPER + ALT + L`** to lock the session.
 
+---
+
+## 🔄 Dotfiles Sync & User Config Isolation (`scripts/dotfiles-push.sh`)
+
+When developing on or tweaking your dotfiles, local personal preferences (such as dynamic active desktop theme colors, custom idle timeouts, active wallpaper assignments, or keyboard layouts) are automatically protected using Git's **`skip-worktree`** mechanism. This ensures that personal machine runtime state never dirties `git status` or conflicts with git pulls.
+
+### 🚀 Using `scripts/dotfiles-push.sh`
+
+A dedicated helper script is provided at `~/.dotfiles/scripts/dotfiles-push.sh`:
+
+```bash
+# Push dotfiles changes to remote (automatically syncs theme and enforces skip-worktree)
+~/.dotfiles/scripts/dotfiles-push.sh
+
+# Check the skip-worktree protection status of all user configuration files
+~/.dotfiles/scripts/dotfiles-push.sh --status
+
+# Explicitly isolate all user configuration files (clean working tree)
+~/.dotfiles/scripts/dotfiles-push.sh --skip
+
+# Temporarily un-skip files if you intend to commit a core template change
+~/.dotfiles/scripts/dotfiles-push.sh --unskip
+```
+
+### 🛡️ Protected User Configuration Files
+- **Desktop Themes**: `.config/hypr/theme.conf`, `theme_vars.lua`, `.config/kitty/theme.conf`, `.config/mako/config`, `.config/btop/btop.conf`, `.config/starship.toml`, `.config/zellij/config.kdl`, `.config/lazygit/config.yml`, `.config/swappy/config`, `.config/kdeglobals`, `.config/dolphinrc`, GTK & XSettings configs.
+- **Runtime User State**: `.config/hypr/hypridle.conf` (idle & suspend timeouts), `.config/hypr/hyprpaper.conf` (wallpaper selection), `.config/hypr/modules/input.lua` (keyboard layout & variant), `.config/mimeapps.list`.
+
+

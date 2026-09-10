@@ -504,6 +504,9 @@ if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" ]; then
     python3 "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" --set catppuccin-mocha --silent 2>/dev/null || true
     log_success "Catppuccin Mocha theme variables initialized."
 fi
+if [ -f "${DOTFILES_DIR}/scripts/dotfiles-push.sh" ]; then
+    bash "${DOTFILES_DIR}/scripts/dotfiles-push.sh" --skip >/dev/null 2>&1 || true
+fi
 
 # 10. System Enhancements: Fontconfig, ZRAM, Pacman Cache & Bluetooth
 log_info "Configuring system enhancements (Subpixel Fonts, ZRAM, Pacman cache, Bluetooth)..."
@@ -556,4 +559,4 @@ echo -e "  • Git TUI Overlay:   ${COLOR_BOLD}SUPER + G${COLOR_RESET} (lazygit)
 echo -e "  • File Picker Modal: ${COLOR_BOLD}SUPER + SHIFT + F${COLOR_RESET} (or ${COLOR_BOLD}SUPER + ALT + F${COLOR_RESET} for Image Grid)"
 echo -e "  • Notification Mako: ${COLOR_BOLD}makoctl reload${COLOR_RESET}"
 echo -e "  • Test SDDM Theme:   ${COLOR_BOLD}~/.dotfiles/sddm/test-theme.sh${COLOR_RESET}"
-
+echo -e "  • Push Dotfiles:     ${COLOR_BOLD}~/.dotfiles/scripts/dotfiles-push.sh${COLOR_RESET} (safely syncs & isolates local configs)"
