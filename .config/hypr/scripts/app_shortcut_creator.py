@@ -962,7 +962,7 @@ def run_gtk_gui():
             else:
                 self.icon_preview.set_from_icon_name("application-x-executable", Gtk.IconSize.DND)
 
-        def _pick_file(self, title, action=Gtk.FileChooserAction.OPEN, filters=None, initial_folder=None):
+        def _pick_file(self, title, action=Gtk.FileChooserAction.OPEN, filters=None, initial_folder=None, default_filter_name="All Files (*)"):
             selected = None
             try:
                 accept_label = "_Open" if action == Gtk.FileChooserAction.OPEN else "_Select"
@@ -978,6 +978,15 @@ def run_gtk_gui():
                 else:
                     dialog.set_current_folder(str(Path.home()))
 
+                created_filters = {}
+
+                # Create "All Files" filter
+                filter_any = Gtk.FileFilter()
+                filter_any.set_name("All Files (*)")
+                filter_any.add_pattern("*")
+                created_filters["All Files (*)"] = filter_any
+
+                # Add specific filters if provided
                 if filters:
                     for name, patterns, mimes in filters:
                         f = Gtk.FileFilter()
@@ -986,12 +995,21 @@ def run_gtk_gui():
                             f.add_pattern(p)
                         for m in mimes:
                             f.add_mime_type(m)
+                        created_filters[name] = f
+
+                # Add filters to dialog (All Files first, then specific categories)
+                if "All Files (*)" in created_filters:
+                    dialog.add_filter(created_filters["All Files (*)"])
+                
+                for name, f in created_filters.items():
+                    if name != "All Files (*)":
                         dialog.add_filter(f)
 
-                filter_any = Gtk.FileFilter()
-                filter_any.set_name("All Files")
-                filter_any.add_pattern("*")
-                dialog.add_filter(filter_any)
+                # Set default active filter
+                if default_filter_name and default_filter_name in created_filters:
+                    dialog.set_filter(created_filters[default_filter_name])
+                elif filter_any:
+                    dialog.set_filter(filter_any)
 
                 res = dialog.run()
                 if res in (Gtk.ResponseType.ACCEPT, Gtk.ResponseType.OK):
@@ -1018,16 +1036,41 @@ def run_gtk_gui():
         def _on_browse_exec(self, button):
             filters = [
                 (
-                    "Executable Files & Scripts",
-                    ["*.sh", "*.py", "*.AppImage", "*.bin", "*.jar"],
-                    ["application/x-executable", "application/x-shellscript"],
-                )
+                    "Executables & Scripts (*.sh, *.py, *.AppImage, *.bin, *.jar, *.desktop)",
+                    ["*.sh", "*.py", "*.AppImage", "*.bin", "*.jar", "*.desktop", "*.run", "*.elf", "*.bash", "*.zsh", "*.AppDir"],
+                    ["application/x-executable", "application/x-shellscript", "application/x-sharedlib", "application/x-desktop"],
+                ),
+                (
+                    "Shell & Python Scripts (*.sh, *.bash, *.py)",
+                    ["*.sh", "*.bash", "*.zsh", "*.py"],
+                    ["application/x-shellscript", "text/x-python"],
+                ),
+                (
+                    "AppImages & Binaries (*.AppImage, *.bin, *.run)",
+                    ["*.AppImage", "*.bin", "*.run", "*.elf"],
+                    ["application/x-executable"],
+                ),
             ]
+
+            # Determine smart initial folder from current input
+            initial_folder = str(Path.home())
+            current_exec = self.entry_exec.get_text().strip()
+            if current_exec:
+                # Handle command with arguments
+                parts = current_exec.split()
+                if parts:
+                    candidate = Path(os.path.expanduser(parts[0]))
+                    if candidate.is_file() and candidate.parent.exists():
+                        initial_folder = str(candidate.parent)
+                    elif candidate.is_dir() and candidate.exists():
+                        initial_folder = str(candidate)
+
             path = self._pick_file(
                 title="Select Executable / Script",
                 action=Gtk.FileChooserAction.OPEN,
                 filters=filters,
-                initial_folder=str(Path.home()),
+                initial_folder=initial_folder,
+                default_filter_name="All Files (*)",
             )
             if path:
                 self.entry_exec.set_text(path)
@@ -1037,21 +1080,46 @@ def run_gtk_gui():
                     self.entry_name.set_text(base)
 
         def _on_browse_cwd(self, button):
+            initial_folder = str(Path.home())
+            current_cwd = self.entry_cwd.get_text().strip()
+            if current_cwd:
+                candidate = Path(os.path.expanduser(current_cwd))
+                if candidate.exists() and candidate.is_dir():
+                    initial_folder = str(candidate)
+            else:
+                current_exec = self.entry_exec.get_text().strip()
+                if current_exec:
+                    parts = current_exec.split()
+                    if parts:
+                        candidate = Path(os.path.expanduser(parts[0]))
+                        if candidate.is_file() and candidate.parent.exists():
+                            initial_folder = str(candidate.parent)
+
             path = self._pick_file(
                 title="Select Working Directory",
                 action=Gtk.FileChooserAction.SELECT_FOLDER,
-                initial_folder=str(Path.home()),
+                initial_folder=initial_folder,
             )
             if path:
                 self.entry_cwd.set_text(path)
 
         def _on_browse_icon(self, button):
-            icon_dir = "/usr/share/icons" if os.path.exists("/usr/share/icons") else str(Path.home())
+            icon_dir = str(Path.home())
+            current_icon = self.entry_icon.get_text().strip()
+            if current_icon and os.path.isabs(current_icon):
+                candidate = Path(current_icon)
+                if candidate.is_file() and candidate.parent.exists():
+                    icon_dir = str(candidate.parent)
+            elif os.path.exists("/usr/share/icons"):
+                icon_dir = "/usr/share/icons"
+            elif os.path.exists("/usr/share/pixmaps"):
+                icon_dir = "/usr/share/pixmaps"
+
             filters = [
                 (
-                    "Image Files (*.png, *.svg, *.ico, *.xpm)",
-                    ["*.png", "*.svg", "*.ico", "*.xpm"],
-                    ["image/png", "image/svg+xml", "image/x-icon", "image/x-xpixmap"],
+                    "Image Files (*.png, *.svg, *.ico, *.xpm, *.webp, *.jpg)",
+                    ["*.png", "*.svg", "*.svgz", "*.ico", "*.xpm", "*.webp", "*.jpg", "*.jpeg"],
+                    ["image/png", "image/svg+xml", "image/x-icon", "image/x-xpixmap", "image/webp", "image/jpeg"],
                 )
             ]
             path = self._pick_file(
@@ -1059,6 +1127,7 @@ def run_gtk_gui():
                 action=Gtk.FileChooserAction.OPEN,
                 filters=filters,
                 initial_folder=icon_dir,
+                default_filter_name="Image Files (*.png, *.svg, *.ico, *.xpm, *.webp, *.jpg)",
             )
             if path:
                 self.entry_icon.set_text(path)
