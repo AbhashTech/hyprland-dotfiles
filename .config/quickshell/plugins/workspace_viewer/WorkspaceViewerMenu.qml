@@ -219,90 +219,91 @@ Rectangle {
         spacing: 14
 
         // Top Navigation Bar
-        Row {
+        Item {
             width: parent.width
-            spacing: 12
+            implicitHeight: 36
 
-            // Icon + Title
+            // Icon + Title + Search Bar
             Row {
-                spacing: 8
+                anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
+                spacing: 12
 
-                Text {
-                    text: "󰮯"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeLarge + 3
-                    color: Theme.blue
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Text {
-                    text: "Workspace Overview"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeLarge
-                    font.bold: true
-                    color: Theme.text
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
-
-            // Search Bar
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 320
-                height: 36
-                radius: 10
-                color: Theme.surface0
-                border.color: searchInput.activeFocus ? Theme.blue : Theme.surface1
-                border.width: 1
-
+                // Icon + Title
                 Row {
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
                     spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
 
                     Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "󰍉"
+                        text: "󰮯"
                         font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
-                        color: Theme.subtext0
+                        font.pixelSize: Theme.fontSizeLarge + 3
+                        color: Theme.blue
+                        anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    TextInput {
-                        id: searchInput
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width - 30
+                    Text {
+                        text: "Workspace Overview"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeLarge
+                        font.bold: true
                         color: Theme.text
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                // Search Bar
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 320
+                    height: 36
+                    radius: 10
+                    color: Theme.surface0
+                    border.color: searchInput.activeFocus ? Theme.blue : Theme.surface1
+                    border.width: 1
+
+                    Row {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        spacing: 8
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "󰍉"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                            color: Theme.subtext0
+                        }
+
+                        TextInput {
+                            id: searchInput
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width - 30
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            clip: true
+                            onTextChanged: {
+                                root.searchQuery = text;
+                            }
+                            Keys.onEscapePressed: {
+                                PluginManager.closeAll();
+                            }
+                        }
+                    }
+
+                    Text {
+                        visible: searchInput.text.length === 0
+                        anchors.left: parent.left
+                        anchors.leftMargin: 32
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "Search open windows across workspaces..."
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeSmall
-                        clip: true
-                        onTextChanged: {
-                            root.searchQuery = text;
-                        }
-                        Keys.onEscapePressed: {
-                            PluginManager.closeAll();
-                        }
+                        color: Theme.overlay0
                     }
                 }
-
-                Text {
-                    visible: searchInput.text.length === 0
-                    anchors.left: parent.left
-                    anchors.leftMargin: 32
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Search open windows across workspaces..."
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.overlay0
-                }
-            }
-
-            Item {
-                width: 1
-                height: 1
-                // spacer
             }
 
             // Close button
@@ -379,39 +380,40 @@ Rectangle {
                             spacing: 8
 
                             // Header inside Card
-                            Row {
+                            Item {
                                 width: parent.width
-                                spacing: 6
+                                implicitHeight: 22
 
-                                Rectangle {
-                                    implicitWidth: 22
-                                    implicitHeight: 22
-                                    radius: 6
-                                    color: isActive ? Theme.blue : Theme.surface1
+                                Row {
+                                    anchors.left: parent.left
                                     anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 6
+
+                                    Rectangle {
+                                        implicitWidth: 22
+                                        implicitHeight: 22
+                                        radius: 6
+                                        color: isActive ? Theme.blue : Theme.surface1
+                                        anchors.verticalCenter: parent.verticalCenter
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: wsId.toString()
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: Theme.fontSizeSmall
+                                            font.bold: true
+                                            color: isActive ? "#ffffff" : Theme.text
+                                        }
+                                    }
 
                                     Text {
-                                        anchors.centerIn: parent
-                                        text: wsId.toString()
+                                        text: "Workspace " + wsId
                                         font.family: Theme.fontFamily
                                         font.pixelSize: Theme.fontSizeSmall
                                         font.bold: true
-                                        color: isActive ? "#ffffff" : Theme.text
+                                        color: Theme.text
+                                        anchors.verticalCenter: parent.verticalCenter
                                     }
-                                }
-
-                                Text {
-                                    text: "Workspace " + wsId
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    font.bold: true
-                                    color: Theme.text
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
-
-                                Item {
-                                    width: 1
-                                    height: 1
                                 }
 
                                 Rectangle {
