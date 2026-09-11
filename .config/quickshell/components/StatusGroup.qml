@@ -43,6 +43,10 @@ Rectangle {
     property string batIcon: "󰁹"
     property string batPercent: "100%"
     property string batProfile: PluginManager.powerProfile
+    property string batStatus: "Full"
+    property double batPowerW: 0.0
+    property double batHealth: 100.0
+    property string batTimeStr: ""
 
     // Dynamic color based on power profile
     readonly property color batColor: {
@@ -53,7 +57,7 @@ Rectangle {
 
     Process {
         id: volProc
-        command: ["python3", "-c", "import subprocess, json, re\ndef clean_audio_name(desc, is_mic=False):\n    if not desc: return 'Digital Mic' if is_mic else 'Speakers'\n    desc = re.sub(r'\\s+', ' ', desc).strip()\n    if 'Speaker' in desc or 'speaker' in desc: return 'Speakers'\n    if 'Headphone' in desc or 'Headset' in desc: return 'Headphones'\n    if 'Digital Microphone' in desc or 'Mic' in desc: return 'Microphone'\n    parts = desc.split(')')\n    if len(parts) > 1 and parts[-1].strip(): return parts[-1].strip()[:24]\n    desc = re.sub(r'\\(HD Audio\\)', '', desc).strip()\n    return desc[:24]\nvol = 50; muted = False; s_desc = 'Speakers'\ntry:\n    res = subprocess.run(['wpctl', 'get-volume', '@DEFAULT_AUDIO_SINK@'], capture_output=True, text=True, timeout=2).stdout.strip()\n    parts = res.split()\n    vol = int(round(float(parts[1])*100)) if len(parts) > 1 else 50\n    muted = '[MUTED]' in res\n    s_name = subprocess.run(['pactl', 'get-default-sink'], capture_output=True, text=True, timeout=2).stdout.strip()\n    sinks_json = json.loads(subprocess.run(['pactl', '-f', 'json', 'list', 'sinks'], capture_output=True, text=True, timeout=2).stdout)\n    for s in sinks_json:\n        if s.get('name') == s_name:\n            s_desc = clean_audio_name(s.get('description', ''))\n            break\nexcept Exception: pass\nm_vol = 100; m_muted = False; m_desc = 'Microphone'\ntry:\n    m_res = subprocess.run(['wpctl', 'get-volume', '@DEFAULT_AUDIO_SOURCE@'], capture_output=True, text=True, timeout=2).stdout.strip()\n    m_parts = m_res.split()\n    m_vol = int(round(float(m_parts[1])*100)) if len(m_parts) > 1 else 100\n    m_muted = '[MUTED]' in m_res\n    m_name = subprocess.run(['pactl', 'get-default-source'], capture_output=True, text=True, timeout=2).stdout.strip()\n    srcs_json = json.loads(subprocess.run(['pactl', '-f', 'json', 'list', 'sources'], capture_output=True, text=True, timeout=2).stdout)\n    for s in srcs_json:\n        if s.get('name') == m_name:\n            m_desc = clean_audio_name(s.get('description', ''), is_mic=True)\n            break\nexcept Exception: pass\nprint(json.dumps({'vol': vol, 'muted': muted, 'sink': s_desc, 'mic_vol': m_vol, 'mic_muted': m_muted, 'mic': m_desc}))"]
+        command: ["python3", "-c", "import subprocess, json\ndef clean_audio_name(desc, is_mic=False):\n    if not desc: return 'Digital Mic' if is_mic else 'Speakers'\n    desc = ' '.join(desc.split()).strip()\n    if 'Speaker' in desc or 'speaker' in desc: return 'Speakers'\n    if 'Headphone' in desc or 'Headset' in desc: return 'Headphones'\n    if 'Digital Microphone' in desc or 'Mic' in desc: return 'Microphone'\n    parts = desc.split(')')\n    if len(parts) > 1 and parts[-1].strip(): return parts[-1].strip()[:24]\n    desc = desc.replace('(HD Audio)', '').strip()\n    return desc[:24]\nvol = 50; muted = False; s_desc = 'Speakers'\ntry:\n    res = subprocess.run(['wpctl', 'get-volume', '@DEFAULT_AUDIO_SINK@'], capture_output=True, text=True, timeout=2).stdout.strip()\n    parts = res.split()\n    vol = int(round(float(parts[1])*100)) if len(parts) > 1 else 50\n    muted = '[MUTED]' in res\n    s_name = subprocess.run(['pactl', 'get-default-sink'], capture_output=True, text=True, timeout=2).stdout.strip()\n    sinks_json = json.loads(subprocess.run(['pactl', '-f', 'json', 'list', 'sinks'], capture_output=True, text=True, timeout=2).stdout)\n    for s in sinks_json:\n        if s.get('name') == s_name:\n            s_desc = clean_audio_name(s.get('description', ''))\n            break\nexcept Exception: pass\nm_vol = 100; m_muted = False; m_desc = 'Microphone'\ntry:\n    m_res = subprocess.run(['wpctl', 'get-volume', '@DEFAULT_AUDIO_SOURCE@'], capture_output=True, text=True, timeout=2).stdout.strip()\n    m_parts = m_res.split()\n    m_vol = int(round(float(m_parts[1])*100)) if len(m_parts) > 1 else 100\n    m_muted = '[MUTED]' in m_res\n    m_name = subprocess.run(['pactl', 'get-default-source'], capture_output=True, text=True, timeout=2).stdout.strip()\n    srcs_json = json.loads(subprocess.run(['pactl', '-f', 'json', 'list', 'sources'], capture_output=True, text=True, timeout=2).stdout)\n    for s in srcs_json:\n        if s.get('name') == m_name:\n            m_desc = clean_audio_name(s.get('description', ''), is_mic=True)\n            break\nexcept Exception: pass\nprint(json.dumps({'vol': vol, 'muted': muted, 'sink': s_desc, 'mic_vol': m_vol, 'mic_muted': m_muted, 'mic': m_desc}))"]
         stdout: SplitParser {
             onRead: data => {
                 try {
@@ -122,7 +126,7 @@ Rectangle {
 
     Process {
         id: btProc
-        command: ["python3", "-c", "import subprocess, json, re\ndef get_bt_info():\n    show_out = subprocess.run(['bluetoothctl', 'show'], capture_output=True, text=True, timeout=2).stdout\n    powered = 'Powered: yes' in show_out\n    paired_out = subprocess.run(['bluetoothctl', 'devices', 'Paired'], capture_output=True, text=True, timeout=2).stdout\n    if not paired_out: paired_out = subprocess.run(['bluetoothctl', 'devices'], capture_output=True, text=True, timeout=2).stdout\n    paired_count = len([l for l in paired_out.splitlines() if l.strip().startswith('Device')])\n    conn_out = subprocess.run(['bluetoothctl', 'devices', 'Connected'], capture_output=True, text=True, timeout=2).stdout\n    conn_lines = [l for l in conn_out.splitlines() if l.strip().startswith('Device')]\n    connected_count = len(conn_lines)\n    connected = connected_count > 0\n    devices = []\n    for l in conn_lines:\n        parts = l.strip().split()\n        if len(parts) >= 3:\n            mac = parts[1]; name = ' '.join(parts[2:])\n            info_out = subprocess.run(['bluetoothctl', 'info', mac], capture_output=True, text=True, timeout=2).stdout\n            bat = -1; icon_type = '󰂱'\n            for il in info_out.splitlines():\n                if 'Battery Percentage:' in il:\n                    try:\n                        m = re.search(r'\\((\\d+)\\)', il)\n                        if m: bat = int(m.group(1))\n                        else: bat = int(il.split('Battery Percentage:')[-1].strip().replace('%', ''))\n                    except: pass\n                elif 'Icon:' in il:\n                    ic = il.lower()\n                    if 'audio' in ic or 'headset' in ic or 'headphone' in ic: icon_type = '󰋋'\n                    elif 'mouse' in ic: icon_type = '󰍽'\n                    elif 'keyboard' in ic: icon_type = '󰌌'\n                    elif 'phone' in ic: icon_type = '󰄜'\n            devices.append({'name': name, 'mac': mac, 'battery': bat, 'icon': icon_type})\n    return {'powered': powered, 'connected': connected, 'connected_count': connected_count, 'paired_count': paired_count, 'devices': devices}\nprint(json.dumps(get_bt_info()))"]
+        command: ["python3", "-c", "import subprocess, json\ndef get_bt_info():\n    show_out = subprocess.run(['bluetoothctl', 'show'], capture_output=True, text=True, timeout=2).stdout\n    powered = 'Powered: yes' in show_out\n    paired_out = subprocess.run(['bluetoothctl', 'devices', 'Paired'], capture_output=True, text=True, timeout=2).stdout\n    if not paired_out: paired_out = subprocess.run(['bluetoothctl', 'devices'], capture_output=True, text=True, timeout=2).stdout\n    paired_count = len([l for l in paired_out.splitlines() if l.strip().startswith('Device')])\n    conn_out = subprocess.run(['bluetoothctl', 'devices', 'Connected'], capture_output=True, text=True, timeout=2).stdout\n    conn_lines = [l for l in conn_out.splitlines() if l.strip().startswith('Device')]\n    connected_count = len(conn_lines)\n    connected = connected_count > 0\n    devices = []\n    for l in conn_lines:\n        parts = l.strip().split()\n        if len(parts) >= 3:\n            mac = parts[1]; name = ' '.join(parts[2:])\n            info_out = subprocess.run(['bluetoothctl', 'info', mac], capture_output=True, text=True, timeout=2).stdout\n            bat = -1; icon_type = '󰂱'\n            for il in info_out.splitlines():\n                if 'Battery Percentage:' in il:\n                    try:\n                        if '(' in il and ')' in il: bat = int(il.split('(')[-1].split(')')[0].strip())\n                        else: bat = int(il.split('Battery Percentage:')[-1].strip().replace('%', ''))\n                    except: pass\n                elif 'Icon:' in il:\n                    ic = il.lower()\n                    if 'audio' in ic or 'headset' in ic or 'headphone' in ic: icon_type = '󰋋'\n                    elif 'mouse' in ic: icon_type = '󰍽'\n                    elif 'keyboard' in ic: icon_type = '󰌌'\n                    elif 'phone' in ic: icon_type = '󰄜'\n            devices.append({'name': name, 'mac': mac, 'battery': bat, 'icon': icon_type})\n    return {'powered': powered, 'connected': connected, 'connected_count': connected_count, 'paired_count': paired_count, 'devices': devices}\nprint(json.dumps(get_bt_info()))"]
         stdout: SplitParser {
             onRead: data => {
                 try {
@@ -149,7 +153,7 @@ Rectangle {
 
     Process {
         id: batProc
-        command: ["python3", "-c", "import glob, subprocess, json\nbats = glob.glob('/sys/class/power_supply/BAT*')\ncap = 100; status = 'Full'\nif bats:\n    b = bats[0]\n    try: cap = int(open(b + '/capacity').read().strip())\n    except: pass\n    try: status = open(b + '/status').read().strip()\n    except: pass\nprof = 'balanced'\ntry:\n    res = subprocess.run(['powerprofilesctl', 'get'], capture_output=True, text=True, timeout=1)\n    if res.returncode == 0 and res.stdout.strip():\n        prof = res.stdout.strip()\nexcept: pass\nprint(json.dumps({'cap': cap, 'status': status, 'profile': prof}))"]
+        command: ["python3", "-c", "import glob, subprocess, json, os\ndef get_bat():\n    bats = glob.glob('/sys/class/power_supply/BAT*')\n    cap = 100; status = 'Full'; power_w = 0.0; health = 100.0; time_str = ''\n    if bats:\n        b = bats[0]\n        try: cap = int(open(os.path.join(b, 'capacity')).read().strip())\n        except: pass\n        try: status = open(os.path.join(b, 'status')).read().strip()\n        except: pass\n        try:\n            p_now = int(open(os.path.join(b, 'power_now')).read().strip())\n            power_w = p_now / 1000000.0\n        except:\n            try:\n                c_now = int(open(os.path.join(b, 'current_now')).read().strip())\n                v_now = int(open(os.path.join(b, 'voltage_now')).read().strip())\n                power_w = (c_now * v_now) / 1e12\n            except: pass\n        try:\n            efull = int(open(os.path.join(b, 'energy_full')).read().strip())\n            edes = int(open(os.path.join(b, 'energy_full_design')).read().strip())\n            health = round((efull / edes) * 100, 1)\n        except:\n            try:\n                cfull = int(open(os.path.join(b, 'charge_full')).read().strip())\n                cdes = int(open(os.path.join(b, 'charge_full_design')).read().strip())\n                health = round((cfull / cdes) * 100, 1)\n            except: pass\n        if power_w > 0.5:\n            try:\n                enow = 0; efull = 0\n                if os.path.exists(os.path.join(b, 'energy_now')):\n                    enow = int(open(os.path.join(b, 'energy_now')).read().strip()) / 1000000.0\n                    efull = int(open(os.path.join(b, 'energy_full')).read().strip()) / 1000000.0\n                elif os.path.exists(os.path.join(b, 'charge_now')):\n                    v_now = int(open(os.path.join(b, 'voltage_now')).read().strip()) / 1000000.0\n                    enow = (int(open(os.path.join(b, 'charge_now')).read().strip()) / 1000000.0) * v_now\n                    efull = (int(open(os.path.join(b, 'charge_full')).read().strip()) / 1000000.0) * v_now\n                if status.lower() == 'discharging' and enow > 0:\n                    hours = enow / power_w; h = int(hours); m = int((hours - h) * 60)\n                    time_str = f'{h}h {m}m left' if h > 0 else f'{m}m left'\n                elif status.lower() == 'charging' and efull > enow:\n                    hours = (efull - enow) / power_w; h = int(hours); m = int((hours - h) * 60)\n                    time_str = f'{h}h {m}m to full' if h > 0 else f'{m}m to full'\n            except: pass\n    prof = 'balanced'\n    try:\n        res = subprocess.run(['powerprofilesctl', 'get'], capture_output=True, text=True, timeout=1)\n        if res.returncode == 0 and res.stdout.strip(): prof = res.stdout.strip()\n    except: pass\n    return {'cap': cap, 'status': status, 'profile': prof, 'power_w': round(power_w, 1), 'health': health, 'time_str': time_str}\nprint(json.dumps(get_bat()))"]
         stdout: SplitParser {
             onRead: data => {
                 try {
@@ -169,6 +173,10 @@ Rectangle {
                     else icon = chg ? "󰂅" : "󰁹";
                     root.batIcon = icon;
                     root.batPercent = cap + "%";
+                    if (obj.status) root.batStatus = obj.status;
+                    if (obj.power_w !== undefined) root.batPowerW = obj.power_w;
+                    if (obj.health !== undefined) root.batHealth = obj.health;
+                    if (obj.time_str !== undefined) root.batTimeStr = obj.time_str;
                     if (obj.profile) {
                         root.batProfile = obj.profile;
                         PluginManager.setPowerProfile(obj.profile);
@@ -598,7 +606,44 @@ Rectangle {
                 icon: root.batIcon
                 iconColor: root.batColor
                 title: "Battery & Power (" + root.batPercent + ")"
-                description: "Power Profile: " + root.batProfile.charAt(0).toUpperCase() + root.batProfile.slice(1)
+                description: root.batStatus + (root.batTimeStr !== "" ? " • " + root.batTimeStr : "")
+                details: [
+                    {
+                        icon: root.batIcon,
+                        iconColor: root.batColor,
+                        label: "State & Charge",
+                        value: root.batStatus + " (" + root.batPercent + ")",
+                        valueColor: root.batColor
+                    },
+                    {
+                        icon: root.batProfile === "power-saver" ? "󰾆" : (root.batProfile === "performance" ? "󰓅" : "󰾅"),
+                        iconColor: root.batColor,
+                        label: "Power Profile",
+                        value: root.batProfile.charAt(0).toUpperCase() + root.batProfile.slice(1),
+                        valueColor: root.batColor
+                    },
+                    {
+                        icon: "󱐋",
+                        iconColor: Theme.peach,
+                        label: "Power Draw",
+                        value: (root.batPowerW > 0 ? (root.batPowerW + " W") : "On AC Power"),
+                        valueColor: Theme.peach
+                    },
+                    {
+                        icon: "󰁹",
+                        iconColor: root.batHealth >= 80 ? Theme.green : (root.batHealth >= 60 ? Theme.yellow : Theme.red),
+                        label: "Battery Health",
+                        value: root.batHealth + "%",
+                        valueColor: root.batHealth >= 80 ? Theme.green : Theme.yellow
+                    },
+                    {
+                        icon: "󱎫",
+                        iconColor: Theme.sapphire,
+                        label: "Runtime Estimate",
+                        value: root.batTimeStr !== "" ? root.batTimeStr : (root.batStatus === "Full" ? "Fully Charged" : "Calculating..."),
+                        valueColor: Theme.text
+                    }
+                ]
                 shortcuts: [
                     { action: "Power Profiles Menu", key: "Left Click" },
                     { action: "Task Manager (btop)", key: "Right Click" }
