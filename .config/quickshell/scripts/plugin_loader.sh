@@ -107,7 +107,7 @@ def generate_window_loaders(services, windows):
     for s in services:
         items.append(f'    Loader {{\n        source: "{s["url"]}"\n        asynchronous: true\n    }}')
     for w in windows:
-        items.append(f'    Loader {{\n        property bool _cached: false\n        active: PluginManager.isPluginVisible("{w["id"]}") || _cached\n        onLoaded: _cached = true\n        source: "{w["url"]}"\n        asynchronous: false\n    }}')
+        items.append(f'    Loader {{\n        property bool _cached: false\n        active: (PluginManager.customPluginVersion >= 0 && PluginManager.isPluginVisible("{w["id"]}")) || (PluginManager.hasOwnProperty("pluginManagerVisible") && "{w["id"]}" === "plugin_manager" && PluginManager.pluginManagerVisible) || _cached\n        onLoaded: _cached = true\n        source: "{w["url"]}"\n        asynchronous: false\n    }}')
     return "\n".join(items)
 
 # Generate CustomWidgetsLeft.qml

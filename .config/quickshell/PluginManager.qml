@@ -19,6 +19,7 @@ QtObject {
     property bool batteryVisible: false
     property bool notificationVisible: false
     property bool workspaceViewerVisible: false
+    property bool pluginManagerVisible: false
     property string powerProfile: "balanced"
     property bool connectivityVisible: false
     property string connectivityTab: "wifi"
@@ -31,6 +32,9 @@ QtObject {
     function isPluginVisible(pluginId) {
         var v = customPluginVersion;
         if (!pluginId) return false;
+        if (pluginId === "plugin_manager" || pluginId === "plugin-manager" || pluginId === "pluginmanager") {
+            if (root.pluginManagerVisible) return true;
+        }
         if (customPluginStates[pluginId] === true) return true;
         var alt1 = pluginId.replace(/-/g, "_");
         if (customPluginStates[alt1] === true) return true;
@@ -78,6 +82,7 @@ QtObject {
         workspaceViewerVisible = false;
         connectivityVisible = false;
         filePickerVisible = false;
+        pluginManagerVisible = false;
         customPluginStates = ({});
         customPluginVersion++;
     }
@@ -123,6 +128,8 @@ QtObject {
                 calcVisible = !current;
                 break;
             case "emoji":
+            case "emoji-picker":
+            case "emojis":
                 current = emojiVisible;
                 closeAll();
                 emojiVisible = !current;
@@ -237,8 +244,9 @@ QtObject {
             case "pluginmanager":
             case "plugins":
             case "pm":
-                current = root.isPluginVisible("plugin_manager");
+                current = root.pluginManagerVisible || root.isPluginVisible("plugin_manager");
                 root.closeAll();
+                root.pluginManagerVisible = !current;
                 root.setPluginVisible("plugin_manager", !current);
                 break;
             case "close":
