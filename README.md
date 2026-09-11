@@ -55,6 +55,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │       ├── ocr-language-manager.desktop # Application menu entry for OCR Language Manager
     │       ├── ocr_grab.py           # Optical character recognition text grabber
     │       ├── ocr_language_manager.py # Tesseract OCR language model downloader, manager & selector (GTK3/CLI)
+    │       ├── plugin-manager.desktop # Application menu entry for Quickshell Plugin Manager
     │       ├── qr_reader.py          # Screen QR / 2D barcode scanner & decoder
     │       ├── resolution_menu.py    # Display resolution & UI scaling switcher
     │       ├── scale_window.py       # Window resizing with on-screen dimensions overlay
@@ -83,9 +84,10 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   │   ├── notifications/   # Notification center & history viewer
     │   │   ├── sysinfo/         # System hardware dashboard (CPU, RAM, Disk) with fast 800ms updates
     │   │   ├── filepicker/      # Floating File Uploader & Selector Modal with XDG Portal, preview & thumbnail grid
-    │   │   └── workspace_viewer/# Interactive multi-workspace layout viewer & hover snapshot previews
+    │   │   ├── workspace_viewer/# Interactive multi-workspace layout viewer & hover snapshot previews
+    │   │   └── plugin-manager/  # Comprehensive Quickshell Plugin Manager, store catalog, template scaffolder & git sync
     │   ├── custom_plugins/      # User Custom Plugins (untracked by git, see README inside)
-    │   └── scripts/             # Supervisor scripts (launch_quickshell.sh, toggle_plugin.sh)
+    │   └── scripts/             # Supervisor scripts (launch_quickshell.sh, toggle_plugin.sh, plugin_loader.sh)
     ├── wireplumber/             # WirePlumber Audio Session Rules
     │   └── wireplumber.conf.d/  # Software DSP mixing (51-alsa-soft-mixer.conf) & profile priority routing (52-alsa-routes.conf)
     ├── kitty/                   # Kitty Terminal Emulator

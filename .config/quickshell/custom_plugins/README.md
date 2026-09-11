@@ -14,7 +14,6 @@ Create a subdirectory under `custom_plugins/` for your plugin with a `manifest.j
 ```text
 ~/.config/quickshell/custom_plugins/
 ├── README.md                   <-- This documentation
-├── plugin-manager/             <-- Built-in GUI & CLI Plugin Manager
 └── my_plugin/                  <-- Your custom plugin folder
     ├── manifest.json           <-- Plugin metadata, position & entrypoints (Automatic discovery!)
     ├── MyBarWidget.qml         <-- Topbar widget (optional)
@@ -73,7 +72,7 @@ Every custom plugin should contain a `manifest.json` file at its root. This inst
 You can enable or disable any custom plugin using any of the following 3 methods:
 
 ### Method 1: Via Graphical UI (Plugin Manager)
-1. Click the **Plugin Manager capsule** on the top status bar or press the toggle keybinding.
+1. Launch **Quickshell Plugin Manager** from the application menu (`SUPER + R` / Fuzzel) or press `SUPER + ALT + M`.
 2. Find your plugin in the list.
 3. Click the **toggle switch** to enable or disable it.
 4. Quickshell will automatically update the manifests and reload widgets in real-time.
@@ -93,10 +92,10 @@ You can enable or disable any custom plugin using any of the following 3 methods
 Use the backend helper script to toggle plugins from scripts or terminal:
 ```bash
 # Enable a plugin
-python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py toggle <plugin-id> true
+python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py toggle <plugin-id> true
 
 # Disable a plugin
-python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py toggle <plugin-id> false
+python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py toggle <plugin-id> false
 ```
 
 ---

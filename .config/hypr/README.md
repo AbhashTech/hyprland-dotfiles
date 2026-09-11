@@ -40,6 +40,7 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
     ├── ocr-language-manager.desktop # Application menu entry for OCR Language Manager
     ├── ocr_grab.py              # Screen OCR text extraction via Tesseract
     ├── ocr_language_manager.py  # Tesseract OCR language model downloader & manager (GTK3/CLI)
+    ├── plugin-manager.desktop   # Application menu entry for Quickshell Plugin Manager
     ├── qr_reader.py             # Screen QR / 2D barcode scanner & decoder
     ├── resolution_menu.py       # Interactive display resolution & UI scale switcher
     ├── scale_window.py          # Window resizing with on-screen dimensions overlay

@@ -21,17 +21,16 @@ A native, interactive GUI & CLI Plugin Manager for **Quickshell** custom plugins
   - **Git Clone**: Clone and register any Git repository directly into your Quickshell plugins directory.
 - **Delete Plugins**: Safely remove unwanted custom plugins with confirmation safeguards.
 - **Real-Time Logs & Diagnostics**: Live console trace drawer to inspect subprocess execution.
-- **Topbar Capsule Module**: Live status indicator displaying active/installed plugin count and quick actions.
+- **Application Menu & Keybinding Launch**: Instant popup modal window accessible via application launcher (`SUPER + R` / Fuzzel) or `SUPER + ALT + M`.
 
 ---
 
 ## 📁 Repository Structure
 
 ```text
-~/.config/quickshell/custom_plugins/plugin-manager/
+~/.config/quickshell/plugins/plugin-manager/
 ├── manifest.json              # Plugin specification & entrypoints
 ├── qmldir                     # QML module exports
-├── PluginManagerModule.qml    # Status bar capsule widget
 ├── PluginManagerWindow.qml    # Glassmorphic overlay popup window
 ├── PluginManagerMenu.qml      # Multi-tab interactive UI card
 ├── PluginManagerService.qml   # Backend IPC service singleton
@@ -58,61 +57,61 @@ hl.bind("SUPER + ALT + M", hl.dsp.exec_cmd("bash " .. os.getenv("HOME") .. "/.co
 
 - **List all plugins & metadata**:
   ```bash
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py list
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py list
   ```
 
 - **Get Discover / Store Catalog**:
   ```bash
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py catalog
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py catalog
   ```
 
 - **Enable or disable a plugin**:
   ```bash
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py toggle <plugin-id> true
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py toggle <plugin-id> false
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py toggle <plugin-id> true
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py toggle <plugin-id> false
   ```
 
 - **Update Manifest properties (e.g. position)**:
   ```bash
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py update-manifest <plugin-id> '{"position":"left"}'
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py update-manifest <plugin-id> '{"position":"left"}'
   ```
 
 - **Git Pull remote updates**:
   ```bash
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py git-pull <plugin-id>
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py git-pull <plugin-id>
   ```
 
 - **View Git commit history**:
   ```bash
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py git-log <plugin-id>
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py git-log <plugin-id>
   ```
 
 - **Export plugin to .tar.gz bundle**:
   ```bash
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py export <plugin-id>
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py export <plugin-id>
   ```
 
 - **Import plugin from archive**:
   ```bash
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py import /path/to/plugin.tar.gz
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py import /path/to/plugin.tar.gz
   ```
 
 - **Scaffold a new plugin**:
   ```bash
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py create '{"id":"pomodoro","name":"Pomodoro Timer","author":"Kunal Gautam","position":"center","hasWidget":true,"hasWindow":true,"hasService":false,"initGit":true}'
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py create '{"id":"pomodoro","name":"Pomodoro Timer","author":"Kunal Gautam","position":"center","hasWidget":true,"hasWindow":true,"hasService":false,"initGit":true}'
   ```
 
 - **Install from Git**:
   ```bash
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py install-git https://github.com/example/my-quickshell-widget.git
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py install-git https://github.com/example/my-quickshell-widget.git
   ```
 
 - **Delete a plugin**:
   ```bash
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py delete <plugin-id>
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py delete <plugin-id>
   ```
 
 - **Reload Quickshell**:
   ```bash
-  python3 ~/.config/quickshell/custom_plugins/plugin-manager/plugin_helper.py reload
+  python3 ~/.config/quickshell/plugins/plugin-manager/plugin_helper.py reload
   ```
