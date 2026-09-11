@@ -244,10 +244,9 @@ QtObject {
             case "pluginmanager":
             case "plugins":
             case "pm":
-                current = root.pluginManagerVisible || root.isPluginVisible("plugin_manager");
+                current = root.pluginManagerVisible;
                 root.closeAll();
                 root.pluginManagerVisible = !current;
-                root.setPluginVisible("plugin_manager", !current);
                 break;
             case "close":
             case "hide":

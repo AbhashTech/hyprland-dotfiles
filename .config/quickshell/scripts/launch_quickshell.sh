@@ -32,13 +32,16 @@ is_quickshell_running() {
 }
 
 stop_quickshell() {
-    pkill -x quickshell 2>/dev/null
-    for i in {1..15}; do
+    quickshell kill 2>/dev/null || true
+    pkill -x quickshell 2>/dev/null || true
+    for i in {1..20}; do
         if ! is_quickshell_running; then
             return 0
         fi
-        sleep 0.02
+        sleep 0.05
     done
+    pkill -9 -x quickshell 2>/dev/null || true
+    sleep 0.1
 }
 
 start_quickshell() {
