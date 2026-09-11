@@ -25,6 +25,15 @@ Rectangle {
     property string micName: "Microphone"
     property int brightness: 50
     property string wifiText: "󰤨"
+    property bool wifiPowered: true
+    property bool wifiConnected: false
+    property string wifiSsid: ""
+    property int wifiSignal: 0
+    property string wifiRssi: ""
+    property string wifiIp: ""
+    property string wifiSec: ""
+    property string wifiFreq: ""
+    property string wifiIface: "wlan0"
     property string btText: "󰂯"
     property string batIcon: "󰁹"
     property string batPercent: "100%"
@@ -74,16 +83,27 @@ Rectangle {
 
     Process {
         id: netProc
-        command: ["python3", "-c", "import subprocess, json\nssid = ''\nsig = 0\ntry:\n    # Try nmcli first\n    res = subprocess.run(['nmcli', '-t', '-f', 'ACTIVE,SSID,SIGNAL', 'dev', 'wifi'], capture_output=True, text=True).stdout\n    lines = [l for l in res.splitlines() if l.startswith('yes:')]\n    if lines:\n        ssid = lines[0].split(':')[1]\n        sig = int(lines[0].split(':')[2] or 0)\nexcept Exception:\n    pass\nif not ssid:\n    try:\n        # Fallback to iwctl / iwd\n        res = subprocess.run(['iwctl', 'station', 'wlan0', 'show'], capture_output=True, text=True).stdout\n        for l in res.splitlines():\n            if 'Connected network' in l:\n                ssid = l.split('Connected network')[-1].strip()\n            if 'RSSI' in l and not sig:\n                try:\n                    rssi_val = int(l.split('RSSI')[-1].strip().split()[0])\n                    # Convert dBm to approx percentage (e.g. -50 dBm -> ~80%)\n                    sig = max(0, min(100, int(2 * (rssi_val + 100))))\n                except Exception:\n                    sig = 75\n    except Exception:\n        pass\nprint(json.dumps({'ssid': ssid, 'sig': sig}))"]
+        command: ["python3", "-c", "import subprocess, json, os, re\ndef get_wifi_info():\n    iface = 'wlan0'\n    try:\n        for net_if in os.listdir('/sys/class/net'):\n            if net_if.startswith(('wl', 'wlan', 'wifi')):\n                iface = net_if; break\n    except Exception: pass\n    powered = True\n    try:\n        rf = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True, timeout=2).stdout\n        if 'Soft blocked: yes' in rf or 'Hard blocked: yes' in rf: powered = False\n    except Exception: pass\n    ssid = ''; sig = 0; rssi = ''; ip = ''; sec = ''; freq = ''; connected = False\n    try:\n        res = subprocess.run(['iwctl', 'station', iface, 'show'], capture_output=True, text=True, timeout=2).stdout\n        for l in res.splitlines():\n            if 'Connected network' in l:\n                ssid = l.split('Connected network')[-1].strip(); connected = bool(ssid)\n            elif 'IPv4 address' in l: ip = l.split('IPv4 address')[-1].strip()\n            elif 'Security' in l: sec = l.split('Security')[-1].strip()\n            elif 'Frequency' in l:\n                f_val = l.split('Frequency')[-1].strip()\n                try: freq = '5 GHz' if int(f_val.split()[0]) > 3000 else '2.4 GHz'\n                except: freq = f_val\n            elif 'RSSI' in l and not sig:\n                try:\n                    r_str = l.split('RSSI')[-1].strip(); rssi = r_str\n                    val = int(r_str.split()[0]); sig = max(0, min(100, int(2 * (val + 100))))\n                except: pass\n    except Exception: pass\n    if not ssid:\n        try:\n            res = subprocess.run(['nmcli', '-t', '-f', 'ACTIVE,SSID,SIGNAL,SECURITY,FREQ,DEVICE', 'dev', 'wifi'], capture_output=True, text=True, timeout=2).stdout\n            for l in res.splitlines():\n                if l.startswith('yes:'):\n                    p = l.split(':')\n                    if len(p) >= 3:\n                        ssid = p[1]; connected = True; sig = int(p[2] or 0)\n                        if len(p) >= 4: sec = p[3]\n                        if len(p) >= 5: freq = p[4]\n                        if len(p) >= 6: iface = p[5]\n        except Exception: pass\n    if not ip and connected:\n        try:\n            ip_out = subprocess.run(['ip', '-brief', 'address', 'show', iface], capture_output=True, text=True, timeout=2).stdout\n            parts = ip_out.split()\n            if len(parts) >= 3: ip = parts[2].split('/')[0]\n        except Exception: pass\n    return {'powered': powered, 'connected': connected, 'ssid': ssid, 'sig': sig, 'rssi': rssi, 'ip': ip, 'sec': sec, 'freq': freq, 'iface': iface}\nprint(json.dumps(get_wifi_info()))"]
         stdout: SplitParser {
             onRead: data => {
                 try {
                     var obj = JSON.parse(data);
-                    if (obj && obj.ssid) {
-                        var sig = parseInt(obj.sig || "0", 10);
-                        if (sig >= 75) root.wifiText = "󰤨";
-                        else if (sig >= 50) root.wifiText = "󰤥";
-                        else if (sig >= 25) root.wifiText = "󰤢";
+                    root.wifiPowered = obj.powered !== undefined ? obj.powered : true;
+                    root.wifiConnected = !!obj.connected;
+                    root.wifiSsid = obj.ssid || "";
+                    root.wifiSignal = parseInt(obj.sig || "0", 10);
+                    root.wifiRssi = obj.rssi || "";
+                    root.wifiIp = obj.ip || "";
+                    root.wifiSec = obj.sec || "";
+                    root.wifiFreq = obj.freq || "";
+                    root.wifiIface = obj.iface || "wlan0";
+
+                    if (!root.wifiPowered) {
+                        root.wifiText = "󰤮";
+                    } else if (root.wifiConnected) {
+                        if (root.wifiSignal >= 75) root.wifiText = "󰤨";
+                        else if (root.wifiSignal >= 50) root.wifiText = "󰤥";
+                        else if (root.wifiSignal >= 25) root.wifiText = "󰤢";
                         else root.wifiText = "󰤟";
                     } else {
                         root.wifiText = "󰤭";
@@ -371,11 +391,63 @@ Rectangle {
                 targetItem: netItem
                 isHovered: netArea.containsMouse
                 icon: root.wifiText
-                iconColor: Theme.teal
-                title: "Wireless Network"
-                description: "Wi-Fi connections & network manager"
+                iconColor: root.wifiConnected ? Theme.teal : (root.wifiPowered ? Theme.subtext0 : Theme.red)
+                title: root.wifiConnected ? root.wifiSsid : (root.wifiPowered ? "Wi-Fi Disconnected" : "Wi-Fi Disabled")
+                description: root.wifiConnected ? ("Connected via " + root.wifiIface) : (root.wifiPowered ? "Adapter active, not connected to any network" : "Wireless adapter radio is turned off")
+                details: root.wifiConnected ? [
+                    {
+                        icon: "󰤨",
+                        iconColor: Theme.teal,
+                        label: "Network (SSID)",
+                        value: root.wifiSsid,
+                        valueColor: Theme.teal
+                    },
+                    {
+                        icon: "󰤢",
+                        iconColor: Theme.green,
+                        label: "Signal Strength",
+                        value: root.wifiSignal + "%" + (root.wifiRssi !== "" ? " (" + root.wifiRssi + ")" : ""),
+                        valueColor: Theme.green
+                    },
+                    {
+                        icon: "󰩟",
+                        iconColor: Theme.blue,
+                        label: "IPv4 Address",
+                        value: root.wifiIp !== "" ? root.wifiIp : "Assigning IP...",
+                        valueColor: Theme.text
+                    },
+                    {
+                        icon: "󰌾",
+                        iconColor: Theme.yellow,
+                        label: "Security & Band",
+                        value: (root.wifiSec !== "" ? root.wifiSec : "Open") + (root.wifiFreq !== "" ? " • " + root.wifiFreq : ""),
+                        valueColor: Theme.subtext0
+                    },
+                    {
+                        icon: "󰈀",
+                        iconColor: Theme.sapphire,
+                        label: "Interface",
+                        value: root.wifiIface,
+                        valueColor: Theme.subtext0
+                    }
+                ] : [
+                    {
+                        icon: root.wifiPowered ? "󰤭" : "󰤮",
+                        iconColor: root.wifiPowered ? Theme.yellow : Theme.red,
+                        label: "Radio State",
+                        value: root.wifiPowered ? "Enabled (Disconnected)" : "Disabled (Radio Off)",
+                        valueColor: root.wifiPowered ? Theme.yellow : Theme.red
+                    },
+                    {
+                        icon: "󰈀",
+                        iconColor: Theme.sapphire,
+                        label: "Interface",
+                        value: root.wifiIface,
+                        valueColor: Theme.subtext0
+                    }
+                ]
                 shortcuts: [
-                    { action: "Wi-Fi Control Center", key: "SUPER + CTRL + W" },
+                    { action: "Wi-Fi Control Center", key: "Left Click" },
                     { action: "Toggle Wi-Fi Radio", key: "Right Click" }
                 ]
             }
