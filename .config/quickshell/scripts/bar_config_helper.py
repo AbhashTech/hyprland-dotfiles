@@ -193,7 +193,7 @@ MODULE_CATALOG = [
         "id": "stats",
         "name": "System Hardware Stats",
         "icon": "󰍛",
-        "description": "Live CPU, RAM, GPU, and system resource monitors",
+        "description": "Live CPU load, memory utilization, and hardware graphs",
         "category": "hardware",
         "defaultSection": "right"
     },

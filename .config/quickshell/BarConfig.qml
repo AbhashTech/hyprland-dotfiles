@@ -15,66 +15,27 @@ QtObject {
     property string activeDropTargetSection: ""
     property int activeDropTargetIndex: -1
 
-    // File watcher for dynamic config reloading
-    property var configFile: FileView {
-        path: Quickshell.env("HOME") + "/.config/quickshell/bar_config.json"
-        printErrors: false
-        onLoaded: {
-            root.version++;
-        }
-    }
-
-    readonly property var rawConfig: {
-        var v = root.version;
-        try {
-            var raw = configFile.text();
-            if (raw && raw.trim().length > 0) {
-                return JSON.parse(raw);
-            }
-        } catch (e) {
-            // fallback
-        }
-        return {
-            "position": "top",
-            "floating": true,
-            "barHeight": 38,
-            "barRadius": 16,
-            "capsuleRadius": 12,
-            "spacing": 6,
-            "marginTop": 8,
-            "marginBottom": 8,
-            "marginLeft": 12,
-            "marginRight": 12,
-            "compactMode": false,
-            "leftModules": ["launcher", "workspaces", "activewindow", "custom_left"],
-            "centerModules": ["mpris", "custom_center", "language"],
-            "rightModules": ["custom_right", "recording", "traynotif", "status", "stats", "power", "clock"],
-            "hiddenModules": []
-        };
-    }
-
-    // Geometry and appearance
-    readonly property string position: rawConfig.position || "top"
+    // ── Reactive in-memory state ──────────────────────────────────────────────
+    property string position: "top"
     readonly property bool isTop: position === "top"
     readonly property bool isBottom: position === "bottom"
-    readonly property bool floating: rawConfig.floating !== undefined ? rawConfig.floating : true
-    readonly property int barHeight: rawConfig.barHeight || 38
-    readonly property int barRadius: rawConfig.barRadius || 16
-    readonly property int capsuleRadius: rawConfig.capsuleRadius || 12
-    readonly property int spacing: rawConfig.spacing !== undefined ? rawConfig.spacing : 6
-    readonly property int marginTop: rawConfig.marginTop !== undefined ? rawConfig.marginTop : 8
-    readonly property int marginBottom: rawConfig.marginBottom !== undefined ? rawConfig.marginBottom : 8
-    readonly property int marginLeft: rawConfig.marginLeft !== undefined ? rawConfig.marginLeft : 12
-    readonly property int marginRight: rawConfig.marginRight !== undefined ? rawConfig.marginRight : 12
-    readonly property bool compactMode: !!rawConfig.compactMode
+    property bool floating: true
+    property int barHeight: 38
+    property int barRadius: 16
+    property int capsuleRadius: 12
+    property int spacing: 6
+    property int marginTop: 8
+    property int marginBottom: 8
+    property int marginLeft: 12
+    property int marginRight: 12
+    property bool compactMode: false
 
-    // Modules per section
-    readonly property var leftModules: rawConfig.leftModules || ["launcher", "workspaces", "activewindow", "custom_left"]
-    readonly property var centerModules: rawConfig.centerModules || ["mpris", "custom_center", "language"]
-    readonly property var rightModules: rawConfig.rightModules || ["custom_right", "recording", "traynotif", "status", "stats", "power", "clock"]
-    readonly property var hiddenModules: rawConfig.hiddenModules || []
+    property var leftModules: ["launcher", "workspaces", "activewindow", "custom_left"]
+    property var centerModules: ["mpris", "custom_center", "language"]
+    property var rightModules: ["custom_right", "recording", "traynotif", "status", "stats", "power", "clock"]
+    property var hiddenModules: []
 
-    // Master Catalog
+    // ── Master Catalog ────────────────────────────────────────────────────────
     readonly property var moduleCatalog: [
         {
             id: "launcher",
@@ -190,6 +151,76 @@ QtObject {
         }
     ]
 
+    // ── Initial load & file watcher ───────────────────────────────────────────
+    property var configFile: FileView {
+        path: Quickshell.env("HOME") + "/.config/quickshell/bar_config.json"
+        printErrors: false
+        onLoaded: {
+            root.loadFromText(configFile.text());
+        }
+    }
+
+    function loadFromText(rawText) {
+        if (!rawText || rawText.trim().length === 0) return;
+        try {
+            var data = JSON.parse(rawText);
+            if (!data) return;
+            if (data.position) root.position = data.position;
+            if (data.floating !== undefined) root.floating = data.floating;
+            if (data.barHeight) root.barHeight = data.barHeight;
+            if (data.barRadius) root.barRadius = data.barRadius;
+            if (data.capsuleRadius) root.capsuleRadius = data.capsuleRadius;
+            if (data.spacing !== undefined) root.spacing = data.spacing;
+            if (data.marginTop !== undefined) root.marginTop = data.marginTop;
+            if (data.marginBottom !== undefined) root.marginBottom = data.marginBottom;
+            if (data.marginLeft !== undefined) root.marginLeft = data.marginLeft;
+            if (data.marginRight !== undefined) root.marginRight = data.marginRight;
+            if (data.compactMode !== undefined) root.compactMode = data.compactMode;
+            if (Array.isArray(data.leftModules)) root.leftModules = data.leftModules.slice();
+            if (Array.isArray(data.centerModules)) root.centerModules = data.centerModules.slice();
+            if (Array.isArray(data.rightModules)) root.rightModules = data.rightModules.slice();
+            if (Array.isArray(data.hiddenModules)) root.hiddenModules = data.hiddenModules.slice();
+            root.version++;
+        } catch (e) {}
+    }
+
+    // ── Background Persistence Process ────────────────────────────────────────
+    property var saveProc: Process {
+        id: saveProc
+    }
+
+    function persist() {
+        var cfg = {
+            "version": 1,
+            "position": root.position,
+            "floating": root.floating,
+            "barHeight": root.barHeight,
+            "barRadius": root.barRadius,
+            "capsuleRadius": root.capsuleRadius,
+            "spacing": root.spacing,
+            "marginTop": root.marginTop,
+            "marginBottom": root.marginBottom,
+            "marginLeft": root.marginLeft,
+            "marginRight": root.marginRight,
+            "compactMode": root.compactMode,
+            "leftModules": root.leftModules,
+            "centerModules": root.centerModules,
+            "rightModules": root.rightModules,
+            "hiddenModules": root.hiddenModules
+        };
+
+        if (saveProc.running) saveProc.running = false;
+        saveProc.command = [
+            "python3",
+            Quickshell.env("HOME") + "/.config/quickshell/scripts/bar_config_helper.py",
+            "save",
+            "--json-data",
+            JSON.stringify(cfg)
+        ];
+        saveProc.running = true;
+    }
+
+    // ── Helper Queries ────────────────────────────────────────────────────────
     function getModuleMeta(moduleId) {
         if (!moduleId) return null;
         for (var i = 0; i < moduleCatalog.length; i++) {
@@ -231,27 +262,7 @@ QtObject {
         return [];
     }
 
-    property var execProc: Process {
-        id: execProc
-    }
-
-    function runHelper(args) {
-        var cmd = ["python3", Quickshell.env("HOME") + "/.config/quickshell/scripts/bar_config_helper.py"].concat(args);
-        execProc.exec(cmd);
-    }
-
-    function saveFullConfig(configObj) {
-        runHelper(["save", "--json-data", JSON.stringify(configObj)]);
-    }
-
-    function setBarPosition(pos) {
-        runHelper(["set-position", "--position", pos]);
-    }
-
-    function setMetric(key, val) {
-        runHelper(["set-metric", "--key", key, "--value", val.toString()]);
-    }
-
+    // ── Public Mutators (Instant In-Memory + Disk Sync) ────────────────────────
     function toggleEditMode() {
         root.editMode = !root.editMode;
         if (!root.editMode) {
@@ -260,27 +271,84 @@ QtObject {
         }
     }
 
+    function setBarPosition(pos) {
+        root.position = pos;
+        root.persist();
+    }
+
+    function setMetric(key, val) {
+        if (key === "barHeight") root.barHeight = val;
+        else if (key === "barRadius") root.barRadius = val;
+        else if (key === "capsuleRadius") root.capsuleRadius = val;
+        else if (key === "spacing") root.spacing = val;
+        else if (key === "marginLeft") { root.marginLeft = val; root.marginRight = val; }
+        else if (key === "compactMode") root.compactMode = val;
+        root.persist();
+    }
+
     function moveModule(moduleId, targetSection, targetIndex) {
         if (!moduleId || !targetSection) return;
-        var idx = targetIndex !== undefined ? targetIndex.toString() : "-1";
-        runHelper(["move", "--module-id", moduleId, "--target-section", targetSection, "--target-index", idx]);
+
+        var left = root.leftModules.slice();
+        var center = root.centerModules.slice();
+        var right = root.rightModules.slice();
+        var hidden = root.hiddenModules.slice();
+
+        // Remove from current section
+        var lIdx = left.indexOf(moduleId);
+        if (lIdx !== -1) left.splice(lIdx, 1);
+        var cIdx = center.indexOf(moduleId);
+        if (cIdx !== -1) center.splice(cIdx, 1);
+        var rIdx = right.indexOf(moduleId);
+        if (rIdx !== -1) right.splice(rIdx, 1);
+        var hIdx = hidden.indexOf(moduleId);
+        if (hIdx !== -1) hidden.splice(hIdx, 1);
+
+        // Insert into target section
+        var targetArr = (targetSection === "left") ? left : (targetSection === "center" ? center : (targetSection === "right" ? right : hidden));
+        if (targetIndex !== undefined && targetIndex >= 0 && targetIndex <= targetArr.length) {
+            targetArr.splice(targetIndex, 0, moduleId);
+        } else {
+            targetArr.push(moduleId);
+        }
+
+        root.leftModules = left;
+        root.centerModules = center;
+        root.rightModules = right;
+        root.hiddenModules = hidden;
+        root.version++;
+        root.persist();
     }
 
     function reorderModule(fromSection, fromIndex, toSection, toIndex) {
-        runHelper([
-            "reorder",
-            "--from-section", fromSection,
-            "--from-index", fromIndex.toString(),
-            "--to-section", toSection,
-            "--to-index", toIndex.toString()
-        ]);
+        var left = root.leftModules.slice();
+        var center = root.centerModules.slice();
+        var right = root.rightModules.slice();
+
+        var srcArr = (fromSection === "left") ? left : (fromSection === "center" ? center : right);
+        var dstArr = (toSection === "left") ? left : (toSection === "center" ? center : right);
+
+        if (fromIndex < 0 || fromIndex >= srcArr.length) return;
+        var item = srcArr.splice(fromIndex, 1)[0];
+
+        if (toIndex >= 0 && toIndex <= dstArr.length) {
+            dstArr.splice(toIndex, 0, item);
+        } else {
+            dstArr.push(item);
+        }
+
+        root.leftModules = left;
+        root.centerModules = center;
+        root.rightModules = right;
+        root.version++;
+        root.persist();
     }
 
     function moveStep(moduleId, direction) {
         var curSec = getSectionForModule(moduleId);
         if (curSec === "hidden") return;
 
-        var list = getSectionModules(curSec);
+        var list = (curSec === "left") ? root.leftModules.slice() : (curSec === "center" ? root.centerModules.slice() : root.rightModules.slice());
         var idx = list.indexOf(moduleId);
         if (idx === -1) return;
 
@@ -288,7 +356,6 @@ QtObject {
             if (idx > 0) {
                 reorderModule(curSec, idx, curSec, idx - 1);
             } else {
-                // Move to preceding section
                 if (curSec === "right") moveModule(moduleId, "center", -1);
                 else if (curSec === "center") moveModule(moduleId, "left", -1);
             }
@@ -296,7 +363,6 @@ QtObject {
             if (idx < list.length - 1) {
                 reorderModule(curSec, idx, curSec, idx + 1);
             } else {
-                // Move to next section
                 if (curSec === "left") moveModule(moduleId, "center", 0);
                 else if (curSec === "center") moveModule(moduleId, "right", 0);
             }
@@ -304,14 +370,85 @@ QtObject {
     }
 
     function toggleVisibility(moduleId) {
-        runHelper(["toggle", "--module-id", moduleId]);
+        var isHidden = root.hiddenModules.indexOf(moduleId) !== -1;
+        if (isHidden) {
+            var hidden = root.hiddenModules.slice();
+            var hIdx = hidden.indexOf(moduleId);
+            if (hIdx !== -1) hidden.splice(hIdx, 1);
+            root.hiddenModules = hidden;
+
+            var meta = getModuleMeta(moduleId);
+            var defSec = (meta && meta.defaultSection) ? meta.defaultSection : "center";
+            moveModule(moduleId, defSec, -1);
+        } else {
+            moveModule(moduleId, "hidden", -1);
+        }
     }
 
     function applyPreset(presetName) {
-        runHelper(["preset", "--preset-name", presetName]);
+        var name = (presetName || "default").toLowerCase();
+        if (name === "minimal") {
+            root.position = "top";
+            root.barHeight = 36;
+            root.barRadius = 14;
+            root.capsuleRadius = 10;
+            root.spacing = 6;
+            root.compactMode = true;
+            root.leftModules = ["launcher", "workspaces"];
+            root.centerModules = ["activewindow"];
+            root.rightModules = ["status", "clock"];
+            root.hiddenModules = ["mpris", "language", "recording", "traynotif", "stats", "power"];
+        } else if (name === "poweruser") {
+            root.position = "top";
+            root.barHeight = 40;
+            root.barRadius = 16;
+            root.capsuleRadius = 12;
+            root.spacing = 6;
+            root.compactMode = false;
+            root.leftModules = ["launcher", "workspaces", "activewindow", "custom_left"];
+            root.centerModules = ["mpris", "custom_center"];
+            root.rightModules = ["custom_right", "recording", "traynotif", "status", "stats", "language", "power", "clock"];
+            root.hiddenModules = [];
+        } else if (name === "dock") {
+            root.position = "bottom";
+            root.barHeight = 44;
+            root.barRadius = 22;
+            root.capsuleRadius = 14;
+            root.spacing = 8;
+            root.compactMode = false;
+            root.leftModules = ["launcher", "workspaces"];
+            root.centerModules = ["activewindow", "mpris"];
+            root.rightModules = ["traynotif", "status", "clock", "power"];
+            root.hiddenModules = ["stats", "recording", "language"];
+        } else if (name === "split") {
+            root.position = "top";
+            root.barHeight = 38;
+            root.barRadius = 16;
+            root.capsuleRadius = 12;
+            root.spacing = 6;
+            root.compactMode = false;
+            root.leftModules = ["launcher", "workspaces", "activewindow"];
+            root.centerModules = ["clock"];
+            root.rightModules = ["mpris", "traynotif", "status", "power"];
+            root.hiddenModules = ["stats", "recording", "language"];
+        } else {
+            // default
+            root.position = "top";
+            root.barHeight = 38;
+            root.barRadius = 16;
+            root.capsuleRadius = 12;
+            root.spacing = 6;
+            root.compactMode = false;
+            root.leftModules = ["launcher", "workspaces", "activewindow", "custom_left"];
+            root.centerModules = ["mpris", "custom_center", "language"];
+            root.rightModules = ["custom_right", "recording", "traynotif", "status", "stats", "power", "clock"];
+            root.hiddenModules = [];
+        }
+        root.version++;
+        root.persist();
     }
 
     function resetToDefaults() {
-        runHelper(["reset"]);
+        applyPreset("default");
     }
 }

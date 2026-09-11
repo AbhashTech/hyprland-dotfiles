@@ -7,8 +7,8 @@ import "../../components"
 Rectangle {
     id: root
 
-    implicitWidth: 840
-    implicitHeight: 640
+    implicitWidth: 860
+    implicitHeight: 660
     width: implicitWidth
     height: implicitHeight
     radius: Theme.barRadius
@@ -52,7 +52,7 @@ Rectangle {
                     color: Theme.text
                 }
                 Text {
-                    text: "Dynamically arrange widgets, adjust bar geometry, and switch presets"
+                    text: "Move widgets dynamically across sections, customize geometry, and switch presets"
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.subtext0
@@ -159,7 +159,7 @@ Rectangle {
             TabButton {
                 tabId: "catalog"
                 tabIcon: "󰄲"
-                tabTitle: "All Modules"
+                tabTitle: "All Modules (" + BarConfig.moduleCatalog.length + ")"
                 isActive: root.currentTab === "catalog"
                 onClicked: root.currentTab = "catalog"
             }
@@ -183,38 +183,112 @@ Rectangle {
                 anchors.margins: 12
                 visible: root.currentTab === "layout"
 
-                RowLayout {
+                ColumnLayout {
                     anchors.fill: parent
-                    spacing: 12
+                    spacing: 10
 
-                    // Left Section Column
-                    SectionColumn {
+                    // 3 Sections Row
+                    RowLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        sectionTitle: "LEFT SECTION"
-                        sectionName: "left"
-                        accentColor: Theme.mauve
-                        modules: BarConfig.leftModules
+                        spacing: 10
+
+                        // Left Section Column
+                        SectionColumn {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            sectionTitle: "LEFT SECTION"
+                            sectionName: "left"
+                            accentColor: Theme.mauve
+                            modules: BarConfig.leftModules
+                        }
+
+                        // Center Section Column
+                        SectionColumn {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            sectionTitle: "CENTER SECTION"
+                            sectionName: "center"
+                            accentColor: Theme.teal
+                            modules: BarConfig.centerModules
+                        }
+
+                        // Right Section Column
+                        SectionColumn {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            sectionTitle: "RIGHT SECTION"
+                            sectionName: "right"
+                            accentColor: Theme.blue
+                            modules: BarConfig.rightModules
+                        }
                     }
 
-                    // Center Section Column
-                    SectionColumn {
+                    // Hidden / Inactive Tray
+                    Rectangle {
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        sectionTitle: "CENTER SECTION"
-                        sectionName: "center"
-                        accentColor: Theme.teal
-                        modules: BarConfig.centerModules
-                    }
+                        implicitHeight: 46
+                        radius: Theme.capsuleRadius
+                        color: Theme.moduleBg
+                        border.color: Theme.moduleBorder
+                        border.width: 1
+                        visible: BarConfig.hiddenModules.length > 0
 
-                    // Right Section Column
-                    SectionColumn {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        sectionTitle: "RIGHT SECTION"
-                        sectionName: "right"
-                        accentColor: Theme.blue
-                        modules: BarConfig.rightModules
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            spacing: 8
+
+                            Text {
+                                text: "󰅙 Inactive:"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: Theme.subtext0
+                            }
+
+                            Row {
+                                spacing: 6
+                                Repeater {
+                                    model: BarConfig.hiddenModules
+
+                                    Rectangle {
+                                        required property var modelData
+                                        readonly property var meta: BarConfig.getModuleMeta(modelData)
+                                        implicitHeight: 28
+                                        implicitWidth: hidRow.implicitWidth + 12
+                                        radius: 14
+                                        color: hidArea.containsMouse ? Theme.moduleHoverBg : Theme.surface0
+                                        border.color: Theme.moduleBorder
+                                        border.width: 1
+
+                                        Row {
+                                            id: hidRow
+                                            anchors.centerIn: parent
+                                            spacing: 4
+                                            Text {
+                                                text: "+ " + meta.name
+                                                font.family: Theme.fontFamily
+                                                font.pixelSize: 10
+                                                font.bold: true
+                                                color: Theme.green
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: hidArea
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: BarConfig.toggleVisibility(modelData)
+                                        }
+                                    }
+                                }
+                            }
+
+                            Item { Layout.fillWidth: true }
+                        }
                     }
                 }
             }
@@ -313,7 +387,6 @@ Rectangle {
                                 unit: "px"
                                 onValueChanged: val => {
                                     BarConfig.setMetric("marginLeft", val);
-                                    BarConfig.setMetric("marginRight", val);
                                 }
                             }
                         }
@@ -697,7 +770,7 @@ Rectangle {
                     readonly property var meta: BarConfig.getModuleMeta(modelData)
 
                     width: ListView.view ? ListView.view.width : 200
-                    height: 40
+                    height: 44
                     radius: Theme.pillRadius
                     color: itemMa.containsMouse ? Theme.moduleHoverBg : Theme.surface0
                     border.color: Theme.moduleBorder
@@ -728,16 +801,16 @@ Rectangle {
 
                         // Move Up / Left
                         Rectangle {
-                            width: 18
-                            height: 18
-                            radius: 9
-                            color: upArea.containsMouse ? Theme.blue : "transparent"
+                            width: 20
+                            height: 20
+                            radius: 10
+                            color: upArea.containsMouse ? Theme.blue : Qt.rgba(0, 0, 0, 0.3)
                             Text {
                                 anchors.centerIn: parent
                                 text: "󰅁"
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 10
-                                color: Theme.subtext0
+                                color: "#ffffff"
                             }
                             MouseArea {
                                 id: upArea
@@ -750,16 +823,16 @@ Rectangle {
 
                         // Move Down / Right
                         Rectangle {
-                            width: 18
-                            height: 18
-                            radius: 9
-                            color: downArea.containsMouse ? Theme.blue : "transparent"
+                            width: 20
+                            height: 20
+                            radius: 10
+                            color: downArea.containsMouse ? Theme.blue : Qt.rgba(0, 0, 0, 0.3)
                             Text {
                                 anchors.centerIn: parent
                                 text: "󰅂"
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 10
-                                color: Theme.subtext0
+                                color: "#ffffff"
                             }
                             MouseArea {
                                 id: downArea
@@ -770,18 +843,69 @@ Rectangle {
                             }
                         }
 
+                        // Move to other sections
+                        Row {
+                            spacing: 2
+                            // Target 1
+                            Rectangle {
+                                readonly property string targetSec: (secCol.sectionName === "left") ? "center" : (secCol.sectionName === "center" ? "left" : "left")
+                                width: 18
+                                height: 18
+                                radius: 4
+                                color: t1Area.containsMouse ? Theme.teal : Qt.rgba(0, 0, 0, 0.3)
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: targetSec.charAt(0).toUpperCase()
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    color: "#ffffff"
+                                }
+                                MouseArea {
+                                    id: t1Area
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: BarConfig.moveModule(modelData, targetSec, -1)
+                                }
+                            }
+                            // Target 2
+                            Rectangle {
+                                readonly property string targetSec: (secCol.sectionName === "right") ? "center" : "right"
+                                width: 18
+                                height: 18
+                                radius: 4
+                                color: t2Area.containsMouse ? Theme.teal : Qt.rgba(0, 0, 0, 0.3)
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: targetSec.charAt(0).toUpperCase()
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    color: "#ffffff"
+                                }
+                                MouseArea {
+                                    id: t2Area
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: BarConfig.moveModule(modelData, targetSec, -1)
+                                }
+                            }
+                        }
+
                         // Hide Button
                         Rectangle {
-                            width: 18
-                            height: 18
-                            radius: 9
-                            color: delArea.containsMouse ? Theme.red : "transparent"
+                            width: 20
+                            height: 20
+                            radius: 10
+                            color: delArea.containsMouse ? Theme.red : Qt.rgba(0, 0, 0, 0.3)
                             Text {
                                 anchors.centerIn: parent
                                 text: "󰅙"
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 10
-                                color: delArea.containsMouse ? "#ffffff" : Theme.subtext0
+                                color: "#ffffff"
                             }
                             MouseArea {
                                 id: delArea
