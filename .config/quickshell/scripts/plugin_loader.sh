@@ -99,8 +99,8 @@ if os.path.isdir(custom_dir):
 def generate_widget_group(widgets):
     items = []
     for w in widgets:
-        items.append(f'        Loader {{\n            source: "{w["url"]}"\n            asynchronous: true\n            onLoaded: {{\n                if (item && item.hasOwnProperty("barWindow")) item.barWindow = root.barWindow;\n            }}\n        }}')
-    return "\n".join(items)
+        items.append(f'        Loader {{\n            source: "{w["url"]}"\n            asynchronous: false\n            width: item ? item.implicitWidth : 0\n            height: item ? item.implicitHeight : 0\n            onLoaded: {{\n                if (item && item.hasOwnProperty("barWindow")) item.barWindow = root.barWindow;\n            }}\n        }}')
+    return "\\n".join(items)
 
 def generate_window_loaders(services, windows):
     items = []
