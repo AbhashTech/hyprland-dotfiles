@@ -19,6 +19,10 @@ Rectangle {
     property string screenName: ""
     property int volume: 50
     property bool muted: false
+    property string sinkName: "Speakers"
+    property int micVolume: 100
+    property bool micMuted: false
+    property string micName: "Microphone"
     property int brightness: 50
     property string wifiText: "󰤨"
     property string btText: "󰂯"
@@ -35,13 +39,17 @@ Rectangle {
 
     Process {
         id: volProc
-        command: ["python3", "-c", "import subprocess, json; res = subprocess.run(['wpctl', 'get-volume', '@DEFAULT_AUDIO_SINK@'], capture_output=True, text=True).stdout.strip(); parts = res.split(); vol = int(float(parts[1])*100) if len(parts) > 1 else 0; muted = '[MUTED]' in res; print(json.dumps({'vol': vol, 'muted': muted}))"]
+        command: ["python3", "-c", "import subprocess, json, re\ndef clean_audio_name(desc, is_mic=False):\n    if not desc: return 'Digital Mic' if is_mic else 'Speakers'\n    desc = re.sub(r'\\s+', ' ', desc).strip()\n    if 'Speaker' in desc or 'speaker' in desc: return 'Speakers'\n    if 'Headphone' in desc or 'Headset' in desc: return 'Headphones'\n    if 'Digital Microphone' in desc or 'Mic' in desc: return 'Microphone'\n    parts = desc.split(')')\n    if len(parts) > 1 and parts[-1].strip(): return parts[-1].strip()[:24]\n    desc = re.sub(r'\\(HD Audio\\)', '', desc).strip()\n    return desc[:24]\nvol = 50; muted = False; s_desc = 'Speakers'\ntry:\n    res = subprocess.run(['wpctl', 'get-volume', '@DEFAULT_AUDIO_SINK@'], capture_output=True, text=True, timeout=2).stdout.strip()\n    parts = res.split()\n    vol = int(round(float(parts[1])*100)) if len(parts) > 1 else 50\n    muted = '[MUTED]' in res\n    s_name = subprocess.run(['pactl', 'get-default-sink'], capture_output=True, text=True, timeout=2).stdout.strip()\n    sinks_json = json.loads(subprocess.run(['pactl', '-f', 'json', 'list', 'sinks'], capture_output=True, text=True, timeout=2).stdout)\n    for s in sinks_json:\n        if s.get('name') == s_name:\n            s_desc = clean_audio_name(s.get('description', ''))\n            break\nexcept Exception: pass\nm_vol = 100; m_muted = False; m_desc = 'Microphone'\ntry:\n    m_res = subprocess.run(['wpctl', 'get-volume', '@DEFAULT_AUDIO_SOURCE@'], capture_output=True, text=True, timeout=2).stdout.strip()\n    m_parts = m_res.split()\n    m_vol = int(round(float(m_parts[1])*100)) if len(m_parts) > 1 else 100\n    m_muted = '[MUTED]' in m_res\n    m_name = subprocess.run(['pactl', 'get-default-source'], capture_output=True, text=True, timeout=2).stdout.strip()\n    srcs_json = json.loads(subprocess.run(['pactl', '-f', 'json', 'list', 'sources'], capture_output=True, text=True, timeout=2).stdout)\n    for s in srcs_json:\n        if s.get('name') == m_name:\n            m_desc = clean_audio_name(s.get('description', ''), is_mic=True)\n            break\nexcept Exception: pass\nprint(json.dumps({'vol': vol, 'muted': muted, 'sink': s_desc, 'mic_vol': m_vol, 'mic_muted': m_muted, 'mic': m_desc}))"]
         stdout: SplitParser {
             onRead: data => {
                 try {
                     var obj = JSON.parse(data);
                     root.volume = obj.vol;
                     root.muted = obj.muted;
+                    if (obj.sink) root.sinkName = obj.sink;
+                    if (obj.mic_vol !== undefined) root.micVolume = obj.mic_vol;
+                    if (obj.mic_muted !== undefined) root.micMuted = obj.mic_muted;
+                    if (obj.mic) root.micName = obj.mic;
                 } catch (e) {}
             }
         }
@@ -208,11 +216,34 @@ Rectangle {
                 isHovered: volArea.containsMouse
                 icon: root.muted ? "󰝟" : (root.volume > 50 ? "󰕾" : "󰖀")
                 iconColor: root.muted ? Theme.red : Theme.blue
-                title: "Audio Volume"
-                description: root.muted ? "Audio is currently Muted" : ("Level: " + root.volume + "%")
+                title: "Audio & Sound"
+                description: "PipeWire / WirePlumber audio server"
+                details: [
+                    {
+                        icon: root.muted ? "󰝟" : "󰕾",
+                        iconColor: root.muted ? Theme.red : Theme.blue,
+                        label: "Output (" + root.sinkName + ")",
+                        value: root.muted ? "Muted" : (root.volume + "%"),
+                        valueColor: root.muted ? Theme.red : Theme.text
+                    },
+                    {
+                        icon: root.micMuted ? "󰍭" : "󰍬",
+                        iconColor: root.micMuted ? Theme.red : Theme.mauve,
+                        label: "Input (" + root.micName + ")",
+                        value: root.micMuted ? "Muted" : (root.micVolume + "%"),
+                        valueColor: root.micMuted ? Theme.red : Theme.text
+                    },
+                    {
+                        icon: "󰓃",
+                        iconColor: Theme.sapphire,
+                        label: "Audio Server",
+                        value: "PipeWire",
+                        valueColor: Theme.subtext0
+                    }
+                ]
                 shortcuts: [
                     { action: "Toggle Mute", key: "Left Click" },
-                    { action: "Audio Mixer Menu", key: "SUPER + SHIFT + A" },
+                    { action: "Audio Mixer Menu", key: "Right Click" },
                     { action: "Volume Up / Down", key: "Scroll" }
                 ]
             }

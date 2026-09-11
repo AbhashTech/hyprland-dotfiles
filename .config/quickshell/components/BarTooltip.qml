@@ -13,6 +13,7 @@ PopupWindow {
     property string icon: ""
     property color iconColor: Theme.accent
     property var shortcuts: [] // Array of { action: "...", key: "..." }
+    property var details: [] // Array of { label: "...", value: "...", icon?: "...", iconColor?: "...", valueColor?: "..." }
     property int showDelay: 200
     property int hideDelay: 100
 
@@ -77,8 +78,9 @@ PopupWindow {
             var w = 220;
             if (headerRow.implicitWidth > w) w = headerRow.implicitWidth;
             if (descText.implicitWidth > w) w = descText.implicitWidth;
+            if (detailsCol.implicitWidth > w) w = detailsCol.implicitWidth;
             if (shortcutsCol.implicitWidth > w) w = shortcutsCol.implicitWidth;
-            return Math.min(Math.max(w + 36, 240), 450);
+            return Math.min(Math.max(w + 36, 260), 480);
         }
 
         implicitWidth: calculatedWidth
@@ -142,6 +144,70 @@ PopupWindow {
                 color: Theme.subtext0
                 wrapMode: Text.WordWrap
                 width: parent.width
+            }
+
+            // Divider if details exist
+            Rectangle {
+                visible: tooltipPop.details && tooltipPop.details.length > 0
+                width: parent.width
+                height: 1
+                color: Theme.surface1
+            }
+
+            // Structured details list
+            Column {
+                id: detailsCol
+                visible: tooltipPop.details && tooltipPop.details.length > 0
+                spacing: 5
+                width: parent.width
+
+                Repeater {
+                    model: tooltipPop.details
+
+                    Item {
+                        width: detailsCol.width
+                        implicitWidth: leftRow.implicitWidth + valLabel.implicitWidth + 24
+                        implicitHeight: Math.max(leftRow.implicitHeight, valLabel.implicitHeight)
+
+                        Row {
+                            id: leftRow
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 6
+
+                            Text {
+                                visible: modelData.icon !== undefined && modelData.icon !== ""
+                                text: modelData.icon || ""
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: modelData.iconColor !== undefined ? modelData.iconColor : Theme.subtext0
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Text {
+                                text: modelData.label || ""
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.subtext0
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+
+                        Text {
+                            id: valLabel
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: modelData.value || ""
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            font.bold: true
+                            color: modelData.valueColor !== undefined ? modelData.valueColor : Theme.text
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                            width: Math.min(implicitWidth, parent.width - leftRow.implicitWidth - 12)
+                        }
+                    }
+                }
             }
 
             // Divider if shortcuts exist
