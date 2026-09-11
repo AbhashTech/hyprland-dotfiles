@@ -155,6 +155,30 @@ QtObject {
         return "hidden";
     }
 
+    function startDrag(moduleId, fromSection, fromIndex) {
+        root.isDragging = true;
+        root.draggedModule = moduleId;
+        root.dragSourceSection = fromSection;
+        root.dragSourceIndex = fromIndex;
+    }
+
+    function updateDragPos(globalX, barWidth) {
+        root.dragX = globalX;
+        root.updateDropTarget(globalX, barWidth);
+    }
+
+    function endDrag() {
+        if (root.isDragging && root.draggedModule !== "") {
+            if (root.targetSection !== "") {
+                root.moveModule(root.draggedModule, root.targetSection, root.targetIndex);
+            }
+            root.isDragging = false;
+            root.draggedModule = "";
+            root.targetSection = "";
+            root.targetIndex = -1;
+        }
+    }
+
     function updateDropTarget(globalX, barWidth) {
         var leftBound = barWidth * 0.35;
         var rightBound = barWidth * 0.65;

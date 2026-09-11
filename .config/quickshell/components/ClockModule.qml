@@ -7,6 +7,9 @@ Rectangle {
     id: root
 
     property var barWindow: null
+    property string barSection: "right"
+    property int barIndex: -1
+    property var barContainer: null
     property bool showDate: false
     property string timeStr: ""
     property string dateStr: ""
@@ -23,7 +26,7 @@ Rectangle {
     CalendarTooltip {
         barWindow: root.barWindow
         targetItem: root
-        isHovered: root.isHovered
+        isHovered: root.isHovered && !BarConfig.isDragging
     }
 
     function updateTime() {
@@ -101,10 +104,39 @@ Rectangle {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: BarConfig.isDragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: mouse => {
-            if (mouse.button === Qt.LeftButton) {
+
+        property real pressX: 0
+        property real pressY: 0
+        property bool didDrag: false
+
+        onPressed: mouse => {
+            pressX = mouse.x;
+            pressY = mouse.y;
+            didDrag = false;
+        }
+
+        onPositionChanged: mouse => {
+            if (pressed && mouse.buttons === Qt.LeftButton) {
+                var dx = mouse.x - pressX;
+                var dy = mouse.y - pressY;
+                if (!didDrag && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+                    didDrag = true;
+                    BarConfig.startDrag("clock", root.barSection, root.barIndex);
+                }
+                if (didDrag && root.barContainer) {
+                    var pt = mapToItem(root.barContainer, mouse.x, mouse.y);
+                    BarConfig.updateDragPos(pt.x, root.barContainer.width);
+                }
+            }
+        }
+
+        onReleased: mouse => {
+            if (didDrag) {
+                BarConfig.endDrag();
+                didDrag = false;
+            } else if (mouse.button === Qt.LeftButton) {
                 root.showDate = !root.showDate;
             } else if (mouse.button === Qt.RightButton) {
                 ctlProc.exec(["kitty", "--class", "calendar-floating", "-T", "Calendar", "-e", "bash", "-c", "cal -3; read -n 1 -s -r -p 'Press any key to close...'"]);

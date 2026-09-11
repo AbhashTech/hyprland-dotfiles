@@ -10,6 +10,9 @@ Rectangle {
     radius: Theme.capsuleRadius
 
     property var barWindow: null
+    property string barSection: "right"
+    property int barIndex: -1
+    property var barContainer: null
     readonly property bool isHovered: mouseArea.containsMouse
     color: isHovered || PluginManager.powerMenuVisible ? Theme.red : Theme.moduleBg
     border.color: isHovered || PluginManager.powerMenuVisible ? Theme.red : Theme.moduleBorder
@@ -30,7 +33,7 @@ Rectangle {
     BarTooltip {
         barWindow: root.barWindow
         targetItem: root
-        isHovered: root.isHovered
+        isHovered: root.isHovered && !BarConfig.isDragging
         icon: "󰐥"
         iconColor: Theme.red
         title: "Power & Session"
@@ -46,9 +49,40 @@ Rectangle {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            PluginManager.toggle("powermenu");
+        cursorShape: BarConfig.isDragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+
+        property real pressX: 0
+        property real pressY: 0
+        property bool didDrag: false
+
+        onPressed: mouse => {
+            pressX = mouse.x;
+            pressY = mouse.y;
+            didDrag = false;
+        }
+
+        onPositionChanged: mouse => {
+            if (pressed && mouse.buttons === Qt.LeftButton) {
+                var dx = mouse.x - pressX;
+                var dy = mouse.y - pressY;
+                if (!didDrag && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+                    didDrag = true;
+                    BarConfig.startDrag("power", root.barSection, root.barIndex);
+                }
+                if (didDrag && root.barContainer) {
+                    var pt = mapToItem(root.barContainer, mouse.x, mouse.y);
+                    BarConfig.updateDragPos(pt.x, root.barContainer.width);
+                }
+            }
+        }
+
+        onReleased: mouse => {
+            if (didDrag) {
+                BarConfig.endDrag();
+                didDrag = false;
+            } else if (mouse.button === Qt.LeftButton) {
+                PluginManager.toggle("powermenu");
+            }
         }
     }
 }

@@ -7,6 +7,9 @@ Rectangle {
     id: root
 
     property var barWindow: null
+    property string barSection: "center"
+    property int barIndex: -1
+    property var barContainer: null
 
     readonly property var activePlayer: {
         const list = Mpris.players.values;
@@ -54,7 +57,7 @@ Rectangle {
     BarTooltip {
         barWindow: root.barWindow
         targetItem: root
-        isHovered: root.isHovered
+        isHovered: root.isHovered && !BarConfig.isDragging
         icon: root.isPlaying ? "󰐊" : "󰏤"
         iconColor: root.isPlaying ? Theme.green : Theme.subtext0
         title: root.fullMediaText !== "" ? root.fullMediaText : "Media Player"
@@ -96,11 +99,42 @@ Rectangle {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: BarConfig.isDragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-        onClicked: {
-            if (root.activePlayer) {
-                root.activePlayer.togglePlaying();
+        property real pressX: 0
+        property real pressY: 0
+        property bool didDrag: false
+
+        onPressed: mouse => {
+            pressX = mouse.x;
+            pressY = mouse.y;
+            didDrag = false;
+        }
+
+        onPositionChanged: mouse => {
+            if (pressed && mouse.buttons === Qt.LeftButton) {
+                var dx = mouse.x - pressX;
+                var dy = mouse.y - pressY;
+                if (!didDrag && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+                    didDrag = true;
+                    BarConfig.startDrag("mpris", root.barSection, root.barIndex);
+                }
+                if (didDrag && root.barContainer) {
+                    var pt = mapToItem(root.barContainer, mouse.x, mouse.y);
+                    BarConfig.updateDragPos(pt.x, root.barContainer.width);
+                }
+            }
+        }
+
+        onReleased: mouse => {
+            if (didDrag) {
+                BarConfig.endDrag();
+                didDrag = false;
+            } else if (mouse.button === Qt.LeftButton) {
+                if (root.activePlayer) {
+                    root.activePlayer.togglePlaying();
+                }
             }
         }
 

@@ -7,6 +7,9 @@ Rectangle {
     id: root
 
     property var barWindow: null
+    property string barSection: "right"
+    property int barIndex: -1
+    property var barContainer: null
     property bool isRecording: false
     property string displayText: ""
 
@@ -23,7 +26,7 @@ Rectangle {
     BarTooltip {
         barWindow: root.barWindow
         targetItem: root
-        isHovered: root.isHovered
+        isHovered: root.isHovered && !BarConfig.isDragging
         icon: "󰻃"
         iconColor: Theme.red
         title: "Screen Recording"
@@ -97,9 +100,38 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-        cursorShape: Qt.PointingHandCursor
-        onClicked: mouse => {
-            if (mouse.button === Qt.LeftButton) {
+        cursorShape: BarConfig.isDragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+
+        property real pressX: 0
+        property real pressY: 0
+        property bool didDrag: false
+
+        onPressed: mouse => {
+            pressX = mouse.x;
+            pressY = mouse.y;
+            didDrag = false;
+        }
+
+        onPositionChanged: mouse => {
+            if (pressed && mouse.buttons === Qt.LeftButton) {
+                var dx = mouse.x - pressX;
+                var dy = mouse.y - pressY;
+                if (!didDrag && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+                    didDrag = true;
+                    BarConfig.startDrag("recording", root.barSection, root.barIndex);
+                }
+                if (didDrag && root.barContainer) {
+                    var pt = mapToItem(root.barContainer, mouse.x, mouse.y);
+                    BarConfig.updateDragPos(pt.x, root.barContainer.width);
+                }
+            }
+        }
+
+        onReleased: mouse => {
+            if (didDrag) {
+                BarConfig.endDrag();
+                didDrag = false;
+            } else if (mouse.button === Qt.LeftButton) {
                 ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/screen_capture.py", "stop"]);
             } else if (mouse.button === Qt.RightButton) {
                 ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/screen_capture.py", "--toggle-indicator"]);

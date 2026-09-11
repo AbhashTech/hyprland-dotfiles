@@ -15,10 +15,10 @@
     "launcher",
     "workspaces",
     "activewindow",
-    "custom_left"
+    "custom_left",
+    "mpris"
   ],
   "centerModules": [
-    "mpris",
     "custom_center",
     "language"
   ],

@@ -17,6 +17,9 @@ Rectangle {
     border.width: 1
 
     property var barWindow: null
+    property string barSection: "right"
+    property int barIndex: -1
+    property var barContainer: null
 
     Row {
         id: trayRow
@@ -51,9 +54,40 @@ Rectangle {
                     id: trayMa
                     anchors.fill: parent
                     hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
+                    cursorShape: BarConfig.isDragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
                     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                    onClicked: mouse => {
+
+                    property real pressX: 0
+                    property real pressY: 0
+                    property bool didDrag: false
+
+                    onPressed: mouse => {
+                        pressX = mouse.x;
+                        pressY = mouse.y;
+                        didDrag = false;
+                    }
+
+                    onPositionChanged: mouse => {
+                        if (pressed && mouse.buttons === Qt.LeftButton) {
+                            var dx = mouse.x - pressX;
+                            var dy = mouse.y - pressY;
+                            if (!didDrag && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+                                didDrag = true;
+                                BarConfig.startDrag("tray", root.barSection, root.barIndex);
+                            }
+                            if (didDrag && root.barContainer) {
+                                var pt = mapToItem(root.barContainer, mouse.x, mouse.y);
+                                BarConfig.updateDragPos(pt.x, root.barContainer.width);
+                            }
+                        }
+                    }
+
+                    onReleased: mouse => {
+                        if (didDrag) {
+                            BarConfig.endDrag();
+                            didDrag = false;
+                            return;
+                        }
                         try {
                             if (mouse.button === Qt.LeftButton) {
                                 modelData.activate();
@@ -79,7 +113,7 @@ Rectangle {
                 BarTooltip {
                     barWindow: root.barWindow
                     targetItem: trayItemWrapper
-                    isHovered: trayMa.containsMouse
+                    isHovered: trayMa.containsMouse && !BarConfig.isDragging
                     icon: "󰍜"
                     title: (modelData.title && modelData.title.length > 0) ? modelData.title : (modelData.id ? modelData.id : "System Tray App")
                     description: "Background system tray indicator"

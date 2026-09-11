@@ -11,6 +11,9 @@ Rectangle {
     radius: Theme.capsuleRadius
 
     property var barWindow: null
+    property string barSection: "left"
+    property int barIndex: -1
+    property var barContainer: null
     readonly property bool isHovered: mouseArea.containsMouse
     color: isHovered ? Theme.moduleHoverBg : Theme.moduleBg
     border.color: isHovered ? Theme.moduleHoverBorder : Theme.moduleBorder
@@ -23,7 +26,7 @@ Rectangle {
     BarTooltip {
         barWindow: root.barWindow
         targetItem: root
-        isHovered: root.isHovered
+        isHovered: root.isHovered && !BarConfig.isDragging
         icon: root.iconText
         iconColor: Theme.accent
         title: root.fullTitle
@@ -99,10 +102,39 @@ Rectangle {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: BarConfig.isDragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-        onClicked: mouse => {
-            if (mouse.button === Qt.LeftButton) {
+
+        property real pressX: 0
+        property real pressY: 0
+        property bool didDrag: false
+
+        onPressed: mouse => {
+            pressX = mouse.x;
+            pressY = mouse.y;
+            didDrag = false;
+        }
+
+        onPositionChanged: mouse => {
+            if (pressed && mouse.buttons === Qt.LeftButton) {
+                var dx = mouse.x - pressX;
+                var dy = mouse.y - pressY;
+                if (!didDrag && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+                    didDrag = true;
+                    BarConfig.startDrag("activewindow", root.barSection, root.barIndex);
+                }
+                if (didDrag && root.barContainer) {
+                    var pt = mapToItem(root.barContainer, mouse.x, mouse.y);
+                    BarConfig.updateDragPos(pt.x, root.barContainer.width);
+                }
+            }
+        }
+
+        onReleased: mouse => {
+            if (didDrag) {
+                BarConfig.endDrag();
+                didDrag = false;
+            } else if (mouse.button === Qt.LeftButton) {
                 ctlProc.exec(["hyprctl", "dispatch hl.dsp.window.float({action = 'toggle'})"]);
             } else if (mouse.button === Qt.RightButton) {
                 ctlProc.exec(["hyprctl", "dispatch hl.dsp.window.close()"]);

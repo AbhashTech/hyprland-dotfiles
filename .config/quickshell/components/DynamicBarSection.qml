@@ -74,7 +74,7 @@ Row {
                 }
             }
 
-            // Container for module
+            // Container for module (Zero blocking overlay: child receives all hovers and clicks)
             Rectangle {
                 id: capsuleContainer
                 anchors.right: parent.right
@@ -93,113 +93,32 @@ Row {
                     sourceComponent: root.getComponentForId(moduleId)
                     asynchronous: false
 
-                    onLoaded: {
-                        if (item && item.hasOwnProperty("barWindow")) {
-                            item.barWindow = root.barWindow;
-                        }
+                    Binding {
+                        target: moduleLoader.item
+                        property: "barWindow"
+                        value: root.barWindow
+                        when: moduleLoader.item !== null && moduleLoader.item.hasOwnProperty("barWindow")
                     }
-                }
-
-                // Interactive Drag & Move Handler
-                MouseArea {
-                    id: dragMa
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton
-                    cursorShape: isDraggedThis ? Qt.ClosedHandCursor : (dragMa.containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor)
-
-                    property real startPressX: 0
-                    property real startPressY: 0
-                    property bool movingActive: false
-
-                    onPressed: mouse => {
-                        startPressX = mouse.x;
-                        startPressY = mouse.y;
-                        movingActive = false;
+                    Binding {
+                        target: moduleLoader.item
+                        property: "barSection"
+                        value: root.section
+                        when: moduleLoader.item !== null && moduleLoader.item.hasOwnProperty("barSection")
                     }
-
-                    onPositionChanged: mouse => {
-                        if (pressed) {
-                            var dx = mouse.x - startPressX;
-                            var dy = mouse.y - startPressY;
-                            if (!movingActive && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
-                                movingActive = true;
-                                BarConfig.isDragging = true;
-                                BarConfig.draggedModule = moduleId;
-                                BarConfig.dragSourceSection = root.section;
-                                BarConfig.dragSourceIndex = index;
-                            }
-                            if (movingActive && root.barContainer) {
-                                var pt = mapToItem(root.barContainer, mouse.x, mouse.y);
-                                BarConfig.dragX = pt.x;
-                                BarConfig.dragY = pt.y;
-                                BarConfig.updateDropTarget(pt.x, root.barContainer.width);
-                            }
-                        }
+                    Binding {
+                        target: moduleLoader.item
+                        property: "barIndex"
+                        value: moduleWrapper.index
+                        when: moduleLoader.item !== null && moduleLoader.item.hasOwnProperty("barIndex")
                     }
-
-                    onReleased: mouse => {
-                        if (movingActive && BarConfig.isDragging) {
-                            if (BarConfig.targetSection !== "") {
-                                BarConfig.moveModule(BarConfig.draggedModule, BarConfig.targetSection, BarConfig.targetIndex);
-                            }
-                            BarConfig.isDragging = false;
-                            BarConfig.draggedModule = "";
-                            BarConfig.targetSection = "";
-                            BarConfig.targetIndex = -1;
-                            movingActive = false;
-                        } else {
-                            root.handleModuleClick(moduleId);
-                        }
+                    Binding {
+                        target: moduleLoader.item
+                        property: "barContainer"
+                        value: root.barContainer
+                        when: moduleLoader.item !== null && moduleLoader.item.hasOwnProperty("barContainer")
                     }
                 }
             }
-        }
-    }
-
-    // Default primary click action for each module when clicked
-    function handleModuleClick(id) {
-        switch (id) {
-            case "launcher":
-                PluginManager.toggle("appmenu");
-                break;
-            case "power":
-                PluginManager.toggle("powermenu");
-                break;
-            case "volume":
-                PluginManager.toggle("volume");
-                break;
-            case "brightness":
-                PluginManager.toggle("brightness");
-                break;
-            case "wifi":
-            case "network":
-                PluginManager.toggle("wifi");
-                break;
-            case "bluetooth":
-                PluginManager.toggle("bluetooth");
-                break;
-            case "battery":
-                PluginManager.toggle("battery");
-                break;
-            case "clipboard":
-                PluginManager.toggle("clipboard");
-                break;
-            case "notifications":
-            case "notification":
-                PluginManager.toggle("notifications");
-                break;
-            case "stats":
-                PluginManager.toggle("sysinfo");
-                break;
-            case "workspaces":
-                PluginManager.toggle("workspaces");
-                break;
-            default:
-                if (id && id.startsWith("plugin_")) {
-                    PluginManager.toggle(id.replace("plugin_", ""));
-                }
-                break;
         }
     }
 
