@@ -35,7 +35,7 @@ QtObject {
 
     property var leftModules: ["launcher", "workspaces", "activewindow", "custom_left"]
     property var centerModules: ["mpris", "custom_center", "language"]
-    property var rightModules: ["custom_right", "recording", "traynotif", "status", "stats", "power", "clock"]
+    property var rightModules: ["tray", "clipboard", "notifications", "volume", "brightness", "wifi", "bluetooth", "battery", "stats", "power", "clock"]
     property var hiddenModules: []
 
     // ── Master Catalog ────────────────────────────────────────────────────────
@@ -46,8 +46,14 @@ QtObject {
         { id: "mpris", name: "Media Player (MPRIS)", icon: "󰎈", description: "Now-playing music info, playback controls, and track details", category: "Media", defaultSection: "center" },
         { id: "language", name: "Keyboard Layout", icon: "󰌌", description: "Current keyboard layout indicator and switcher", category: "System", defaultSection: "center" },
         { id: "recording", name: "Recording Indicator", icon: "󰑋", description: "Screen capture and audio recording active status capsule", category: "System", defaultSection: "right" },
-        { id: "traynotif", name: "Tray & Notification Hub", icon: "󰂚", description: "System tray apps, clipboard history button, and unread notifications", category: "System", defaultSection: "right" },
-        { id: "status", name: "Quick Status Controls", icon: "󰤨", description: "Volume mixer, brightness, Wi-Fi, Bluetooth, and battery gauges", category: "Hardware", defaultSection: "right" },
+        { id: "tray", name: "System Tray", icon: "󰍜", description: "System background application tray icons", category: "System", defaultSection: "right" },
+        { id: "clipboard", name: "Clipboard History", icon: "󰅌", description: "Clipboard manager button with search and private mode toggle", category: "System", defaultSection: "right" },
+        { id: "notifications", name: "Notification Hub", icon: "󰂚", description: "Notification center and DND toggle", category: "System", defaultSection: "right" },
+        { id: "volume", name: "Audio Volume", icon: "󰕾", description: "Volume output level and mute toggle", category: "Hardware", defaultSection: "right" },
+        { id: "brightness", name: "Screen Brightness", icon: "󰃠", description: "Display backlight brightness level and control", category: "Hardware", defaultSection: "right" },
+        { id: "wifi", name: "Wi-Fi Network", icon: "󰤨", description: "Wireless network status and control center", category: "Hardware", defaultSection: "right" },
+        { id: "bluetooth", name: "Bluetooth Peripherals", icon: "󰂯", description: "Bluetooth connectivity and paired devices", category: "Hardware", defaultSection: "right" },
+        { id: "battery", name: "Battery & Power", icon: "󰁹", description: "Battery charge indicator and power profiles", category: "Hardware", defaultSection: "right" },
         { id: "stats", name: "Hardware Resource Stats", icon: "󰍛", description: "Live CPU load, memory utilization, and hardware graphs", category: "Hardware", defaultSection: "right" },
         { id: "power", name: "Power Menu", icon: "", description: "Power options: lock screen, suspend, reboot, and power off", category: "System", defaultSection: "right" },
         { id: "clock", name: "Clock & Calendar", icon: "", description: "Live clock, date view, and interactive calendar popup", category: "Time", defaultSection: "right" },

@@ -1,3 +1,4 @@
 singleton Theme 1.0 Theme.qml
 singleton PluginManager 1.0 PluginManager.qml
 singleton BarConfig 1.0 BarConfig.qml
+singleton StatusService 1.0 StatusService.qml

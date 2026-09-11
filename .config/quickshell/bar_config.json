@@ -23,10 +23,14 @@
     "language"
   ],
   "rightModules": [
-    "custom_right",
-    "recording",
-    "traynotif",
-    "status",
+    "tray",
+    "clipboard",
+    "notifications",
+    "volume",
+    "brightness",
+    "wifi",
+    "bluetooth",
+    "battery",
     "stats",
     "power",
     "clock"

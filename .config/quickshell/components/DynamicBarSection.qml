@@ -46,7 +46,7 @@ Row {
             readonly property bool isDraggedThis: BarConfig.isDragging && BarConfig.draggedModule === moduleId
             readonly property bool isTargetHere: BarConfig.isDragging && BarConfig.targetSection === root.section && BarConfig.targetIndex === index
 
-            implicitWidth: (isTargetHere && !isDraggedThis ? 48 : 0) + (moduleLoader.item ? moduleLoader.item.implicitWidth : 38)
+            implicitWidth: (isTargetHere && !isDraggedThis ? 44 : 0) + (moduleLoader.item ? moduleLoader.item.implicitWidth : 38)
             implicitHeight: Theme.barHeight - 8
 
             Behavior on implicitWidth { NumberAnimation { duration: 180; easing.type: Easing.OutQuad } }
@@ -57,7 +57,7 @@ Row {
                 visible: isTargetHere && !isDraggedThis
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                width: 40
+                width: 38
                 height: parent.height
                 radius: Theme.capsuleRadius
                 color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.25)
@@ -69,7 +69,7 @@ Row {
                     anchors.centerIn: parent
                     text: "󰐕"
                     font.family: Theme.fontFamily
-                    font.pixelSize: 13
+                    font.pixelSize: 12
                     color: Theme.accent
                 }
             }
@@ -83,7 +83,7 @@ Row {
                 width: moduleLoader.item ? moduleLoader.item.implicitWidth : 38
                 radius: Theme.capsuleRadius
                 color: "transparent"
-                opacity: isDraggedThis ? 0.35 : 1.0
+                opacity: isDraggedThis ? 0.30 : 1.0
 
                 Behavior on opacity { NumberAnimation { duration: 150 } }
 
@@ -122,7 +122,7 @@ Row {
                         if (pressed) {
                             var dx = mouse.x - startPressX;
                             var dy = mouse.y - startPressY;
-                            if (!movingActive && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+                            if (!movingActive && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
                                 movingActive = true;
                                 BarConfig.isDragging = true;
                                 BarConfig.draggedModule = moduleId;
@@ -149,7 +149,6 @@ Row {
                             BarConfig.targetIndex = -1;
                             movingActive = false;
                         } else {
-                            // Click pass-through: if user just clicked without dragging, trigger module default action
                             root.handleModuleClick(moduleId);
                         }
                     }
@@ -167,22 +166,37 @@ Row {
             case "power":
                 PluginManager.toggle("powermenu");
                 break;
-            case "clock":
-                // handled by clock's own logic or toggle
-                break;
-            case "status":
+            case "volume":
                 PluginManager.toggle("volume");
                 break;
-            case "traynotif":
+            case "brightness":
+                PluginManager.toggle("brightness");
+                break;
+            case "wifi":
+            case "network":
+                PluginManager.toggle("wifi");
+                break;
+            case "bluetooth":
+                PluginManager.toggle("bluetooth");
+                break;
+            case "battery":
+                PluginManager.toggle("battery");
+                break;
+            case "clipboard":
+                PluginManager.toggle("clipboard");
+                break;
+            case "notifications":
+            case "notification":
                 PluginManager.toggle("notifications");
+                break;
+            case "stats":
+                PluginManager.toggle("sysinfo");
                 break;
             case "workspaces":
                 PluginManager.toggle("workspaces");
                 break;
-            case "mpris":
-                break;
             default:
-                if (id.startsWith("plugin_")) {
+                if (id && id.startsWith("plugin_")) {
                     PluginManager.toggle(id.replace("plugin_", ""));
                 }
                 break;
@@ -204,6 +218,24 @@ Row {
                 return languageComp;
             case "recording":
                 return recordingComp;
+            case "volume":
+                return volumeComp;
+            case "brightness":
+                return brightnessComp;
+            case "wifi":
+            case "network":
+                return wifiComp;
+            case "bluetooth":
+                return bluetoothComp;
+            case "battery":
+                return batteryComp;
+            case "tray":
+                return trayComp;
+            case "clipboard":
+                return clipboardComp;
+            case "notifications":
+            case "notification":
+                return notificationComp;
             case "traynotif":
                 return trayNotifComp;
             case "status":
@@ -234,6 +266,14 @@ Row {
     Component { id: mprisComp; MprisModule { barWindow: root.barWindow } }
     Component { id: languageComp; LanguageModule { barWindow: root.barWindow } }
     Component { id: recordingComp; RecordingModule { barWindow: root.barWindow } }
+    Component { id: volumeComp; VolumeModule { barWindow: root.barWindow } }
+    Component { id: brightnessComp; BrightnessModule { barWindow: root.barWindow } }
+    Component { id: wifiComp; WifiModule { barWindow: root.barWindow } }
+    Component { id: bluetoothComp; BluetoothModule { barWindow: root.barWindow } }
+    Component { id: batteryComp; BatteryModule { barWindow: root.barWindow } }
+    Component { id: trayComp; TrayModule { barWindow: root.barWindow } }
+    Component { id: clipboardComp; ClipboardModule { barWindow: root.barWindow } }
+    Component { id: notificationComp; NotificationModule { barWindow: root.barWindow } }
     Component { id: trayNotifComp; TrayNotifGroup { barWindow: root.barWindow } }
     Component {
         id: statusGroupComp
