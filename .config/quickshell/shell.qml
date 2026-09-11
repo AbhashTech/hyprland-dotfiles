@@ -148,20 +148,27 @@ ShellRoot {
         }
     }
 
-    // Modular Quickshell Plugin Windows
-    AppMenuWindow {}
-    PowerMenuWindow {}
-    ClipboardWindow {}
-    QuickCalcWindow {}
-    EmojiPickerWindow {}
-    KeybindsWindow {}
-    VolumeMixerWindow {}
-    BrightnessWindow {}
-    SysInfoWindow {}
-    ConnectivityWindow {}
-    BatteryWindow {}
-    NotificationWindow {}
-    FilePickerWindow {}
-    WorkspaceViewerWindow {}
+    component LazyWindow: Loader {
+        property bool trigger: false
+        property bool _cached: false
+        active: trigger || _cached
+        onLoaded: _cached = true
+    }
+
+    // Modular Quickshell Plugin Windows (Lazy-loaded on first access for instant shell startup)
+    LazyWindow { trigger: PluginManager.appMenuVisible; source: "plugins/appmenu/AppMenuWindow.qml" }
+    LazyWindow { trigger: PluginManager.powerMenuVisible; source: "plugins/powermenu/PowerMenuWindow.qml" }
+    LazyWindow { trigger: PluginManager.clipboardVisible; source: "plugins/clipboard/ClipboardWindow.qml" }
+    LazyWindow { trigger: PluginManager.calcVisible; source: "plugins/calc/QuickCalcWindow.qml" }
+    LazyWindow { trigger: PluginManager.emojiVisible; source: "plugins/emoji/EmojiPickerWindow.qml" }
+    LazyWindow { trigger: PluginManager.keybindsVisible; source: "plugins/keybinds/KeybindsWindow.qml" }
+    LazyWindow { trigger: PluginManager.volumeVisible; source: "plugins/volume/VolumeMixerWindow.qml" }
+    LazyWindow { trigger: PluginManager.brightnessVisible; source: "plugins/brightness/BrightnessWindow.qml" }
+    LazyWindow { trigger: PluginManager.sysinfoVisible; source: "plugins/sysinfo/SysInfoWindow.qml" }
+    LazyWindow { trigger: PluginManager.connectivityVisible; source: "plugins/connectivity/ConnectivityWindow.qml" }
+    LazyWindow { trigger: PluginManager.batteryVisible; source: "plugins/battery/BatteryWindow.qml" }
+    LazyWindow { trigger: PluginManager.notificationVisible; source: "plugins/notifications/NotificationWindow.qml" }
+    LazyWindow { trigger: PluginManager.filePickerVisible; source: "plugins/filepicker/FilePickerWindow.qml" }
+    LazyWindow { trigger: PluginManager.workspaceViewerVisible; source: "plugins/workspace_viewer/WorkspaceViewerWindow.qml" }
     CustomWindows {}
 }

@@ -77,7 +77,7 @@ if os.path.isdir(custom_dir):
 
         for win in plugin_windows:
             if os.path.isfile(os.path.join(plugin_path, win)):
-                windows.append(f"file://{plugin_path}/{win}")
+                windows.append({"id": plugin_id, "url": f"file://{plugin_path}/{win}"})
 
         # 3. Services / Background items
         plugin_services = []
@@ -92,20 +92,22 @@ if os.path.isdir(custom_dir):
 
         for srv in plugin_services:
             if os.path.isfile(os.path.join(plugin_path, srv)):
-                services.append(f"file://{plugin_path}/{srv}")
+                services.append({"id": plugin_id, "url": f"file://{plugin_path}/{srv}"})
 
         plugin_toggles.append(plugin_id)
 
 def generate_widget_group(widgets):
     items = []
     for w in widgets:
-        items.append(f'        Loader {{\n            source: "{w["url"]}"\n            asynchronous: false\n            onLoaded: {{\n                if (item && item.hasOwnProperty("barWindow")) item.barWindow = root.barWindow;\n            }}\n        }}')
+        items.append(f'        Loader {{\n            source: "{w["url"]}"\n            asynchronous: true\n            onLoaded: {{\n                if (item && item.hasOwnProperty("barWindow")) item.barWindow = root.barWindow;\n            }}\n        }}')
     return "\n".join(items)
 
-def generate_window_loaders(urls):
+def generate_window_loaders(services, windows):
     items = []
-    for u in urls:
-        items.append(f'    Loader {{\n        source: "{u}"\n        asynchronous: false\n    }}')
+    for s in services:
+        items.append(f'    Loader {{\n        source: "{s["url"]}"\n        asynchronous: true\n    }}')
+    for w in windows:
+        items.append(f'    Loader {{\n        property bool _cached: false\n        active: PluginManager.isPluginVisible("{w["id"]}") || _cached\n        onLoaded: _cached = true\n        source: "{w["url"]}"\n        asynchronous: false\n    }}')
     return "\n".join(items)
 
 # Generate CustomWidgetsLeft.qml
@@ -145,13 +147,13 @@ Row {{
 """
 
 # Generate CustomWindows.qml
-all_floating = services + windows
 windows_qml = f"""import QtQuick
 import Quickshell
+import ".."
 
 Item {{
     id: root
-{generate_window_loaders(all_floating)}
+{generate_window_loaders(services, windows)}
 }}
 """
 

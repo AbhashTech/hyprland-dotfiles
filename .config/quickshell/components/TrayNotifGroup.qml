@@ -72,7 +72,6 @@ Rectangle {
         interval: 3000
         running: true
         repeat: true
-        triggeredOnStart: true
         onTriggered: {
             if (!notifStatusProc.running) notifStatusProc.running = true;
             if (!clipStatusProc.running) clipStatusProc.running = true;

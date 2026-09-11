@@ -50,62 +50,39 @@ Rectangle {
     }
 
     Process {
-        id: hyprWsProc
-        command: ["hyprctl", "workspaces", "-j"]
+        id: hyprBatchProc
+        command: ["hyprctl", "--batch", "j/workspaces ; j/activeworkspace ; j/clients"]
         property string buffer: ""
         stdout: SplitParser {
+            splitMarker: ""
             onRead: data => {
-                hyprWsProc.buffer += data;
+                hyprBatchProc.buffer += data;
             }
         }
         onExited: {
-            try {
-                var wsList = JSON.parse(buffer);
-                var ids = [];
-                for (var i = 0; i < wsList.length; i++) {
-                    ids.push(wsList[i].id);
-                }
-                root.activeIds = ids;
-            } catch (e) {}
-            buffer = "";
-        }
-    }
+            if (hyprBatchProc.buffer.length > 0) {
+                try {
+                    var raw = hyprBatchProc.buffer.trim();
+                    var blocks = raw.split(/\n\s*\n+/);
+                    if (blocks.length >= 3) {
+                        var wsList = JSON.parse(blocks[0].trim());
+                        var ids = [];
+                        for (var i = 0; i < wsList.length; i++) {
+                            ids.push(wsList[i].id);
+                        }
+                        root.activeIds = ids;
 
-    Process {
-        id: hyprActiveWsProc
-        command: ["hyprctl", "activeworkspace", "-j"]
-        property string buffer: ""
-        stdout: SplitParser {
-            onRead: data => {
-                hyprActiveWsProc.buffer += data;
-            }
-        }
-        onExited: {
-            try {
-                var ws = JSON.parse(buffer);
-                if (ws && ws.id) {
-                    root.activeWorkspaceId = ws.id;
-                }
-            } catch (e) {}
-            buffer = "";
-        }
-    }
+                        var activeWs = JSON.parse(blocks[1].trim());
+                        if (activeWs && activeWs.id) {
+                            root.activeWorkspaceId = activeWs.id;
+                        }
 
-    Process {
-        id: hyprClientsProc
-        command: ["hyprctl", "clients", "-j"]
-        property string buffer: ""
-        stdout: SplitParser {
-            onRead: data => {
-                hyprClientsProc.buffer += data;
+                        var clients = JSON.parse(blocks[2].trim());
+                        root.allClients = clients || [];
+                    }
+                } catch (e) {}
             }
-        }
-        onExited: {
-            try {
-                var list = JSON.parse(buffer);
-                root.allClients = list || [];
-            } catch (e) {}
-            buffer = "";
+            hyprBatchProc.buffer = "";
         }
     }
 
@@ -128,10 +105,9 @@ Rectangle {
         interval: 600
         running: true
         repeat: true
+        triggeredOnStart: true
         onTriggered: {
-            if (!hyprWsProc.running) hyprWsProc.running = true;
-            if (!hyprActiveWsProc.running) hyprActiveWsProc.running = true;
-            if (!hyprClientsProc.running) hyprClientsProc.running = true;
+            if (!hyprBatchProc.running) hyprBatchProc.running = true;
         }
     }
 

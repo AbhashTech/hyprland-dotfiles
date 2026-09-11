@@ -56,153 +56,109 @@ Rectangle {
     }
 
     Process {
-        id: volProc
-        command: ["python3", "-c", "import subprocess, json\ndef clean_audio_name(desc, is_mic=False):\n    if not desc: return 'Digital Mic' if is_mic else 'Speakers'\n    desc = ' '.join(desc.split()).strip()\n    if 'Speaker' in desc or 'speaker' in desc: return 'Speakers'\n    if 'Headphone' in desc or 'Headset' in desc: return 'Headphones'\n    if 'Digital Microphone' in desc or 'Mic' in desc: return 'Microphone'\n    parts = desc.split(')')\n    if len(parts) > 1 and parts[-1].strip(): return parts[-1].strip()[:24]\n    desc = desc.replace('(HD Audio)', '').strip()\n    return desc[:24]\nvol = 50; muted = False; s_desc = 'Speakers'\ntry:\n    res = subprocess.run(['wpctl', 'get-volume', '@DEFAULT_AUDIO_SINK@'], capture_output=True, text=True, timeout=2).stdout.strip()\n    parts = res.split()\n    vol = int(round(float(parts[1])*100)) if len(parts) > 1 else 50\n    muted = '[MUTED]' in res\n    s_name = subprocess.run(['pactl', 'get-default-sink'], capture_output=True, text=True, timeout=2).stdout.strip()\n    sinks_json = json.loads(subprocess.run(['pactl', '-f', 'json', 'list', 'sinks'], capture_output=True, text=True, timeout=2).stdout)\n    for s in sinks_json:\n        if s.get('name') == s_name:\n            s_desc = clean_audio_name(s.get('description', ''))\n            break\nexcept Exception: pass\nm_vol = 100; m_muted = False; m_desc = 'Microphone'\ntry:\n    m_res = subprocess.run(['wpctl', 'get-volume', '@DEFAULT_AUDIO_SOURCE@'], capture_output=True, text=True, timeout=2).stdout.strip()\n    m_parts = m_res.split()\n    m_vol = int(round(float(m_parts[1])*100)) if len(m_parts) > 1 else 100\n    m_muted = '[MUTED]' in m_res\n    m_name = subprocess.run(['pactl', 'get-default-source'], capture_output=True, text=True, timeout=2).stdout.strip()\n    srcs_json = json.loads(subprocess.run(['pactl', '-f', 'json', 'list', 'sources'], capture_output=True, text=True, timeout=2).stdout)\n    for s in srcs_json:\n        if s.get('name') == m_name:\n            m_desc = clean_audio_name(s.get('description', ''), is_mic=True)\n            break\nexcept Exception: pass\nprint(json.dumps({'vol': vol, 'muted': muted, 'sink': s_desc, 'mic_vol': m_vol, 'mic_muted': m_muted, 'mic': m_desc}))"]
+        id: statusProc
+        command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/scripts/status_helper.py", "--screen", root.screenName]
         stdout: SplitParser {
+            splitMarker: ""
             onRead: data => {
                 try {
-                    var obj = JSON.parse(data);
-                    root.volume = obj.vol;
-                    root.muted = obj.muted;
-                    if (obj.sink) root.sinkName = obj.sink;
-                    if (obj.mic_vol !== undefined) root.micVolume = obj.mic_vol;
-                    if (obj.mic_muted !== undefined) root.micMuted = obj.mic_muted;
-                    if (obj.mic) root.micName = obj.mic;
-                } catch (e) {}
-            }
-        }
-    }
+                    var obj = JSON.parse(data.trim());
+                    if (!obj) return;
 
-    Process {
-        id: brightProc
-        command: root.screenName !== ""
-            ? ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", "get-screen", root.screenName]
-            : ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", "get-active"]
-        stdout: SplitParser {
-            onRead: data => {
-                try {
-                    var obj = JSON.parse(data);
-                    if (obj && obj.brightness !== undefined) {
-                        root.brightness = obj.brightness;
+                    // 1. Audio
+                    if (obj.audio) {
+                        if (obj.audio.vol !== undefined) root.volume = obj.audio.vol;
+                        if (obj.audio.muted !== undefined) root.muted = obj.audio.muted;
+                        if (obj.audio.sink) root.sinkName = obj.audio.sink;
+                        if (obj.audio.mic_vol !== undefined) root.micVolume = obj.audio.mic_vol;
+                        if (obj.audio.mic_muted !== undefined) root.micMuted = obj.audio.mic_muted;
+                        if (obj.audio.mic) root.micName = obj.audio.mic;
+                    }
+
+                    // 2. Brightness
+                    if (obj.bright && obj.bright.brightness !== undefined) {
+                        root.brightness = obj.bright.brightness;
+                    }
+
+                    // 3. Wi-Fi
+                    if (obj.wifi) {
+                        root.wifiPowered = obj.wifi.powered !== undefined ? obj.wifi.powered : true;
+                        root.wifiConnected = !!obj.wifi.connected;
+                        root.wifiSsid = obj.wifi.ssid || "";
+                        root.wifiSignal = parseInt(obj.wifi.sig || "0", 10);
+                        root.wifiRssi = obj.wifi.rssi || "";
+                        root.wifiIp = obj.wifi.ip || "";
+                        root.wifiSec = obj.wifi.sec || "";
+                        root.wifiFreq = obj.wifi.freq || "";
+                        root.wifiIface = obj.wifi.iface || "wlan0";
+
+                        if (!root.wifiPowered) {
+                            root.wifiText = "󰤮";
+                        } else if (root.wifiConnected) {
+                            if (root.wifiSignal >= 75) root.wifiText = "󰤨";
+                            else if (root.wifiSignal >= 50) root.wifiText = "󰤥";
+                            else if (root.wifiSignal >= 25) root.wifiText = "󰤢";
+                            else root.wifiText = "󰤟";
+                        } else {
+                            root.wifiText = "󰤭";
+                        }
+                    }
+
+                    // 4. Bluetooth
+                    if (obj.bt) {
+                        root.btPowered = obj.bt.powered !== undefined ? obj.bt.powered : true;
+                        root.btConnected = !!obj.bt.connected;
+                        root.btConnectedCount = parseInt(obj.bt.connected_count || "0", 10);
+                        root.btPairedCount = parseInt(obj.bt.paired_count || "0", 10);
+                        root.btDevices = obj.bt.devices || [];
+
+                        if (!root.btPowered) {
+                            root.btText = "󰂲";
+                        } else if (root.btConnected) {
+                            root.btText = "󰂱";
+                        } else {
+                            root.btText = "󰂯";
+                        }
+                    }
+
+                    // 5. Battery
+                    if (obj.bat) {
+                        var cap = obj.bat.cap !== undefined ? obj.bat.cap : 100;
+                        var chg = obj.bat.status === "Charging";
+                        var icon = "󰁹";
+                        if (cap <= 10) icon = chg ? "󰢜" : "󰂃";
+                        else if (cap <= 20) icon = chg ? "󰂆" : "󰁺";
+                        else if (cap <= 30) icon = chg ? "󰂇" : "󰁻";
+                        else if (cap <= 40) icon = chg ? "󰂈" : "󰁼";
+                        else if (cap <= 50) icon = chg ? "󰢝" : "󰁽";
+                        else if (cap <= 60) icon = chg ? "󰂉" : "󰁾";
+                        else if (cap <= 70) icon = chg ? "󰢞" : "󰁿";
+                        else if (cap <= 80) icon = chg ? "󰂊" : "󰂀";
+                        else if (cap <= 90) icon = chg ? "󰂋" : "󰂁";
+                        else icon = chg ? "󰂅" : "󰁹";
+                        root.batIcon = icon;
+                        root.batPercent = cap + "%";
+                        if (obj.bat.status) root.batStatus = obj.bat.status;
+                        if (obj.bat.power_w !== undefined) root.batPowerW = obj.bat.power_w;
+                        if (obj.bat.health !== undefined) root.batHealth = obj.bat.health;
+                        if (obj.bat.time_str !== undefined) root.batTimeStr = obj.bat.time_str;
+                        if (obj.bat.profile) {
+                            root.batProfile = obj.bat.profile;
+                            PluginManager.setPowerProfile(obj.bat.profile);
+                        }
                     }
                 } catch (e) {}
             }
         }
-    }
-
-    Process {
-        id: netProc
-        command: ["python3", "-c", "import subprocess, json, os, re\ndef get_wifi_info():\n    iface = 'wlan0'\n    try:\n        for net_if in os.listdir('/sys/class/net'):\n            if net_if.startswith(('wl', 'wlan', 'wifi')):\n                iface = net_if; break\n    except Exception: pass\n    powered = True\n    try:\n        rf = subprocess.run(['rfkill', 'list', 'wifi'], capture_output=True, text=True, timeout=2).stdout\n        if 'Soft blocked: yes' in rf or 'Hard blocked: yes' in rf: powered = False\n    except Exception: pass\n    ssid = ''; sig = 0; rssi = ''; ip = ''; sec = ''; freq = ''; connected = False\n    try:\n        res = subprocess.run(['iwctl', 'station', iface, 'show'], capture_output=True, text=True, timeout=2).stdout\n        for l in res.splitlines():\n            if 'Connected network' in l:\n                ssid = l.split('Connected network')[-1].strip(); connected = bool(ssid)\n            elif 'IPv4 address' in l: ip = l.split('IPv4 address')[-1].strip()\n            elif 'Security' in l: sec = l.split('Security')[-1].strip()\n            elif 'Frequency' in l:\n                f_val = l.split('Frequency')[-1].strip()\n                try: freq = '5 GHz' if int(f_val.split()[0]) > 3000 else '2.4 GHz'\n                except: freq = f_val\n            elif 'RSSI' in l and not sig:\n                try:\n                    r_str = l.split('RSSI')[-1].strip(); rssi = r_str\n                    val = int(r_str.split()[0]); sig = max(0, min(100, int(2 * (val + 100))))\n                except: pass\n    except Exception: pass\n    if not ssid:\n        try:\n            res = subprocess.run(['nmcli', '-t', '-f', 'ACTIVE,SSID,SIGNAL,SECURITY,FREQ,DEVICE', 'dev', 'wifi'], capture_output=True, text=True, timeout=2).stdout\n            for l in res.splitlines():\n                if l.startswith('yes:'):\n                    p = l.split(':')\n                    if len(p) >= 3:\n                        ssid = p[1]; connected = True; sig = int(p[2] or 0)\n                        if len(p) >= 4: sec = p[3]\n                        if len(p) >= 5: freq = p[4]\n                        if len(p) >= 6: iface = p[5]\n        except Exception: pass\n    if not ip and connected:\n        try:\n            ip_out = subprocess.run(['ip', '-brief', 'address', 'show', iface], capture_output=True, text=True, timeout=2).stdout\n            parts = ip_out.split()\n            if len(parts) >= 3: ip = parts[2].split('/')[0]\n        except Exception: pass\n    return {'powered': powered, 'connected': connected, 'ssid': ssid, 'sig': sig, 'rssi': rssi, 'ip': ip, 'sec': sec, 'freq': freq, 'iface': iface}\nprint(json.dumps(get_wifi_info()))"]
-        stdout: SplitParser {
-            onRead: data => {
-                try {
-                    var obj = JSON.parse(data);
-                    root.wifiPowered = obj.powered !== undefined ? obj.powered : true;
-                    root.wifiConnected = !!obj.connected;
-                    root.wifiSsid = obj.ssid || "";
-                    root.wifiSignal = parseInt(obj.sig || "0", 10);
-                    root.wifiRssi = obj.rssi || "";
-                    root.wifiIp = obj.ip || "";
-                    root.wifiSec = obj.sec || "";
-                    root.wifiFreq = obj.freq || "";
-                    root.wifiIface = obj.iface || "wlan0";
-
-                    if (!root.wifiPowered) {
-                        root.wifiText = "󰤮";
-                    } else if (root.wifiConnected) {
-                        if (root.wifiSignal >= 75) root.wifiText = "󰤨";
-                        else if (root.wifiSignal >= 50) root.wifiText = "󰤥";
-                        else if (root.wifiSignal >= 25) root.wifiText = "󰤢";
-                        else root.wifiText = "󰤟";
-                    } else {
-                        root.wifiText = "󰤭";
-                    }
-                } catch (e) {
-                    root.wifiText = "󰤨";
-                }
-            }
-        }
-    }
-
-    Process {
-        id: btProc
-        command: ["python3", "-c", "import subprocess, json\ndef get_bt_info():\n    show_out = subprocess.run(['bluetoothctl', 'show'], capture_output=True, text=True, timeout=2).stdout\n    powered = 'Powered: yes' in show_out\n    paired_out = subprocess.run(['bluetoothctl', 'devices', 'Paired'], capture_output=True, text=True, timeout=2).stdout\n    if not paired_out: paired_out = subprocess.run(['bluetoothctl', 'devices'], capture_output=True, text=True, timeout=2).stdout\n    paired_count = len([l for l in paired_out.splitlines() if l.strip().startswith('Device')])\n    conn_out = subprocess.run(['bluetoothctl', 'devices', 'Connected'], capture_output=True, text=True, timeout=2).stdout\n    conn_lines = [l for l in conn_out.splitlines() if l.strip().startswith('Device')]\n    connected_count = len(conn_lines)\n    connected = connected_count > 0\n    devices = []\n    for l in conn_lines:\n        parts = l.strip().split()\n        if len(parts) >= 3:\n            mac = parts[1]; name = ' '.join(parts[2:])\n            info_out = subprocess.run(['bluetoothctl', 'info', mac], capture_output=True, text=True, timeout=2).stdout\n            bat = -1; icon_type = '󰂱'\n            for il in info_out.splitlines():\n                if 'Battery Percentage:' in il:\n                    try:\n                        if '(' in il and ')' in il: bat = int(il.split('(')[-1].split(')')[0].strip())\n                        else: bat = int(il.split('Battery Percentage:')[-1].strip().replace('%', ''))\n                    except: pass\n                elif 'Icon:' in il:\n                    ic = il.lower()\n                    if 'audio' in ic or 'headset' in ic or 'headphone' in ic: icon_type = '󰋋'\n                    elif 'mouse' in ic: icon_type = '󰍽'\n                    elif 'keyboard' in ic: icon_type = '󰌌'\n                    elif 'phone' in ic: icon_type = '󰄜'\n            devices.append({'name': name, 'mac': mac, 'battery': bat, 'icon': icon_type})\n    return {'powered': powered, 'connected': connected, 'connected_count': connected_count, 'paired_count': paired_count, 'devices': devices}\nprint(json.dumps(get_bt_info()))"]
-        stdout: SplitParser {
-            onRead: data => {
-                try {
-                    var obj = JSON.parse(data);
-                    root.btPowered = obj.powered !== undefined ? obj.powered : true;
-                    root.btConnected = !!obj.connected;
-                    root.btConnectedCount = parseInt(obj.connected_count || "0", 10);
-                    root.btPairedCount = parseInt(obj.paired_count || "0", 10);
-                    root.btDevices = obj.devices || [];
-
-                    if (!root.btPowered) {
-                        root.btText = "󰂲";
-                    } else if (root.btConnected) {
-                        root.btText = "󰂱";
-                    } else {
-                        root.btText = "󰂯";
-                    }
-                } catch (e) {
-                    root.btText = "󰂯";
-                }
-            }
-        }
-    }
-
-    Process {
-        id: batProc
-        command: ["python3", "-c", "import glob, subprocess, json, os\ndef get_bat():\n    bats = glob.glob('/sys/class/power_supply/BAT*')\n    cap = 100; status = 'Full'; power_w = 0.0; health = 100.0; time_str = ''\n    if bats:\n        b = bats[0]\n        try: cap = int(open(os.path.join(b, 'capacity')).read().strip())\n        except: pass\n        try: status = open(os.path.join(b, 'status')).read().strip()\n        except: pass\n        try:\n            p_now = int(open(os.path.join(b, 'power_now')).read().strip())\n            power_w = p_now / 1000000.0\n        except:\n            try:\n                c_now = int(open(os.path.join(b, 'current_now')).read().strip())\n                v_now = int(open(os.path.join(b, 'voltage_now')).read().strip())\n                power_w = (c_now * v_now) / 1e12\n            except: pass\n        try:\n            efull = int(open(os.path.join(b, 'energy_full')).read().strip())\n            edes = int(open(os.path.join(b, 'energy_full_design')).read().strip())\n            health = round((efull / edes) * 100, 1)\n        except:\n            try:\n                cfull = int(open(os.path.join(b, 'charge_full')).read().strip())\n                cdes = int(open(os.path.join(b, 'charge_full_design')).read().strip())\n                health = round((cfull / cdes) * 100, 1)\n            except: pass\n        if power_w > 0.5:\n            try:\n                enow = 0; efull = 0\n                if os.path.exists(os.path.join(b, 'energy_now')):\n                    enow = int(open(os.path.join(b, 'energy_now')).read().strip()) / 1000000.0\n                    efull = int(open(os.path.join(b, 'energy_full')).read().strip()) / 1000000.0\n                elif os.path.exists(os.path.join(b, 'charge_now')):\n                    v_now = int(open(os.path.join(b, 'voltage_now')).read().strip()) / 1000000.0\n                    enow = (int(open(os.path.join(b, 'charge_now')).read().strip()) / 1000000.0) * v_now\n                    efull = (int(open(os.path.join(b, 'charge_full')).read().strip()) / 1000000.0) * v_now\n                if status.lower() == 'discharging' and enow > 0:\n                    hours = enow / power_w; h = int(hours); m = int((hours - h) * 60)\n                    time_str = f'{h}h {m}m left' if h > 0 else f'{m}m left'\n                elif status.lower() == 'charging' and efull > enow:\n                    hours = (efull - enow) / power_w; h = int(hours); m = int((hours - h) * 60)\n                    time_str = f'{h}h {m}m to full' if h > 0 else f'{m}m to full'\n            except: pass\n    prof = 'balanced'\n    try:\n        res = subprocess.run(['powerprofilesctl', 'get'], capture_output=True, text=True, timeout=1)\n        if res.returncode == 0 and res.stdout.strip(): prof = res.stdout.strip()\n    except: pass\n    return {'cap': cap, 'status': status, 'profile': prof, 'power_w': round(power_w, 1), 'health': health, 'time_str': time_str}\nprint(json.dumps(get_bat()))"]
-        stdout: SplitParser {
-            onRead: data => {
-                try {
-                    var obj = JSON.parse(data);
-                    var cap = obj.cap;
-                    var chg = obj.status === "Charging";
-                    var icon = "󰁹";
-                    if (cap <= 10) icon = chg ? "󰢜" : "󰂃";
-                    else if (cap <= 20) icon = chg ? "󰂆" : "󰁺";
-                    else if (cap <= 30) icon = chg ? "󰂇" : "󰁻";
-                    else if (cap <= 40) icon = chg ? "󰂈" : "󰁼";
-                    else if (cap <= 50) icon = chg ? "󰢝" : "󰁽";
-                    else if (cap <= 60) icon = chg ? "󰂉" : "󰁾";
-                    else if (cap <= 70) icon = chg ? "󰢞" : "󰁿";
-                    else if (cap <= 80) icon = chg ? "󰂊" : "󰂀";
-                    else if (cap <= 90) icon = chg ? "󰂋" : "󰂁";
-                    else icon = chg ? "󰂅" : "󰁹";
-                    root.batIcon = icon;
-                    root.batPercent = cap + "%";
-                    if (obj.status) root.batStatus = obj.status;
-                    if (obj.power_w !== undefined) root.batPowerW = obj.power_w;
-                    if (obj.health !== undefined) root.batHealth = obj.health;
-                    if (obj.time_str !== undefined) root.batTimeStr = obj.time_str;
-                    if (obj.profile) {
-                        root.batProfile = obj.profile;
-                        PluginManager.setPowerProfile(obj.profile);
-                    }
-                } catch (e) {
-                    root.batIcon = "󰁹";
-                    root.batPercent = "100%";
-                }
-            }
-        }
-    }
-
-    Process {
-        id: ctlProc
     }
 
     Timer {
         interval: 3000
         running: true
         repeat: true
+        triggeredOnStart: true
         onTriggered: {
-            if (!volProc.running) volProc.running = true;
-            if (!brightProc.running) brightProc.running = true;
-            if (!netProc.running) netProc.running = true;
-            if (!btProc.running) btProc.running = true;
-            if (!batProc.running) batProc.running = true;
+            if (!statusProc.running) statusProc.running = true;
         }
     }
 

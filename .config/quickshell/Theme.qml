@@ -119,6 +119,7 @@ QtObject {
     readonly property string fontFamily: "JetBrainsMono Nerd Font, JetBrains Mono, monospace"
     readonly property int fontSizeSmall: 11
     readonly property int fontSize: 13
+    readonly property int fontSizeMedium: 14
     readonly property int fontSizeLarge: 15
     readonly property int fontSizeIcon: 16
 

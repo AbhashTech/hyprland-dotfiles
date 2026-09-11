@@ -33,11 +33,11 @@ is_quickshell_running() {
 
 stop_quickshell() {
     pkill -x quickshell 2>/dev/null
-    for i in {1..10}; do
+    for i in {1..15}; do
         if ! is_quickshell_running; then
-            break
+            return 0
         fi
-        sleep 0.05
+        sleep 0.02
     done
 }
 
@@ -55,8 +55,8 @@ start_quickshell() {
     QS_BIN="$(command -v quickshell || echo /usr/bin/quickshell)"
     
     # Performance & memory environment presets
+    export QML_DISABLE_DISK_CACHE=0
     export QSG_RENDER_LOOP="${QSG_RENDER_LOOP:-threaded}"
-    export QT_QUICK_BACKEND="${QT_QUICK_BACKEND:-wayland}"
     export MALLOC_TRIM_THRESHOLD_="${MALLOC_TRIM_THRESHOLD_:-131072}"
     
     "$QS_BIN" -d -p "$HOME/.config/quickshell" "${PASSTHROUGH_ARGS[@]}" >/dev/null 2>&1
@@ -80,7 +80,6 @@ case "$ACTION" in
         ;;
     restart)
         stop_quickshell
-        sleep 0.1
         start_quickshell
         ;;
 esac
