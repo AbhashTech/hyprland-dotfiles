@@ -8,48 +8,28 @@ Row {
     id: root
 
     property var barWindow: null
+    property var barContainer: null
     property string section: "left" // "left" | "center" | "right"
-    readonly property var moduleList: (section === "left") ? BarConfig.leftModules : (section === "center" ? BarConfig.centerModules : BarConfig.rightModules)
+    readonly property var moduleList: (section === "left") ? BarConfig.leftModules : (section === "center") ? BarConfig.centerModules : BarConfig.rightModules
     spacing: BarConfig.spacing
 
-    // Empty section placeholder in edit mode
+    // Drop slot if empty section is targeted
     Rectangle {
-        id: emptyPlaceholder
-        visible: BarConfig.editMode && root.moduleList.length === 0
-        implicitHeight: Theme.barHeight - 10
-        implicitWidth: 130
+        id: emptyDropSlot
+        visible: BarConfig.isDragging && root.moduleList.length === 0 && BarConfig.targetSection === root.section
+        implicitHeight: Theme.barHeight - 8
+        implicitWidth: 44
         radius: Theme.capsuleRadius
-        color: Theme.moduleBg
-        border.color: Theme.mauve
+        color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.25)
+        border.color: Theme.accent
         border.width: 1
 
-        Row {
+        Text {
             anchors.centerIn: parent
-            spacing: 6
-            Text {
-                text: "󰐕"
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
-                color: Theme.mauve
-            }
-            Text {
-                text: section.toUpperCase() + " (Empty)"
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
-                font.bold: true
-                color: Theme.subtext0
-            }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: {
-                if (BarConfig.selectedModule !== "") {
-                    BarConfig.moveModule(BarConfig.selectedModule, root.section, -1);
-                }
-            }
+            text: "󰐕"
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+            color: Theme.accent
         }
     }
 
@@ -63,32 +43,53 @@ Row {
             required property int index
 
             readonly property string moduleId: modelData
-            readonly property var moduleMeta: BarConfig.getModuleMeta(moduleId)
-            readonly property bool isSelected: BarConfig.selectedModule === moduleId
-            readonly property bool isDragged: BarConfig.draggedModule === moduleId
+            readonly property bool isDraggedThis: BarConfig.isDragging && BarConfig.draggedModule === moduleId
+            readonly property bool isTargetHere: BarConfig.isDragging && BarConfig.targetSection === root.section && BarConfig.targetIndex === index
 
-            implicitWidth: (moduleLoader.item ? moduleLoader.item.implicitWidth : 38) + (BarConfig.editMode ? 32 : 0)
+            implicitWidth: (isTargetHere && !isDraggedThis ? 48 : 0) + (moduleLoader.item ? moduleLoader.item.implicitWidth : 38)
             implicitHeight: Theme.barHeight - 8
 
-            Behavior on implicitWidth { NumberAnimation { duration: 150 } }
+            Behavior on implicitWidth { NumberAnimation { duration: 180; easing.type: Easing.OutQuad } }
 
-            // Normal & Edit container
+            // Drop indicator gap / glow
             Rectangle {
-                id: editContainer
-                anchors.fill: parent
+                id: dropGap
+                visible: isTargetHere && !isDraggedThis
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                width: 40
+                height: parent.height
                 radius: Theme.capsuleRadius
-                color: BarConfig.editMode ? (isSelected ? Theme.moduleActiveBg : Qt.rgba(Theme.mantle.r, Theme.mantle.g, Theme.mantle.b, 0.6)) : "transparent"
-                border.color: BarConfig.editMode ? (isSelected ? Theme.accent : Theme.mauve) : "transparent"
-                border.width: BarConfig.editMode ? 1 : 0
+                color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.25)
+                border.color: Theme.accent
+                border.width: 1
+                z: 10
 
-                Behavior on border.color { ColorAnimation { duration: 150 } }
+                Text {
+                    anchors.centerIn: parent
+                    text: "󰐕"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 13
+                    color: Theme.accent
+                }
+            }
 
-                // The Actual Widget
+            // Container for module
+            Rectangle {
+                id: capsuleContainer
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: moduleLoader.item ? moduleLoader.item.implicitWidth : 38
+                radius: Theme.capsuleRadius
+                color: "transparent"
+                opacity: isDraggedThis ? 0.35 : 1.0
+
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+
                 Loader {
                     id: moduleLoader
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    anchors.leftMargin: BarConfig.editMode ? 28 : 0
+                    anchors.centerIn: parent
                     sourceComponent: root.getComponentForId(moduleId)
                     asynchronous: false
 
@@ -99,180 +100,92 @@ Row {
                     }
                 }
 
-                // Edit Overlay & Controls
-                Item {
-                    id: editControlsOverlay
+                // Interactive Drag & Move Handler
+                MouseArea {
+                    id: dragMa
                     anchors.fill: parent
-                    visible: BarConfig.editMode
-                    z: 5
+                    hoverEnabled: true
+                    acceptedButtons: Qt.LeftButton
+                    cursorShape: isDraggedThis ? Qt.ClosedHandCursor : (dragMa.containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor)
 
-                    // Drag & Select Handle on Left
-                    Rectangle {
-                        id: dragHandle
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: 26
-                        radius: Theme.capsuleRadius
-                        color: dragHandleArea.containsMouse || isSelected ? Theme.mauve : Qt.rgba(Theme.surface0.r, Theme.surface0.g, Theme.surface0.b, 0.7)
+                    property real startPressX: 0
+                    property real startPressY: 0
+                    property bool movingActive: false
 
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                    onPressed: mouse => {
+                        startPressX = mouse.x;
+                        startPressY = mouse.y;
+                        movingActive = false;
+                    }
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰁝"
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize
-                            color: dragHandleArea.containsMouse || isSelected ? "#ffffff" : Theme.subtext0
-                        }
-
-                        MouseArea {
-                            id: dragHandleArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.SizeAllCursor
-                            drag.target: null
-
-                            property real startX: 0
-
-                            onPressed: mouse => {
-                                startX = mouse.x;
-                                BarConfig.selectedModule = moduleId;
+                    onPositionChanged: mouse => {
+                        if (pressed) {
+                            var dx = mouse.x - startPressX;
+                            var dy = mouse.y - startPressY;
+                            if (!movingActive && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+                                movingActive = true;
+                                BarConfig.isDragging = true;
+                                BarConfig.draggedModule = moduleId;
+                                BarConfig.dragSourceSection = root.section;
+                                BarConfig.dragSourceIndex = index;
                             }
-
-                            onPositionChanged: mouse => {
-                                if (pressed) {
-                                    var diff = mouse.x - startX;
-                                    if (diff > 40) {
-                                        BarConfig.moveStep(moduleId, "right");
-                                        startX = mouse.x;
-                                    } else if (diff < -40) {
-                                        BarConfig.moveStep(moduleId, "left");
-                                        startX = mouse.x;
-                                    }
-                                }
-                            }
-
-                            onClicked: {
-                                BarConfig.selectedModule = (BarConfig.selectedModule === moduleId) ? "" : moduleId;
+                            if (movingActive && root.barContainer) {
+                                var pt = mapToItem(root.barContainer, mouse.x, mouse.y);
+                                BarConfig.dragX = pt.x;
+                                BarConfig.dragY = pt.y;
+                                BarConfig.updateDropTarget(pt.x, root.barContainer.width);
                             }
                         }
                     }
 
-                    // Quick Action Menu on Hover / Selected
-                    Row {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 4
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 3
-                        visible: moduleWrapperHoverArea.containsMouse || isSelected
-
-                        // Move Left Button
-                        Rectangle {
-                            width: 20
-                            height: 20
-                            radius: 10
-                            color: leftBtnArea.containsMouse ? Theme.blue : Qt.rgba(0, 0, 0, 0.6)
-                            Text {
-                                anchors.centerIn: parent
-                                text: "󰅁"
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 11
-                                color: "#ffffff"
+                    onReleased: mouse => {
+                        if (movingActive && BarConfig.isDragging) {
+                            if (BarConfig.targetSection !== "") {
+                                BarConfig.moveModule(BarConfig.draggedModule, BarConfig.targetSection, BarConfig.targetIndex);
                             }
-                            MouseArea {
-                                id: leftBtnArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: BarConfig.moveStep(moduleId, "left")
-                            }
-                        }
-
-                        // Move Right Button
-                        Rectangle {
-                            width: 20
-                            height: 20
-                            radius: 10
-                            color: rightBtnArea.containsMouse ? Theme.blue : Qt.rgba(0, 0, 0, 0.6)
-                            Text {
-                                anchors.centerIn: parent
-                                text: "󰅂"
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 11
-                                color: "#ffffff"
-                            }
-                            MouseArea {
-                                id: rightBtnArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: BarConfig.moveStep(moduleId, "right")
-                            }
-                        }
-
-                        // Cycle Section Button (Left -> Center -> Right -> Left)
-                        Rectangle {
-                            width: 20
-                            height: 20
-                            radius: 10
-                            color: secBtnArea.containsMouse ? Theme.teal : Qt.rgba(0, 0, 0, 0.6)
-                            Text {
-                                anchors.centerIn: parent
-                                text: root.section === "left" ? "C" : (root.section === "center" ? "R" : "L")
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: "#ffffff"
-                            }
-                            MouseArea {
-                                id: secBtnArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    var nextSec = root.section === "left" ? "center" : (root.section === "center" ? "right" : "left");
-                                    BarConfig.moveModule(moduleId, nextSec, -1);
-                                }
-                            }
-                        }
-
-                        // Hide / Remove from Bar Button
-                        Rectangle {
-                            width: 20
-                            height: 20
-                            radius: 10
-                            color: hideBtnArea.containsMouse ? Theme.red : Qt.rgba(0, 0, 0, 0.6)
-                            Text {
-                                anchors.centerIn: parent
-                                text: "󰅙"
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 11
-                                color: "#ffffff"
-                            }
-                            MouseArea {
-                                id: hideBtnArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: BarConfig.toggleVisibility(moduleId)
-                            }
-                        }
-                    }
-
-                    MouseArea {
-                        id: moduleWrapperHoverArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        onClicked: mouse => {
-                            if (mouse.button === Qt.LeftButton) {
-                                BarConfig.selectedModule = (BarConfig.selectedModule === moduleId) ? "" : moduleId;
-                            }
+                            BarConfig.isDragging = false;
+                            BarConfig.draggedModule = "";
+                            BarConfig.targetSection = "";
+                            BarConfig.targetIndex = -1;
+                            movingActive = false;
+                        } else {
+                            // Click pass-through: if user just clicked without dragging, trigger module default action
+                            root.handleModuleClick(moduleId);
                         }
                     }
                 }
             }
+        }
+    }
+
+    // Default primary click action for each module when clicked
+    function handleModuleClick(id) {
+        switch (id) {
+            case "launcher":
+                PluginManager.toggle("appmenu");
+                break;
+            case "power":
+                PluginManager.toggle("powermenu");
+                break;
+            case "clock":
+                // handled by clock's own logic or toggle
+                break;
+            case "status":
+                PluginManager.toggle("volume");
+                break;
+            case "traynotif":
+                PluginManager.toggle("notifications");
+                break;
+            case "workspaces":
+                PluginManager.toggle("workspaces");
+                break;
+            case "mpris":
+                break;
+            default:
+                if (id.startsWith("plugin_")) {
+                    PluginManager.toggle(id.replace("plugin_", ""));
+                }
+                break;
         }
     }
 

@@ -249,7 +249,6 @@ sudo usermod -aG i2c $USER
 | `SUPER + SHIFT + Z` | Open Floating Zellij Session |
 | `SUPER + SHIFT + P` | **Hyprpicker**: Pick color from screen, copy hex code & notify |
 | `SUPER + ALT + P` | **Quickshell Plugin Manager**: Open native plugin manager & store catalog modal |
-| `SUPER + ALT + B` | **Quickshell Bar Customizer**: Open status bar layout editor & dynamic widget customizer |
 | `SUPER + T` | **Theme Switcher Menu**: Interactive graphical theme selector (19 themes) |
 | `SUPER + ALT + T` | **Theme Manager & Studio GUI**: Full GTK3 desktop theme & palette manager |
 | `SUPER + CTRL + T` | **Cycle Theme**: Instantly cycle to next theme in palette registry |

@@ -7,13 +7,16 @@ QtObject {
     id: root
 
     property int version: 0
-    property bool editMode: false
-    property string selectedModule: ""
+
+    // ── Drag and Drop Live State ──────────────────────────────────────────────
+    property bool isDragging: false
     property string draggedModule: ""
     property string dragSourceSection: ""
     property int dragSourceIndex: -1
-    property string activeDropTargetSection: ""
-    property int activeDropTargetIndex: -1
+    property real dragX: 0
+    property real dragY: 0
+    property string targetSection: ""
+    property int targetIndex: -1
 
     // ── Reactive in-memory state ──────────────────────────────────────────────
     property string position: "top"
@@ -37,118 +40,20 @@ QtObject {
 
     // ── Master Catalog ────────────────────────────────────────────────────────
     readonly property var moduleCatalog: [
-        {
-            id: "launcher",
-            name: "App Launcher",
-            icon: "󰣇",
-            description: "Application menu search and quick power launcher",
-            category: "Navigation",
-            defaultSection: "left"
-        },
-        {
-            id: "workspaces",
-            name: "Workspaces",
-            icon: "󰨇",
-            description: "Active virtual workspaces with preview popups and scroll navigation",
-            category: "Navigation",
-            defaultSection: "left"
-        },
-        {
-            id: "activewindow",
-            name: "Active Window",
-            icon: "󰘔",
-            description: "Current focused window title and application icon",
-            category: "Information",
-            defaultSection: "left"
-        },
-        {
-            id: "mpris",
-            name: "Media Player (MPRIS)",
-            icon: "󰎈",
-            description: "Now-playing music info, playback controls, and track details",
-            category: "Media",
-            defaultSection: "center"
-        },
-        {
-            id: "language",
-            name: "Keyboard Layout",
-            icon: "󰌌",
-            description: "Current keyboard layout indicator and switcher",
-            category: "System",
-            defaultSection: "center"
-        },
-        {
-            id: "recording",
-            name: "Recording Indicator",
-            icon: "󰑋",
-            description: "Screen capture and audio recording active status capsule",
-            category: "System",
-            defaultSection: "right"
-        },
-        {
-            id: "traynotif",
-            name: "Tray & Notification Hub",
-            icon: "󰂚",
-            description: "System tray apps, clipboard history button, and unread notifications",
-            category: "System",
-            defaultSection: "right"
-        },
-        {
-            id: "status",
-            name: "Quick Status Controls",
-            icon: "󰤨",
-            description: "Volume mixer, brightness, Wi-Fi, Bluetooth, and battery gauges",
-            category: "Hardware",
-            defaultSection: "right"
-        },
-        {
-            id: "stats",
-            name: "Hardware Resource Stats",
-            icon: "󰍛",
-            description: "Live CPU load, memory utilization, and hardware graphs",
-            category: "Hardware",
-            defaultSection: "right"
-        },
-        {
-            id: "power",
-            name: "Power Menu",
-            icon: "",
-            description: "Power options: lock screen, suspend, reboot, and power off",
-            category: "System",
-            defaultSection: "right"
-        },
-        {
-            id: "clock",
-            name: "Clock & Calendar",
-            icon: "",
-            description: "Live clock, date view, and interactive calendar popup",
-            category: "Time",
-            defaultSection: "right"
-        },
-        {
-            id: "custom_left",
-            name: "Left Custom Plugins",
-            icon: "󰏖",
-            description: "User plugins configured to appear on the left section",
-            category: "Custom Plugins",
-            defaultSection: "left"
-        },
-        {
-            id: "custom_center",
-            name: "Center Custom Plugins",
-            icon: "󰏖",
-            description: "User plugins configured to appear in the center section",
-            category: "Custom Plugins",
-            defaultSection: "center"
-        },
-        {
-            id: "custom_right",
-            name: "Right Custom Plugins",
-            icon: "󰏖",
-            description: "User plugins configured to appear on the right section",
-            category: "Custom Plugins",
-            defaultSection: "right"
-        }
+        { id: "launcher", name: "App Launcher", icon: "󰣇", description: "Application menu search and quick power launcher", category: "Navigation", defaultSection: "left" },
+        { id: "workspaces", name: "Workspaces", icon: "󰨇", description: "Active virtual workspaces with preview popups and scroll navigation", category: "Navigation", defaultSection: "left" },
+        { id: "activewindow", name: "Active Window", icon: "󰘔", description: "Current focused window title and application icon", category: "Information", defaultSection: "left" },
+        { id: "mpris", name: "Media Player (MPRIS)", icon: "󰎈", description: "Now-playing music info, playback controls, and track details", category: "Media", defaultSection: "center" },
+        { id: "language", name: "Keyboard Layout", icon: "󰌌", description: "Current keyboard layout indicator and switcher", category: "System", defaultSection: "center" },
+        { id: "recording", name: "Recording Indicator", icon: "󰑋", description: "Screen capture and audio recording active status capsule", category: "System", defaultSection: "right" },
+        { id: "traynotif", name: "Tray & Notification Hub", icon: "󰂚", description: "System tray apps, clipboard history button, and unread notifications", category: "System", defaultSection: "right" },
+        { id: "status", name: "Quick Status Controls", icon: "󰤨", description: "Volume mixer, brightness, Wi-Fi, Bluetooth, and battery gauges", category: "Hardware", defaultSection: "right" },
+        { id: "stats", name: "Hardware Resource Stats", icon: "󰍛", description: "Live CPU load, memory utilization, and hardware graphs", category: "Hardware", defaultSection: "right" },
+        { id: "power", name: "Power Menu", icon: "", description: "Power options: lock screen, suspend, reboot, and power off", category: "System", defaultSection: "right" },
+        { id: "clock", name: "Clock & Calendar", icon: "", description: "Live clock, date view, and interactive calendar popup", category: "Time", defaultSection: "right" },
+        { id: "custom_left", name: "Left Custom Plugins", icon: "󰏖", description: "User plugins configured to appear on the left section", category: "Custom Plugins", defaultSection: "left" },
+        { id: "custom_center", name: "Center Custom Plugins", icon: "󰏖", description: "User plugins configured to appear in the center section", category: "Custom Plugins", defaultSection: "center" },
+        { id: "custom_right", name: "Right Custom Plugins", icon: "󰏖", description: "User plugins configured to appear on the right section", category: "Custom Plugins", defaultSection: "right" }
     ]
 
     // ── Initial load & file watcher ───────────────────────────────────────────
@@ -220,7 +125,6 @@ QtObject {
         saveProc.running = true;
     }
 
-    // ── Helper Queries ────────────────────────────────────────────────────────
     function getModuleMeta(moduleId) {
         if (!moduleId) return null;
         for (var i = 0; i < moduleCatalog.length; i++) {
@@ -238,52 +142,33 @@ QtObject {
         };
     }
 
-    function isModuleVisible(moduleId) {
-        if (hiddenModules.indexOf(moduleId) !== -1) return false;
-        if (leftModules.indexOf(moduleId) !== -1) return true;
-        if (centerModules.indexOf(moduleId) !== -1) return true;
-        if (rightModules.indexOf(moduleId) !== -1) return true;
-        return false;
-    }
-
     function getSectionForModule(moduleId) {
         if (leftModules.indexOf(moduleId) !== -1) return "left";
         if (centerModules.indexOf(moduleId) !== -1) return "center";
         if (rightModules.indexOf(moduleId) !== -1) return "right";
-        if (hiddenModules.indexOf(moduleId) !== -1) return "hidden";
         return "hidden";
     }
 
-    function getSectionModules(section) {
-        if (section === "left") return leftModules;
-        if (section === "center") return centerModules;
-        if (section === "right") return rightModules;
-        if (section === "hidden") return hiddenModules;
-        return [];
-    }
+    function updateDropTarget(globalX, barWidth) {
+        var leftBound = barWidth * 0.35;
+        var rightBound = barWidth * 0.65;
 
-    // ── Public Mutators (Instant In-Memory + Disk Sync) ────────────────────────
-    function toggleEditMode() {
-        root.editMode = !root.editMode;
-        if (!root.editMode) {
-            root.selectedModule = "";
-            root.draggedModule = "";
+        if (globalX < leftBound) {
+            root.targetSection = "left";
+            var leftCount = root.leftModules.length;
+            var ratio = Math.max(0, Math.min(1, globalX / leftBound));
+            root.targetIndex = Math.floor(ratio * (leftCount + 1));
+        } else if (globalX > rightBound) {
+            root.targetSection = "right";
+            var rightCount = root.rightModules.length;
+            var ratio = Math.max(0, Math.min(1, (globalX - rightBound) / (barWidth - rightBound)));
+            root.targetIndex = Math.floor(ratio * (rightCount + 1));
+        } else {
+            root.targetSection = "center";
+            var centerCount = root.centerModules.length;
+            var ratio = Math.max(0, Math.min(1, (globalX - leftBound) / (rightBound - leftBound)));
+            root.targetIndex = Math.floor(ratio * (centerCount + 1));
         }
-    }
-
-    function setBarPosition(pos) {
-        root.position = pos;
-        root.persist();
-    }
-
-    function setMetric(key, val) {
-        if (key === "barHeight") root.barHeight = val;
-        else if (key === "barRadius") root.barRadius = val;
-        else if (key === "capsuleRadius") root.capsuleRadius = val;
-        else if (key === "spacing") root.spacing = val;
-        else if (key === "marginLeft") { root.marginLeft = val; root.marginRight = val; }
-        else if (key === "compactMode") root.compactMode = val;
-        root.persist();
     }
 
     function moveModule(moduleId, targetSection, targetIndex) {
@@ -294,7 +179,7 @@ QtObject {
         var right = root.rightModules.slice();
         var hidden = root.hiddenModules.slice();
 
-        // Remove from current section
+        // Remove from current list
         var lIdx = left.indexOf(moduleId);
         if (lIdx !== -1) left.splice(lIdx, 1);
         var cIdx = center.indexOf(moduleId);
@@ -304,7 +189,7 @@ QtObject {
         var hIdx = hidden.indexOf(moduleId);
         if (hIdx !== -1) hidden.splice(hIdx, 1);
 
-        // Insert into target section
+        // Target list insertion
         var targetArr = (targetSection === "left") ? left : (targetSection === "center" ? center : (targetSection === "right" ? right : hidden));
         if (targetIndex !== undefined && targetIndex >= 0 && targetIndex <= targetArr.length) {
             targetArr.splice(targetIndex, 0, moduleId);
@@ -318,137 +203,5 @@ QtObject {
         root.hiddenModules = hidden;
         root.version++;
         root.persist();
-    }
-
-    function reorderModule(fromSection, fromIndex, toSection, toIndex) {
-        var left = root.leftModules.slice();
-        var center = root.centerModules.slice();
-        var right = root.rightModules.slice();
-
-        var srcArr = (fromSection === "left") ? left : (fromSection === "center" ? center : right);
-        var dstArr = (toSection === "left") ? left : (toSection === "center" ? center : right);
-
-        if (fromIndex < 0 || fromIndex >= srcArr.length) return;
-        var item = srcArr.splice(fromIndex, 1)[0];
-
-        if (toIndex >= 0 && toIndex <= dstArr.length) {
-            dstArr.splice(toIndex, 0, item);
-        } else {
-            dstArr.push(item);
-        }
-
-        root.leftModules = left;
-        root.centerModules = center;
-        root.rightModules = right;
-        root.version++;
-        root.persist();
-    }
-
-    function moveStep(moduleId, direction) {
-        var curSec = getSectionForModule(moduleId);
-        if (curSec === "hidden") return;
-
-        var list = (curSec === "left") ? root.leftModules.slice() : (curSec === "center" ? root.centerModules.slice() : root.rightModules.slice());
-        var idx = list.indexOf(moduleId);
-        if (idx === -1) return;
-
-        if (direction === "left" || direction === "up") {
-            if (idx > 0) {
-                reorderModule(curSec, idx, curSec, idx - 1);
-            } else {
-                if (curSec === "right") moveModule(moduleId, "center", -1);
-                else if (curSec === "center") moveModule(moduleId, "left", -1);
-            }
-        } else if (direction === "right" || direction === "down") {
-            if (idx < list.length - 1) {
-                reorderModule(curSec, idx, curSec, idx + 1);
-            } else {
-                if (curSec === "left") moveModule(moduleId, "center", 0);
-                else if (curSec === "center") moveModule(moduleId, "right", 0);
-            }
-        }
-    }
-
-    function toggleVisibility(moduleId) {
-        var isHidden = root.hiddenModules.indexOf(moduleId) !== -1;
-        if (isHidden) {
-            var hidden = root.hiddenModules.slice();
-            var hIdx = hidden.indexOf(moduleId);
-            if (hIdx !== -1) hidden.splice(hIdx, 1);
-            root.hiddenModules = hidden;
-
-            var meta = getModuleMeta(moduleId);
-            var defSec = (meta && meta.defaultSection) ? meta.defaultSection : "center";
-            moveModule(moduleId, defSec, -1);
-        } else {
-            moveModule(moduleId, "hidden", -1);
-        }
-    }
-
-    function applyPreset(presetName) {
-        var name = (presetName || "default").toLowerCase();
-        if (name === "minimal") {
-            root.position = "top";
-            root.barHeight = 36;
-            root.barRadius = 14;
-            root.capsuleRadius = 10;
-            root.spacing = 6;
-            root.compactMode = true;
-            root.leftModules = ["launcher", "workspaces"];
-            root.centerModules = ["activewindow"];
-            root.rightModules = ["status", "clock"];
-            root.hiddenModules = ["mpris", "language", "recording", "traynotif", "stats", "power"];
-        } else if (name === "poweruser") {
-            root.position = "top";
-            root.barHeight = 40;
-            root.barRadius = 16;
-            root.capsuleRadius = 12;
-            root.spacing = 6;
-            root.compactMode = false;
-            root.leftModules = ["launcher", "workspaces", "activewindow", "custom_left"];
-            root.centerModules = ["mpris", "custom_center"];
-            root.rightModules = ["custom_right", "recording", "traynotif", "status", "stats", "language", "power", "clock"];
-            root.hiddenModules = [];
-        } else if (name === "dock") {
-            root.position = "bottom";
-            root.barHeight = 44;
-            root.barRadius = 22;
-            root.capsuleRadius = 14;
-            root.spacing = 8;
-            root.compactMode = false;
-            root.leftModules = ["launcher", "workspaces"];
-            root.centerModules = ["activewindow", "mpris"];
-            root.rightModules = ["traynotif", "status", "clock", "power"];
-            root.hiddenModules = ["stats", "recording", "language"];
-        } else if (name === "split") {
-            root.position = "top";
-            root.barHeight = 38;
-            root.barRadius = 16;
-            root.capsuleRadius = 12;
-            root.spacing = 6;
-            root.compactMode = false;
-            root.leftModules = ["launcher", "workspaces", "activewindow"];
-            root.centerModules = ["clock"];
-            root.rightModules = ["mpris", "traynotif", "status", "power"];
-            root.hiddenModules = ["stats", "recording", "language"];
-        } else {
-            // default
-            root.position = "top";
-            root.barHeight = 38;
-            root.barRadius = 16;
-            root.capsuleRadius = 12;
-            root.spacing = 6;
-            root.compactMode = false;
-            root.leftModules = ["launcher", "workspaces", "activewindow", "custom_left"];
-            root.centerModules = ["mpris", "custom_center", "language"];
-            root.rightModules = ["custom_right", "recording", "traynotif", "status", "stats", "power", "clock"];
-            root.hiddenModules = [];
-        }
-        root.version++;
-        root.persist();
-    }
-
-    function resetToDefaults() {
-        applyPreset("default");
     }
 }

@@ -180,9 +180,6 @@ hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprpicker -a -f hex && noti
 -- Open Quickshell Plugin Manager Modal
 hl.bind(mainMod .. " + ALT + P",   hl.dsp.exec_cmd(programs.pluginManager))
 
--- Open Quickshell Status Bar Customizer & Layout Editor
-hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd(programs.barCustomizer))
-
 -- Open Universal Theme Switcher Menu (19 Themes)
 local themeScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/theme_switcher.py"
 hl.bind(mainMod .. " + T",         hl.dsp.exec_cmd(themeScript .. " --menu"))

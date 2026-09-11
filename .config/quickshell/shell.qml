@@ -19,7 +19,6 @@ import "plugins/notifications"
 import "plugins/filepicker"
 import "plugins/workspace_viewer"
 import "plugins/plugin-manager"
-import "plugins/bar_customizer"
 import "generated"
 
 ShellRoot {
@@ -35,7 +34,7 @@ ShellRoot {
         }
     }
 
-    // Dynamic Status Bar across all connected displays
+    // Dynamic Modular Status Bar across all connected displays
     Variants {
         model: Quickshell.screens
 
@@ -74,29 +73,18 @@ ShellRoot {
                     anchors.fill: parent
                     radius: BarConfig.barRadius
                     color: Theme.barBg
-                    border.color: BarConfig.editMode ? Theme.mauve : Theme.barBorder
+                    border.color: BarConfig.isDragging ? Theme.accent : Theme.barBorder
                     border.width: 1
 
                     Behavior on radius { NumberAnimation { duration: 150 } }
                     Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                    // Background right-click handler for Bar Context Menu
-                    MouseArea {
-                        anchors.fill: parent
-                        acceptedButtons: Qt.RightButton
-                        hoverEnabled: false
-                        onClicked: mouse => {
-                            if (mouse.button === Qt.RightButton) {
-                                contextMenu.showAt(mouse.x, mouse.y);
-                            }
-                        }
-                    }
 
                     // Left Modules Section
                     DynamicBarSection {
                         id: leftGroup
                         section: "left"
                         barWindow: barWindow
+                        barContainer: barContainer
                         anchors.left: parent.left
                         anchors.leftMargin: 6
                         anchors.verticalCenter: parent.verticalCenter
@@ -107,6 +95,7 @@ ShellRoot {
                         id: centerGroup
                         section: "center"
                         barWindow: barWindow
+                        barContainer: barContainer
                         anchors.centerIn: parent
                     }
 
@@ -115,26 +104,50 @@ ShellRoot {
                         id: rightGroup
                         section: "right"
                         barWindow: barWindow
+                        barContainer: barContainer
                         anchors.right: parent.right
                         anchors.rightMargin: 6
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    // Context Menu
-                    BarContextMenu {
-                        id: contextMenu
-                        anchors.fill: parent
-                    }
-                }
+                    // Floating Live Drag Ghost (follows cursor anywhere across the bar)
+                    Rectangle {
+                        id: dragGhost
+                        visible: BarConfig.isDragging && BarConfig.draggedModule !== ""
+                        x: BarConfig.dragX - width / 2
+                        y: 4
+                        height: parent.height - 8
+                        width: ghostRow.implicitWidth + 24
+                        radius: BarConfig.capsuleRadius
+                        color: Theme.moduleActiveBg
+                        border.color: Theme.accent
+                        border.width: 2
+                        z: 999
+                        scale: 1.06
 
-                // Interactive Edit Mode Banner (shows below or above bar depending on position)
-                BarEditBanner {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: BarConfig.isTop ? parent.bottom : undefined
-                    anchors.bottom: BarConfig.isBottom ? parent.top : undefined
-                    anchors.topMargin: BarConfig.isTop ? 8 : 0
-                    anchors.bottomMargin: BarConfig.isBottom ? 8 : 0
-                    z: 50
+                        readonly property var ghostMeta: BarConfig.getModuleMeta(BarConfig.draggedModule)
+
+                        Row {
+                            id: ghostRow
+                            anchors.centerIn: parent
+                            spacing: 6
+
+                            Text {
+                                text: dragGhost.ghostMeta ? dragGhost.ghostMeta.icon : "󰏖"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeIcon
+                                color: Theme.accent
+                            }
+
+                            Text {
+                                text: dragGhost.ghostMeta ? dragGhost.ghostMeta.name : BarConfig.draggedModule
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                font.bold: true
+                                color: "#ffffff"
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -163,6 +176,5 @@ ShellRoot {
     LazyWindow { trigger: PluginManager.filePickerVisible; source: "plugins/filepicker/FilePickerWindow.qml" }
     LazyWindow { trigger: PluginManager.workspaceViewerVisible; source: "plugins/workspace_viewer/WorkspaceViewerWindow.qml" }
     LazyWindow { trigger: PluginManager.pluginManagerVisible; source: "plugins/plugin-manager/PluginManagerWindow.qml" }
-    LazyWindow { trigger: PluginManager.barCustomizerVisible; source: "plugins/bar_customizer/BarCustomizerWindow.qml" }
     CustomWindows {}
 }
