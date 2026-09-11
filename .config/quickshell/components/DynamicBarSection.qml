@@ -46,7 +46,7 @@ Row {
             readonly property bool isDraggedThis: BarConfig.isDragging && BarConfig.draggedModule === moduleId
             readonly property bool isTargetHere: BarConfig.isDragging && BarConfig.targetSection === root.section && BarConfig.targetIndex === index
 
-            implicitWidth: (isTargetHere && !isDraggedThis ? 44 : 0) + (moduleLoader.item ? moduleLoader.item.implicitWidth : 38)
+            implicitWidth: (isTargetHere && !isDraggedThis ? 36 : 0) + (moduleLoader.item ? moduleLoader.item.implicitWidth : 32)
             implicitHeight: Theme.barHeight - 8
 
             Behavior on implicitWidth { NumberAnimation { duration: 180; easing.type: Easing.OutQuad } }
@@ -57,7 +57,7 @@ Row {
                 visible: isTargetHere && !isDraggedThis
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                width: 38
+                width: 32
                 height: parent.height
                 radius: Theme.capsuleRadius
                 color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.25)
@@ -80,7 +80,7 @@ Row {
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                width: moduleLoader.item ? moduleLoader.item.implicitWidth : 38
+                width: moduleLoader.item ? moduleLoader.item.implicitWidth : 32
                 radius: Theme.capsuleRadius
                 color: "transparent"
                 opacity: isDraggedThis ? 0.30 : 1.0

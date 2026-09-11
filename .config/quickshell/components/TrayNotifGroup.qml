@@ -9,7 +9,7 @@ Rectangle {
     id: root
 
     implicitHeight: Theme.barHeight - 8
-    implicitWidth: row.implicitWidth + 16
+    implicitWidth: row.implicitWidth + 12
     radius: Theme.capsuleRadius
 
     readonly property bool isHovered: mouseArea.containsMouse
@@ -88,12 +88,12 @@ Rectangle {
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: 8
+        spacing: 4
 
         // System Tray Icons
         Row {
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 6
+            spacing: 4
             Repeater {
                 model: SystemTray.items
                 Item {

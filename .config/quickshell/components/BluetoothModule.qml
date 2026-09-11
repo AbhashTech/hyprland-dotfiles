@@ -7,7 +7,7 @@ Rectangle {
     id: root
 
     implicitHeight: Theme.barHeight - 8
-    implicitWidth: 38
+    implicitWidth: 32
     radius: Theme.capsuleRadius
 
     readonly property bool isHovered: btArea.containsMouse

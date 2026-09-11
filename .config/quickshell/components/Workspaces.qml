@@ -7,7 +7,7 @@ Rectangle {
     id: root
 
     implicitHeight: Theme.barHeight - 8
-    implicitWidth: row.implicitWidth + 8
+    implicitWidth: row.implicitWidth + 6
     radius: Theme.capsuleRadius
 
     color: Theme.moduleBg
@@ -128,7 +128,7 @@ Rectangle {
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: 4
+        spacing: 3
 
         Repeater {
             model: root.workspaceList
@@ -140,7 +140,7 @@ Rectangle {
                 readonly property bool isOccupied: root.activeIds.indexOf(wsNum) !== -1
 
                 implicitHeight: Theme.barHeight - 16
-                implicitWidth: isActive ? 28 : 24
+                implicitWidth: isActive ? 24 : 20
                 radius: Theme.pillRadius
 
                 color: isActive ? Theme.blue : (btnArea.containsMouse ? Theme.moduleActiveBg : "transparent")

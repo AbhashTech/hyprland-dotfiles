@@ -7,7 +7,7 @@ Rectangle {
     id: root
 
     implicitHeight: Theme.barHeight - 8
-    implicitWidth: brightContent.implicitWidth + 16
+    implicitWidth: brightContent.implicitWidth + 12
     radius: Theme.capsuleRadius
 
     readonly property bool isHovered: brightArea.containsMouse
@@ -27,7 +27,7 @@ Rectangle {
     Row {
         id: brightContent
         anchors.centerIn: parent
-        spacing: 4
+        spacing: 3
 
         Text {
             anchors.verticalCenter: parent.verticalCenter

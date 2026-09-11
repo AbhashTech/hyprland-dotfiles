@@ -15,7 +15,7 @@ Rectangle {
 
     visible: isRecording
     implicitHeight: Theme.barHeight - 8
-    implicitWidth: visible ? row.implicitWidth + 18 : 0
+    implicitWidth: visible ? row.implicitWidth + 12 : 0
     radius: Theme.capsuleRadius
 
     readonly property bool isHovered: mouseArea.containsMouse
@@ -74,7 +74,7 @@ Rectangle {
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: 6
+        spacing: 4
 
         Text {
             anchors.verticalCenter: parent.verticalCenter

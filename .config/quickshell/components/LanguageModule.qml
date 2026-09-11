@@ -13,7 +13,7 @@ Rectangle {
     property string layoutName: "US"
 
     implicitHeight: Theme.barHeight - 8
-    implicitWidth: row.implicitWidth + 18
+    implicitWidth: row.implicitWidth + 12
     radius: Theme.capsuleRadius
 
     readonly property bool isHovered: mouseArea.containsMouse
@@ -78,7 +78,7 @@ Rectangle {
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: 6
+        spacing: 4
 
         Text {
             anchors.verticalCenter: parent.verticalCenter

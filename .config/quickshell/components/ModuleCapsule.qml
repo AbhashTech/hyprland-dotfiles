@@ -12,7 +12,7 @@ Rectangle {
     readonly property bool isHovered: hoverable && mouseArea.containsMouse
 
     implicitHeight: Theme.barHeight - 8
-    implicitWidth: innerContainer.implicitWidth + 16
+    implicitWidth: innerContainer.implicitWidth + 12
 
     radius: Theme.capsuleRadius
     color: isHovered ? Theme.moduleHoverBg : Theme.moduleBg
@@ -32,7 +32,7 @@ Rectangle {
     Row {
         id: innerContainer
         anchors.centerIn: parent
-        spacing: 6
+        spacing: 4
         property int alignment: Qt.AlignVCenter
     }
 }

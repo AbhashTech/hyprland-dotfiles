@@ -44,7 +44,7 @@ Rectangle {
 
     visible: hasMedia
     implicitHeight: Theme.barHeight - 8
-    implicitWidth: visible ? Math.min(row.implicitWidth + 20, 240) : 0
+    implicitWidth: visible ? Math.min(row.implicitWidth + 14, 220) : 0
     radius: Theme.capsuleRadius
 
     readonly property bool isHovered: mouseArea.containsMouse
@@ -72,7 +72,7 @@ Rectangle {
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: 6
+        spacing: 4
 
         Text {
             anchors.verticalCenter: parent.verticalCenter

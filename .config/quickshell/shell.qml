@@ -86,7 +86,7 @@ ShellRoot {
                         barWindow: barWindow
                         barContainer: barContainer
                         anchors.left: parent.left
-                        anchors.leftMargin: 6
+                        anchors.leftMargin: 4
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -106,7 +106,7 @@ ShellRoot {
                         barWindow: barWindow
                         barContainer: barContainer
                         anchors.right: parent.right
-                        anchors.rightMargin: 6
+                        anchors.rightMargin: 4
                         anchors.verticalCenter: parent.verticalCenter
                     }
 

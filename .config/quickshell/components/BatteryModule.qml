@@ -7,7 +7,7 @@ Rectangle {
     id: root
 
     implicitHeight: Theme.barHeight - 8
-    implicitWidth: batContent.implicitWidth + 16
+    implicitWidth: batContent.implicitWidth + 12
     radius: Theme.capsuleRadius
 
     readonly property bool isHovered: batArea.containsMouse
@@ -27,7 +27,7 @@ Rectangle {
     Row {
         id: batContent
         anchors.centerIn: parent
-        spacing: 4
+        spacing: 3
 
         Text {
             anchors.verticalCenter: parent.verticalCenter

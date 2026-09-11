@@ -26,11 +26,11 @@ QtObject {
     property int barHeight: 38
     property int barRadius: 16
     property int capsuleRadius: 12
-    property int spacing: 6
-    property int marginTop: 8
-    property int marginBottom: 8
-    property int marginLeft: 12
-    property int marginRight: 12
+    property int spacing: 3
+    property int marginTop: 6
+    property int marginBottom: 6
+    property int marginLeft: 8
+    property int marginRight: 8
     property bool compactMode: false
 
     property var leftModules: ["launcher", "workspaces", "activewindow", "custom_left"]

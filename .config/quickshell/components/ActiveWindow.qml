@@ -7,7 +7,7 @@ Rectangle {
     id: root
 
     implicitHeight: Theme.barHeight - 8
-    implicitWidth: Math.min(row.implicitWidth + 20, 260)
+    implicitWidth: Math.min(row.implicitWidth + 14, 240)
     radius: Theme.capsuleRadius
 
     property var barWindow: null
@@ -147,7 +147,7 @@ Rectangle {
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: 6
+        spacing: 4
 
         Text {
             anchors.verticalCenter: parent.verticalCenter

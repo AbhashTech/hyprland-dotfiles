@@ -9,7 +9,7 @@ Rectangle {
     id: root
 
     implicitHeight: Theme.barHeight - 8
-    implicitWidth: Math.max(28, trayRow.implicitWidth + 12)
+    implicitWidth: Math.max(24, trayRow.implicitWidth + 8)
     radius: Theme.capsuleRadius
 
     color: Theme.moduleBg
@@ -24,7 +24,7 @@ Rectangle {
     Row {
         id: trayRow
         anchors.centerIn: parent
-        spacing: 6
+        spacing: 4
 
         Repeater {
             model: SystemTray.items
