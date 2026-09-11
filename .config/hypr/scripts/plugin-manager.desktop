@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Plugin Manager
+GenericName=Quickshell Plugin Manager
+Comment=Manage, configure, enable/disable, install and scaffold Quickshell plugins
+Exec=bash /home/kunal/.config/quickshell/scripts/toggle_plugin.sh plugin_manager
+Icon=preferences-plugin
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;System;
+StartupWMClass=quickshell:plugin_manager
+StartupNotify=true
+Keywords=plugin;manager;quickshell;extensions;widgets;custom;store;

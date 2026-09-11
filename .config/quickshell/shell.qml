@@ -18,6 +18,7 @@ import "plugins/battery"
 import "plugins/notifications"
 import "plugins/filepicker"
 import "plugins/workspace_viewer"
+import "plugins/plugin-manager"
 import "generated"
 
 ShellRoot {
@@ -170,6 +171,6 @@ ShellRoot {
     LazyWindow { trigger: PluginManager.notificationVisible; source: "plugins/notifications/NotificationWindow.qml" }
     LazyWindow { trigger: PluginManager.filePickerVisible; source: "plugins/filepicker/FilePickerWindow.qml" }
     LazyWindow { trigger: PluginManager.workspaceViewerVisible; source: "plugins/workspace_viewer/WorkspaceViewerWindow.qml" }
-    LazyWindow { trigger: PluginManager.pluginManagerVisible; source: "custom_plugins/plugin-manager/PluginManagerWindow.qml" }
+    LazyWindow { trigger: PluginManager.pluginManagerVisible; source: "plugins/plugin-manager/PluginManagerWindow.qml" }
     CustomWindows {}
 }

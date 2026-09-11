@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "plugin_manager",
+  "name": "Plugin Manager",
+  "version": "1.0.0",
+  "author": "Kunal Gautam",
+  "description": "Comprehensive plugin manager for Quickshell: Add, Delete, Enable, Disable, and Scaffold custom plugins with instant live reload",
+  "kinds": [
+    "window",
+    "service"
+  ],
+  "entryPoints": {
+    "windows": [
+      "PluginManagerWindow.qml"
+    ],
+    "service": "PluginManagerService.qml"
+  }
+}

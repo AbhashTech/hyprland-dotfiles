@@ -1,0 +1,4 @@
+singleton PluginManagerService 1.0 PluginManagerService.qml
+PluginManagerModule 1.0 PluginManagerModule.qml
+PluginManagerWindow 1.0 PluginManagerWindow.qml
+PluginManagerMenu 1.0 PluginManagerMenu.qml

@@ -470,6 +470,22 @@ StartupNotify=true
 Keywords=keyboard;layout;variant;language;typing;input;xkb;hindi;tamil;telugu;dvorak;colemak;marathi;bengali;kannada;malayalam;gujarati;
 EOF
 
+cat > "${HOME}/.local/share/applications/plugin-manager.desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Plugin Manager
+GenericName=Quickshell Plugin Manager
+Comment=Manage, configure, enable/disable, install and scaffold Quickshell plugins
+Exec=bash ${HOME}/.config/quickshell/scripts/toggle_plugin.sh plugin_manager
+Icon=preferences-plugin
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;System;
+StartupWMClass=quickshell:plugin_manager
+StartupNotify=true
+Keywords=plugin;manager;quickshell;extensions;widgets;custom;store;
+EOF
+
 chmod +x "${HOME}/.local/share/applications/"*.desktop 2>/dev/null || true
 
 if [ -f "${DOTFILES_DIR}/.config/hypr/assets/ocr-language-manager.png" ]; then
