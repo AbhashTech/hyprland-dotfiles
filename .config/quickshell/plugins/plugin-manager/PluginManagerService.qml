@@ -29,14 +29,6 @@ QtObject {
     // Diagnostics / System Logs Buffer
     property var diagnosticsLogs: []
 
-    // Keybinding state
-    property string activeKeybind: "SUPER + ALT + M"
-    property bool isKeybindConflict: false
-    property string keybindConflictDesc: ""
-    property string keybindStatusMessage: ""
-    property var recommendedKeybinds: []
-    property string keybindTargetPlugin: "plugin_manager"
-
     // UI state
     property bool isLoading: false
     property string searchQuery: ""
@@ -561,106 +553,10 @@ QtObject {
         reloadProc.exec(["python3", root.helperPath, "reload"]);
     }
 
-    // 13. Get Keybind Process
-    property var getKeybindProc: Process {
-        id: getKeybindProc
-        property string buffer: ""
-        onStarted: { buffer = ""; }
-        stdout: SplitParser {
-            splitMarker: ""
-            onRead: data => { getKeybindProc.buffer += data; }
-        }
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode === 0 && getKeybindProc.buffer.trim().length > 0) {
-                try {
-                    var res = JSON.parse(getKeybindProc.buffer.trim());
-                    if (res && res.success && res.keybind) {
-                        root.activeKeybind = res.keybind;
-                    }
-                } catch (e) {
-                    console.error("Get keybind parse error:", e);
-                }
-            }
-            getKeybindProc.buffer = "";
-        }
-    }
-
-    // 14. Check Keybind Process
-    property var checkKeybindProc: Process {
-        id: checkKeybindProc
-        property string buffer: ""
-        onStarted: { buffer = ""; }
-        stdout: SplitParser {
-            splitMarker: ""
-            onRead: data => { checkKeybindProc.buffer += data; }
-        }
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode === 0 && checkKeybindProc.buffer.trim().length > 0) {
-                try {
-                    var res = JSON.parse(checkKeybindProc.buffer.trim());
-                    root.isKeybindConflict = !!res.hasConflict;
-                    root.keybindConflictDesc = res.conflictDesc || "";
-                    root.keybindStatusMessage = res.message || "";
-                    root.recommendedKeybinds = res.recommended || [];
-                } catch (e) {
-                    console.error("Check keybind parse error:", e);
-                }
-            }
-            checkKeybindProc.buffer = "";
-        }
-    }
-
-    // 15. Save Keybind Process
-    property var saveKeybindProc: Process {
-        id: saveKeybindProc
-        property string buffer: ""
-        onStarted: { buffer = ""; }
-        stdout: SplitParser {
-            splitMarker: ""
-            onRead: data => { saveKeybindProc.buffer += data; }
-        }
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode === 0 && saveKeybindProc.buffer.trim().length > 0) {
-                try {
-                    var res = JSON.parse(saveKeybindProc.buffer.trim());
-                    if (res && res.success) {
-                        root.activeKeybind = res.keybind || "";
-                        root.isKeybindConflict = false;
-                        root.showToast("Keybinding saved to '" + res.keybind + "'!", "success");
-                    } else if (res && res.error) {
-                        root.showToast("Keybinding error: " + res.error, "error");
-                    }
-                } catch (e) {
-                    console.error("Save keybind error:", e);
-                }
-            }
-            saveKeybindProc.buffer = "";
-        }
-    }
-
-    function loadKeybind(pluginId) {
-        var pid = pluginId || root.keybindTargetPlugin || "plugin_manager";
-        root.keybindTargetPlugin = pid;
-        getKeybindProc.exec(["python3", root.helperPath, "get-keybind", pid]);
-    }
-
-    function checkKeybind(combo, pluginId) {
-        if (!combo || combo.trim().length === 0) return;
-        var pid = pluginId || root.keybindTargetPlugin || "plugin_manager";
-        checkKeybindProc.exec(["python3", root.helperPath, "check-keybind", combo.trim(), pid]);
-    }
-
-    function saveKeybind(combo, pluginId) {
-        if (!combo || combo.trim().length === 0) return;
-        var pid = pluginId || root.keybindTargetPlugin || "plugin_manager";
-        saveKeybindProc.exec(["python3", root.helperPath, "set-keybind", combo.trim(), pid]);
-    }
-
     // Auto-fetch data on initialization
     Component.onCompleted: {
         root.refresh();
         root.loadCatalog();
-        root.loadKeybind("plugin_manager");
         root.appendLog("Plugin Manager service ready", "info");
     }
 }

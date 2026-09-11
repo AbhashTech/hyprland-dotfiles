@@ -1,5 +1,0 @@
-{
-  "keybind": "SUPER + ALT + M",
-  "ipcCommand": "quickshell ipc call pluginManager toggle plugin_manager",
-  "luaSnippet": "hl.bind(\"SUPER + ALT + M\", hl.dsp.exec_cmd(\"quickshell ipc call pluginManager toggle plugin_manager\"))"
-}
