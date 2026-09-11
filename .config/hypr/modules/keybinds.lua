@@ -177,6 +177,9 @@ hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd(programs.terminal .. " --clas
 -- Pick Color from Screen & Copy Hex (Hyprpicker)
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprpicker -a -f hex && notify-send -a Hyprpicker -i color-picker 'Color Picked' \"$(wl-paste)\""))
 
+-- Open Quickshell Plugin Manager Modal
+hl.bind(mainMod .. " + ALT + P",   hl.dsp.exec_cmd(programs.pluginManager))
+
 -- Open Universal Theme Switcher Menu (19 Themes)
 local themeScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/theme_switcher.py"
 hl.bind(mainMod .. " + T",         hl.dsp.exec_cmd(themeScript .. " --menu"))

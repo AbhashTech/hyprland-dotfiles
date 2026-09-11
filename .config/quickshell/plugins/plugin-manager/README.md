@@ -21,7 +21,7 @@ A native, interactive GUI & CLI Plugin Manager for **Quickshell** custom plugins
   - **Git Clone**: Clone and register any Git repository directly into your Quickshell plugins directory.
 - **Delete Plugins**: Safely remove unwanted custom plugins with confirmation safeguards.
 - **Real-Time Logs & Diagnostics**: Live console trace drawer to inspect subprocess execution.
-- **Application Menu & Keybinding Launch**: Instant popup modal window accessible via application launcher (`SUPER + R` / Fuzzel) or `SUPER + ALT + M`.
+- **Application Menu & Keybinding Launch**: Instant popup modal window accessible via application launcher (`SUPER + R` / Fuzzel) or `SUPER + ALT + P`.
 
 ---
 
@@ -50,7 +50,7 @@ bash ~/.config/quickshell/scripts/toggle_plugin.sh plugin_manager
 
 In `~/.config/hypr/modules/keybinds.lua`:
 ```lua
-hl.bind("SUPER + ALT + M", hl.dsp.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh plugin_manager"))
+hl.bind("SUPER + ALT + P", hl.dsp.exec_cmd(programs.pluginManager))
 ```
 
 ### CLI Commands (`plugin_helper.py`)

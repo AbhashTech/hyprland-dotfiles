@@ -72,7 +72,7 @@ Every custom plugin should contain a `manifest.json` file at its root. This inst
 You can enable or disable any custom plugin using any of the following 3 methods:
 
 ### Method 1: Via Graphical UI (Plugin Manager)
-1. Launch **Quickshell Plugin Manager** from the application menu (`SUPER + R` / Fuzzel) or press `SUPER + ALT + M`.
+1. Launch **Quickshell Plugin Manager** from the application menu (`SUPER + R` / Fuzzel) or press `SUPER + ALT + P`.
 2. Find your plugin in the list.
 3. Click the **toggle switch** to enable or disable it.
 4. Quickshell will automatically update the manifests and reload widgets in real-time.

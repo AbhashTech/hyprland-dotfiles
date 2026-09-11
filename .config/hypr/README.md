@@ -247,7 +247,8 @@ sudo usermod -aG i2c $USER
 | `SUPER + G` | Open Floating Lazygit TUI |
 | `SUPER + D` | Open Floating Lazydocker TUI |
 | `SUPER + SHIFT + Z` | Open Floating Zellij Session |
-| `SUPER + SHIFT + P` / `SUPER + ALT + P` | **Hyprpicker**: Pick color from screen, copy hex code & notify |
+| `SUPER + SHIFT + P` | **Hyprpicker**: Pick color from screen, copy hex code & notify |
+| `SUPER + ALT + P` | **Quickshell Plugin Manager**: Open native plugin manager & store catalog modal |
 | `SUPER + T` | **Theme Switcher Menu**: Interactive graphical theme selector (19 themes) |
 | `SUPER + ALT + T` | **Theme Manager & Studio GUI**: Full GTK3 desktop theme & palette manager |
 | `SUPER + CTRL + T` | **Cycle Theme**: Instantly cycle to next theme in palette registry |

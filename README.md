@@ -605,7 +605,8 @@ The dotfiles include a dedicated GUI and CLI utility ([`app_shortcut_creator.py`
 | `SUPER + G` | **Lazygit Overlay** | Open floating full-featured Git TUI |
 | `SUPER + D` | **Lazydocker Overlay** | Open floating Docker/Podman container manager TUI |
 | `SUPER + SHIFT + Z` | **Zellij Workspace** | Open floating terminal multiplexer session |
-| `SUPER + SHIFT + P` / `SUPER + ALT + P` | **Hyprpicker** | Pick color from screen, copy hex code to clipboard & trigger notification |
+| `SUPER + SHIFT + P` | **Hyprpicker** | Pick color from screen, copy hex code to clipboard & trigger notification |
+| `SUPER + ALT + P` | **Quickshell Plugin Manager** | Open native Plugin Manager GUI & Store catalog modal |
 | `SUPER + T` | **Theme Switcher Menu** | Open interactive **Fuzzel/Wofi** theme selector (19 curated themes, live reload) |
 | `SUPER + ALT + T` | **Theme Manager & Studio GUI** | Launch graphical **GTK3** theme & palette manager with live card previews |
 | `SUPER + CTRL + T` | **Cycle Theme** | Instantly cycle to the next color palette in the theme registry |
