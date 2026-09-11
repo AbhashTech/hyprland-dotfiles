@@ -192,10 +192,9 @@ The top status bar is built with **Quickshell** (`~/.config/quickshell/shell.qml
 - **󰣇 Application Launcher (`LauncherButton.qml`)**: Left-click opens the native **Quickshell App Launcher** popup with live desktop application search, categories, and icons; right-click opens the **Quickshell Power Menu**.
 - **Workspaces (`Workspaces.qml`)**: Persistent workspaces 1–4 with live active badges and automatic available workspace allocation when connecting external monitors; mouse scroll cycles through workspaces.
 - **Active Window (`ActiveWindow.qml`)**: Shows current focused window title with contextual application icons (Firefox, Kitty, Dolphin, VS Code).
-- **MPRIS Media Controller (`MprisModule.qml`)**: Shows currently playing media (Spotify, Firefox, mpv) with play/pause click and scroll track skipping.
 
 ### 2. Center Zone
-- ** Clock & Calendar (`ClockModule.qml`)**: 12h/24h digital clock with a rich interactive Catppuccin calendar tooltip. Right-click toggles format; scroll navigates months.
+- **MPRIS Media Controller (`MprisModule.qml`)**: Shows currently playing media (Spotify, Firefox, mpv) with play/pause click and scroll track skipping.
 - **󰌌 Keyboard Layout (`LanguageModule.qml`)**: Live keyboard layout indicator (e.g. US). Left-click cycles layout; right-click opens layout menu; middle-click opens layout installer.
 
 ### 3. Right Zone
@@ -219,6 +218,7 @@ The top status bar is built with **Quickshell** (`~/.config/quickshell/shell.qml
   - **Left-Click**: Opens the glassmorphic **System Resources Dashboard** (`quickshell/plugins/sysinfo/`) with fast 800ms real-time metric updates, smooth progress bar animations, CPU %, RAM GB/%, Disk GB/%, and outside-click dismissal.
   - **Right-Click**: Directly opens **Btop** task monitor (`kitty --class btop -e btop`).
 - **󰐥 Power Menu (`PowerModule.qml`)**: Left-click launches the glassmorphic **Quickshell Power & Session Menu** (Lock, Suspend, Logout, Reboot, Shutdown).
+- ** Clock & Calendar (`ClockModule.qml`)**: 12h/24h digital clock with a rich interactive Catppuccin calendar tooltip. Right-click toggles format; scroll navigates months.
 
 ---
 

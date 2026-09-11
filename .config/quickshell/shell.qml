@@ -90,9 +90,6 @@ ShellRoot {
                         ActiveWindow {
                             barWindow: barWindow
                         }
-                        MprisModule {
-                            barWindow: barWindow
-                        }
                         CustomWidgetsLeft {
                             barWindow: barWindow
                         }
@@ -104,7 +101,7 @@ ShellRoot {
                         anchors.centerIn: parent
                         spacing: 6
 
-                        ClockModule {
+                        MprisModule {
                             barWindow: barWindow
                         }
                         CustomWidgetsCenter {
@@ -140,6 +137,9 @@ ShellRoot {
                             barWindow: barWindow
                         }
                         PowerModule {
+                            barWindow: barWindow
+                        }
+                        ClockModule {
                             barWindow: barWindow
                         }
                     }
