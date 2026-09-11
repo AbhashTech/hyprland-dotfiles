@@ -40,7 +40,59 @@ Rectangle {
         icon: StatusService.wifiText
         iconColor: StatusService.wifiConnected ? Theme.teal : (StatusService.wifiPowered ? Theme.subtext0 : Theme.red)
         title: StatusService.wifiConnected ? StatusService.wifiSsid : (StatusService.wifiPowered ? "Wi-Fi Disconnected" : "Wi-Fi Disabled")
-        description: StatusService.wifiConnected ? ("Signal: " + StatusService.wifiSignal + "% • IP: " + (StatusService.wifiIp || "N/A")) : "Click to manage wireless networks"
+        description: StatusService.wifiConnected ? ("Connected via " + StatusService.wifiIface) : (StatusService.wifiPowered ? "Adapter active, not connected to any network" : "Wireless adapter radio is turned off")
+        details: StatusService.wifiConnected ? [
+            {
+                icon: "󰤨",
+                iconColor: Theme.teal,
+                label: "Network (SSID)",
+                value: StatusService.wifiSsid,
+                valueColor: Theme.teal
+            },
+            {
+                icon: "󰤢",
+                iconColor: Theme.green,
+                label: "Signal Strength",
+                value: StatusService.wifiSignal + "%" + (StatusService.wifiRssi !== "" ? " (" + StatusService.wifiRssi + ")" : ""),
+                valueColor: Theme.green
+            },
+            {
+                icon: "󰩟",
+                iconColor: Theme.blue,
+                label: "IPv4 Address",
+                value: StatusService.wifiIp !== "" ? StatusService.wifiIp : "Assigning IP...",
+                valueColor: Theme.text
+            },
+            {
+                icon: "󰌾",
+                iconColor: Theme.yellow,
+                label: "Security & Band",
+                value: (StatusService.wifiSec !== "" ? StatusService.wifiSec : "Open") + (StatusService.wifiFreq !== "" ? " • " + StatusService.wifiFreq : ""),
+                valueColor: Theme.subtext0
+            },
+            {
+                icon: "󰈀",
+                iconColor: Theme.sapphire,
+                label: "Interface",
+                value: StatusService.wifiIface,
+                valueColor: Theme.subtext0
+            }
+        ] : [
+            {
+                icon: StatusService.wifiPowered ? "󰤭" : "󰤮",
+                iconColor: StatusService.wifiPowered ? Theme.yellow : Theme.red,
+                label: "Radio State",
+                value: StatusService.wifiPowered ? "Enabled (Disconnected)" : "Disabled (Radio Off)",
+                valueColor: StatusService.wifiPowered ? Theme.yellow : Theme.red
+            },
+            {
+                icon: "󰈀",
+                iconColor: Theme.sapphire,
+                label: "Interface",
+                value: StatusService.wifiIface,
+                valueColor: Theme.subtext0
+            }
+        ]
         shortcuts: [
             { action: "Wi-Fi Control Center", key: "Left Click" },
             { action: "Toggle Wi-Fi Radio", key: "Right Click" }

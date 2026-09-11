@@ -58,6 +58,43 @@ Rectangle {
         iconColor: StatusService.batColor
         title: "Battery & Power (" + StatusService.batPercent + ")"
         description: StatusService.batStatus + (StatusService.batTimeStr !== "" ? " • " + StatusService.batTimeStr : "")
+        details: [
+            {
+                icon: StatusService.batIcon,
+                iconColor: StatusService.batColor,
+                label: "State & Charge",
+                value: StatusService.batStatus + " (" + StatusService.batPercent + ")",
+                valueColor: StatusService.batColor
+            },
+            {
+                icon: StatusService.batProfile === "power-saver" ? "󰾆" : (StatusService.batProfile === "performance" ? "󰓅" : "󰾅"),
+                iconColor: StatusService.batColor,
+                label: "Power Profile",
+                value: StatusService.batProfile ? (StatusService.batProfile.charAt(0).toUpperCase() + StatusService.batProfile.slice(1)) : "Balanced",
+                valueColor: StatusService.batColor
+            },
+            {
+                icon: "󱐋",
+                iconColor: Theme.peach,
+                label: "Power Draw",
+                value: (StatusService.batPowerW > 0 ? (StatusService.batPowerW + " W") : "On AC Power"),
+                valueColor: Theme.peach
+            },
+            {
+                icon: "󰁹",
+                iconColor: StatusService.batHealth >= 80 ? Theme.green : (StatusService.batHealth >= 60 ? Theme.yellow : Theme.red),
+                label: "Battery Health",
+                value: StatusService.batHealth + "%",
+                valueColor: StatusService.batHealth >= 80 ? Theme.green : Theme.yellow
+            },
+            {
+                icon: "󱎫",
+                iconColor: Theme.sapphire,
+                label: "Runtime Estimate",
+                value: StatusService.batTimeStr !== "" ? StatusService.batTimeStr : (StatusService.batStatus === "Full" ? "Fully Charged" : "Calculating..."),
+                valueColor: Theme.text
+            }
+        ]
         shortcuts: [
             { action: "Power Profiles Menu", key: "Left Click" },
             { action: "Task Manager (btop)", key: "Right Click" }

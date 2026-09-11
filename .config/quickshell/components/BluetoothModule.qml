@@ -39,8 +39,39 @@ Rectangle {
         isHovered: root.isHovered && !BarConfig.isDragging
         icon: StatusService.btText
         iconColor: StatusService.btConnected ? Theme.green : (StatusService.btPowered ? Theme.blue : Theme.red)
-        title: StatusService.btConnected ? (StatusService.btConnectedCount + " Devices Connected") : (StatusService.btPowered ? "Bluetooth On" : "Bluetooth Off")
-        description: StatusService.btConnected ? "Active Bluetooth peripherals" : "Click to scan and connect devices"
+        title: StatusService.btConnected ? (StatusService.btConnectedCount + (StatusService.btConnectedCount === 1 ? " Device Connected" : " Devices Connected")) : (StatusService.btPowered ? "Bluetooth On" : "Bluetooth Off")
+        description: StatusService.btConnected ? "Active connected bluetooth peripherals" : (StatusService.btPowered ? (StatusService.btPairedCount + " paired devices in memory") : "Bluetooth adapter radio is disabled")
+        details: {
+            var list = [];
+            if (StatusService.btConnected && StatusService.btDevices && StatusService.btDevices.length > 0) {
+                for (var i = 0; i < StatusService.btDevices.length; i++) {
+                    var dev = StatusService.btDevices[i];
+                    var batStr = (dev.battery !== undefined && dev.battery >= 0) ? (dev.battery + "%") : "Connected";
+                    list.push({
+                        icon: dev.icon || "󰂱",
+                        iconColor: Theme.green,
+                        label: dev.name || "Device",
+                        value: batStr,
+                        valueColor: (dev.battery !== undefined && dev.battery >= 0 && dev.battery <= 20) ? Theme.red : Theme.green
+                    });
+                }
+            }
+            list.push({
+                icon: StatusService.btPowered ? "󰂯" : "󰂲",
+                iconColor: StatusService.btPowered ? Theme.blue : Theme.red,
+                label: "Controller Radio",
+                value: StatusService.btPowered ? "Powered On" : "Powered Off",
+                valueColor: StatusService.btPowered ? Theme.green : Theme.red
+            });
+            list.push({
+                icon: "󰂯",
+                iconColor: Theme.sapphire,
+                label: "Paired Devices",
+                value: StatusService.btPairedCount + " paired",
+                valueColor: Theme.subtext0
+            });
+            return list;
+        }
         shortcuts: [
             { action: "Bluetooth Control Center", key: "Left Click" },
             { action: "Toggle Bluetooth Radio", key: "Right Click" }

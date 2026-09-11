@@ -306,7 +306,30 @@ Rectangle {
                 icon: "󰃠"
                 iconColor: Theme.yellow
                 title: "Screen Brightness"
-                description: "Display brightness: " + root.brightness + "%"
+                description: "Display backlight & color temperature"
+                details: [
+                    {
+                        icon: "󰃠",
+                        iconColor: Theme.yellow,
+                        label: "Current Level",
+                        value: root.brightness + "%",
+                        valueColor: Theme.yellow
+                    },
+                    {
+                        icon: "󰃟",
+                        iconColor: Theme.peach,
+                        label: "Backlight Control",
+                        value: "Hardware / DDC",
+                        valueColor: Theme.subtext0
+                    },
+                    {
+                        icon: "󰖔",
+                        iconColor: Theme.mauve,
+                        label: "Night Light Filter",
+                        value: "Hyprsunset (Toggleable)",
+                        valueColor: Theme.mauve
+                    }
+                ]
                 shortcuts: [
                     { action: "Brightness Center", key: "SUPER + SHIFT + B" },
                     { action: "Night Light Filter", key: "SUPER + ALT + N" },

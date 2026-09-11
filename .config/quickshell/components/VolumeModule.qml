@@ -55,7 +55,30 @@ Rectangle {
         icon: StatusService.muted ? "󰝟" : (StatusService.volume > 50 ? "󰕾" : "󰖀")
         iconColor: StatusService.muted ? Theme.red : Theme.blue
         title: "Audio & Sound"
-        description: "Output: " + StatusService.sinkName + " • " + (StatusService.muted ? "Muted" : (StatusService.volume + "%"))
+        description: "PipeWire / WirePlumber audio server"
+        details: [
+            {
+                icon: StatusService.muted ? "󰝟" : "󰕾",
+                iconColor: StatusService.muted ? Theme.red : Theme.blue,
+                label: "Output (" + StatusService.sinkName + ")",
+                value: StatusService.muted ? "Muted" : (StatusService.volume + "%"),
+                valueColor: StatusService.muted ? Theme.red : Theme.text
+            },
+            {
+                icon: StatusService.micMuted ? "󰍭" : "󰍬",
+                iconColor: StatusService.micMuted ? Theme.red : Theme.mauve,
+                label: "Input (" + StatusService.micName + ")",
+                value: StatusService.micMuted ? "Muted" : (StatusService.micVolume + "%"),
+                valueColor: StatusService.micMuted ? Theme.red : Theme.text
+            },
+            {
+                icon: "󰓃",
+                iconColor: Theme.sapphire,
+                label: "Audio Server",
+                value: "PipeWire",
+                valueColor: Theme.subtext0
+            }
+        ]
         shortcuts: [
             { action: "Toggle Mute", key: "Left Click" },
             { action: "Audio Mixer Menu", key: "Right Click" },
