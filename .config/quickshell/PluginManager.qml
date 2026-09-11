@@ -30,12 +30,21 @@ QtObject {
 
     function isPluginVisible(pluginId) {
         var v = customPluginVersion;
-        return customPluginStates[pluginId] === true;
+        if (!pluginId) return false;
+        if (customPluginStates[pluginId] === true) return true;
+        var alt1 = pluginId.replace(/-/g, "_");
+        if (customPluginStates[alt1] === true) return true;
+        var alt2 = pluginId.replace(/_/g, "-");
+        if (customPluginStates[alt2] === true) return true;
+        return false;
     }
 
     function setPluginVisible(pluginId, isVis) {
+        if (!pluginId) return;
         var copy = Object.assign({}, customPluginStates);
         copy[pluginId] = isVis;
+        copy[pluginId.replace(/-/g, "_")] = isVis;
+        copy[pluginId.replace(/_/g, "-")] = isVis;
         customPluginStates = copy;
         customPluginVersion++;
     }
@@ -222,6 +231,15 @@ QtObject {
                 closeAll();
                 filePickerMimeFilter = "image";
                 filePickerVisible = true;
+                break;
+            case "plugin_manager":
+            case "plugin-manager":
+            case "pluginmanager":
+            case "plugins":
+            case "pm":
+                current = root.isPluginVisible("plugin_manager");
+                root.closeAll();
+                root.setPluginVisible("plugin_manager", !current);
                 break;
             case "close":
             case "hide":
