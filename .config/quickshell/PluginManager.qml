@@ -20,6 +20,7 @@ QtObject {
     property bool notificationVisible: false
     property bool workspaceViewerVisible: false
     property bool pluginManagerVisible: false
+    property bool barCustomizerVisible: false
     property string powerProfile: "balanced"
     property bool connectivityVisible: false
     property string connectivityTab: "wifi"
@@ -83,6 +84,7 @@ QtObject {
         connectivityVisible = false;
         filePickerVisible = false;
         pluginManagerVisible = false;
+        barCustomizerVisible = false;
         customPluginStates = ({});
         customPluginVersion++;
     }
@@ -247,6 +249,17 @@ QtObject {
                 current = root.pluginManagerVisible;
                 root.closeAll();
                 root.pluginManagerVisible = !current;
+                break;
+            case "bar_customizer":
+            case "bar-customizer":
+            case "barcustomizer":
+            case "bar":
+            case "bar-settings":
+            case "barsettings":
+            case "bar_settings":
+                current = root.barCustomizerVisible;
+                root.closeAll();
+                root.barCustomizerVisible = !current;
                 break;
             case "close":
             case "hide":

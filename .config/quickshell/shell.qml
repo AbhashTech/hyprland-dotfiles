@@ -19,6 +19,7 @@ import "plugins/notifications"
 import "plugins/filepicker"
 import "plugins/workspace_viewer"
 import "plugins/plugin-manager"
+import "plugins/bar_customizer"
 import "generated"
 
 ShellRoot {
@@ -34,7 +35,7 @@ ShellRoot {
         }
     }
 
-    // Top Status Bar across screens
+    // Dynamic Status Bar across all connected displays
     Variants {
         model: Quickshell.screens
 
@@ -44,106 +45,96 @@ ShellRoot {
                 required property var modelData
                 screen: modelData
 
-                // Match waybar margins and positioning
+                // Dynamic Top / Bottom positioning & margins from BarConfig
                 anchors {
-                    top: true
+                    top: BarConfig.isTop
+                    bottom: BarConfig.isBottom
                     left: true
                     right: true
                 }
 
                 margins {
-                    top: 8
-                    left: 12
-                    right: 12
-                    bottom: 0
+                    top: BarConfig.isTop ? BarConfig.marginTop : 0
+                    bottom: BarConfig.isBottom ? BarConfig.marginBottom : 0
+                    left: BarConfig.marginLeft
+                    right: BarConfig.marginRight
                 }
 
-                implicitHeight: Theme.barHeight
+                implicitHeight: BarConfig.barHeight
                 color: "transparent"
 
                 WlrLayershell.layer: WlrLayer.Top
                 WlrLayershell.namespace: "quickshell"
                 WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-                exclusiveZone: Theme.barHeight + 8
+                exclusiveZone: BarConfig.barHeight + (BarConfig.isTop ? BarConfig.marginTop : BarConfig.marginBottom)
 
-                // Main glassmorphic background container
+                // Main glassmorphic container
                 Rectangle {
+                    id: barContainer
                     anchors.fill: parent
-                    radius: Theme.barRadius
+                    radius: BarConfig.barRadius
                     color: Theme.barBg
-                    border.color: Theme.barBorder
+                    border.color: BarConfig.editMode ? Theme.mauve : Theme.barBorder
                     border.width: 1
 
-                    // Left Modules
-                    Row {
+                    Behavior on radius { NumberAnimation { duration: 150 } }
+                    Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                    // Background right-click handler for Bar Context Menu
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.RightButton
+                        hoverEnabled: false
+                        onClicked: mouse => {
+                            if (mouse.button === Qt.RightButton) {
+                                contextMenu.showAt(mouse.x, mouse.y);
+                            }
+                        }
+                    }
+
+                    // Left Modules Section
+                    DynamicBarSection {
                         id: leftGroup
+                        section: "left"
+                        barWindow: barWindow
                         anchors.left: parent.left
                         anchors.leftMargin: 6
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 6
-
-                        LauncherButton {
-                            barWindow: barWindow
-                        }
-                        Workspaces {
-                            barWindow: barWindow
-                        }
-                        ActiveWindow {
-                            barWindow: barWindow
-                        }
-                        CustomWidgetsLeft {
-                            barWindow: barWindow
-                        }
                     }
 
-                    // Center Modules
-                    Row {
+                    // Center Modules Section
+                    DynamicBarSection {
                         id: centerGroup
+                        section: "center"
+                        barWindow: barWindow
                         anchors.centerIn: parent
-                        spacing: 6
-
-                        MprisModule {
-                            barWindow: barWindow
-                        }
-                        CustomWidgetsCenter {
-                            barWindow: barWindow
-                        }
-                        LanguageModule {
-                            barWindow: barWindow
-                        }
                     }
 
-                    // Right Modules
-                    Row {
+                    // Right Modules Section
+                    DynamicBarSection {
                         id: rightGroup
+                        section: "right"
+                        barWindow: barWindow
                         anchors.right: parent.right
                         anchors.rightMargin: 6
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 6
-
-                        CustomWidgetsRight {
-                            barWindow: barWindow
-                        }
-                        RecordingModule {
-                            barWindow: barWindow
-                        }
-                        TrayNotifGroup {
-                            barWindow: barWindow
-                        }
-                        StatusGroup {
-                            barWindow: barWindow
-                            screenName: (barWindow && barWindow.screen && barWindow.screen.name) ? barWindow.screen.name : (modelData && modelData.name ? modelData.name : "")
-                        }
-                        StatsModule {
-                            barWindow: barWindow
-                        }
-                        PowerModule {
-                            barWindow: barWindow
-                        }
-                        ClockModule {
-                            barWindow: barWindow
-                        }
                     }
+
+                    // Context Menu
+                    BarContextMenu {
+                        id: contextMenu
+                        anchors.fill: parent
+                    }
+                }
+
+                // Interactive Edit Mode Banner (shows below or above bar depending on position)
+                BarEditBanner {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: BarConfig.isTop ? parent.bottom : undefined
+                    anchors.bottom: BarConfig.isBottom ? parent.top : undefined
+                    anchors.topMargin: BarConfig.isTop ? 8 : 0
+                    anchors.bottomMargin: BarConfig.isBottom ? 8 : 0
+                    z: 50
                 }
             }
         }
@@ -172,5 +163,6 @@ ShellRoot {
     LazyWindow { trigger: PluginManager.filePickerVisible; source: "plugins/filepicker/FilePickerWindow.qml" }
     LazyWindow { trigger: PluginManager.workspaceViewerVisible; source: "plugins/workspace_viewer/WorkspaceViewerWindow.qml" }
     LazyWindow { trigger: PluginManager.pluginManagerVisible; source: "plugins/plugin-manager/PluginManagerWindow.qml" }
+    LazyWindow { trigger: PluginManager.barCustomizerVisible; source: "plugins/bar_customizer/BarCustomizerWindow.qml" }
     CustomWindows {}
 }

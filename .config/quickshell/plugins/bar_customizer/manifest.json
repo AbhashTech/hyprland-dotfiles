@@ -1,0 +1,14 @@
+{
+  "id": "bar_customizer",
+  "name": "Bar Customizer",
+  "version": "1.0.0",
+  "author": "Kunal Gautam",
+  "description": "Interactive status bar layout editor, dynamic widget placement, and geometry customization panel",
+  "category": "system",
+  "icon": "󰏖",
+  "enabled": true,
+  "entryPoints": {
+    "window": "BarCustomizerWindow.qml",
+    "menu": "BarCustomizerMenu.qml"
+  }
+}

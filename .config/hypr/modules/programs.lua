@@ -23,6 +23,7 @@ local programs = {
     filePickerImg = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh filepicker-image",
     workspaces    = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh workspaces",
     pluginManager = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh plugin_manager",
+    barCustomizer = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh bar_customizer",
     browser     = "firefox",
 }
 

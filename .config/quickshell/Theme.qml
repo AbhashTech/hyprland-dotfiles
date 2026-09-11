@@ -123,8 +123,8 @@ QtObject {
     readonly property int fontSizeLarge: 15
     readonly property int fontSizeIcon: 16
 
-    readonly property int barHeight: 38
-    readonly property int barRadius: 16
-    readonly property int capsuleRadius: 12
-    readonly property int pillRadius: 8
+    readonly property int barHeight: BarConfig.barHeight
+    readonly property int barRadius: BarConfig.barRadius
+    readonly property int capsuleRadius: BarConfig.capsuleRadius
+    readonly property int pillRadius: Math.max(4, Math.round(BarConfig.capsuleRadius * 0.66))
 }

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Status Bar Customizer
+GenericName=Quickshell Status Bar Customizer
+Comment=Dynamically move widgets, customize layout, geometry, and styling of Quickshell status bar
+Exec=bash /home/kunal/.config/quickshell/scripts/toggle_plugin.sh bar_customizer
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;System;
+StartupWMClass=quickshell:bar_customizer
+StartupNotify=true
+Keywords=bar;panel;status;quickshell;widgets;layout;customize;theme;dock;

@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "position": "top",
+  "floating": true,
+  "barHeight": 38,
+  "barRadius": 16,
+  "capsuleRadius": 12,
+  "spacing": 6,
+  "marginTop": 8,
+  "marginBottom": 8,
+  "marginLeft": 12,
+  "marginRight": 12,
+  "compactMode": false,
+  "leftModules": [
+    "launcher",
+    "workspaces",
+    "activewindow",
+    "custom_left"
+  ],
+  "centerModules": [
+    "mpris",
+    "custom_center",
+    "language"
+  ],
+  "rightModules": [
+    "custom_right",
+    "recording",
+    "traynotif",
+    "status",
+    "stats",
+    "power",
+    "clock"
+  ],
+  "hiddenModules": []
+}
