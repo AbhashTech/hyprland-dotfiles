@@ -37,7 +37,7 @@ CATEGORY_ICONS = {
 
 ICON_ALIASES = {
     "firefox": "firefox",
-    "kitty": "kitty",
+    "foot": "foot",
     "dolphin": "system-file-manager",
     "code": "visual-studio-code",
     "spotify": "spotify",

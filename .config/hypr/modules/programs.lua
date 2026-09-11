@@ -4,7 +4,7 @@
 
 -- Set programs that you use
 local programs = {
-    terminal    = "kitty",
+    terminal    = "foot",
     fileManager = "dolphin",
     menu        = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh appmenu",
     powerMenu   = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh powermenu",

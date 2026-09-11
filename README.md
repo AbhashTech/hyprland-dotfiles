@@ -1,6 +1,6 @@
 # 🌌 Unified Hyprland & Wayland Dotfiles
 
-A modular, unified, and fully version-controlled dotfiles suite for **Hyprland** on Arch Linux. Features **Quickshell** (modular status bar and native plugins suite for App Menu, Power Session, Clipboard, Calculator, Emojis, Keybindings, Audio Mixer, Display Brightness, and System Resources), **Mako**, **Btop**, **Kitty**, **Starship**, **Lazygit**, **Zellij**, **Swappy**, custom OSD overlays, Catppuccin Mocha themed SDDM greeter, dynamic power profiles, keyboard layout management, media/audio switchers, and a comprehensive modern CLI productivity suite (100% official Pacman packages).
+A modular, unified, and fully version-controlled dotfiles suite for **Hyprland** on Arch Linux. Features **Quickshell** (modular status bar and native plugins suite for App Menu, Power Session, Clipboard, Calculator, Emojis, Keybindings, Audio Mixer, Display Brightness, and System Resources), **Mako**, **Btop**, **Foot**, **Starship**, **Lazygit**, **Zellij**, **Swappy**, custom OSD overlays, Catppuccin Mocha themed SDDM greeter, dynamic power profiles, keyboard layout management, media/audio switchers, and a comprehensive modern CLI productivity suite (100% official Pacman packages).
 
 ---
 
@@ -90,8 +90,9 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   └── scripts/             # Supervisor scripts (launch_quickshell.sh, toggle_plugin.sh, plugin_loader.sh)
     ├── wireplumber/             # WirePlumber Audio Session Rules
     │   └── wireplumber.conf.d/  # Software DSP mixing (51-alsa-soft-mixer.conf) & profile priority routing (52-alsa-routes.conf)
-    ├── kitty/                   # Kitty Terminal Emulator
-    │   └── kitty.conf           # Catppuccin Mocha theme, font, padding & shortcuts
+    ├── foot/                    # Foot Terminal Emulator
+    │   ├── foot.ini             # Font, geometry, latency, ergonomics & keybinds
+    │   └── theme.ini            # Dynamic theme colors (Catppuccin Mocha & multi-theme)
     ├── starship.toml            # Starship Cross-Shell Prompt (Catppuccin Mocha, multi-theme, continuation prompt & Claude Code statusline)
     ├── zellij/                  # Terminal Multiplexer
     │   └── config.kdl           # Themes, compact status bar & ergonomics
@@ -193,7 +194,7 @@ The top status bar is built with **Quickshell** (`~/.config/quickshell/shell.qml
 ### 1. Left Zone
 - **󰣇 Application Launcher (`LauncherButton.qml`)**: Left-click opens the native **Quickshell App Launcher** popup with live desktop application search, categories, and icons; right-click opens the **Quickshell Power Menu**.
 - **Workspaces (`Workspaces.qml`)**: Persistent workspaces 1–4 with live active badges and automatic available workspace allocation when connecting external monitors; mouse scroll cycles through workspaces.
-- **Active Window (`ActiveWindow.qml`)**: Shows current focused window title with contextual application icons (Firefox, Kitty, Dolphin, VS Code).
+- **Active Window (`ActiveWindow.qml`)**: Shows current focused window title with contextual application icons (Firefox, Foot, Dolphin, VS Code).
 
 ### 2. Center Zone
 - **MPRIS Media Controller (`MprisModule.qml`)**: Shows currently playing media (Spotify, Firefox, mpv) with play/pause click and scroll track skipping.
@@ -218,7 +219,7 @@ The top status bar is built with **Quickshell** (`~/.config/quickshell/shell.qml
 - **󰍛 System Hardware & Stats Chip (`StatsModule.qml`)**:
   - Displays a clean chip icon in the status bar.
   - **Left-Click**: Opens the glassmorphic **System Resources Dashboard** (`quickshell/plugins/sysinfo/`) with fast 800ms real-time metric updates, smooth progress bar animations, CPU %, RAM GB/%, Disk GB/%, and outside-click dismissal.
-  - **Right-Click**: Directly opens **Btop** task monitor (`kitty --class btop -e btop`).
+  - **Right-Click**: Directly opens **Btop** task monitor (`foot --app-id=btop -e btop`).
 - **󰐥 Power Menu (`PowerModule.qml`)**: Left-click launches the glassmorphic **Quickshell Power & Session Menu** (Lock, Suspend, Logout, Reboot, Shutdown).
 - ** Clock & Calendar (`ClockModule.qml`)**: 12h/24h digital clock with a rich interactive Catppuccin calendar tooltip. Right-click toggles format; scroll navigates months.
 
@@ -243,7 +244,7 @@ The dotfiles include a dedicated **Audio Mixer & Sound Hub** (`~/.config/quicksh
 - **Audio Tools & Server Recovery**:
   - **󰋋 Test Audio**: Plays stereo left/right audio channel test tones.
   - **🔄 Restart PipeWire**: Single-click restart and recovery of `pipewire`, `pipewire-pulse`, and `wireplumber` user services.
-  - **🎛️ Terminal TUI**: Launches the interactive curses mixer in a floating Kitty terminal.
+  - **🎛️ Terminal TUI**: Launches the interactive curses mixer in a floating Foot terminal.
 - **Enhanced PipeWire & WirePlumber Audio Architecture**:
   - **Hardware Jack & Cable Presence Sense**: Audio utilities actively verify physical port connection availability via `pactl list cards`, hiding phantom/unplugged HDMI audio pipes and disconnected mic/headphone jacks.
   - **Clean Profile Routing (`52-alsa-routes.conf`)**: Enforces stable default priority for internal Speaker and microphone routing without duplicate node ghosting.
@@ -326,9 +327,9 @@ The dotfiles include a dedicated **System Hardware & Resources** dashboard (`~/.
   - **Accurate Instant CPU Metric**: Direct kernel `/proc/stat` delta sampling providing real-time CPU usage percentage without external library latency or 0.0% initialization lag.
   - **Memory & Storage Metrics**: Real-time RAM usage in GiB and percentage alongside root filesystem (`/`) capacity and utilization.
   - **Smooth Fluid Progress Bars**: Hardware bars feature animated width interpolation (`NumberAnimation`) and dynamic color transitions based on load thresholds.
-  - **Btop Terminal Launcher**: 1-click button (and status bar right-click trigger) to immediately open **Btop** in Kitty terminal.
+  - **Btop Terminal Launcher**: 1-click button (and status bar right-click trigger) to immediately open **Btop** in Foot terminal.
   - **Outside-Click & Escape Dismissal**: Easy keyboard and mouse dismissal.
-- **Right-Click Action**: Instantly launches the **Btop** interactive terminal monitor (`kitty --class btop -e btop`).
+- **Right-Click Action**: Instantly launches the **Btop** interactive terminal monitor (`foot --app-id=btop -e btop`).
 
 ---
 
@@ -545,12 +546,12 @@ The dotfiles include a dedicated GUI and CLI utility ([`app_shortcut_creator.py`
 ### 🖥️ Core Applications & Essential Controls
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
-| `SUPER + Q` / `SUPER + Return` | **Open Terminal** | Launch Kitty GPU-accelerated terminal emulator |
+| `SUPER + Return` | **Open Terminal** | Launch Foot Wayland-native terminal emulator |
 | `SUPER + grave (~)` | **Dropdown Terminal** | Fast floating scratchpad terminal (`dropdown-terminal`) |
 | `SUPER + R` / `SUPER + Space` | **App Launcher** | Open **Quickshell** application menu (with category tabs & search) |
 | `SUPER + B` | **Web Browser** | Launch default web browser (Firefox) |
 | `SUPER + E` | **Dolphin File Manager** | Launch KDE GUI file manager |
-| `SUPER + SHIFT + E` | **Yazi File Manager** | Launch terminal file manager in Kitty |
+| `SUPER + SHIFT + E` | **Yazi File Manager** | Launch terminal file manager in Foot |
 | `SUPER + C` / `SUPER + SHIFT + Q` / `ALT + F4` | **Close Window** | Close active focused window |
 | `SUPER + F` | **Toggle Fullscreen** | Toggle active window between normal and true fullscreen mode |
 | `SUPER + V` | **Toggle Floating** | Switch active window between tiled and floating mode |
@@ -799,7 +800,7 @@ A dedicated helper script is provided at `~/.dotfiles/scripts/dotfiles-push.sh`:
 ```
 
 ### 🛡️ Protected User Configuration Files
-- **Desktop Themes**: `.config/hypr/theme.conf`, `theme_vars.lua`, `.config/kitty/theme.conf`, `.config/mako/config`, `.config/btop/btop.conf`, `.config/starship.toml`, `.config/zellij/config.kdl`, `.config/lazygit/config.yml`, `.config/swappy/config`, `.config/kdeglobals`, `.config/dolphinrc`, GTK & XSettings configs.
+- **Desktop Themes**: `.config/hypr/theme.conf`, `theme_vars.lua`, `.config/foot/theme.ini`, `.config/mako/config`, `.config/btop/btop.conf`, `.config/starship.toml`, `.config/zellij/config.kdl`, `.config/lazygit/config.yml`, `.config/swappy/config`, `.config/kdeglobals`, `.config/dolphinrc`, GTK & XSettings configs.
 - **Runtime User State**: `.config/hypr/hypridle.conf` (idle & suspend timeouts), `.config/hypr/hyprpaper.conf` (wallpaper selection), `.config/hypr/modules/input.lua` (keyboard layout & variant), `.config/mimeapps.list`.
 
 

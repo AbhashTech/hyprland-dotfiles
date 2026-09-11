@@ -85,7 +85,7 @@ Rectangle {
         var c = (appClass || "").toLowerCase();
         if (c.indexOf("firefox") !== -1) return Theme.peach;
         if (c.indexOf("chrome") !== -1 || c.indexOf("brave") !== -1) return Theme.yellow;
-        if (c.indexOf("kitty") !== -1 || c.indexOf("terminal") !== -1) return Theme.green;
+        if (c.indexOf("foot") !== -1 || c.indexOf("kitty") !== -1 || c.indexOf("terminal") !== -1) return Theme.green;
         if (c.indexOf("dolphin") !== -1 || c.indexOf("nautilus") !== -1) return Theme.blue;
         if (c.indexOf("code") !== -1 || c.indexOf("vscodium") !== -1) return Theme.sapphire;
         if (c.indexOf("discord") !== -1) return Theme.lavender;

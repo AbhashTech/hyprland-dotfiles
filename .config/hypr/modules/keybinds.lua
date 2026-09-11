@@ -9,11 +9,11 @@ local mainMod = "SUPER" -- Sets "Windows / Meta" key as main modifier
 -- 🖥️ Core Applications & Essential Controls
 -- =============================================================================
 
--- Open Kitty Terminal
+-- Open Foot Terminal
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(programs.terminal))
 
 -- Toggle Dropdown Scratchpad Terminal
-hl.bind(mainMod .. " + grave", hl.dsp.exec_cmd(programs.terminal .. " --class=dropdown-terminal"))
+hl.bind(mainMod .. " + grave", hl.dsp.exec_cmd(programs.terminal .. " --app-id=dropdown-terminal"))
 
 -- Open Application Launcher (Quickshell App Menu)
 hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd(programs.menu))
@@ -24,7 +24,7 @@ hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(programs.browser or "firefox"))
 -- Open Dolphin File Manager
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(programs.fileManager))
 
--- Open Yazi File Manager in Kitty
+-- Open Yazi File Manager in Foot
 hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd(programs.terminal .. " -e yazi"))
 
 -- Close Active Focused Window
@@ -166,13 +166,13 @@ hl.bind(mainMod .. " + ALT + 5",         hl.dsp.exec_cmd(resScript .. " 2.00"))
 -- =============================================================================
 
 -- Open Floating Lazygit TUI
-hl.bind(mainMod .. " + G", hl.dsp.exec_cmd(programs.terminal .. " --class=lazygit-floating -e lazygit"))
+hl.bind(mainMod .. " + G", hl.dsp.exec_cmd(programs.terminal .. " --app-id=lazygit-floating -e lazygit"))
 
 -- Open Floating Lazydocker TUI
-hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(programs.terminal .. " --class=lazydocker-floating -e lazydocker"))
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(programs.terminal .. " --app-id=lazydocker-floating -e lazydocker"))
 
 -- Open Floating Zellij Session
-hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd(programs.terminal .. " --class=zellij-floating -e zellij"))
+hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd(programs.terminal .. " --app-id=zellij-floating -e zellij"))
 
 -- Pick Color from Screen & Copy Hex (Hyprpicker)
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprpicker -a -f hex && notify-send -a Hyprpicker -i color-picker 'Color Picked' \"$(wl-paste)\""))

@@ -1192,8 +1192,8 @@ def run_gtk_gui():
 
             try:
                 if self.chk_terminal.get_active():
-                    # Launch inside kitty
-                    term_cmd = ["kitty", "--hold", "sh", "-c", exec_cmd]
+                    # Launch inside foot
+                    term_cmd = ["foot", "--hold", "sh", "-c", exec_cmd]
                     subprocess.Popen(term_cmd, cwd=working_dir)
                 else:
                     subprocess.Popen(exec_cmd, shell=True, cwd=working_dir)
@@ -1347,7 +1347,7 @@ def run_gtk_gui():
 
             try:
                 if item["terminal"]:
-                    subprocess.Popen(["kitty", "--hold", "sh", "-c", exec_cmd], cwd=cwd)
+                    subprocess.Popen(["foot", "--hold", "sh", "-c", exec_cmd], cwd=cwd)
                 else:
                     subprocess.Popen(exec_cmd, shell=True, cwd=cwd)
                 self._show_msg(f"Launched '{item['name']}'", Gtk.MessageType.INFO)

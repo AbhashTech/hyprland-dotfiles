@@ -4,7 +4,8 @@
 # =============================================================================
 
 export STARSHIP_CONFIG="${HOME}/.config/starship.toml"
-export EDITOR="kitty -e nano"
+export EDITOR="foot -e nano"
+export TERMINAL="foot"
 export VISUAL="${EDITOR}"
 export PAGER="bat --style=plain"
 

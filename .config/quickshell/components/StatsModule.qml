@@ -88,7 +88,7 @@ Rectangle {
             } else if (mouse.button === Qt.LeftButton) {
                 PluginManager.toggle("sysinfo");
             } else if (mouse.button === Qt.RightButton) {
-                ctlProc.exec(["kitty", "--class", "btop", "-e", "btop"]);
+                ctlProc.exec(["foot", "--app-id=btop", "-e", "btop"]);
             }
         }
     }

@@ -74,7 +74,7 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
 - **wlogout** — Wayland logout and power management modal.
 
 ### 3. Applications & File Management
-- **kitty** — GPU-accelerated terminal emulator (`SUPER + Q`).
+- **foot** — Lightweight, ultra-fast Wayland terminal emulator (`SUPER + Return`).
 - **yazi** — Lightning fast terminal file manager (`SUPER + SHIFT + E`).
 - **dolphin** — GUI file manager (`SUPER + E`).
 - **firefox** — Web browser (`SUPER + B`).
@@ -134,7 +134,7 @@ chmod +x ~/.config/hypr/install.sh
 sudo pacman -S --needed \
     hyprland hypridle hyprlock hyprpaper hyprpicker hyprsunset wlsunset hyprpolkitagent \
     xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
-    quickshell waybar mako fuzzel wofi wlogout kitty yazi zoxide fzf wtype \
+    quickshell waybar mako fuzzel wofi wlogout foot yazi zoxide fzf wtype \
     dolphin firefox btop \
     pipewire pipewire-pulse wireplumber libpulse playerctl \
     brightnessctl ddcutil wl-clipboard cliphist \
@@ -191,12 +191,12 @@ sudo usermod -aG i2c $USER
 ### 🖥️ Core Applications & Essential Controls
 | Shortcut | Action |
 | :--- | :--- |
-| `SUPER + Q` / `SUPER + Return` | Open Kitty Terminal |
+| `SUPER + Return` | Open Foot Terminal |
 | `SUPER + grave (~)` | Toggle Dropdown Scratchpad Terminal (`dropdown-terminal`) |
 | `SUPER + R` / `SUPER + Space` | Open Fuzzel Application Launcher (with outside click-dismiss) |
 | `SUPER + B` | Open Firefox Browser |
 | `SUPER + E` | Open Dolphin File Manager |
-| `SUPER + SHIFT + E` | Open Yazi Terminal File Manager |
+| `SUPER + SHIFT + E` | Open Yazi Terminal File Manager in Foot |
 | `SUPER + C` / `SUPER + SHIFT + Q` / `ALT + F4` | Close Active Focused Window |
 | `SUPER + F` | Toggle Window Fullscreen Mode |
 | `SUPER + V` | Toggle Window Floating Mode |

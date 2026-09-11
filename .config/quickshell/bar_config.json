@@ -15,10 +15,10 @@
     "launcher",
     "workspaces",
     "activewindow",
+    "mpris",
     "custom_left"
   ],
   "centerModules": [
-    "mpris",
     "custom_center",
     "language"
   ],
@@ -31,9 +31,9 @@
     "wifi",
     "bluetooth",
     "battery",
+    "clock",
     "stats",
-    "power",
-    "clock"
+    "power"
   ],
   "hiddenModules": []
 }

@@ -32,7 +32,7 @@ USER_CONFIG_FILES=(
     # Dynamic theme files
     ".config/hypr/theme.conf"
     ".config/hypr/theme_vars.lua"
-    ".config/kitty/theme.conf"
+    ".config/foot/theme.ini"
     ".config/mako/config"
     ".config/btop/btop.conf"
     ".config/starship.toml"

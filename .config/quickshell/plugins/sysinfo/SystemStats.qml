@@ -213,7 +213,7 @@ Rectangle {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     PluginManager.closeAll();
-                    ctlProc.exec(["kitty", "--class", "btop", "-e", "btop"]);
+                    ctlProc.exec(["foot", "--app-id=btop", "-e", "btop"]);
                 }
             }
         }

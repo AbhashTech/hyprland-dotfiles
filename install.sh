@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # Unified Hyprland Desktop Dotfiles - Automated Installer & Symlinker
-# (Hyprland, Quickshell, Mako, Btop, Kitty, Audio, Modern CLI Power Tools)
+# (Hyprland, Quickshell, Mako, Btop, Foot, Audio, Modern CLI Power Tools)
 # =============================================================================
 
 set -e
@@ -59,7 +59,7 @@ if command -v pacman >/dev/null 2>&1; then
         nwg-look
 
         # Terminal & Modern CLI Power Suite
-        kitty
+        foot
         neovim
         yazi
         zoxide
@@ -217,7 +217,7 @@ DOT_CONFIG_DIRS=(
     "wireplumber"
     "mako"
     "btop"
-    "kitty"
+    "foot"
     "nvim"
     "zellij"
     "fastfetch"

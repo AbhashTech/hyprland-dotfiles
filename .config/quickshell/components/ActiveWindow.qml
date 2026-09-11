@@ -62,9 +62,9 @@ Rectangle {
                 if (title.indexOf("Mozilla Firefox") !== -1) {
                     root.iconText = "󰈹";
                     title = title.replace(" — Mozilla Firefox", "").replace(" - Mozilla Firefox", "");
-                } else if (title.indexOf("Kitty") !== -1 || win.class === "kitty") {
+                } else if (title.indexOf("Foot") !== -1 || win.class === "foot" || title.indexOf("Kitty") !== -1 || win.class === "kitty") {
                     root.iconText = "󰞷";
-                    title = title.replace(" - Kitty", "");
+                    title = title.replace(" - Foot", "").replace(" - Kitty", "");
                 } else if (title.indexOf("Dolphin") !== -1 || win.class === "dolphin") {
                     root.iconText = "󰉋";
                     title = title.replace(" - Dolphin", "");

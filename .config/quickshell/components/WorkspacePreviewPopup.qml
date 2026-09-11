@@ -87,7 +87,7 @@ PopupWindow {
         var c = (appClass || "").toLowerCase();
         if (c.indexOf("firefox") !== -1) return Theme.peach;
         if (c.indexOf("chrome") !== -1 || c.indexOf("brave") !== -1) return Theme.yellow;
-        if (c.indexOf("kitty") !== -1 || c.indexOf("terminal") !== -1) return Theme.green;
+        if (c.indexOf("foot") !== -1 || c.indexOf("kitty") !== -1 || c.indexOf("terminal") !== -1) return Theme.green;
         if (c.indexOf("dolphin") !== -1 || c.indexOf("nautilus") !== -1) return Theme.blue;
         if (c.indexOf("code") !== -1 || c.indexOf("vscodium") !== -1) return Theme.sapphire;
         if (c.indexOf("discord") !== -1) return Theme.lavender;
@@ -380,7 +380,7 @@ PopupWindow {
                                 Rectangle {
                                     width: parent.width
                                     height: parent.height - Math.max(7, Math.min(13, parent.height * 0.2))
-                                    color: (client.class && (client.class.toLowerCase().indexOf("kitty") !== -1 || client.class.toLowerCase().indexOf("terminal") !== -1)) ? "#11111b" : Theme.surface0
+                                    color: (client.class && (client.class.toLowerCase().indexOf("foot") !== -1 || client.class.toLowerCase().indexOf("kitty") !== -1 || client.class.toLowerCase().indexOf("terminal") !== -1)) ? "#11111b" : Theme.surface0
 
                                     // App Icon & Lines
                                     Row {

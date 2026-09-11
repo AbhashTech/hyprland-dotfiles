@@ -991,7 +991,7 @@ KEY_ALIASES = {
 }
 
 KNOWN_BIND_DESCRIPTIONS = {
-    "SUPER + Return": "Open Kitty Terminal",
+    "SUPER + Return": "Open Foot Terminal",
     "SUPER + grave": "Toggle Dropdown Scratchpad Terminal",
     "SUPER + Space": "Open Application Launcher (Quickshell App Menu)",
     "SUPER + B": "Launch Web Browser (Firefox)",

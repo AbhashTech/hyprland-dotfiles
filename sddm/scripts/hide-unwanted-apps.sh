@@ -47,7 +47,6 @@ UNWANTED_APPS=(
     "org.kde.ksecretd.desktop"
 
     # Redundant entries & sub-handlers
-    "kitty-open.desktop"
     "org.pwmt.zathura-pdf-mupdf.desktop"
 )
 

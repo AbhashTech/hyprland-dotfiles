@@ -10,7 +10,7 @@ Applies palettes across:
 - Hyprland (Borders, shadows, blur, Lua variables)
 - Waybar (CSS color definitions & live reload)
 - Fuzzel (RGBA launcher palette)
-- Kitty (Terminal 16 colors, cursor, borders, tabs)
+- Foot (Terminal 16 colors, cursor, selection, colors-dark)
 - Mako (Notification daemon colors & live reload)
 - Wofi & Wlogout (CSS glassmorphic styles)
 - Hyprlock (Lockscreen color variables)
@@ -145,7 +145,7 @@ def ensure_dirs():
     THEME_DIR.mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "hypr").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "quickshell").mkdir(parents=True, exist_ok=True)
-    (CONFIG_DIR / "kitty").mkdir(parents=True, exist_ok=True)
+    (CONFIG_DIR / "foot").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "btop" / "themes").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "zellij").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "gtk-3.0").mkdir(parents=True, exist_ok=True)
@@ -194,7 +194,7 @@ DOTFILES_ROOT = HOME / ".dotfiles"
 THEME_TRACKED_REL_PATHS = [
     ".config/hypr/theme.conf",
     ".config/hypr/theme_vars.lua",
-    ".config/kitty/theme.conf",
+    ".config/foot/theme.ini",
     ".config/mako/config",
     ".config/btop/btop.conf",
     ".config/starship.toml",
@@ -446,74 +446,46 @@ def generate_wlogout_colors(theme):
     if (DOTFILES_DIR / "wlogout").exists():
         (DOTFILES_DIR / "wlogout" / "colors.css").write_text(content)
 
-def generate_kitty_theme(theme):
-    """Generate ~/.config/kitty/theme.conf for Kitty."""
+def generate_foot_theme(theme):
+    """Generate ~/.config/foot/theme.ini for Foot."""
     c = theme["colors"]
     t = theme["terminal"]
-    content = f"""# =============================================================================
-# Kitty Theme Colors - {theme.get('name', theme['id'])}
+    content = f"""# -*- conf -*-
+# =============================================================================
+# Foot Theme Colors - {theme.get('name', theme['id'])}
 # =============================================================================
 
-# Window borders
-active_border_color {c['accent']}
-inactive_border_color {c['surface0']}
-bell_border_color {c['red']}
+[colors-dark]
+alpha=0.92
+foreground={c['text'].lstrip('#')}
+background={c['base'].lstrip('#')}
 
-# Cursor
-cursor {c['rosewater']}
-cursor_text_color {c['crust']}
+regular0={t['color0'].lstrip('#')}
+regular1={t['color1'].lstrip('#')}
+regular2={t['color2'].lstrip('#')}
+regular3={t['color3'].lstrip('#')}
+regular4={t['color4'].lstrip('#')}
+regular5={t['color5'].lstrip('#')}
+regular6={t['color6'].lstrip('#')}
+regular7={t['color7'].lstrip('#')}
 
-# URL
-url_color {c['blue']}
+bright0={t['color8'].lstrip('#')}
+bright1={t['color9'].lstrip('#')}
+bright2={t['color10'].lstrip('#')}
+bright3={t['color11'].lstrip('#')}
+bright4={t['color12'].lstrip('#')}
+bright5={t['color13'].lstrip('#')}
+bright6={t['color14'].lstrip('#')}
+bright7={t['color15'].lstrip('#')}
 
-# Tabs
-active_tab_foreground   {c['crust']}
-active_tab_background   {c['accent']}
-inactive_tab_foreground {c['text']}
-inactive_tab_background {c['mantle']}
-tab_bar_background      {c['crust']}
-
-# Color Scheme
-background {c['base']}
-foreground {c['text']}
-selection_background {c['surface2']}
-selection_foreground {c['text']}
-
-# Black
-color0 {t['color0']}
-color8 {t['color8']}
-
-# Red
-color1 {t['color1']}
-color9 {t['color9']}
-
-# Green
-color2  {t['color2']}
-color10 {t['color10']}
-
-# Yellow
-color3  {t['color3']}
-color11 {t['color11']}
-
-# Blue
-color4  {t['color4']}
-color12 {t['color12']}
-
-# Magenta / Mauve
-color5  {t['color5']}
-color13 {t['color13']}
-
-# Cyan / Teal
-color6  {t['color6']}
-color14 {t['color14']}
-
-# White
-color7  {t['color7']}
-color15 {t['color15']}
+cursor={c['crust'].lstrip('#')} {c['rosewater'].lstrip('#')}
+selection-foreground={c['text'].lstrip('#')}
+selection-background={c['surface2'].lstrip('#')}
+urls={c['blue'].lstrip('#')}
 """
-    (CONFIG_DIR / "kitty" / "theme.conf").write_text(content)
-    if (DOTFILES_DIR / "kitty").exists():
-        (DOTFILES_DIR / "kitty" / "theme.conf").write_text(content)
+    (CONFIG_DIR / "foot" / "theme.ini").write_text(content)
+    if (DOTFILES_DIR / "foot").exists():
+        (DOTFILES_DIR / "foot" / "theme.ini").write_text(content)
 
 def update_fuzzel_colors(theme):
     """Update ~/.config/fuzzel/fuzzel.ini colors section."""
@@ -885,8 +857,8 @@ def generate_kde_theme(theme):
     kdeglobals_content = f"""[General]
 ColorScheme={name}
 Name={name}
-TerminalApplication=kitty
-TerminalService=kitty
+TerminalApplication=foot
+TerminalService=foot
 
 [KDE]
 ColorScheme={name}
@@ -1390,13 +1362,7 @@ def reload_desktop():
     except Exception:
         pass
 
-    # 4. Reload Kitty terminals
-    try:
-        subprocess.run(["killall", "-SIGUSR1", "kitty"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
-
-    # 5. Reload KDE/Qt services if running
+    # 4. Reload KDE/Qt services if running
     for bus in ["org.kde.kded6", "org.kde.kded5"]:
         try:
             subprocess.run(["qdbus", bus, "/kded", f"{bus}.reconfigure"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -1452,7 +1418,7 @@ def apply_theme(theme_id, themes=None, notify=True):
     generate_hypr_lua_vars(theme)
     generate_hypr_conf(theme)
     generate_quickshell_colors(theme)
-    generate_kitty_theme(theme)
+    generate_foot_theme(theme)
     update_mako_colors(theme)
     generate_btop_theme(theme)
     update_starship_palette(theme)

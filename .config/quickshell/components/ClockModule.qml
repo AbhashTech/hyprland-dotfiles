@@ -139,7 +139,7 @@ Rectangle {
             } else if (mouse.button === Qt.LeftButton) {
                 root.showDate = !root.showDate;
             } else if (mouse.button === Qt.RightButton) {
-                ctlProc.exec(["kitty", "--class", "calendar-floating", "-T", "Calendar", "-e", "bash", "-c", "cal -3; read -n 1 -s -r -p 'Press any key to close...'"]);
+                ctlProc.exec(["foot", "--app-id=calendar-floating", "-T", "Calendar", "-e", "bash", "-c", "cal -3; read -n 1 -s -r -p 'Press any key to close...'"]);
             }
         }
     }
