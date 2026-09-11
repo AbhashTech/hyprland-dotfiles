@@ -35,6 +35,11 @@ Rectangle {
     property string wifiFreq: ""
     property string wifiIface: "wlan0"
     property string btText: "󰂯"
+    property bool btPowered: true
+    property bool btConnected: false
+    property int btConnectedCount: 0
+    property int btPairedCount: 0
+    property var btDevices: []
     property string batIcon: "󰁹"
     property string batPercent: "100%"
     property string batProfile: PluginManager.powerProfile
@@ -117,14 +122,20 @@ Rectangle {
 
     Process {
         id: btProc
-        command: ["python3", "-c", "import subprocess, json; res = subprocess.run(['bluetoothctl', 'show'], capture_output=True, text=True).stdout; powered = 'Powered: yes' in res; dev_res = subprocess.run(['bluetoothctl', 'devices', 'Connected'], capture_output=True, text=True).stdout.strip(); print(json.dumps({'powered': powered, 'connected': bool(dev_res)}))"]
+        command: ["python3", "-c", "import subprocess, json, re\ndef get_bt_info():\n    show_out = subprocess.run(['bluetoothctl', 'show'], capture_output=True, text=True, timeout=2).stdout\n    powered = 'Powered: yes' in show_out\n    paired_out = subprocess.run(['bluetoothctl', 'devices', 'Paired'], capture_output=True, text=True, timeout=2).stdout\n    if not paired_out: paired_out = subprocess.run(['bluetoothctl', 'devices'], capture_output=True, text=True, timeout=2).stdout\n    paired_count = len([l for l in paired_out.splitlines() if l.strip().startswith('Device')])\n    conn_out = subprocess.run(['bluetoothctl', 'devices', 'Connected'], capture_output=True, text=True, timeout=2).stdout\n    conn_lines = [l for l in conn_out.splitlines() if l.strip().startswith('Device')]\n    connected_count = len(conn_lines)\n    connected = connected_count > 0\n    devices = []\n    for l in conn_lines:\n        parts = l.strip().split()\n        if len(parts) >= 3:\n            mac = parts[1]; name = ' '.join(parts[2:])\n            info_out = subprocess.run(['bluetoothctl', 'info', mac], capture_output=True, text=True, timeout=2).stdout\n            bat = -1; icon_type = '󰂱'\n            for il in info_out.splitlines():\n                if 'Battery Percentage:' in il:\n                    try:\n                        m = re.search(r'\\((\\d+)\\)', il)\n                        if m: bat = int(m.group(1))\n                        else: bat = int(il.split('Battery Percentage:')[-1].strip().replace('%', ''))\n                    except: pass\n                elif 'Icon:' in il:\n                    ic = il.lower()\n                    if 'audio' in ic or 'headset' in ic or 'headphone' in ic: icon_type = '󰋋'\n                    elif 'mouse' in ic: icon_type = '󰍽'\n                    elif 'keyboard' in ic: icon_type = '󰌌'\n                    elif 'phone' in ic: icon_type = '󰄜'\n            devices.append({'name': name, 'mac': mac, 'battery': bat, 'icon': icon_type})\n    return {'powered': powered, 'connected': connected, 'connected_count': connected_count, 'paired_count': paired_count, 'devices': devices}\nprint(json.dumps(get_bt_info()))"]
         stdout: SplitParser {
             onRead: data => {
                 try {
                     var obj = JSON.parse(data);
-                    if (!obj.powered) {
+                    root.btPowered = obj.powered !== undefined ? obj.powered : true;
+                    root.btConnected = !!obj.connected;
+                    root.btConnectedCount = parseInt(obj.connected_count || "0", 10);
+                    root.btPairedCount = parseInt(obj.paired_count || "0", 10);
+                    root.btDevices = obj.devices || [];
+
+                    if (!root.btPowered) {
                         root.btText = "󰂲";
-                    } else if (obj.connected) {
+                    } else if (root.btConnected) {
                         root.btText = "󰂱";
                     } else {
                         root.btText = "󰂯";
@@ -490,11 +501,42 @@ Rectangle {
                 targetItem: btItem
                 isHovered: btArea.containsMouse
                 icon: root.btText
-                iconColor: Theme.blue
-                title: "Bluetooth Manager"
-                description: "Paired devices & bluetooth settings"
+                iconColor: root.btConnected ? Theme.green : (root.btPowered ? Theme.blue : Theme.red)
+                title: root.btConnected ? (root.btConnectedCount + (root.btConnectedCount === 1 ? " Device Connected" : " Devices Connected")) : (root.btPowered ? "Bluetooth On" : "Bluetooth Off")
+                description: root.btConnected ? "Active connected bluetooth peripherals" : (root.btPowered ? (root.btPairedCount + " paired devices in memory") : "Bluetooth adapter radio is disabled")
+                details: {
+                    var list = [];
+                    if (root.btConnected && root.btDevices && root.btDevices.length > 0) {
+                        for (var i = 0; i < root.btDevices.length; i++) {
+                            var dev = root.btDevices[i];
+                            var batStr = (dev.battery !== undefined && dev.battery >= 0) ? (dev.battery + "%") : "Connected";
+                            list.push({
+                                icon: dev.icon || "󰂱",
+                                iconColor: Theme.green,
+                                label: dev.name || "Device",
+                                value: batStr,
+                                valueColor: (dev.battery !== undefined && dev.battery >= 0 && dev.battery <= 20) ? Theme.red : Theme.green
+                            });
+                        }
+                    }
+                    list.push({
+                        icon: root.btPowered ? "󰂯" : "󰂲",
+                        iconColor: root.btPowered ? Theme.blue : Theme.red,
+                        label: "Controller Radio",
+                        value: root.btPowered ? "Powered On" : "Powered Off",
+                        valueColor: root.btPowered ? Theme.green : Theme.red
+                    });
+                    list.push({
+                        icon: "󰂯",
+                        iconColor: Theme.sapphire,
+                        label: "Paired Devices",
+                        value: root.btPairedCount + " paired",
+                        valueColor: Theme.subtext0
+                    });
+                    return list;
+                }
                 shortcuts: [
-                    { action: "Bluetooth Control Center", key: "SUPER + CTRL + B" },
+                    { action: "Bluetooth Control Center", key: "Left Click" },
                     { action: "Toggle Bluetooth Radio", key: "Right Click" }
                 ]
             }
