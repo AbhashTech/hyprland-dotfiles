@@ -350,11 +350,10 @@ fi
 if [ -d "${DOTFILES_DIR}/sddm/themes/catppuccin-mocha" ]; then
     log_info "Deploying Catppuccin Mocha SDDM Theme..."
     if command -v sudo >/dev/null 2>&1; then
-        if [ -f "/usr/bin/sddm-greeter-qt6" ]; then
-            if [ ! -L "/usr/bin/sddm-greeter" ] || [ "$(readlink /usr/bin/sddm-greeter 2>/dev/null)" != "/usr/bin/sddm-greeter-qt6" ]; then
-                sudo mv /usr/bin/sddm-greeter /usr/bin/sddm-greeter.qt5 2>/dev/null || true
-                sudo ln -sf /usr/bin/sddm-greeter-qt6 /usr/bin/sddm-greeter
-            fi
+        # Restore original sddm-greeter if previously symlinked
+        if [ -f "/usr/bin/sddm-greeter.qt5" ] && [ -L "/usr/bin/sddm-greeter" ]; then
+            sudo rm /usr/bin/sddm-greeter 2>/dev/null || true
+            sudo mv /usr/bin/sddm-greeter.qt5 /usr/bin/sddm-greeter 2>/dev/null || true
         fi
         sudo mkdir -p /usr/share/sddm/themes
         sudo rm -rf /usr/share/sddm/themes/catppuccin-mocha

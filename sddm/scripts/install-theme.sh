@@ -43,14 +43,12 @@ if [ ! -d "$THEME_SOURCE" ]; then
     exit 1
 fi
 
-# 1. Ensure Qt6 Greeter is used by SDDM daemon
-log_info "Configuring SDDM to use Qt6 greeter..."
-if [ -f "/usr/bin/sddm-greeter-qt6" ]; then
-    if [ ! -L "/usr/bin/sddm-greeter" ] || [ "$(readlink /usr/bin/sddm-greeter 2>/dev/null)" != "/usr/bin/sddm-greeter-qt6" ]; then
-        sudo mv /usr/bin/sddm-greeter /usr/bin/sddm-greeter.qt5 2>/dev/null || true
-        sudo ln -sf /usr/bin/sddm-greeter-qt6 /usr/bin/sddm-greeter
-        log_success "Linked /usr/bin/sddm-greeter -> /usr/bin/sddm-greeter-qt6"
-    fi
+# 1. Restore original sddm-greeter if previously moved/symlinked
+if [ -f "/usr/bin/sddm-greeter.qt5" ] && [ -L "/usr/bin/sddm-greeter" ]; then
+    log_info "Restoring standard package /usr/bin/sddm-greeter..."
+    sudo rm /usr/bin/sddm-greeter 2>/dev/null || true
+    sudo mv /usr/bin/sddm-greeter.qt5 /usr/bin/sddm-greeter 2>/dev/null || true
+    log_success "Restored /usr/bin/sddm-greeter package binary."
 fi
 
 # 2. Install Theme to /usr/share/sddm/themes
