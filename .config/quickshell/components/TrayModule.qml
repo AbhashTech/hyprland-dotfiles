@@ -8,18 +8,34 @@ import ".."
 Rectangle {
     id: root
 
-    implicitHeight: Theme.barHeight - 8
-    implicitWidth: Math.max(24, trayRow.implicitWidth + 8)
-    radius: Theme.capsuleRadius
-
-    color: Theme.moduleBg
-    border.color: Theme.moduleBorder
-    border.width: 1
-
     property var barWindow: null
     property string barSection: "right"
     property int barIndex: -1
     property var barContainer: null
+
+    readonly property int validItemCount: {
+        const list = SystemTray.items ? SystemTray.items.values : null;
+        if (!list || list.length === 0) return 0;
+        let c = 0;
+        for (let i = 0; i < list.length; i++) {
+            const it = list[i];
+            if (it && it.icon && it.icon.length > 0) {
+                c++;
+            }
+        }
+        return c;
+    }
+
+    readonly property bool hasItems: validItemCount > 0
+
+    visible: hasItems || (BarConfig.isDragging && BarConfig.draggedModule === "tray")
+    implicitHeight: visible ? Theme.barHeight - 8 : 0
+    implicitWidth: hasItems ? (trayRow.implicitWidth + 8) : (visible ? 28 : 0)
+    radius: Theme.capsuleRadius
+
+    color: Theme.moduleBg
+    border.color: Theme.moduleBorder
+    border.width: visible && hasItems ? 1 : (visible ? 1 : 0)
 
     Row {
         id: trayRow
@@ -27,13 +43,16 @@ Rectangle {
         spacing: 4
 
         Repeater {
+            id: trayRepeater
             model: SystemTray.items
 
             Item {
                 id: trayItemWrapper
                 required property var modelData
-                width: 18
-                height: 18
+                readonly property bool hasIcon: !!(modelData && modelData.icon && modelData.icon.length > 0)
+                visible: hasIcon
+                width: hasIcon ? 18 : 0
+                height: hasIcon ? 18 : 0
                 anchors.verticalCenter: parent.verticalCenter
 
                 QsMenuAnchor {

@@ -99,8 +99,10 @@ Rectangle {
                 Item {
                     id: trayItemWrapper
                     required property var modelData
-                    width: 18
-                    height: 18
+                    readonly property bool hasIcon: !!(modelData && modelData.icon && modelData.icon.length > 0)
+                    visible: hasIcon
+                    width: hasIcon ? 18 : 0
+                    height: hasIcon ? 18 : 0
                     anchors.verticalCenter: parent.verticalCenter
 
                     QsMenuAnchor {

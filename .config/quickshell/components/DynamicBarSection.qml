@@ -46,6 +46,7 @@ Row {
             readonly property bool isDraggedThis: BarConfig.isDragging && BarConfig.draggedModule === moduleId
             readonly property bool isTargetHere: BarConfig.isDragging && BarConfig.targetSection === root.section && BarConfig.targetIndex === index
 
+            visible: isTargetHere || isDraggedThis || (moduleLoader.item ? (moduleLoader.item.visible || moduleWrapper.implicitWidth > 0) : true)
             implicitWidth: (isTargetHere && !isDraggedThis ? 36 : 0) + (moduleLoader.item ? moduleLoader.item.implicitWidth : 32)
             implicitHeight: Theme.barHeight - 8
 
