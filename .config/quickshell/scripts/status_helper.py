@@ -86,9 +86,59 @@ def get_audio_info():
         "mic": m_desc
     }
 
-def get_brightness_info(screen_name=""):
-    brightness = 50
-    # Try direct sysfs backlight first (< 0.2ms)
+def is_internal_display(name):
+    name_upper = (name or "").upper()
+    return name_upper.startswith("EDP") or name_upper.startswith("LVDS") or name_upper.startswith("DSI")
+
+def get_i2c_bus_for_connector(connector_name):
+    if not connector_name:
+        return None
+    for p in glob.glob(f"/sys/class/drm/*-{connector_name}/ddc"):
+        try:
+            target = os.path.realpath(p)
+            base = os.path.basename(target)
+            if base.startswith("i2c-"):
+                return int(base.split("-")[-1])
+        except Exception:
+            pass
+    for p in glob.glob(f"/sys/class/drm/*{connector_name}*/ddc"):
+        try:
+            target = os.path.realpath(p)
+            base = os.path.basename(target)
+            if base.startswith("i2c-"):
+                return int(base.split("-")[-1])
+        except Exception:
+            pass
+    return None
+
+def get_active_monitor():
+    try:
+        raw = subprocess.run(["hyprctl", "monitors", "-j"], capture_output=True, text=True, timeout=0.6).stdout
+        if raw:
+            mons = json.loads(raw)
+            for m in mons:
+                if m.get("focused"):
+                    return m
+            cursor_raw = subprocess.run(["hyprctl", "cursorpos"], capture_output=True, text=True, timeout=0.4).stdout
+            if cursor_raw and "," in cursor_raw:
+                try:
+                    cx, cy = [int(v.strip()) for v in cursor_raw.split(",")]
+                    for m in mons:
+                        x = m.get("x", 0)
+                        y = m.get("y", 0)
+                        w = m.get("width", 1920)
+                        h = m.get("height", 1080)
+                        if x <= cx < x + w and y <= cy < y + h:
+                            return m
+                except Exception:
+                    pass
+            if mons:
+                return mons[0]
+    except Exception:
+        pass
+    return None
+
+def get_internal_backlight_pct():
     backlights = glob.glob("/sys/class/backlight/*")
     if backlights:
         try:
@@ -96,24 +146,64 @@ def get_brightness_info(screen_name=""):
             cur = int(open(os.path.join(bl, "brightness")).read().strip())
             mx = int(open(os.path.join(bl, "max_brightness")).read().strip())
             if mx > 0:
-                return {"brightness": int(round((cur / mx) * 100))}
+                return int(round((cur / mx) * 100))
         except Exception:
             pass
+    return 50
 
-    # Fallback to brightness_control cache or script
-    cache_path = os.path.expanduser("~/.cache/quickshell_brightness_cache.json")
-    if os.path.isfile(cache_path):
-        try:
-            with open(cache_path, "r") as f:
-                cdata = json.load(f)
-                if screen_name and screen_name in cdata:
-                    return {"brightness": cdata[screen_name]}
-                elif "active" in cdata:
-                    return {"brightness": cdata["active"]}
-        except Exception:
-            pass
+def get_brightness_info(screen_name=""):
+    target_screen = screen_name
+    active_mon = None
 
-    return {"brightness": brightness}
+    if not target_screen:
+        active_mon = get_active_monitor()
+        if active_mon:
+            target_screen = active_mon.get("name", "")
+
+    is_internal = is_internal_display(target_screen) if target_screen else True
+
+    if is_internal:
+        pct = get_internal_backlight_pct()
+        label = "Laptop Screen"
+        if active_mon and active_mon.get("model"):
+            label = active_mon.get("model")
+        return {
+            "brightness": pct,
+            "name": target_screen or "eDP-1",
+            "is_internal": True,
+            "label": label
+        }
+    else:
+        # External Monitor
+        cache_path = os.path.expanduser("~/.cache/quickshell_brightness_cache.json")
+        target_bus = get_i2c_bus_for_connector(target_screen)
+        b_val = 50
+        model_label = target_screen or "External Monitor"
+
+        if os.path.isfile(cache_path):
+            try:
+                with open(cache_path, "r") as f:
+                    cdata = json.load(f)
+                    monitors = cdata.get("monitors", [])
+                    for m in monitors:
+                        if (target_bus is not None and m.get("bus") == target_bus) or (target_screen and str(m.get("name")) == str(target_screen)):
+                            b_val = m.get("brightness", 50)
+                            model_label = m.get("model", model_label)
+                            break
+                    else:
+                        if monitors:
+                            b_val = monitors[0].get("brightness", 50)
+                            model_label = monitors[0].get("model", model_label)
+            except Exception:
+                pass
+
+        return {
+            "brightness": b_val,
+            "name": target_screen,
+            "is_internal": False,
+            "bus": target_bus,
+            "label": model_label
+        }
 
 def get_wifi_info():
     iface = "wlan0"

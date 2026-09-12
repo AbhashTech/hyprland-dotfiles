@@ -20,6 +20,8 @@ Rectangle {
     property bool internalAvailable: true
     property var externalMonitors: []
     property bool nightLightEnabled: false
+    property string activeScreenName: ""
+    property bool activeIsInternal: true
 
     function refreshBrightness(rescan) {
         if (!brightProc.running) {
@@ -64,6 +66,10 @@ Rectangle {
                     }
                     root.externalMonitors = obj.external || [];
                     root.nightLightEnabled = obj.night_light || false;
+                    if (obj.active) {
+                        root.activeScreenName = obj.active.name || "";
+                        root.activeIsInternal = obj.active.is_internal !== undefined ? obj.active.is_internal : true;
+                    }
                 } catch (e) {}
             }
         }
@@ -168,8 +174,8 @@ Rectangle {
             implicitHeight: 112
             radius: 10
             color: Theme.surface0
-            border.color: Theme.moduleBorder
-            border.width: 1
+            border.color: root.activeIsInternal ? Theme.yellow : Theme.moduleBorder
+            border.width: root.activeIsInternal ? 2 : 1
             visible: root.internalAvailable
 
             ColumnLayout {
@@ -193,6 +199,25 @@ Rectangle {
                         font.pixelSize: Theme.fontSizeSmall
                         font.bold: true
                         color: Theme.text
+                    }
+
+                    Rectangle {
+                        visible: root.activeIsInternal
+                        implicitWidth: 84
+                        implicitHeight: 20
+                        radius: 4
+                        color: Qt.rgba(Theme.yellow.r, Theme.yellow.g, Theme.yellow.b, 0.2)
+                        border.color: Theme.yellow
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "★ Active Screen"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 9
+                            font.bold: true
+                            color: Theme.yellow
+                        }
                     }
 
                     Item { Layout.fillWidth: true }
@@ -262,12 +287,12 @@ Rectangle {
                 implicitHeight: extCol.implicitHeight + 24
                 radius: 10
                 color: Theme.surface0
-                border.color: Theme.blue
-                border.width: 1
-
+                readonly property bool isThisActive: !root.activeIsInternal && (modelData.name === root.activeScreenName || (root.externalMonitors.length === 1 && !root.activeIsInternal))
                 property int monitorBus: modelData.bus
                 property int liveBrightness: modelData.brightness
                 property int liveContrast: modelData.contrast
+                border.color: isThisActive ? Theme.blue : Theme.moduleBorder
+                border.width: isThisActive ? 2 : 1
 
                 ColumnLayout {
                     id: extCol
@@ -294,6 +319,25 @@ Rectangle {
                             color: Theme.text
                             elide: Text.ElideRight
                             Layout.fillWidth: true
+                        }
+
+                        Rectangle {
+                            visible: extCard.isThisActive
+                            implicitWidth: 84
+                            implicitHeight: 20
+                            radius: 4
+                            color: Qt.rgba(Theme.blue.r, Theme.blue.g, Theme.blue.b, 0.25)
+                            border.color: Theme.blue
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "★ Active Screen"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 9
+                                font.bold: true
+                                color: Theme.blue
+                            }
                         }
 
                         Rectangle {

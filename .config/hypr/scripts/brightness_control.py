@@ -208,14 +208,52 @@ def save_cache(data):
     except Exception:
         pass
 
-def get_ddc_bus():
-    """Find the active DDC bus from cache or discovery."""
+def get_i2c_bus_for_connector(connector_name):
+    if not connector_name:
+        return None
+    for p in glob.glob(f"/sys/class/drm/*-{connector_name}/ddc"):
+        try:
+            target = os.path.realpath(p)
+            base = os.path.basename(target)
+            if base.startswith("i2c-"):
+                return int(base.split("-")[-1])
+        except Exception:
+            pass
+    for p in glob.glob(f"/sys/class/drm/*{connector_name}*/ddc"):
+        try:
+            target = os.path.realpath(p)
+            base = os.path.basename(target)
+            if base.startswith("i2c-"):
+                return int(base.split("-")[-1])
+        except Exception:
+            pass
+    return None
+
+def get_ddc_bus(screen_name=None):
+    """Find the active DDC bus from connector name, cache or discovery."""
+    target_screen = screen_name
+    if not target_screen:
+        mon = get_active_monitor_info()
+        if not mon["is_internal"]:
+            target_screen = mon.get("name")
+
+    mapped_bus = get_i2c_bus_for_connector(target_screen) if target_screen else None
+
     cache = load_cache()
     monitors = cache.get("monitors", [])
     if monitors:
         for m in monitors:
-            if m.get("bus") is not None:
+            if mapped_bus is not None and m.get("bus") == mapped_bus:
                 return m.get("bus"), m.get("model", "External Monitor"), m.get("brightness", 50), m.get("contrast", 50)
+            if target_screen and str(m.get("name")) == str(target_screen):
+                return m.get("bus", 1), m.get("model", "External Monitor"), m.get("brightness", 50), m.get("contrast", 50)
+        # Fallback to first monitor in cache
+        first = monitors[0]
+        if first.get("bus") is not None:
+            return first.get("bus"), first.get("model", "External Monitor"), first.get("brightness", 50), first.get("contrast", 50)
+
+    if mapped_bus is not None:
+        return mapped_bus, f"External Monitor ({target_screen})", 50, 50
 
     # Fallback to probing known buses
     for b in [1, 2, 3, 4, 5, 0, 6, 7]:
@@ -405,7 +443,7 @@ def get_screen_state(screen_name=None):
             "label": label
         }
     else:
-        bus, model, b_val, c_val = get_ddc_bus()
+        bus, model, b_val, c_val = get_ddc_bus(screen_name)
         return {
             "brightness": b_val,
             "contrast": c_val,
@@ -423,7 +461,8 @@ def change_screen_brightness(screen_name, delta):
     elif is_internal_name(screen_name):
         change_brightness(delta)
     else:
-        change_ddc_brightness(delta)
+        bus, _, _, _ = get_ddc_bus(screen_name)
+        change_ddc_brightness(delta, bus=bus)
 
 # ---------------------------------------------------------
 # Interactive Menu

@@ -105,6 +105,73 @@ def probe_ddc_bus(bus_num):
         pass
     return None
 
+def is_internal_name(name):
+    name_upper = (name or "").upper()
+    return name_upper.startswith("EDP") or name_upper.startswith("LVDS") or name_upper.startswith("DSI")
+
+def get_connector_for_bus(bus_num):
+    """Find DRM connector name associated with an I2C bus."""
+    for p in glob.glob(f"/sys/class/drm/*-*/ddc"):
+        try:
+            target = os.path.realpath(p)
+            base = os.path.basename(target)
+            if base == f"i2c-{bus_num}":
+                parent_dir = os.path.basename(os.path.dirname(p))
+                # card1-HDMI-A-1 -> HDMI-A-1
+                if "-" in parent_dir:
+                    return parent_dir.split("-", 1)[1]
+                return parent_dir
+        except Exception:
+            pass
+    return f"I2C-{bus_num}"
+
+def get_active_monitor_info():
+    """Detect currently focused / active monitor in Hyprland."""
+    raw = run_cmd(["hyprctl", "monitors", "-j"], timeout=1)
+    if raw:
+        try:
+            monitors = json.loads(raw)
+            for m in monitors:
+                if m.get("focused"):
+                    name = m.get("name", "")
+                    return {
+                        "name": name,
+                        "is_internal": is_internal_name(name),
+                        "model": m.get("model", "") or m.get("description", "") or name,
+                        "description": m.get("description", name)
+                    }
+            cursor_raw = run_cmd(["hyprctl", "cursorpos"], timeout=1)
+            if cursor_raw and "," in cursor_raw:
+                try:
+                    cx, cy = [int(v.strip()) for v in cursor_raw.split(",")]
+                    for m in monitors:
+                        x = m.get("x", 0)
+                        y = m.get("y", 0)
+                        w = m.get("width", 1920)
+                        h = m.get("height", 1080)
+                        if x <= cx < x + w and y <= cy < y + h:
+                            name = m.get("name", "")
+                            return {
+                                "name": name,
+                                "is_internal": is_internal_name(name),
+                                "model": m.get("model", "") or m.get("description", "") or name,
+                                "description": m.get("description", name)
+                            }
+                except Exception:
+                    pass
+            if monitors:
+                first = monitors[0]
+                name = first.get("name", "")
+                return {
+                    "name": name,
+                    "is_internal": is_internal_name(name),
+                    "model": first.get("model", "") or name,
+                    "description": first.get("description", name)
+                }
+        except Exception:
+            pass
+    return {"name": "eDP-1", "is_internal": True, "model": "Built-in Display", "description": "Laptop Screen"}
+
 def detect_external_monitors(force_rescan=False):
     """Detect DDC/CI capable external monitors with smart caching and EDID lookup."""
     drm_names = get_drm_monitor_names()
@@ -123,6 +190,8 @@ def detect_external_monitors(force_rescan=False):
                             if vals:
                                 mon["brightness"] = vals["brightness"]
                                 mon["contrast"] = vals["contrast"]
+                            if "name" not in mon or not mon["name"]:
+                                mon["name"] = get_connector_for_bus(bus)
                     return cached_monitors
         except Exception:
             pass
@@ -141,14 +210,20 @@ def detect_external_monitors(force_rescan=False):
     for b in bus_nums:
         vals = probe_ddc_bus(b)
         if vals:
+            conn_name = get_connector_for_bus(b)
             # Use EDID parsed name if available
-            model_label = f"External Monitor (I2C-{b})"
+            model_label = f"External Monitor ({conn_name})"
             if drm_names:
-                # Take first matched external name
-                model_label = list(drm_names.values())[0]
+                for dconn, dname in drm_names.items():
+                    if conn_name in dconn or dconn in conn_name:
+                        model_label = dname
+                        break
+                else:
+                    model_label = list(drm_names.values())[0]
 
             monitors.append({
                 "id": len(monitors) + 1,
+                "name": conn_name,
                 "bus": b,
                 "model": model_label,
                 "brightness": vals["brightness"],
@@ -165,15 +240,17 @@ def detect_external_monitors(force_rescan=False):
     return monitors
 
 def get_all_state(force_rescan=False):
-    """Aggregate internal and external display states."""
+    """Aggregate internal and external display states along with active monitor info."""
     internal = get_internal_brightness()
     external = detect_external_monitors(force_rescan=force_rescan)
     night_light = get_night_light_status()
+    active_mon = get_active_monitor_info()
 
     return {
         "internal": internal,
         "external": external,
-        "night_light": night_light
+        "night_light": night_light,
+        "active": active_mon
     }
 
 def set_internal_brightness(val):

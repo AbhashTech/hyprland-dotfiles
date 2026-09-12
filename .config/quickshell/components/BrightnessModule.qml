@@ -54,8 +54,8 @@ Rectangle {
         isHovered: root.isHovered && !BarConfig.isDragging
         icon: "󰃠"
         iconColor: Theme.yellow
-        title: "Screen Brightness"
-        description: "Display backlight & color temperature"
+        title: "Screen Brightness (" + (StatusService.brightScreen !== "" ? StatusService.brightScreen : (StatusService.brightIsInternal ? "Internal" : "External")) + ")"
+        description: StatusService.brightLabel !== "" ? StatusService.brightLabel : "Display backlight & color temperature"
         details: [
             {
                 icon: "󰃠",
@@ -65,10 +65,10 @@ Rectangle {
                 valueColor: Theme.yellow
             },
             {
-                icon: "󰃟",
+                icon: StatusService.brightIsInternal ? "󰌢" : "󰍹",
                 iconColor: Theme.peach,
-                label: "Backlight Control",
-                value: "Hardware / DDC",
+                label: "Active Display",
+                value: (StatusService.brightLabel !== "" ? StatusService.brightLabel : (StatusService.brightScreen !== "" ? StatusService.brightScreen : "Display")) + (StatusService.brightIsInternal ? " (Internal)" : " (External DDC)"),
                 valueColor: Theme.subtext0
             },
             {

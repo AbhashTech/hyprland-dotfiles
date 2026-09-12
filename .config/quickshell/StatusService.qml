@@ -16,6 +16,9 @@ QtObject {
 
     // Brightness State
     property int brightness: 50
+    property string brightScreen: ""
+    property string brightLabel: "Display"
+    property bool brightIsInternal: true
 
     // Wi-Fi State
     property string wifiText: "󰤨"
@@ -80,6 +83,9 @@ QtObject {
                     // 2. Brightness
                     if (obj.bright && obj.bright.brightness !== undefined) {
                         root.brightness = obj.bright.brightness;
+                        if (obj.bright.name) root.brightScreen = obj.bright.name;
+                        if (obj.bright.label) root.brightLabel = obj.bright.label;
+                        if (obj.bright.is_internal !== undefined) root.brightIsInternal = obj.bright.is_internal;
                     }
 
                     // 3. Wi-Fi
