@@ -121,13 +121,20 @@ def start_daemon(silent=False):
 
     stop_daemon_watchers()
 
+    # Watchers with sensitive data filtering (skip password managers & secret clipboard hints)
+    filter_clause = (
+        'types=\\$(wl-paste -l 2>/dev/null); '
+        'if echo \\\"\\$types\\\" | grep -qiE \\"password|secret|keepass|1password\\"; then exit 0; fi; '
+    )
     cmd_text = (
         'wl-paste --type text --watch bash -c "'
-        'cliphist store && (pgrep -x waybar >/dev/null && pkill -RTMIN+9 waybar || true)"'
+        + filter_clause
+        + 'cliphist store && (pgrep -x waybar >/dev/null && pkill -RTMIN+9 waybar || true)"'
     )
     cmd_image = (
         'wl-paste --type image --watch bash -c "'
-        'cliphist store && (pgrep -x waybar >/dev/null && pkill -RTMIN+9 waybar || true)"'
+        + filter_clause
+        + 'cliphist store && (pgrep -x waybar >/dev/null && pkill -RTMIN+9 waybar || true)"'
     )
 
     try:
