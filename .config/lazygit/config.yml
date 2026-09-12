@@ -1,28 +1,28 @@
 # =============================================================================
-# Lazygit Configuration - Catppuccin Latte
+# Lazygit Configuration - Catppuccin Mocha
 # =============================================================================
 
 gui:
   theme:
     activeBorderColor:
-      - '#8839ef'
+      - '#cba6f7'
       - bold
     inactiveBorderColor:
-      - '#acb0be'
+      - '#585b70'
     optionsTextColor:
-      - '#1e66f5'
+      - '#89b4fa'
     selectedLineBgColor:
-      - '#ccd0da'
+      - '#313244'
     cherryPickedCommitBgColor:
-      - '#bcc0cc'
+      - '#45475a'
     cherryPickedCommitFgColor:
-      - '#8839ef'
+      - '#cba6f7'
     unstagedChangesColor:
-      - '#d20f39'
+      - '#f38ba8'
     defaultFgColor:
-      - '#4c4f69'
+      - '#cdd6f4'
     searchingActiveBorderColor:
-      - '#df8e1d'
+      - '#f9e2af'
 
 git:
   paging:
