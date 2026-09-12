@@ -47,8 +47,8 @@ Rectangle {
             selectedRealName = userModel.data(userModel.index(idx, 0), Qt.UserRole + 2) || ""
             selectedAvatarPath = userModel.data(userModel.index(idx, 0), Qt.UserRole + 4) || ""
         } else {
-            selectedUserName = "kunal"
-            selectedRealName = "Kunal"
+            selectedUserName = (typeof userModel !== "undefined" && userModel.lastUser) ? userModel.lastUser : ""
+            selectedRealName = selectedUserName
             selectedAvatarPath = ""
         }
         if (usernameBox) {

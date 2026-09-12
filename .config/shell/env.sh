@@ -11,6 +11,7 @@ export PAGER="bat --style=plain"
 
 CACHE_DIR="${HOME}/.cache/shell"
 mkdir -p "${CACHE_DIR}" 2>/dev/null || true
+chmod 700 "${CACHE_DIR}" 2>/dev/null || true
 
 _SHELL_NAME=""
 if [ -n "$BASH_VERSION" ]; then

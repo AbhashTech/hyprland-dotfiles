@@ -21,11 +21,12 @@ if command -v bat >/dev/null 2>&1; then
 fi
 
 # --- ripgrep (Modern grep) & fd (Modern find) ---
+# Note: Keep standard grep/find untouched to preserve POSIX compatibility in scripts
 if command -v rg >/dev/null 2>&1; then
-    alias grep='rg'
+    alias rgrep='rg'
 fi
 if command -v fd >/dev/null 2>&1; then
-    alias find='fd'
+    alias fdfind='fd'
 fi
 
 # --- Disk & Resource Analyzers ---
