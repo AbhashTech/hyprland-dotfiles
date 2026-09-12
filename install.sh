@@ -548,9 +548,9 @@ EOF' 2>/dev/null || true
     # Automated Pacman cache cleaning timer
     sudo systemctl enable --now paccache.timer 2>/dev/null || true
 
-    # Bluetooth battery level reporting & fast connectable
+    # Bluetooth battery level reporting (keep FastConnectable disabled for security)
     if [ -f /etc/bluetooth/main.conf ] && ! grep -q "Experimental = true" /etc/bluetooth/main.conf; then
-        sudo sed -i '/^\[General\]/a Experimental = true\nFastConnectable = true' /etc/bluetooth/main.conf 2>/dev/null || true
+        sudo sed -i '/^\[General\]/a Experimental = true' /etc/bluetooth/main.conf 2>/dev/null || true
     fi
     log_success "System enhancements configured."
 fi
