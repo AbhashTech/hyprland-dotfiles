@@ -465,6 +465,104 @@ def change_screen_brightness(screen_name, delta):
         change_ddc_brightness(delta, bus=bus)
 
 # ---------------------------------------------------------
+# Idle Dim & Restore (Internal & External Screens)
+# ---------------------------------------------------------
+
+DIM_STATE_FILE = os.path.expanduser("~/.cache/hypr_ext_dim_saved.json")
+
+def get_all_external_buses():
+    """Find all external I2C buses connected to external displays."""
+    buses = []
+    for p in glob.glob("/sys/class/drm/*-*/ddc"):
+        parent = os.path.basename(os.path.dirname(p))
+        if "eDP" in parent or "LVDS" in parent or "DSI" in parent:
+            continue
+        try:
+            target = os.path.realpath(p)
+            base = os.path.basename(target)
+            if base.startswith("i2c-"):
+                b_num = int(base.split("-")[-1])
+                if b_num not in buses:
+                    buses.append(b_num)
+        except Exception:
+            pass
+    if not buses:
+        cache = load_cache()
+        for m in cache.get("monitors", []):
+            b = m.get("bus")
+            if b is not None and b not in buses:
+                buses.append(b)
+    return buses
+
+def dim_screens(dim_pct=10):
+    """Dim both internal laptop screen and all connected external displays for idle."""
+    dim_pct = max(0, min(100, int(dim_pct)))
+    # 1. Internal laptop backlight
+    run_cmd(["brightnessctl", "-s", "set", f"{dim_pct}%"])
+
+    # 2. External monitors
+    ext_buses = get_all_external_buses()
+    if not ext_buses:
+        return
+
+    saved_state = {}
+    if os.path.exists(DIM_STATE_FILE):
+        try:
+            with open(DIM_STATE_FILE, "r") as f:
+                saved_state = json.load(f)
+        except Exception:
+            saved_state = {}
+
+    cache = load_cache()
+    cached_mons = {str(m.get("bus")): m.get("brightness", 50) for m in cache.get("monitors", [])}
+
+    updated_saved = False
+    for b in ext_buses:
+        b_str = str(b)
+        if b_str not in saved_state:
+            orig_val = cached_mons.get(b_str, 50)
+            saved_state[b_str] = orig_val
+            updated_saved = True
+        # Set external monitor brightness to dim_pct asynchronously
+        subprocess.Popen(["ddcutil", "--bus", str(b), "--noverify", "setvcp", "10", str(dim_pct)])
+
+    if updated_saved or not os.path.exists(DIM_STATE_FILE):
+        try:
+            with open(DIM_STATE_FILE, "w") as f:
+                json.dump(saved_state, f)
+        except Exception:
+            pass
+
+def restore_screens():
+    """Restore brightness of internal screen and all external displays after idle resume."""
+    # 1. Internal laptop backlight
+    run_cmd(["brightnessctl", "-r"])
+
+    # 2. External monitors
+    if not os.path.exists(DIM_STATE_FILE):
+        return
+
+    saved_state = {}
+    try:
+        with open(DIM_STATE_FILE, "r") as f:
+            saved_state = json.load(f)
+    except Exception:
+        pass
+
+    try:
+        os.remove(DIM_STATE_FILE)
+    except Exception:
+        pass
+
+    for b_str, orig_val in saved_state.items():
+        try:
+            b = int(b_str)
+            update_cached_external(b, brightness=int(orig_val))
+            subprocess.Popen(["ddcutil", "--bus", str(b), "--noverify", "setvcp", "10", str(orig_val)])
+        except Exception:
+            pass
+
+# ---------------------------------------------------------
 # Interactive Menu
 # ---------------------------------------------------------
 
@@ -635,11 +733,18 @@ def main():
     elif cmd in ["ddc-contrast-set", "ext-contrast", "ext-set-contrast"] and len(sys.argv) >= 3:
         set_ddc_contrast(sys.argv[2])
 
+    # Idle Dim & Restore
+    elif cmd in ["dim", "idle-dim"]:
+        dim_pct = int(sys.argv[2]) if len(sys.argv) >= 3 else 10
+        dim_screens(dim_pct)
+    elif cmd in ["restore", "undim", "idle-resume", "resume"]:
+        restore_screens()
+
     elif cmd in ["menu", "dmenu", "gui"]:
         interactive_menu()
     else:
         print(f"Unknown action: {cmd}")
-        print("Usage: brightness_control.py [active-up|active-down|active-set|get-active|up|down|ddc-up|ddc-down|ext-set-brightness|ext-set-contrast|menu]")
+        print("Usage: brightness_control.py [active-up|active-down|active-set|get-active|dim|restore|up|down|ddc-up|ddc-down|ext-set-brightness|ext-set-contrast|menu]")
         sys.exit(1)
 
 if __name__ == "__main__":
