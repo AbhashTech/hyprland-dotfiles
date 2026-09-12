@@ -232,6 +232,18 @@ def get_wifi_info():
     except Exception:
         pass
 
+    if powered:
+        if not os.path.exists(f"/sys/class/net/{iface}"):
+            powered = False
+        else:
+            try:
+                flags_str = open(f"/sys/class/net/{iface}/flags").read().strip()
+                flags = int(flags_str, 16)
+                if not (flags & 1):
+                    powered = False
+            except Exception:
+                pass
+
     ssid = ""
     sig = 0
     rssi = ""

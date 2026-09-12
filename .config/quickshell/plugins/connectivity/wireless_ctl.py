@@ -39,17 +39,57 @@ def get_wifi_interface() -> str:
         pass
     return "wlan0"
 
-def get_wifi_status() -> dict:
-    iface = get_wifi_interface()
-    powered = True
+def get_wifi_devices() -> list:
+    devs = []
+    out = run_cmd(['iwctl', 'device', 'list'])
+    for line in out.splitlines():
+        parts = line.split()
+        if len(parts) >= 2 and (parts[0].startswith('wlan') or parts[0].startswith('wlp') or parts[0].startswith('wlo')):
+            devs.append(parts[0])
+    if not devs:
+        try:
+            for iface in os.listdir('/sys/class/net'):
+                if iface.startswith(('wl', 'wlan', 'wifi')):
+                    devs.append(iface)
+        except Exception:
+            pass
+    if not devs:
+        devs = ["wlan0"]
+    return list(dict.fromkeys(devs))
+
+def is_wifi_powered(iface: str = None) -> bool:
+    if not iface:
+        iface = get_wifi_interface()
     rf = run_cmd(['rfkill', 'list', 'wifi'])
     if 'Soft blocked: yes' in rf or 'Hard blocked: yes' in rf:
-        powered = False
+        return False
 
     dev_out = run_cmd(['iwctl', 'device', 'list'])
     for line in dev_out.splitlines():
+        parts = line.split()
+        if len(parts) >= 3 and parts[0] == iface:
+            return parts[2].lower() == 'on'
         if iface in line and 'off' in line:
-            powered = False
+            return False
+
+    if shutil.which('nmcli'):
+        nm = run_cmd(['nmcli', 'radio', 'wifi'])
+        if 'disabled' in nm.lower():
+            return False
+
+    try:
+        if os.path.exists(f"/sys/class/net/{iface}/flags"):
+            flags = int(open(f"/sys/class/net/{iface}/flags").read().strip(), 16)
+            if not (flags & 1):
+                return False
+    except Exception:
+        pass
+
+    return True
+
+def get_wifi_status() -> dict:
+    iface = get_wifi_interface()
+    powered = is_wifi_powered(iface)
 
     result = {
         "iface": iface,
@@ -190,14 +230,25 @@ def wifi_forget(ssid: str) -> bool:
 
 def wifi_toggle() -> bool:
     try:
-        rf = run_cmd(['rfkill', 'list', 'wifi'])
-        if 'Soft blocked: yes' in rf or 'Hard blocked: yes' in rf:
-            subprocess.run(['rfkill', 'unblock', 'wifi'], timeout=3)
-            iface = get_wifi_interface()
-            subprocess.run(['iwctl', 'device', iface, 'set-property', 'Powered', 'on'], timeout=3)
+        iface = get_wifi_interface()
+        devices = get_wifi_devices()
+        currently_powered = is_wifi_powered(iface)
+
+        if currently_powered:
+            for dev in devices:
+                subprocess.run(['iwctl', 'device', dev, 'set-property', 'Powered', 'off'], timeout=3)
+            if shutil.which('nmcli'):
+                subprocess.run(['nmcli', 'radio', 'wifi', 'off'], timeout=3)
         else:
-            iface = get_wifi_interface()
-            subprocess.run(['iwctl', 'device', iface, 'set-property', 'Powered', 'off'], timeout=3)
+            subprocess.run(['rfkill', 'unblock', 'wifi'], timeout=3)
+            for dev in devices:
+                subprocess.run(['iwctl', 'device', dev, 'set-property', 'Powered', 'on'], timeout=3)
+            if shutil.which('nmcli'):
+                subprocess.run(['nmcli', 'radio', 'wifi', 'on'], timeout=3)
+            try:
+                subprocess.run(['iwctl', 'station', iface, 'scan'], timeout=2)
+            except Exception:
+                pass
         return True
     except Exception:
         return False
