@@ -291,6 +291,16 @@ hl.window_rule({
     center = true,
 })
 
+-- Resolution & Display Scaling GUI Dialog
+hl.window_rule({
+    name   = "float-resolution-menu",
+    match  = { class = "(resolution-menu|resolution_menu\\.py)" },
+    float  = true,
+    size   = "460 480",
+    center = true,
+})
+
+
 
 
 

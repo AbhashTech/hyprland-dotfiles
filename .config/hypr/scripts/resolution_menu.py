@@ -145,11 +145,15 @@ def open_wofi_menu(prompt, options):
         try:
             import gi
             gi.require_version("Gtk", "3.0")
-            from gi.repository import Gtk, Gdk
+            from gi.repository import Gtk, Gdk, GLib
+
+            GLib.set_prgname("resolution-menu")
+            GLib.set_application_name("Display Resolution & Refresh Rate")
 
             selected = [""]
             dialog = Gtk.Dialog(title=prompt, flags=0)
-            dialog.set_default_size(420, 400)
+            dialog.set_role("resolution-menu")
+            dialog.set_default_size(460, 480)
             dialog.set_position(Gtk.WindowPosition.CENTER)
 
             box = dialog.get_content_area()
