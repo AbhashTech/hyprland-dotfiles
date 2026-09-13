@@ -24,22 +24,36 @@ PanelWindow {
                                      ? WlrKeyboardFocus.Exclusive
                                      : WlrKeyboardFocus.None
 
-    // Clicking the backdrop closes the picker (same as clipboard/emoji)
+    // Backdrop overlay: intercepts clicks outside the modal
     MouseArea {
         anchors.fill: parent
-        onClicked: {
-            filePickerModal.cancelAndClose()
+        hoverEnabled: false
+        preventStealing: true
+        onClicked: filePickerModal.cancelAndClose()
+    }
+
+    FilePickerModal {
+        id: filePickerModal
+        anchors.centerIn: parent
+        focus: true
+
+        // Absorb clicks within the modal area so backdrop is never triggered
+        MouseArea {
+            anchors.fill: parent
+            z: -1
+            preventStealing: true
         }
+    }
 
-        FilePickerModal {
-            id: filePickerModal
-            anchors.centerIn: parent
-
-            // Prevent backdrop click from propagating through the modal
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.NoButton
-            }
+    // Capture OS close keyboard shortcuts (Super+C, Alt+F4, Super+Q, Super+W, Escape)
+    Keys.onPressed: (event) => {
+        var isSuper = (event.modifiers & Qt.MetaModifier);
+        var isAlt   = (event.modifiers & Qt.AltModifier);
+        if (event.key === Qt.Key_Escape ||
+            (isSuper && (event.key === Qt.Key_C || event.key === Qt.Key_Q || event.key === Qt.Key_W)) ||
+            (isAlt && event.key === Qt.Key_F4)) {
+            filePickerModal.cancelAndClose();
+            event.accepted = true;
         }
     }
 

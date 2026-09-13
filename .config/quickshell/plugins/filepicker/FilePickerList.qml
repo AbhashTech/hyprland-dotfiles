@@ -203,9 +203,7 @@ Rectangle {
                     font.pixelSize:  Theme.fontSizeSmall
                     color:           Theme.overlay0
                     horizontalAlignment: Text.AlignRight
-                    visible:         !modelData.isDir
                 }
-                Item { Layout.preferredWidth: 72; visible: modelData.isDir }
 
                 // Modified date
                 Text {
@@ -224,8 +222,6 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape:  Qt.PointingHandCursor
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
-
-                onEntered:    listRoot.focusIndex = index
 
                 onClicked: (mouse) => {
                     listRoot.focusIndex = index

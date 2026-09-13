@@ -77,10 +77,70 @@ QUICK_LINKS = [
     {"name": "Dotfiles",   "path": os.path.join(HOME, ".dotfiles"),      "icon": "\ue795"},   #
 ]
 
+COMMON_FILENAMES = {
+    "dockerfile": "text/x-dockerfile",
+    "containerfile": "text/x-dockerfile",
+    "makefile": "text/x-makefile",
+    "justfile": "text/plain",
+    "procfile": "text/plain",
+    "gemfile": "text/x-ruby",
+    "rakefile": "text/x-ruby",
+    "cmakelists.txt": "text/x-cmake",
+    "license": "text/plain",
+    "copying": "text/plain",
+    "authors": "text/plain",
+    "readme": "text/markdown",
+    ".gitignore": "text/plain",
+    ".gitattributes": "text/plain",
+    ".editorconfig": "text/plain",
+    ".env": "text/plain",
+}
+
+COMMON_EXT_MIMES = {
+    ".mod": "text/x-go",
+    ".sum": "text/plain",
+    ".work": "text/x-go",
+    ".rs": "text/x-rust",
+    ".toml": "text/x-toml",
+    ".yaml": "text/x-yaml",
+    ".yml": "text/x-yaml",
+    ".json": "application/json",
+    ".md": "text/markdown",
+    ".markdown": "text/markdown",
+    ".ts": "application/typescript",
+    ".tsx": "text/typescript-jsx",
+    ".js": "application/javascript",
+    ".jsx": "text/javascript-jsx",
+    ".env": "text/plain",
+    ".conf": "text/plain",
+    ".ini": "text/plain",
+    ".cfg": "text/plain",
+    ".log": "text/plain",
+    ".sql": "text/x-sql",
+    ".sh": "application/x-sh",
+    ".bash": "application/x-sh",
+    ".zsh": "application/x-sh",
+    ".fish": "text/plain",
+    ".lua": "application/x-lua",
+    ".py": "text/x-python",
+    ".go": "text/x-go",
+    ".c": "text/x-c",
+    ".cpp": "text/x-c++src",
+    ".h": "text/x-c",
+    ".hpp": "text/x-c++src",
+    ".zig": "text/plain",
+}
+
 def detect_mime(path):
     """Best-effort MIME detection."""
     if os.path.isdir(path):
         return "inode/directory"
+    base = os.path.basename(path).lower()
+    if base in COMMON_FILENAMES:
+        return COMMON_FILENAMES[base]
+    for ext, m in COMMON_EXT_MIMES.items():
+        if base.endswith(ext):
+            return m
     mime, _ = mimetypes.guess_type(path)
     if mime:
         return mime
@@ -116,6 +176,9 @@ def mime_category(mime, is_dir=False):
         "application/json", "text/x-c", "text/x-c++src", "text/x-java",
         "text/x-go", "text/x-rust", "application/x-sh", "text/x-shellscript",
         "application/x-lua", "text/x-yaml", "application/xml",
+        "text/markdown", "text/x-sql", "text/x-dockerfile", "text/x-makefile",
+        "application/typescript", "text/typescript-jsx", "text/javascript-jsx",
+        "text/x-toml", "text/x-cmake", "text/x-ruby",
     }
     if mime in CODE_MIMES: return "code"
     DOC_MIMES = {
@@ -198,13 +261,20 @@ def cmd_list(args):
                         if cat != mime_filter and not mime.startswith(mime_filter + "/"):
                             continue
                     thumb = thumbnail_path(entry.path, mime) if not is_dir else ""
+                    item_count = 0
+                    if is_dir:
+                        try:
+                            item_count = len(os.listdir(entry.path))
+                        except (PermissionError, OSError):
+                            item_count = 0
                     entries.append({
                         "name":        name,
                         "path":        entry.path,
                         "isDir":       is_dir,
                         "isSymlink":   is_link,
                         "size":        size,
-                        "sizeStr":     human_size(size) if not is_dir else "",
+                        "sizeStr":     f"{item_count} items" if is_dir else human_size(size),
+                        "itemCount":   item_count if is_dir else 0,
                         "modified":    mtime,
                         "modifiedStr": datetime.fromtimestamp(mtime).strftime("%b %d %Y  %H:%M"),
                         "mime":        mime,
@@ -226,6 +296,37 @@ def cmd_list(args):
     dirs  = sorted([e for e in entries if e["isDir"]],  key=lambda e: e["name"].lower(), reverse=not sort_asc)
     files = sorted([e for e in entries if not e["isDir"]], key=file_key, reverse=not sort_asc)
     print(json.dumps(dirs + files))
+
+def cmd_dir_preview(path):
+    path = os.path.abspath(os.path.expanduser(path))
+    if not os.path.isdir(path):
+        print(json.dumps({"error": f"Not a directory: {path}", "items": [], "count": 0}))
+        return
+    items = []
+    try:
+        with os.scandir(path) as it:
+            for entry in it:
+                if entry.name.startswith("."):
+                    continue
+                try:
+                    is_d = entry.is_dir(follow_symlinks=True)
+                    m = detect_mime(entry.path)
+                    items.append({
+                        "name": entry.name,
+                        "isDir": is_d,
+                        "icon": mime_icon(m, is_d),
+                    })
+                except OSError:
+                    continue
+    except (PermissionError, OSError):
+        pass
+    items.sort(key=lambda x: (not x["isDir"], x["name"].lower()))
+    print(json.dumps({
+        "path": path,
+        "name": os.path.basename(path) or path,
+        "count": len(items),
+        "items": items[:30]
+    }))
 
 def _load_bookmarks():
     try:
@@ -299,7 +400,7 @@ def cmd_confirm(paths):
             pass
     seen = set()
     for p in abs_paths:
-        d = os.path.dirname(p)
+        d = p if os.path.isdir(p) else os.path.dirname(p)
         if d and d not in seen and os.path.isdir(d):
             seen.add(d)
             r = [x for x in _load_recents() if x["path"] != d]
@@ -331,6 +432,7 @@ def main():
     cmd  = args[0]
     rest = args[1:]
     if   cmd == "list":            cmd_list(rest)
+    elif cmd == "dir-preview":     cmd_dir_preview(rest[0]) if rest else None
     elif cmd == "bookmarks":       cmd_bookmarks()
     elif cmd == "add-bookmark":    cmd_add_bookmark(rest[0]) if rest else None
     elif cmd == "remove-bookmark": cmd_remove_bookmark(rest[0]) if rest else None

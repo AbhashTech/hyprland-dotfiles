@@ -15,6 +15,8 @@ Rectangle {
     // ── In-props ─────────────────────────────────────────────────────────────
     property var    entry:   null   // current file entry object
     property string content: ""    // text content (loaded externally)
+    property var    dirData: null   // directory preview summary
+    property bool   isDirectoryMode: false
 
     // ── States ────────────────────────────────────────────────────────────────
     readonly property bool hasEntry:   entry !== null && entry !== undefined
@@ -39,7 +41,7 @@ Rectangle {
 
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text:           "󰈔"
+                    text:           preview.isDirectoryMode ? "󰉋" : "󰈔"
                     font.family:    Theme.fontFamily
                     font.pixelSize: 48
                     color:          Theme.overlay0
@@ -47,7 +49,7 @@ Rectangle {
                 }
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text:           "Select a file\nto preview"
+                    text:           preview.isDirectoryMode ? "Select a folder\nto preview" : "Select a file\nto preview"
                     font.family:    Theme.fontFamily
                     font.pixelSize: Theme.fontSizeSmall
                     color:          Theme.overlay0
@@ -96,7 +98,9 @@ Rectangle {
                 }
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text:           "Directory"
+                    text:           preview.hasEntry && preview.isDir && preview.entry.itemCount !== undefined && preview.entry.itemCount >= 0
+                                        ? (preview.entry.itemCount + (preview.entry.itemCount === 1 ? " item" : " items"))
+                                        : "Directory"
                     font.family:    Theme.fontFamily
                     font.pixelSize: Theme.fontSizeSmall
                     color:          Theme.subtext0
@@ -161,6 +165,13 @@ Rectangle {
                     value:   preview.hasEntry ? (preview.entry.sizeStr || "—") : ""
                 }
 
+                // Contains (directories only)
+                MetaRow {
+                    visible: preview.hasEntry && preview.isDir
+                    label:   "Contains"
+                    value:   preview.hasEntry && preview.entry.sizeStr ? preview.entry.sizeStr : "—"
+                }
+
                 // Modified
                 MetaRow {
                     label: "Modified"
@@ -182,6 +193,79 @@ Rectangle {
                         font.pixelSize: 10
                         color:          Theme.yellow
                     }
+                }
+            }
+        }
+
+        // ── Directory contents preview ────────────────────────────────────────
+        Rectangle {
+            Layout.fillWidth:  true
+            Layout.fillHeight: true
+            visible:           preview.hasEntry && preview.isDir
+            radius:            Theme.pillRadius
+            color:             Theme.moduleBg
+            clip:              true
+
+            ColumnLayout {
+                anchors.fill:    parent
+                anchors.margins: 10
+                spacing:         6
+
+                Text {
+                    Layout.fillWidth: true
+                    text:           "Contents:"
+                    font.family:    Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.bold:      true
+                    color:          Theme.subtext0
+                }
+
+                ListView {
+                    Layout.fillWidth:  true
+                    Layout.fillHeight: true
+                    clip:              true
+                    model:             preview.dirData && preview.dirData.items ? preview.dirData.items : []
+
+                    ScrollBar.vertical: ScrollBar {
+                        policy: ScrollBar.AsNeeded
+                        width:  4
+                    }
+
+                    delegate: Item {
+                        width:  ListView.view.width
+                        height: 20
+
+                        RowLayout {
+                            anchors.fill: parent
+                            spacing:      6
+
+                            Text {
+                                text:           modelData.icon || (modelData.isDir ? "󰉋" : "󰈔")
+                                font.family:    Theme.fontFamily
+                                font.pixelSize: 11
+                                color:          modelData.isDir ? Theme.blue : Theme.subtext0
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text:           modelData.name
+                                font.family:    Theme.fontFamily
+                                font.pixelSize: 11
+                                color:          modelData.isDir ? Theme.blue : Theme.text
+                                elide:          Text.ElideRight
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    visible:        preview.dirData && preview.dirData.items && preview.dirData.items.length === 0
+                    Layout.alignment: Qt.AlignHCenter
+                    text:           "Empty folder"
+                    font.family:    Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    color:          Theme.overlay0
+                    opacity:        0.7
                 }
             }
         }

@@ -173,7 +173,6 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape:  Qt.PointingHandCursor
 
-                onEntered:       gridRoot.focusIndex = index
                 onClicked:  (mouse) => {
                     gridRoot.focusIndex = index
                     if (gridRoot.multiSelect) {

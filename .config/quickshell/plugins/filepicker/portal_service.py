@@ -122,6 +122,21 @@ def parse_mime_filter(options) -> str:
     return "all"
 
 
+def parse_current_folder(options) -> str:
+    """Extract suggested folder path from portal options if provided."""
+    cf = options.get("current_folder")
+    if not cf:
+        return ""
+    if isinstance(cf, (bytes, bytearray)):
+        return cf.decode("utf-8", errors="replace").rstrip("\x00")
+    if isinstance(cf, (list, tuple, dbus.Array)):
+        try:
+            return bytes(cf).decode("utf-8", errors="replace").rstrip("\x00")
+        except Exception:
+            return ""
+    return str(cf).rstrip("\x00")
+
+
 class FileChooserBackend(dbus.service.Object):
 
     def __init__(self, bus, path):
@@ -131,23 +146,34 @@ class FileChooserBackend(dbus.service.Object):
         """Run in a background thread: write request, trigger QS, wait, reply."""
         with _request_lock:
             multiple    = bool(options.get("multiple", False))
-            mime_filter = parse_mime_filter(options)
+            directory   = bool(options.get("directory", False))
+            if not directory:
+                title_lower = str(title).lower()
+                if any(k in title_lower for k in ("workspace", "folder", "directory")):
+                    directory = True
+
+            mime_filter    = parse_mime_filter(options)
+            current_folder = parse_current_folder(options)
+            accept_label   = str(options.get("accept_label", ""))
 
             request = {
-                "mode":         mode,
-                "app_id":       str(app_id),
-                "title":        str(title),
-                "multiple":     multiple,
-                "mime_filter":  mime_filter,
-                "current_name": str(options.get("current_name", "")),
-                "timestamp":    time.time(),
+                "mode":           mode,
+                "directory":      directory,
+                "app_id":         str(app_id),
+                "title":          str(title),
+                "accept_label":   accept_label,
+                "multiple":       multiple,
+                "mime_filter":    mime_filter,
+                "current_name":   str(options.get("current_name", "")),
+                "current_folder": current_folder,
+                "timestamp":      time.time(),
             }
 
             os.makedirs(CACHE_DIR, exist_ok=True)
             with open(REQUEST_F, "w") as f:
                 json.dump(request, f, indent=2)
 
-            print(f"[portal] Request from {app_id!r}: {mode} / {mime_filter}", file=sys.stderr)
+            print(f"[portal] Request from {app_id!r}: {mode} / dir={directory} / {mime_filter}", file=sys.stderr)
             trigger_quickshell("filepicker-portal")
 
             code, results = wait_for_response()
@@ -204,7 +230,11 @@ class FileChooserBackend(dbus.service.Object):
 
 def main():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-    GLib.threads_init()
+    if hasattr(GLib, "threads_init"):
+        try:
+            GLib.threads_init()
+        except Exception:
+            pass
 
     bus  = dbus.SessionBus()
     name = dbus.service.BusName(BUS_NAME, bus=bus)
