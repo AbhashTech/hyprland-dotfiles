@@ -554,6 +554,12 @@ EOF' 2>/dev/null || true
     log_success "System enhancements configured."
 fi
 
+# 11. Personal Settings Verification
+if [ -f "${DOTFILES_DIR}/scripts/dotfiles-personal.sh" ]; then
+    echo ""
+    log_info "Modular personal configuration environment initialized."
+fi
+
 echo ""
 log_success "Unified dotfiles deployed successfully!"
 echo -e "To load the productivity shell suite in your terminal, add this to your ~/.bashrc or ~/.zshrc:"
@@ -575,3 +581,5 @@ echo -e "  • File Picker Modal: ${COLOR_BOLD}SUPER + SHIFT + F${COLOR_RESET} (
 echo -e "  • Notification Mako: ${COLOR_BOLD}makoctl reload${COLOR_RESET}"
 echo -e "  • Test SDDM Theme:   ${COLOR_BOLD}~/.dotfiles/sddm/test-theme.sh${COLOR_RESET}"
 echo -e "  • Push Dotfiles:     ${COLOR_BOLD}~/.dotfiles/scripts/dotfiles-push.sh${COLOR_RESET} (safely syncs & isolates local configs)"
+echo -e "  • Personal Configs:  ${COLOR_BOLD}~/.dotfiles/scripts/dotfiles-personal.sh${COLOR_RESET} (export, import, version control)"
+

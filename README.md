@@ -803,4 +803,69 @@ A dedicated helper script is provided at `~/.dotfiles/scripts/dotfiles-push.sh`:
 - **Desktop Themes**: `.config/hypr/theme.conf`, `theme_vars.lua`, `.config/foot/theme.ini`, `.config/mako/config`, `.config/btop/btop.conf`, `.config/starship.toml`, `.config/zellij/config.kdl`, `.config/lazygit/config.yml`, `.config/swappy/config`, `.config/kdeglobals`, `.config/dolphinrc`, GTK & XSettings configs.
 - **Runtime User State**: `.config/hypr/hypridle.conf` (idle & suspend timeouts), `.config/hypr/hyprpaper.conf` (wallpaper selection), `.config/hypr/modules/input.lua` (keyboard layout & variant), `.config/mimeapps.list`.
 
+---
+
+## 🧩 Personal Configurations & Modular Extensions (`scripts/dotfiles-personal.sh`)
+
+To customize your system with personal plugins, programming languages, multi-monitor setups, and shell tokens without dirtying the Git repository or causing merge conflicts during `git pull`, this dotfiles suite provides **granular, self-descriptive personal extension points** across all packages.
+
+All personal files in these directories are automatically ignored by Git.
+
+### 📂 Self-Descriptive Personal File Structure
+
+#### 1. 🖥️ Hyprland (`~/.dotfiles/.config/hypr/user/`)
+Split into dedicated files for each component:
+- `monitors.lua`: Custom multi-display resolutions, refresh rates, and positioning (e.g. `hyprland.monitor(...)`).
+- `input.lua`: Keyboard layouts, mouse sensitivity, and touchpad natural scroll.
+- `keybinds.lua`: Personal hotkeys and custom application shortcuts.
+- `rules.lua`: Custom window rules, floating rules, and workspace assignments.
+- `autostart.lua`: Background applications to launch on login (e.g. Discord, Spotify).
+- `env.lua`: Personal compositor environment variables.
+- `workspaces.lua`: Custom workspace monitors and behavior.
+
+#### 2. 🐚 Shell (`~/.dotfiles/.config/shell/user/` & `~/.zshenv`)
+- `~/.zshenv`: Machine-wide environment variables loaded by all Zsh shells and tools (outside git).
+- `~/.config/shell/user/env.sh` / `paths.sh`: Personal PATH additions (e.g. `$GOPATH/bin`, Cargo).
+- `~/.config/shell/user/aliases.sh`: Custom command aliases.
+- `~/.config/shell/user/functions.sh`: Custom shell helper functions.
+- `~/.config/shell/user/tokens.sh`: Private API tokens and credentials.
+
+#### 3. 📝 Neovim (`~/.dotfiles/.config/nvim/lua/plugins/`)
+- `personal_go.lua`: Golang development suite (`go.nvim`, `nvim-dap-go`, Delve debugger).
+- `personal_web.lua`: React, Next.js, and TypeScript JSX/TSX helpers (`nvim-ts-autotag`).
+- `personal_terminal.lua`: ToggleTerm suite (`<leader>tt` floating terminal, splits, and floating Lazygit).
+- `personal_lsp.lua`: Personal LSP servers (`gopls`, `ts_ls`, `tailwindcss`, `eslint`), formatters (`prettierd`), and inlay hints.
+- `personal_<name>.lua`: Any additional custom plugin or language configuration.
+
+---
+
+### 🛠️ Personal Settings Management Utility (`scripts/dotfiles-personal.sh`)
+
+A dedicated CLI utility is provided at `~/.dotfiles/scripts/dotfiles-personal.sh` (or alias `dotpersonal`):
+
+```bash
+# 1. Inspect all active personal files and version control status
+dotpersonal status
+
+# 2. Export all personal settings to an archive (for backup or transferring to a new machine)
+dotpersonal export ~/my-personal-dotfiles.tar.gz
+
+# 3. Import and restore personal settings from an archive or folder
+dotpersonal import ~/my-personal-dotfiles.tar.gz
+
+# 4. Initialize a standalone, private Git repository for your personal settings
+dotpersonal init-repo
+
+# 5. Commit personal configuration updates to your private personal repo
+dotpersonal save "feat: add python setup and custom keybinds"
+
+# 6. View diffs between active files and your private personal repo
+dotpersonal diff
+
+# 7. Push / pull personal configs to your private GitHub or GitLab repository
+dotpersonal push
+dotpersonal pull
+```
+
+
 
