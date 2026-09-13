@@ -815,9 +815,9 @@ All personal files in these directories are automatically ignored by Git.
 
 #### 1. 🖥️ Hyprland (`~/.dotfiles/.config/hypr/user/`)
 Split into dedicated files for each component:
-- `monitors.lua`: Custom multi-display resolutions, refresh rates, and positioning (e.g. `hyprland.monitor(...)`).
-- `input.lua`: Keyboard layouts, mouse sensitivity, and touchpad natural scroll.
-- `keybinds.lua`: Personal hotkeys and custom application shortcuts.
+- `monitors.lua`: Custom multi-display resolutions, refresh rates, and positioning (e.g. `hyprland.monitor(...)`). Automatically written by the Screen Resolution & Display Scaling Manager (`Super+Shift+D` / `resolution_menu.py`).
+- `input.lua`: Keyboard layouts, variants, options, mouse sensitivity, and touchpad natural scroll. Automatically written by the Keyboard Layout & Variant Manager (`Super+Shift+K` / `keyboard_layout.py`).
+- `keybinds.lua`: Personal hotkeys and custom application shortcuts (automatically parsed and displayed by the Keybinds Viewer `Super+K` / `keybinds_viewer.py`).
 - `rules.lua`: Custom window rules, floating rules, and workspace assignments.
 - `autostart.lua`: Background applications to launch on login (e.g. Discord, Spotify).
 - `env.lua`: Personal compositor environment variables.

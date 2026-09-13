@@ -28,8 +28,9 @@ from pathlib import Path
 HOME = Path.home()
 CONFIG_DIR = HOME / ".config"
 DOTFILES_CONFIG_DIR = HOME / ".dotfiles" / ".config"
-INPUT_CONFIG_PATH = CONFIG_DIR / "hypr" / "modules" / "input.lua"
-DOTFILES_INPUT_PATH = DOTFILES_CONFIG_DIR / "hypr" / "modules" / "input.lua"
+USER_INPUT_PATH = CONFIG_DIR / "hypr" / "user" / "input.lua"
+DEFAULT_INPUT_PATH = CONFIG_DIR / "hypr" / "modules" / "input.lua"
+DOTFILES_DEFAULT_INPUT_PATH = DOTFILES_CONFIG_DIR / "hypr" / "modules" / "input.lua"
 XKB_BASE_LST = Path("/usr/share/X11/xkb/rules/base.lst")
 XKB_EVDEV_LST = Path("/usr/share/X11/xkb/rules/evdev.lst")
 
@@ -332,18 +333,25 @@ def get_main_keyboard():
 
 
 def get_configured_from_file():
-    """Read currently configured layouts and options from input.lua."""
+    """Read currently configured layouts and options from personal user/input.lua or fallback modules/input.lua."""
     target_files = [
-        INPUT_CONFIG_PATH.resolve() if INPUT_CONFIG_PATH.exists() else None,
-        DOTFILES_INPUT_PATH.resolve() if DOTFILES_INPUT_PATH.exists() else None,
-        INPUT_CONFIG_PATH,
-        DOTFILES_INPUT_PATH
+        USER_INPUT_PATH.resolve() if USER_INPUT_PATH.exists() else None,
+        USER_INPUT_PATH if USER_INPUT_PATH.exists() else None,
+        DEFAULT_INPUT_PATH.resolve() if DEFAULT_INPUT_PATH.exists() else None,
+        DOTFILES_DEFAULT_INPUT_PATH.resolve() if DOTFILES_DEFAULT_INPUT_PATH.exists() else None,
+        DEFAULT_INPUT_PATH,
+        DOTFILES_DEFAULT_INPUT_PATH
     ]
     config_file = None
     for f in target_files:
         if f and f.exists():
-            config_file = f
-            break
+            try:
+                txt = f.read_text(encoding="utf-8")
+                if "kb_layout" in txt:
+                    config_file = f
+                    break
+            except Exception:
+                pass
 
     if not config_file:
         return {"layouts": ["us"], "variants": [""], "options": ""}
@@ -414,7 +422,7 @@ def get_active_layout_info():
 
 
 def save_and_apply_config(layouts, variants, options=None):
-    """Update input.lua and apply live via Hyprland IPC."""
+    """Update personal user/input.lua (untracked) and apply live via Hyprland IPC."""
     if not layouts:
         layouts = ["us"]
         variants = [""]
@@ -425,41 +433,62 @@ def save_and_apply_config(layouts, variants, options=None):
     kb_layout_str = ",".join(layouts)
     kb_variant_str = ",".join(variants)
 
-    # Save to disk across potential paths
-    target_files = set()
-    for p in [INPUT_CONFIG_PATH, DOTFILES_INPUT_PATH]:
-        if p.exists():
-            target_files.add(p.resolve())
-            target_files.add(p)
+    if options is None:
+        options = get_configured_from_file().get("options", "")
 
-    for config_file in target_files:
-        try:
-            content = config_file.read_text(encoding="utf-8")
+    # Ensure parent directory ~/.config/hypr/user exists
+    USER_INPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
+    try:
+        content = ""
+        if USER_INPUT_PATH.exists():
+            content = USER_INPUT_PATH.read_text(encoding="utf-8")
+
+        if content.strip() and "kb_layout" in content:
             if re.search(r'kb_layout\s*=\s*["\'][^"\']*["\']', content):
                 content = re.sub(
                     r'kb_layout\s*=\s*["\'][^"\']*["\']',
                     f'kb_layout  = "{kb_layout_str}"',
                     content
                 )
-
             if re.search(r'kb_variant\s*=\s*["\'][^"\']*["\']', content):
                 content = re.sub(
                     r'kb_variant\s*=\s*["\'][^"\']*["\']',
                     f'kb_variant = "{kb_variant_str}"',
                     content
                 )
+            if options is not None:
+                if re.search(r'kb_options\s*=\s*["\'][^"\']*["\']', content):
+                    content = re.sub(
+                        r'kb_options\s*=\s*["\'][^"\']*["\']',
+                        f'kb_options = "{options}"',
+                        content
+                    )
+                elif re.search(r'kb_variant\s*=\s*["\'][^"\']*["\']', content):
+                    content = re.sub(
+                        r'(kb_variant\s*=\s*["\'][^"\']*["\'],?)',
+                        r'\1\n        kb_options = "' + options + '",',
+                        content
+                    )
+        else:
+            # Generate clean, self-descriptive personal input.lua
+            content = f"""--------------------------------------------------------------------------------
+-- User Personal Input Configuration (Untracked)
+--------------------------------------------------------------------------------
+-- Managed by Keyboard Layout & Variant Manager
 
-            if options is not None and re.search(r'kb_options\s*=\s*["\'][^"\']*["\']', content):
-                content = re.sub(
-                    r'kb_options\s*=\s*["\'][^"\']*["\']',
-                    f'kb_options = "{options}"',
-                    content
-                )
+hl.config({{
+    input = {{
+        kb_layout  = "{kb_layout_str}",
+        kb_variant = "{kb_variant_str}",
+        kb_options = "{options}",
+    }},
+}})
+"""
 
-            config_file.write_text(content, encoding="utf-8")
-        except Exception as e:
-            print(f"Warning: writing {config_file} failed: {e}", file=sys.stderr)
+        USER_INPUT_PATH.write_text(content, encoding="utf-8")
+    except Exception as e:
+        print(f"Warning: writing {USER_INPUT_PATH} failed: {e}", file=sys.stderr)
 
     # Apply live to Hyprland
     lua_code = f'hl.config({{ input = {{ kb_layout = "{kb_layout_str}", kb_variant = "{kb_variant_str}" }} }})'

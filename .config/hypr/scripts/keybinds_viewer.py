@@ -23,6 +23,7 @@ POSSIBLE_CONFIG_PATHS = [
     Path.home() / ".dotfiles" / ".config" / "hypr" / "modules" / "keybinds.lua",
     Path.home() / ".config" / "hypr" / "hyprland.lua",
 ]
+USER_KEYBINDS_PATH = Path.home() / ".config" / "hypr" / "user" / "keybinds.lua"
 
 # Catppuccin Mocha ANSI Colors for CLI output
 COLOR_RESET = "\033[0m"
@@ -341,6 +342,13 @@ def main():
         sys.exit(1)
 
     entries = parse_keybinds(config_file)
+    if not args.file and USER_KEYBINDS_PATH.is_file():
+        user_entries = parse_keybinds(USER_KEYBINDS_PATH)
+        if user_entries:
+            for entry in user_entries:
+                if not entry.get("category") or entry.get("category") == "General":
+                    entry["category"] = "Personal Keybinds"
+            entries.extend(user_entries)
 
     if args.json:
         print(json.dumps(entries))
