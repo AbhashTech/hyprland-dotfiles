@@ -13,9 +13,21 @@ Rectangle {
     width: implicitWidth
     height: implicitHeight
     radius: Theme.barRadius
-    color: Theme.barBg
-    border.color: Theme.barBorder
+    color: Theme.base
+    border.color: Theme.surface1
     border.width: 1
+
+    Keys.onPressed: (event) => {
+        var isSuper = (event.modifiers & Qt.MetaModifier);
+        var isAlt = (event.modifiers & Qt.AltModifier);
+        if (event.key === Qt.Key_Escape ||
+            (isSuper && (event.key === Qt.Key_C || event.key === Qt.Key_Q || event.key === Qt.Key_W)) ||
+            (isAlt && event.key === Qt.Key_F4)) {
+            PluginManager.pluginManagerVisible = false;
+            PluginManager.closeAll();
+            event.accepted = true;
+        }
+    }
 
     // Main views: "list", "store", "add", "logs", "edit_manifest", "git_logs", "delete_confirm"
     property string activeView: "list"
@@ -216,14 +228,16 @@ Rectangle {
                 implicitHeight: 34
                 radius: Theme.capsuleRadius
                 color: closeMouse.containsMouse ? Theme.red : Theme.surface0
-                border.color: Theme.surface2
+                border.color: closeMouse.containsMouse ? Theme.red : Theme.surface2
                 border.width: 1
+                z: 10
 
                 Text {
                     anchors.centerIn: parent
                     text: "✕"
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize
+                    font.bold: true
                     color: closeMouse.containsMouse ? Theme.crust : Theme.subtext0
                 }
 
@@ -232,7 +246,10 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: PluginManager.closeAll()
+                    onClicked: {
+                        PluginManager.pluginManagerVisible = false;
+                        PluginManager.closeAll();
+                    }
                 }
             }
         }
@@ -346,6 +363,18 @@ Rectangle {
                             color: Theme.text
                             clip: true
                             onTextChanged: PluginManagerService.searchQuery = text
+
+                            Keys.onPressed: (event) => {
+                                var isSuper = (event.modifiers & Qt.MetaModifier);
+                                var isAlt = (event.modifiers & Qt.AltModifier);
+                                if (event.key === Qt.Key_Escape ||
+                                    (isSuper && (event.key === Qt.Key_C || event.key === Qt.Key_Q || event.key === Qt.Key_W)) ||
+                                    (isAlt && event.key === Qt.Key_F4)) {
+                                    PluginManager.pluginManagerVisible = false;
+                                    PluginManager.closeAll();
+                                    event.accepted = true;
+                                }
+                            }
 
                             Text {
                                 text: "Search plugins by name, ID, author, or description..."
