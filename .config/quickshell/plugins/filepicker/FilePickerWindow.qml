@@ -34,6 +34,8 @@ PanelWindow {
 
     FilePickerModal {
         id: filePickerModal
+        width: implicitWidth
+        height: implicitHeight
         anchors.centerIn: parent
         focus: true
 
@@ -45,17 +47,6 @@ PanelWindow {
         }
     }
 
-    // Capture OS close keyboard shortcuts (Super+C, Alt+F4, Super+Q, Super+W, Escape)
-    Keys.onPressed: (event) => {
-        var isSuper = (event.modifiers & Qt.MetaModifier);
-        var isAlt   = (event.modifiers & Qt.AltModifier);
-        if (event.key === Qt.Key_Escape ||
-            (isSuper && (event.key === Qt.Key_C || event.key === Qt.Key_Q || event.key === Qt.Key_W)) ||
-            (isAlt && event.key === Qt.Key_F4)) {
-            filePickerModal.cancelAndClose();
-            event.accepted = true;
-        }
-    }
 
     Connections {
         target: PluginManager

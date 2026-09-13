@@ -19,6 +19,8 @@ Rectangle {
 
     implicitWidth:  960
     implicitHeight: 620
+    width:          implicitWidth
+    height:         implicitHeight
     radius:         Theme.barRadius
     color:          Theme.barBg
     border.color:   Theme.barBorder
@@ -470,6 +472,14 @@ Rectangle {
     }
 
     Keys.onPressed: event => {
+        var isSuper = (event.modifiers & Qt.MetaModifier);
+        var isAlt   = (event.modifiers & Qt.AltModifier);
+        if ((isSuper && (event.key === Qt.Key_C || event.key === Qt.Key_Q || event.key === Qt.Key_W)) ||
+            (isAlt && event.key === Qt.Key_F4)) {
+            modal.cancelAndClose();
+            event.accepted = true;
+            return;
+        }
         if (event.key === Qt.Key_Backspace && !(searchText.length > 0)) {
             modal.navigateUp()
             event.accepted = true
