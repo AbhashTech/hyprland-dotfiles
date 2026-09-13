@@ -228,4 +228,14 @@ hl.window_rule({
     center = true,
 })
 
+-- Personal Settings Manager GUI Dialog
+hl.window_rule({
+    name   = "float-dotpersonal-manager",
+    match  = { class = "(dotpersonal-manager|dotpersonal_gui\\.py)" },
+    float  = true,
+    size   = "960 680",
+    center = true,
+})
+
+
 

@@ -987,8 +987,11 @@ def launch_dotpersonal_gui(start_tab: int = 0, screenshot: str = None, expand_fo
     class PersonalManagerWindow(Gtk.Window):
         def __init__(self):
             super().__init__(title="Personal Settings Manager")
-            self.set_default_size(900, 650)
+            GLib.set_prgname("dotpersonal-manager")
+            GLib.set_application_name("Personal Settings Manager")
+            self.set_default_size(960, 680)
             self.set_position(Gtk.WindowPosition.CENTER)
+            self.set_role("dotpersonal-manager")
 
             self._syncing_checks = False
             self.included_state = load_included_config_state()

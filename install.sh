@@ -496,7 +496,7 @@ Exec=python3 ${HOME}/.config/hypr/scripts/dotpersonal_gui.py
 Icon=preferences-desktop-personal
 Terminal=false
 Categories=Utility;Settings;DesktopSettings;
-StartupWMClass=dotpersonal_gui.py
+StartupWMClass=dotpersonal-manager
 StartupNotify=true
 Keywords=dotfiles;personal;backup;git;export;import;private;modular;neovim;hyprland;shell;
 EOF
