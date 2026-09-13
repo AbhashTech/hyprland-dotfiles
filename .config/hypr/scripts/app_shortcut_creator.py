@@ -117,6 +117,25 @@ window {{
     font-size: 13px;
 }}
 
+/* Theme-matched tooltips */
+tooltip, tooltip.background {{
+    background-color: {c.get("surface0", "#313244")};
+    color: {c.get("text", "#cdd6f4")};
+    border: 1px solid {c.get("surface2", "#585b70")};
+    border-radius: 6px;
+    padding: 4px 8px;
+}}
+
+tooltip * {{
+    background-color: transparent;
+    color: {c.get("text", "#cdd6f4")};
+}}
+
+tooltip label {{
+    color: {c.get("text", "#cdd6f4")};
+    font-size: 11px;
+}}
+
 .top-header {{
     background-color: {c.get("mantle", "#11111b")};
     border-bottom: 1px solid {c.get("surface0", "#313244")};
