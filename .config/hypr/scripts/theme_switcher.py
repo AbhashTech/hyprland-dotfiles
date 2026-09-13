@@ -1847,6 +1847,10 @@ def run_gui_theme_manager(themes=None):
     class ThemeManagerWindow(Gtk.Window):
         def __init__(self, theme_dict, cur_id):
             super().__init__(title="Desktop Theme & Palette Manager")
+            GLib.set_prgname("theme-manager")
+            GLib.set_application_name("Desktop Theme Switcher & Palette Manager")
+            self.set_role("theme-manager")
+
             self.themes = theme_dict
             self.current_theme_id = cur_id
             self.selected_theme_id = cur_id
@@ -1901,15 +1905,19 @@ def run_gui_theme_manager(themes=None):
             btn_random.connect("clicked", self._on_random_clicked)
             header.pack_start(btn_random, False, False, 0)
 
-            # Center: Title & Subtitle
+            # Center: Title & Subtitle (flexibly packed with ellipsize to maintain right alignment of close button when tiled)
             title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
             self.title_lbl = Gtk.Label()
             self.title_lbl.set_markup(f"<span size='12288' weight='bold'>🎨 Desktop Theme Switcher &amp; Palette Manager</span>")
+            self.title_lbl.set_ellipsize(Pango.EllipsizeMode.END)
+            self.title_lbl.set_max_width_chars(40)
             self.subtitle_lbl = Gtk.Label()
             self.subtitle_lbl.set_markup(f"<span size='10240'>{len(self.themes)} Handcrafted Palettes • Hyprland, Waybar &amp; Apps</span>")
+            self.subtitle_lbl.set_ellipsize(Pango.EllipsizeMode.END)
+            self.subtitle_lbl.set_max_width_chars(50)
             title_box.pack_start(self.title_lbl, False, False, 0)
             title_box.pack_start(self.subtitle_lbl, False, False, 0)
-            header.set_center_widget(title_box)
+            header.pack_start(title_box, True, True, 0)
 
             # Right: Single Dedicated Close Button wrapped in EventBox for guaranteed Wayland pointer capture
             self.close_evbox = Gtk.EventBox()
@@ -1941,7 +1949,7 @@ def run_gui_theme_manager(themes=None):
             left_box.set_margin_bottom(14)
             left_box.set_margin_start(16)
             left_box.set_margin_end(12)
-            main_paned.pack1(left_box, resize=True, shrink=False)
+            main_paned.pack1(left_box, resize=True, shrink=True)
 
             # Top Bar: Search Entry & Filter Buttons
             top_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
@@ -1988,8 +1996,8 @@ def run_gui_theme_manager(themes=None):
             # Right Column (Theme Preview & Details Inspector)
             self.preview_pane = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
             self.preview_pane.get_style_context().add_class("preview-pane")
-            self.preview_pane.set_size_request(360, -1)
-            main_paned.pack2(self.preview_pane, resize=False, shrink=False)
+            self.preview_pane.set_size_request(280, -1)
+            main_paned.pack2(self.preview_pane, resize=False, shrink=True)
 
             self.card_widgets = {}
             self._populate_grid()

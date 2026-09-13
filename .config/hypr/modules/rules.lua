@@ -219,3 +219,13 @@ hl.window_rule({
     center = true,
 })
 
+-- Theme Manager & Switcher GUI Dialog
+hl.window_rule({
+    name   = "float-theme-manager",
+    match  = { class = "(theme-manager|theme_switcher\\.py)" },
+    float  = true,
+    size   = "1080 720",
+    center = true,
+})
+
+
