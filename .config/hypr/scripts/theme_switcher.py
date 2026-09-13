@@ -1591,7 +1591,6 @@ def run_gui_theme_manager(themes=None):
         return f"""
         * {{
             font-family: system-ui, -apple-system, 'Noto Sans', 'Segoe UI', 'Ubuntu', 'DejaVu Sans', sans-serif;
-            -gtk-font-smoothing: antialiased;
         }}
         window, dialog, .dialog-vbox {{
             background-color: {base};
@@ -1736,6 +1735,21 @@ def run_gui_theme_manager(themes=None):
             font-weight: 700;
         }}
         button.btn-delete:hover {{
+            background-color: {red};
+            color: {crust};
+            border-color: {red};
+        }}
+        button.btn-close {{
+            background-color: {s0};
+            background-image: none;
+            color: {sub1};
+            border: 1.5px solid {s1};
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 800;
+        }}
+        button.btn-close:hover {{
             background-color: {red};
             color: {crust};
             border-color: {red};
@@ -1890,6 +1904,13 @@ def run_gui_theme_manager(themes=None):
             btn_random.connect("clicked", self._on_random_clicked)
             header.pack_start(btn_random)
 
+            # Close Button
+            btn_close = Gtk.Button(label="✕")
+            btn_close.get_style_context().add_class("btn-close")
+            btn_close.set_tooltip_text("Close Theme Switcher (Esc, Super+C)")
+            btn_close.connect("clicked", lambda b: self.destroy())
+            header.pack_end(btn_close)
+
             self.set_titlebar(header)
 
             # Main Layout
@@ -1957,8 +1978,9 @@ def run_gui_theme_manager(themes=None):
             self._populate_grid()
             self._update_preview()
 
-            # Keyboard navigation
+            # Keyboard navigation and window management
             self.connect("key-press-event", self._on_key_press)
+            self.connect("delete-event", lambda *args: (self.destroy(), False)[1])
 
         def _create_color_chip(self, hex_val, tooltip=None, size=22):
             rf, gf, bf = [c / 255.0 for c in hex_to_rgb_tuple(hex_val)]
@@ -2023,8 +2045,9 @@ def run_gui_theme_manager(themes=None):
                 # Header row: Title + Badges
                 h_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
                 icon = tdata.get("icon", "🎨")
+                esc_name = GLib.markup_escape_text(name)
                 title_label = Gtk.Label()
-                title_label.set_markup(f"<span size='11264' weight='bold'>{icon}  {name}</span>")
+                title_label.set_markup(f"<span size='11264' weight='bold'>{icon}  {esc_name}</span>")
                 title_label.set_xalign(0)
                 title_label.set_ellipsize(Pango.EllipsizeMode.END)
                 h_box.pack_start(title_label, True, True, 0)
@@ -2041,8 +2064,9 @@ def run_gui_theme_manager(themes=None):
                 card_box.pack_start(h_box, False, False, 0)
 
                 # Description
+                esc_desc = GLib.markup_escape_text(desc)
                 desc_lbl = Gtk.Label()
-                desc_lbl.set_markup(f"<span size='9216'>{desc}</span>")
+                desc_lbl.set_markup(f"<span size='9216'>{esc_desc}</span>")
                 desc_lbl.set_xalign(0)
                 desc_lbl.set_ellipsize(Pango.EllipsizeMode.END)
                 desc_lbl.set_max_width_chars(34)
@@ -2097,9 +2121,11 @@ def run_gui_theme_manager(themes=None):
             ttype = tdata.get("type", "dark").capitalize()
             desc = tdata.get("desc", "")
             accent = c.get("accent", "#cba6f7")
+            esc_name = GLib.markup_escape_text(name)
+            esc_desc = GLib.markup_escape_text(desc)
 
             p_title = Gtk.Label()
-            p_title.set_markup(f"<span size='15360' weight='heavy'>{tdata.get('icon', '🎨')}  {name}</span>")
+            p_title.set_markup(f"<span size='15360' weight='heavy'>{tdata.get('icon', '🎨')}  {esc_name}</span>")
             p_title.set_xalign(0)
             self.preview_pane.pack_start(p_title, False, False, 0)
 
@@ -2109,7 +2135,7 @@ def run_gui_theme_manager(themes=None):
             self.preview_pane.pack_start(p_meta, False, False, 0)
 
             p_desc = Gtk.Label()
-            p_desc.set_markup(f"<span size='10240'>{desc}</span>")
+            p_desc.set_markup(f"<span size='10240'>{esc_desc}</span>")
             p_desc.set_xalign(0)
             p_desc.set_line_wrap(True)
             self.preview_pane.pack_start(p_desc, False, False, 0)
@@ -2284,6 +2310,16 @@ def run_gui_theme_manager(themes=None):
 
         def _on_key_press(self, widget, event):
             if event.keyval == Gdk.KEY_Escape:
+                self.destroy()
+                return True
+            # Super + C, Super + Q, Super + W (OS window close shortcuts)
+            if (event.state & Gdk.ModifierType.MOD4_MASK) and event.keyval in (
+                Gdk.KEY_c, Gdk.KEY_C, Gdk.KEY_q, Gdk.KEY_Q, Gdk.KEY_w, Gdk.KEY_W
+            ):
+                self.destroy()
+                return True
+            # Alt + F4 (OS window close shortcut)
+            if (event.state & Gdk.ModifierType.MOD1_MASK) and event.keyval == Gdk.KEY_F4:
                 self.destroy()
                 return True
             elif event.keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
@@ -2623,8 +2659,10 @@ def run_gui_theme_manager(themes=None):
             card.get_style_context().add_class("card-box")
 
             h_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            esc_name = GLib.markup_escape_text(name)
+            esc_desc = GLib.markup_escape_text(desc)
             t_lbl = Gtk.Label()
-            t_lbl.set_markup(f"<span size='11264' weight='bold'>{icon}  {name}</span>")
+            t_lbl.set_markup(f"<span size='11264' weight='bold'>{icon}  {esc_name}</span>")
             t_lbl.set_xalign(0)
             h_box.pack_start(t_lbl, True, True, 0)
 
@@ -2634,7 +2672,7 @@ def run_gui_theme_manager(themes=None):
             card.pack_start(h_box, False, False, 0)
 
             d_lbl = Gtk.Label()
-            d_lbl.set_markup(f"<span size='10240'>{desc}</span>")
+            d_lbl.set_markup(f"<span size='10240'>{esc_desc}</span>")
             d_lbl.set_xalign(0)
             card.pack_start(d_lbl, False, False, 0)
 
