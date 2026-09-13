@@ -339,6 +339,7 @@ cmd_help() {
     echo -e "${C_BOLD}Usage:${C_RESET} $0 <command> [arguments]"
     echo ""
     echo -e "${C_CYAN}Commands:${C_RESET}"
+    echo -e "  ${C_BOLD}gui${C_RESET}                  Launch the interactive GTK3 graphical personal settings manager"
     echo -e "  ${C_BOLD}status${C_RESET}               List all detected personal files & git repo status"
     echo -e "  ${C_BOLD}export${C_RESET} [output]      Export personal files to an archive (.tar.gz) or folder"
     echo -e "  ${C_BOLD}import${C_RESET} <source>      Import personal files from an archive or folder"
@@ -360,6 +361,10 @@ cmd_help() {
 
 # CLI routing
 case "$1" in
+    gui|--gui)
+        shift
+        exec python3 "${DOTFILES_DIR}/.config/hypr/scripts/dotpersonal_gui.py" "$@"
+        ;;
     status|"")
         cmd_status
         ;;

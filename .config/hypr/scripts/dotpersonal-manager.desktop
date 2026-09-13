@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Personal Settings Manager
+GenericName=Modular Dotfiles & Private Backup Manager
+Comment=Manage untracked personal configurations, export backups, and sync private Git repository
+Exec=python3 /home/kunal/.dotfiles/.config/hypr/scripts/dotpersonal_gui.py
+Icon=preferences-desktop-personal
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;
+StartupWMClass=dotpersonal_gui.py
+StartupNotify=true
+Keywords=dotfiles;personal;backup;git;export;import;private;modular;neovim;hyprland;shell;
