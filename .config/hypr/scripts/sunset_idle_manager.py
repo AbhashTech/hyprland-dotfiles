@@ -968,7 +968,10 @@ def show_gui():
 
     # Create GTK Window
     win = Gtk.Window(title="Night Light & Display Idle Manager")
-    win.set_default_size(580, 680)
+    GLib.set_prgname("sunset-idle-manager")
+    GLib.set_application_name("Night Light & Display Idle Manager")
+    win.set_role("sunset-idle-manager")
+    win.set_default_size(640, 720)
     win.set_position(Gtk.WindowPosition.CENTER)
     win.set_border_width(18)
 

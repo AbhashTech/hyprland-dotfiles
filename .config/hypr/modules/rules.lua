@@ -246,6 +246,16 @@ hl.window_rule({
     center = true,
 })
 
+-- Night Light & Display Idle Manager GUI Dialog
+hl.window_rule({
+    name   = "float-sunset-idle-manager",
+    match  = { class = "(sunset-idle-manager|sunset_idle_manager\\.py)" },
+    float  = true,
+    size   = "640 720",
+    center = true,
+})
+
+
 
 
 
