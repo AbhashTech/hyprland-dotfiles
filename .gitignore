@@ -23,3 +23,15 @@ __pycache__/
 .config/quickshell/.generated/
 .config/quickshell/generated/
 
+# Modular User Personal Configurations (Self-descriptive & Untracked)
+.config/hypr/user/*
+!.config/hypr/user/README.md
+.config/shell/user/*
+!.config/shell/user/README.md
+.config/shell/*.local.sh
+.config/nvim/lua/plugins/personal_*.lua
+.config/nvim/lua/custom/*
+!.config/nvim/lua/custom/README.md
+
+
+

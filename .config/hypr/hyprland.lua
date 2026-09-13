@@ -20,3 +20,18 @@ require("modules.input")
 require("modules.keybinds")
 require("modules.rules")
 require("modules.permissions")
+
+-- Load self-descriptive user personal overrides (untracked in dotfiles)
+local user_modules = {
+  "user.env",
+  "user.monitors",
+  "user.input",
+  "user.keybinds",
+  "user.rules",
+  "user.autostart",
+  "user.workspaces",
+}
+for _, mod in ipairs(user_modules) do
+  pcall(require, mod)
+end
+

@@ -86,7 +86,18 @@ alias app-creator="python3 ~/.config/hypr/scripts/app_shortcut_creator.py"
 
 # --- Dotfiles & Theme Synchronization ---
 alias dotpush="~/.dotfiles/scripts/dotfiles-push.sh"
+alias dotpersonal="~/.dotfiles/scripts/dotfiles-personal.sh"
 alias theme-sync="python3 ~/.config/hypr/scripts/theme_switcher.py --git-sync"
 alias theme-skip="python3 ~/.config/hypr/scripts/theme_switcher.py --git-skip"
 alias theme-unskip="python3 ~/.config/hypr/scripts/theme_switcher.py --git-unskip"
+
+# --- Modular User Personal Aliases (Untracked) ---
+if [ -d "${HOME}/.config/shell/user" ]; then
+    for _user_alias in "${HOME}/.config/shell/user"/aliases*.sh "${HOME}/.config/shell/user"/functions*.sh; do
+        [ -f "$_user_alias" ] && source "$_user_alias"
+    done
+    unset _user_alias
+fi
+[[ -f "${HOME}/.config/shell/aliases.local.sh" ]] && source "${HOME}/.config/shell/aliases.local.sh"
+
 

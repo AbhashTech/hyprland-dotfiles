@@ -82,3 +82,13 @@ if [ -n "$_SHELL_NAME" ]; then
         fi
     fi
 fi
+
+# --- Modular User Personal Environment (Untracked) ---
+if [ -d "${HOME}/.config/shell/user" ]; then
+    for _user_env in "${HOME}/.config/shell/user"/env*.sh "${HOME}/.config/shell/user"/paths*.sh; do
+        [ -f "$_user_env" ] && source "$_user_env"
+    done
+    unset _user_env
+fi
+[[ -f "${HOME}/.config/shell/env.local.sh" ]] && source "${HOME}/.config/shell/env.local.sh"
+
