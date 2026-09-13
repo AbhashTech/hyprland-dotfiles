@@ -336,7 +336,7 @@ def open_in_editor(file_path):
     subprocess.Popen([editor, str(file_path)])
 
 
-def launch_dotpersonal_gui():
+def launch_dotpersonal_gui(start_tab: int = 0):
     """Initialize and launch the GTK3 GUI application."""
     import gi
     gi.require_version("Gtk", "3.0")
@@ -368,14 +368,37 @@ def launch_dotpersonal_gui():
     yellow_fg = get_contrast_color(c_yellow)
     sapphire_fg = get_contrast_color(c_sapphire)
 
+    settings = Gtk.Settings.get_default()
+    if settings:
+        settings.set_property("gtk-application-prefer-dark-theme", theme_type == "dark")
+
     css_provider = Gtk.CssProvider()
     css_data = f"""
     * {{
         font-family: system-ui, -apple-system, 'Inter', 'Roboto', 'Noto Sans', 'JetBrainsMono Nerd Font', sans-serif;
     }}
 
-    window {{
+    /* Full Window & Container Surface Styling */
+    window, dialog, messagedialog,
+    viewport, scrolledwindow,
+    box, grid,
+    notebook, notebook > stack, notebook > stack > *,
+    list, listbox, row, listboxrow {{
         background-color: {c_base};
+        color: {c_text};
+    }}
+
+    scrolledwindow, viewport {{
+        background-color: {c_base};
+        border: none;
+    }}
+
+    list, listbox, row, listboxrow {{
+        background-color: transparent;
+        color: {c_text};
+    }}
+
+    label {{
         color: {c_text};
     }}
 
@@ -411,9 +434,24 @@ def launch_dotpersonal_gui():
         background: transparent;
     }}
 
+    notebook tab label {{
+        color: {c_subtext0};
+        font-weight: 600;
+    }}
+
     notebook tab:checked {{
         color: {c_accent};
         border-bottom: 2px solid {c_accent};
+        background-color: {c_base};
+    }}
+
+    notebook tab:checked label {{
+        color: {c_accent};
+        font-weight: 700;
+    }}
+
+    notebook stack {{
+        background-color: {c_base};
     }}
 
     /* Base Buttons */
@@ -632,7 +670,7 @@ def launch_dotpersonal_gui():
         font-weight: 700;
     }}
 
-    entry, textview {{
+    entry, entry.search-input {{
         background-color: {c_mantle};
         color: {c_text};
         border: 1px solid {c_surface1};
@@ -640,8 +678,50 @@ def launch_dotpersonal_gui():
         padding: 6px 10px;
     }}
 
-    entry:focus, textview:focus {{
+    entry:focus {{
         border-color: {c_accent};
+        background-color: {c_surface0};
+        color: {c_text};
+    }}
+
+    textview, textview text, textview.view {{
+        background-color: {c_mantle};
+        color: {c_text};
+        font-family: 'JetBrainsMono Nerd Font', monospace;
+        font-size: 12px;
+    }}
+
+    scrolledwindow textview,
+    scrolledwindow textview text {{
+        background-color: {c_mantle};
+        color: {c_text};
+    }}
+
+    combobox, combobox button, combobox textview, combobox cellview {{
+        background-color: {c_surface0};
+        color: {c_text};
+        border: 1px solid {c_surface2};
+        border-radius: 6px;
+    }}
+
+    combobox button:hover {{
+        background-color: {c_surface1};
+        border-color: {c_accent};
+    }}
+
+    combobox window, combobox menu, combobox .menu, menu, .menu {{
+        background-color: {c_mantle};
+        color: {c_text};
+        border: 1px solid {c_surface1};
+    }}
+
+    menuitem, .menuitem {{
+        color: {c_text};
+    }}
+
+    menuitem:hover, .menuitem:hover {{
+        background-color: {c_surface1};
+        color: {c_text};
     }}
 
     .card {{
@@ -655,6 +735,33 @@ def launch_dotpersonal_gui():
     .card:hover {{
         border-color: {c_surface1};
         background-color: {c_surface0};
+    }}
+
+    .card label {{
+        color: {c_text};
+    }}
+
+    .card label.stat-label {{
+        color: {c_subtext0};
+    }}
+
+    .empty-card {{
+        background-color: {c_mantle};
+        border: 1px dashed {c_surface2};
+        border-radius: 10px;
+        padding: 36px 20px;
+        margin: 16px 4px;
+    }}
+
+    label.empty-title {{
+        color: {c_text};
+        font-size: 14px;
+        font-weight: 700;
+    }}
+
+    label.empty-sub {{
+        color: {c_subtext0};
+        font-size: 12px;
     }}
 
     label.badge, .badge {{
@@ -676,19 +783,27 @@ def launch_dotpersonal_gui():
         padding: 16px;
     }}
 
-    .section-title {{
+    .status-box label {{
+        color: {c_text};
+    }}
+
+    .status-box label.stat-label {{
+        color: {c_subtext0};
+    }}
+
+    .section-title, label.section-title {{
         font-size: 13px;
         font-weight: 700;
-        color: {c_text};
+        color: {c_accent};
         margin-bottom: 6px;
     }}
 
-    .stat-label {{
+    .stat-label, label.stat-label {{
         font-size: 11px;
         color: {c_subtext0};
     }}
 
-    .stat-value {{
+    .stat-value, label.stat-value {{
         font-size: 13px;
         font-weight: 600;
         color: {c_text};
@@ -706,7 +821,7 @@ def launch_dotpersonal_gui():
     screen = Gdk.Screen.get_default()
     if screen:
         Gtk.StyleContext.add_provider_for_screen(
-            screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
         )
 
     class PersonalManagerWindow(Gtk.Window):
@@ -851,6 +966,17 @@ def launch_dotpersonal_gui():
                 card.pack_end(btn_edit, False, False, 0)
 
                 self.files_listbox.add(card)
+
+            if visible_count == 0:
+                empty_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+                empty_card.get_style_context().add_class("empty-card")
+                lbl_title = Gtk.Label(label="No matching personal configuration files found.", xalign=0.5)
+                lbl_title.get_style_context().add_class("empty-title")
+                lbl_sub = Gtk.Label(label="Click '+ New Config' above to create one from templates!", xalign=0.5)
+                lbl_sub.get_style_context().add_class("empty-sub")
+                empty_card.pack_start(lbl_title, False, False, 0)
+                empty_card.pack_start(lbl_sub, False, False, 0)
+                self.files_listbox.add(empty_card)
 
             self.files_listbox.show_all()
             self.lbl_files_count.set_text(f"Showing {visible_count} of {len(files)} active personal files (all ignored by Git).")
@@ -1202,8 +1328,17 @@ def launch_dotpersonal_gui():
     win = PersonalManagerWindow()
     win.connect("destroy", Gtk.main_quit)
     win.show_all()
+    if start_tab and 0 <= start_tab < 3:
+        win.notebook.set_current_page(start_tab)
     Gtk.main()
 
 
 if __name__ == "__main__":
-    launch_dotpersonal_gui()
+    tab = 0
+    for arg in sys.argv[1:]:
+        if arg.startswith("--tab="):
+            try:
+                tab = int(arg.split("=")[1])
+            except ValueError:
+                pass
+    launch_dotpersonal_gui(start_tab=tab)
