@@ -778,6 +778,23 @@ def launch_keybind_manager_gui(start_tab: int = 0):
         color: {c_text};
     }}
 
+    /* Theme-matched tooltips */
+    tooltip, tooltip.background {{
+        background-color: {c_surface0};
+        color: {c_text};
+        border: 1px solid {c_surface2};
+        border-radius: 6px;
+        padding: 4px 8px;
+    }}
+    tooltip * {{
+        background-color: transparent;
+        color: {c_text};
+    }}
+    tooltip label {{
+        color: {c_text};
+        font-size: 11px;
+    }}
+
     .top-header {{
         background-color: {c_mantle};
         border-bottom: 1px solid {c_surface0};
