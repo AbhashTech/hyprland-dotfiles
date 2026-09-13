@@ -485,6 +485,38 @@ StartupNotify=true
 Keywords=plugin;manager;quickshell;extensions;widgets;custom;store;
 EOF
 
+cat > "${HOME}/.local/share/applications/dotpersonal-manager.desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Personal Settings Manager
+GenericName=Modular Dotfiles & Private Backup Manager
+Comment=Manage untracked personal configurations, export backups, and sync private Git repository
+Exec=python3 ${HOME}/.config/hypr/scripts/dotpersonal_gui.py
+Icon=preferences-desktop-personal
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;
+StartupWMClass=dotpersonal_gui.py
+StartupNotify=true
+Keywords=dotfiles;personal;backup;git;export;import;private;modular;neovim;hyprland;shell;
+EOF
+
+cat > "${HOME}/.local/share/applications/keybind-manager.desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Keybindings Manager
+GenericName=Hyprland Shortcuts & Hotkeys Manager
+Comment=Manage, override, disable, and create custom Hyprland keybindings
+Exec=python3 ${HOME}/.config/hypr/scripts/keybind_manager.py
+Icon=preferences-desktop-keyboard
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;
+StartupWMClass=keybind_manager.py
+StartupNotify=true
+Keywords=hyprland;keybind;keys;shortcuts;hotkeys;binds;keyboard;actions;override;custom;
+EOF
+
 chmod +x "${HOME}/.local/share/applications/"*.desktop 2>/dev/null || true
 
 if [ -f "${DOTFILES_DIR}/.config/hypr/assets/ocr-language-manager.png" ]; then
