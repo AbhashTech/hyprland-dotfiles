@@ -718,7 +718,7 @@ def launch_keybind_manager_gui(start_tab: int = 0):
     import gi
     gi.require_version("Gtk", "3.0")
     gi.require_version("Gdk", "3.0")
-    from gi.repository import Gtk, Gdk, Pango
+    from gi.repository import Gtk, Gdk, GLib, Pango
 
     colors, theme_type, theme_name = get_active_theme_colors()
 
@@ -1451,8 +1451,11 @@ def launch_keybind_manager_gui(start_tab: int = 0):
     class KeybindsManagerWindow(Gtk.Window):
         def __init__(self):
             super().__init__(title="Hyprland Keybindings Manager")
-            self.set_default_size(960, 660)
+            GLib.set_prgname("keybind-manager")
+            GLib.set_application_name("Hyprland Keybindings Manager")
+            self.set_default_size(1000, 680)
             self.set_position(Gtk.WindowPosition.CENTER)
+            self.set_role("keybind-manager")
 
             self.default_binds = parse_default_keybinds()
             self.disabled_defaults, self.overrides, self.custom_binds, self.plugin_binds = load_user_keybinds_state()

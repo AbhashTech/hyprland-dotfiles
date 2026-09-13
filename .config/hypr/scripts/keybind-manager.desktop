@@ -8,6 +8,6 @@ Exec=python3 /home/kunal/.dotfiles/.config/hypr/scripts/keybind_manager.py
 Icon=preferences-desktop-keyboard
 Terminal=false
 Categories=Utility;Settings;DesktopSettings;
-StartupWMClass=keybind_manager.py
+StartupWMClass=keybind-manager
 StartupNotify=true
 Keywords=hyprland;keybind;keys;shortcuts;hotkeys;binds;keyboard;actions;override;custom;

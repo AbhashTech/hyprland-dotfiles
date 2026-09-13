@@ -237,5 +237,15 @@ hl.window_rule({
     center = true,
 })
 
+-- Hyprland Keybindings Manager GUI Dialog
+hl.window_rule({
+    name   = "float-keybind-manager",
+    match  = { class = "(keybind-manager|keybind_manager\\.py)" },
+    float  = true,
+    size   = "1000 680",
+    center = true,
+})
+
+
 
 
