@@ -905,7 +905,7 @@ def launch_gtk_gui(initial_tab=0):
         import gi
         gi.require_version("Gtk", "3.0")
         gi.require_version("Gdk", "3.0")
-        from gi.repository import Gtk, Gdk
+        from gi.repository import Gtk, Gdk, GLib
     except Exception as e:
         print(f"GTK3 initialization error: {e}", file=sys.stderr)
         return
@@ -1155,8 +1155,11 @@ def launch_gtk_gui(initial_tab=0):
     class KeyboardLayoutWindow(Gtk.Window):
         def __init__(self, start_tab=0):
             super().__init__(title="Keyboard Layouts")
-            self.set_default_size(620, 520)
+            GLib.set_prgname("keyboard-layout-manager")
+            GLib.set_application_name("Keyboard Layouts")
+            self.set_default_size(680, 560)
             self.set_position(Gtk.WindowPosition.CENTER)
+            self.set_role("keyboard-layout-manager")
             self.l_map, self.v_map = parse_all_xkb_catalog()
 
             # Main vertical box

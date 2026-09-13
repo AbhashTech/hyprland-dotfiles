@@ -464,7 +464,7 @@ Exec=python3 ${HOME}/.config/hypr/scripts/keyboard_layout.py --gui
 Icon=preferences-desktop-keyboard
 Terminal=false
 Categories=Utility;Settings;DesktopSettings;HardwareSettings;
-StartupWMClass=keyboard_layout.py
+StartupWMClass=keyboard-layout-manager
 StartupNotify=true
 Keywords=keyboard;layout;variant;language;typing;input;xkb;hindi;tamil;telugu;dvorak;colemak;marathi;bengali;kannada;malayalam;gujarati;
 EOF

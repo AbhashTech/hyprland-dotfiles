@@ -255,6 +255,16 @@ hl.window_rule({
     center = true,
 })
 
+-- Keyboard Layout Manager GUI Dialog
+hl.window_rule({
+    name   = "float-keyboard-layout",
+    match  = { class = "(keyboard-layout-manager|keyboard_layout\\.py)" },
+    float  = true,
+    size   = "680 560",
+    center = true,
+})
+
+
 
 
 
