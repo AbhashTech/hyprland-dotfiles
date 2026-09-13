@@ -1221,6 +1221,9 @@ def update_systemwide_theme(theme):
             ("color-scheme", color_scheme),
             ("gtk-theme", gtk_theme_name),
             ("icon-theme", icon_theme_name),
+            ("font-antialiasing", "rgba"),
+            ("font-hinting", "slight"),
+            ("font-rgba-order", "rgb"),
         ]:
             try:
                 subprocess.run(
@@ -1245,6 +1248,9 @@ def update_systemwide_theme(theme):
         for key_path, val in [
             ("/org/gnome/desktop/interface/color-scheme", f"'{color_scheme}'"),
             ("/org/gnome/desktop/interface/gtk-theme", f"'{gtk_theme_name}'"),
+            ("/org/gnome/desktop/interface/font-antialiasing", "'rgba'"),
+            ("/org/gnome/desktop/interface/font-hinting", "'slight'"),
+            ("/org/gnome/desktop/interface/font-rgba-order", "'rgb'"),
         ]:
             try:
                 subprocess.run(
@@ -1276,6 +1282,10 @@ def update_systemwide_theme(theme):
         settings_dict["gtk-application-prefer-dark-theme"] = gtk_dark_val
         settings_dict["gtk-color-scheme"] = f'"{color_scheme}"'
         settings_dict["gtk-decoration-layout"] = ":close"
+        settings_dict["gtk-xft-antialias"] = "1"
+        settings_dict["gtk-xft-hinting"] = "1"
+        settings_dict["gtk-xft-hintstyle"] = "hintslight"
+        settings_dict["gtk-xft-rgba"] = "rgb"
         if "gtk-theme-name" not in settings_dict or settings_dict["gtk-theme-name"] in ["Adwaita", "Adwaita-dark", "Breeze", "Breeze-Dark"]:
             settings_dict["gtk-theme-name"] = gtk_theme_name
         if "gtk-icon-theme-name" not in settings_dict or settings_dict["gtk-icon-theme-name"] in ["Papirus", "Papirus-Dark", "Papirus-Light"]:
@@ -1304,6 +1314,11 @@ Net/IconThemeName "{icon_theme_name}"
 Gtk/ApplicationPreferDarkTheme {gtk_dark_val}
 Gtk/ColorScheme "{color_scheme}"
 Gtk/DecorationLayout ":close"
+Xft/Antialias 1
+Xft/Hinting 1
+Xft/HintStyle "hintslight"
+Xft/RGBA "rgb"
+Xft/DPI 98304
 """
     try:
         xsettings_file.write_text(xsettings_content, encoding="utf-8")
@@ -1575,7 +1590,8 @@ def run_gui_theme_manager(themes=None):
 
         return f"""
         * {{
-            font-family: 'Inter', 'Noto Sans', 'Segoe UI', 'Ubuntu', system-ui, sans-serif;
+            font-family: system-ui, -apple-system, 'Noto Sans', 'Segoe UI', 'Ubuntu', 'DejaVu Sans', sans-serif;
+            -gtk-font-smoothing: antialiased;
         }}
         window, dialog, .dialog-vbox {{
             background-color: {base};
@@ -1856,9 +1872,9 @@ def run_gui_theme_manager(themes=None):
             
             title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
             self.title_lbl = Gtk.Label()
-            self.title_lbl.set_markup(f"<span size='12000' weight='bold'>🎨 Desktop Theme Switcher &amp; Palette Manager</span>")
+            self.title_lbl.set_markup(f"<span size='12288' weight='bold'>🎨 Desktop Theme Switcher &amp; Palette Manager</span>")
             self.subtitle_lbl = Gtk.Label()
-            self.subtitle_lbl.set_markup(f"<span size='9500'>{len(self.themes)} Handcrafted Palettes • Hyprland, Waybar &amp; Apps</span>")
+            self.subtitle_lbl.set_markup(f"<span size='10240'>{len(self.themes)} Handcrafted Palettes • Hyprland, Waybar &amp; Apps</span>")
             title_box.pack_start(self.title_lbl, False, False, 0)
             title_box.pack_start(self.subtitle_lbl, False, False, 0)
             header.set_custom_title(title_box)
@@ -1893,7 +1909,7 @@ def run_gui_theme_manager(themes=None):
             top_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
             
             self.search_entry = Gtk.SearchEntry()
-            self.search_entry.set_placeholder_text("🔍 Filter themes by name, mode, color or style...")
+            self.search_entry.set_placeholder_text("Filter themes by name, mode, color or style...")
             self.search_entry.get_style_context().add_class("search-input")
             self.search_entry.connect("search-changed", self._on_search_changed)
             top_bar.pack_start(self.search_entry, True, True, 0)
@@ -2008,7 +2024,7 @@ def run_gui_theme_manager(themes=None):
                 h_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
                 icon = tdata.get("icon", "🎨")
                 title_label = Gtk.Label()
-                title_label.set_markup(f"<span size='10500' weight='bold'>{icon}  {name}</span>")
+                title_label.set_markup(f"<span size='11264' weight='bold'>{icon}  {name}</span>")
                 title_label.set_xalign(0)
                 title_label.set_ellipsize(Pango.EllipsizeMode.END)
                 h_box.pack_start(title_label, True, True, 0)
@@ -2026,10 +2042,10 @@ def run_gui_theme_manager(themes=None):
 
                 # Description
                 desc_lbl = Gtk.Label()
-                desc_lbl.set_markup(f"<span size='9000'>{desc}</span>")
+                desc_lbl.set_markup(f"<span size='9216'>{desc}</span>")
                 desc_lbl.set_xalign(0)
                 desc_lbl.set_ellipsize(Pango.EllipsizeMode.END)
-                desc_lbl.set_max_width_chars(32)
+                desc_lbl.set_max_width_chars(34)
                 card_box.pack_start(desc_lbl, False, False, 0)
 
                 # Swatch Palette Strip
@@ -2083,17 +2099,17 @@ def run_gui_theme_manager(themes=None):
             accent = c.get("accent", "#cba6f7")
 
             p_title = Gtk.Label()
-            p_title.set_markup(f"<span size='15000' weight='heavy'>{tdata.get('icon', '🎨')}  {name}</span>")
+            p_title.set_markup(f"<span size='15360' weight='heavy'>{tdata.get('icon', '🎨')}  {name}</span>")
             p_title.set_xalign(0)
             self.preview_pane.pack_start(p_title, False, False, 0)
 
             p_meta = Gtk.Label()
-            p_meta.set_markup(f"<span size='10000'>Mode: <b>{ttype}</b>   •   Accent: <span font_family='monospace' weight='bold'>{accent}</span></span>")
+            p_meta.set_markup(f"<span size='10240'>Mode: <b>{ttype}</b>   •   Accent: <span font_family='monospace' weight='bold'>{accent}</span></span>")
             p_meta.set_xalign(0)
             self.preview_pane.pack_start(p_meta, False, False, 0)
 
             p_desc = Gtk.Label()
-            p_desc.set_markup(f"<span size='9500'>{desc}</span>")
+            p_desc.set_markup(f"<span size='10240'>{desc}</span>")
             p_desc.set_xalign(0)
             p_desc.set_line_wrap(True)
             self.preview_pane.pack_start(p_desc, False, False, 0)
@@ -2124,7 +2140,7 @@ def run_gui_theme_manager(themes=None):
 
             # Palette matrix box
             pal_label = Gtk.Label()
-            pal_label.set_markup("<span size='10500' weight='bold'>🎨 Color Palette Matrix</span>")
+            pal_label.set_markup("<span size='11264' weight='bold'>🎨 Color Palette Matrix</span>")
             pal_label.set_xalign(0)
             self.preview_pane.pack_start(pal_label, False, False, 0)
 
@@ -2140,7 +2156,7 @@ def run_gui_theme_manager(themes=None):
                 if k in c and isinstance(c[k], str) and c[k].startswith("#"):
                     chip = self._create_color_chip(c[k], tooltip=f"{k}: {c[k]}", size=20)
                     lbl = Gtk.Label()
-                    lbl.set_markup(f"<span size='9000'><b>{k}:</b> <span font_family='monospace'>{c[k]}</span></span>")
+                    lbl.set_markup(f"<span size='9216'><b>{k}:</b> <span font_family='monospace'>{c[k]}</span></span>")
                     lbl.set_xalign(0)
                     box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
                     box.pack_start(chip, False, False, 0)
@@ -2343,7 +2359,7 @@ def run_gui_theme_manager(themes=None):
             # -----------------------------------------------------------------
             seed_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
             seed_lbl = Gtk.Label()
-            seed_lbl.set_markup("<span size='10500' weight='bold'>🌱 Seed from Template:</span>")
+            seed_lbl.set_markup("<span size='11264' weight='bold'>🌱 Seed from Template:</span>")
             seed_box.pack_start(seed_lbl, False, False, 0)
 
             self.seed_combo = Gtk.ComboBoxText()
@@ -2364,7 +2380,7 @@ def run_gui_theme_manager(themes=None):
             meta_frame.get_style_context().add_class("editor-frame")
             
             meta_title = Gtk.Label()
-            meta_title.set_markup("<span size='11500' weight='bold'>📋 Theme Identity &amp; Metadata</span>")
+            meta_title.set_markup("<span size='12288' weight='bold'>📋 Theme Identity &amp; Metadata</span>")
             meta_title.set_xalign(0)
             meta_frame.pack_start(meta_title, False, False, 0)
 
@@ -2440,7 +2456,7 @@ def run_gui_theme_manager(themes=None):
             pal_frame.get_style_context().add_class("editor-frame")
 
             pal_title = Gtk.Label()
-            pal_title.set_markup("<span size='11500' weight='bold'>🎨 Color Palette Studio</span>")
+            pal_title.set_markup("<span size='12288' weight='bold'>🎨 Color Palette Studio</span>")
             pal_title.set_xalign(0)
             pal_frame.pack_start(pal_title, False, False, 0)
 
@@ -2478,7 +2494,7 @@ def run_gui_theme_manager(themes=None):
 
             for cat_title, color_list in categories:
                 cat_lbl = Gtk.Label()
-                cat_lbl.set_markup(f"<span size='10500' weight='bold'>{cat_title}</span>")
+                cat_lbl.set_markup(f"<span size='11264' weight='bold'>{cat_title}</span>")
                 cat_lbl.set_xalign(0)
                 pal_frame.pack_start(cat_lbl, False, False, 2)
 
@@ -2493,7 +2509,7 @@ def run_gui_theme_manager(themes=None):
                     row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
                     
                     lbl = Gtk.Label()
-                    lbl.set_markup(f"<span size='9500' weight='bold'>{c_label}:</span>")
+                    lbl.set_markup(f"<span size='10240' weight='bold'>{c_label}:</span>")
                     lbl.set_xalign(0)
                     lbl.set_size_request(130, -1)
                     lbl.set_tooltip_text(c_desc)
@@ -2598,7 +2614,7 @@ def run_gui_theme_manager(themes=None):
             is_dark = (self.combo_type.get_active() == 0)
 
             title_lbl = Gtk.Label()
-            title_lbl.set_markup("<span size='11500' weight='bold'>👁️ Real-Time Live Preview</span>")
+            title_lbl.set_markup("<span size='12288' weight='bold'>👁️ Real-Time Live Preview</span>")
             title_lbl.set_xalign(0)
             self.live_preview_box.pack_start(title_lbl, False, False, 0)
 
@@ -2608,7 +2624,7 @@ def run_gui_theme_manager(themes=None):
 
             h_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
             t_lbl = Gtk.Label()
-            t_lbl.set_markup(f"<span size='11000' weight='bold'>{icon}  {name}</span>")
+            t_lbl.set_markup(f"<span size='11264' weight='bold'>{icon}  {name}</span>")
             t_lbl.set_xalign(0)
             h_box.pack_start(t_lbl, True, True, 0)
 
@@ -2618,7 +2634,7 @@ def run_gui_theme_manager(themes=None):
             card.pack_start(h_box, False, False, 0)
 
             d_lbl = Gtk.Label()
-            d_lbl.set_markup(f"<span size='9500'>{desc}</span>")
+            d_lbl.set_markup(f"<span size='10240'>{desc}</span>")
             d_lbl.set_xalign(0)
             card.pack_start(d_lbl, False, False, 0)
 
