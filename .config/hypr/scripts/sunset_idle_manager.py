@@ -938,7 +938,7 @@ def show_gui():
     try:
         import gi
         gi.require_version("Gtk", "3.0")
-        from gi.repository import Gtk, Gdk, GLib
+        from gi.repository import Gtk, Gdk, GLib, Pango
     except Exception as e:
         print(f"GTK3/PyGObject unavailable: {e}. Falling back to menu mode.", file=sys.stderr)
         show_menu()
@@ -974,6 +974,18 @@ def show_gui():
     win.set_default_size(640, 720)
     win.set_position(Gtk.WindowPosition.CENTER)
     win.set_border_width(18)
+
+    def _on_key_press(widget, event):
+        if event.keyval in (Gdk.KEY_Escape,):
+            win.destroy()
+            return True
+        ctrl = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0
+        if ctrl and event.keyval in (Gdk.KEY_q, Gdk.KEY_Q, Gdk.KEY_w, Gdk.KEY_W):
+            win.destroy()
+            return True
+        return False
+
+    win.connect("key-press-event", _on_key_press)
 
     # Apply CSS styling
     css = f"""
@@ -1046,6 +1058,21 @@ def show_gui():
         background-color: {c_surface1};
         color: {c_text};
         border-color: {c_accent};
+    }}
+    .btn-close, .btn-close label {{
+        background-color: {c_surface0};
+        color: {c_subtext0};
+        border-radius: 8px;
+        padding: 4px 10px;
+        font-size: 11pt;
+        font-weight: bold;
+        border: 1px solid transparent;
+        transition: all 150ms ease-in-out;
+    }}
+    .btn-close:hover, .btn-close:hover label {{
+        background-color: {c_red};
+        color: {danger_fg};
+        border-color: {c_red};
     }}
     .primary-btn, .primary-btn label {{
         background-color: {c_accent};
@@ -1155,11 +1182,20 @@ def show_gui():
     title_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
     title_lbl = Gtk.Label(xalign=0)
     title_lbl.set_markup(f"<span font='14' weight='bold' color='{colors.get('mauve', '#cba6f7')}'>Display Power &amp; Night Light Control</span>")
+    title_lbl.set_ellipsize(Pango.EllipsizeMode.END)
     sub_lbl = Gtk.Label(xalign=0)
     sub_lbl.set_markup(f"<span color='{colors.get('subtext0', '#a6adc8')}'>Unified manager for Hyprsunset &amp; Hypridle idle timeouts</span>")
+    sub_lbl.set_ellipsize(Pango.EllipsizeMode.END)
     title_vbox.pack_start(title_lbl, False, False, 0)
     title_vbox.pack_start(sub_lbl, False, False, 0)
     header.pack_start(title_vbox, True, True, 4)
+
+    # Dedicated Close Button
+    btn_close = Gtk.Button(label="✕")
+    btn_close.get_style_context().add_class("btn-close")
+    btn_close.set_tooltip_text("Close (Esc, Ctrl+W)")
+    btn_close.connect("clicked", lambda b: win.destroy())
+    header.pack_end(btn_close, False, False, 0)
 
     main_vbox.pack_start(header, False, False, 0)
 
