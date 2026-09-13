@@ -511,6 +511,23 @@ def launch_gtk_gui():
         color: {c_text};
     }}
 
+    /* Theme-matched tooltips */
+    tooltip, tooltip.background {{
+        background-color: {c_surface0};
+        color: {c_text};
+        border: 1px solid {c_surface2};
+        border-radius: 6px;
+        padding: 4px 8px;
+    }}
+    tooltip * {{
+        background-color: transparent;
+        color: {c_text};
+    }}
+    tooltip label {{
+        color: {c_text};
+        font-size: 11px;
+    }}
+
     .header-box {{
         background-color: {c_mantle};
         border-bottom: 2px solid {c_surface0};
@@ -866,7 +883,7 @@ def launch_gtk_gui():
             test_btn = Gtk.Button(label="📸 Capture & Test OCR")
             test_btn.get_style_context().add_class("btn-capture")
             test_btn.set_tooltip_text("Capture screen area and run OCR test (Ctrl+Return)")
-            test_btn.connect("clicked", lambda b: run_ocr_grab())
+            test_btn.connect("clicked", lambda b: self.on_capture_and_close())
             header_box.pack_end(test_btn, False, False, 4)
 
             # Keyboard shortcut listener
@@ -979,9 +996,13 @@ def launch_gtk_gui():
                     self.search_entry.grab_focus()
                 return True
             if ctrl and event.keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
-                run_ocr_grab()
+                self.on_capture_and_close()
                 return True
             return False
+
+        def on_capture_and_close(self):
+            self.destroy()
+            run_ocr_grab()
 
         def update_chips_and_header(self):
             """Update active languages chips and command line preview."""
