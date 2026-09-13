@@ -1745,8 +1745,10 @@ def run_gui_theme_manager(themes=None):
             color: {sub1};
             border: 1.5px solid {s1};
             border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 13px;
+            padding: 6px 14px;
+            min-width: 36px;
+            min-height: 36px;
+            font-size: 14px;
             font-weight: 800;
         }}
         button.btn-close:hover {{
@@ -1909,12 +1911,22 @@ def run_gui_theme_manager(themes=None):
             title_box.pack_start(self.subtitle_lbl, False, False, 0)
             header.set_center_widget(title_box)
 
-            # Right: Single Dedicated Close Button
-            btn_close = Gtk.Button(label="✕")
-            btn_close.get_style_context().add_class("btn-close")
-            btn_close.set_tooltip_text("Close Theme Switcher (Esc, Super+C)")
-            btn_close.connect("clicked", lambda b: self.destroy())
-            header.pack_end(btn_close, False, False, 0)
+            # Right: Single Dedicated Close Button wrapped in EventBox for guaranteed Wayland pointer capture
+            self.close_evbox = Gtk.EventBox()
+            self.close_evbox.set_visible_window(True)
+
+            self.btn_close = Gtk.Button(label="✕")
+            self.btn_close.get_style_context().add_class("btn-close")
+            self.btn_close.set_tooltip_text("Close Theme Switcher (Esc, Super+C)")
+            self.btn_close.set_can_focus(False)
+            self.btn_close.connect("clicked", lambda b: self._close_app())
+            self.btn_close.connect("button-press-event", lambda w, e: (self._close_app(), True)[1] if e.button == 1 else False)
+            self.btn_close.connect("button-release-event", lambda w, e: (self._close_app(), True)[1] if e.button == 1 else False)
+
+            self.close_evbox.connect("button-press-event", lambda w, e: (self._close_app(), True)[1] if e.button == 1 else False)
+            self.close_evbox.connect("button-release-event", lambda w, e: (self._close_app(), True)[1] if e.button == 1 else False)
+            self.close_evbox.add(self.btn_close)
+            header.pack_end(self.close_evbox, False, False, 0)
 
             main_vbox.pack_start(header, False, False, 0)
 
@@ -1985,7 +1997,7 @@ def run_gui_theme_manager(themes=None):
 
             # Keyboard navigation and window management
             self.connect("key-press-event", self._on_key_press)
-            self.connect("delete-event", lambda *args: (self.destroy(), False)[1])
+            self.connect("delete-event", lambda *args: (self._close_app(), False)[1])
 
         def _create_color_chip(self, hex_val, tooltip=None, size=22):
             rf, gf, bf = [c / 255.0 for c in hex_to_rgb_tuple(hex_val)]
@@ -2203,12 +2215,22 @@ def run_gui_theme_manager(themes=None):
 
             self.preview_pane.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 2)
 
-            # Apply Button
+            # Bottom Action Buttons (Apply Theme + Close)
+            actions_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+
             btn_apply = Gtk.Button(label=f"✓  Apply Theme: {name}")
             btn_apply.get_style_context().add_class("apply-btn")
             btn_apply.set_size_request(-1, 42)
             btn_apply.connect("clicked", lambda b: self._apply_selected_theme())
-            self.preview_pane.pack_start(btn_apply, False, False, 4)
+            actions_box.pack_start(btn_apply, True, True, 0)
+
+            btn_bottom_close = Gtk.Button(label="✕ Close")
+            btn_bottom_close.get_style_context().add_class("btn-action-small")
+            btn_bottom_close.set_size_request(86, 42)
+            btn_bottom_close.connect("clicked", lambda b: self._close_app())
+            actions_box.pack_end(btn_bottom_close, False, False, 0)
+
+            self.preview_pane.pack_start(actions_box, False, False, 4)
 
             self.preview_pane.show_all()
 
@@ -2313,19 +2335,30 @@ def run_gui_theme_manager(themes=None):
                 self.selected_theme_id = random.choice(candidates)
                 self._apply_selected_theme()
 
+        def _close_app(self, *args):
+            try:
+                self.destroy()
+            except Exception:
+                pass
+            try:
+                Gtk.main_quit()
+            except Exception:
+                pass
+            sys.exit(0)
+
         def _on_key_press(self, widget, event):
             if event.keyval == Gdk.KEY_Escape:
-                self.destroy()
+                self._close_app()
                 return True
             # Super + C, Super + Q, Super + W (OS window close shortcuts)
             if (event.state & Gdk.ModifierType.MOD4_MASK) and event.keyval in (
                 Gdk.KEY_c, Gdk.KEY_C, Gdk.KEY_q, Gdk.KEY_Q, Gdk.KEY_w, Gdk.KEY_W
             ):
-                self.destroy()
+                self._close_app()
                 return True
             # Alt + F4 (OS window close shortcut)
             if (event.state & Gdk.ModifierType.MOD1_MASK) and event.keyval == Gdk.KEY_F4:
-                self.destroy()
+                self._close_app()
                 return True
             elif event.keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
                 self._apply_selected_theme()
@@ -2370,7 +2403,9 @@ def run_gui_theme_manager(themes=None):
 
             btn_cancel = Gtk.Button(label="Cancel")
             btn_cancel.get_style_context().add_class("btn-action-small")
+            btn_cancel.set_can_focus(False)
             btn_cancel.connect("clicked", lambda b: self.destroy())
+            btn_cancel.connect("button-press-event", lambda w, e: (self.destroy(), True)[1] if e.button == 1 else False)
             header.pack_start(btn_cancel, False, False, 0)
 
             title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
