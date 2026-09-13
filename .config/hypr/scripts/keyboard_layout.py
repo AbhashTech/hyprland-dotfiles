@@ -944,6 +944,23 @@ def launch_gtk_gui(initial_tab=0):
         color: {c_text};
     }}
 
+    /* Theme-matched tooltips */
+    tooltip, tooltip.background {{
+        background-color: {c_surface0};
+        color: {c_text};
+        border: 1px solid {c_surface2};
+        border-radius: 6px;
+        padding: 4px 8px;
+    }}
+    tooltip * {{
+        background-color: transparent;
+        color: {c_text};
+    }}
+    tooltip label {{
+        color: {c_text};
+        font-size: 11px;
+    }}
+
     /* Clean subtle window header */
     .top-header {{
         background-color: {c_mantle};
