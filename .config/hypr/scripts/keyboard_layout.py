@@ -905,7 +905,7 @@ def launch_gtk_gui(initial_tab=0):
         import gi
         gi.require_version("Gtk", "3.0")
         gi.require_version("Gdk", "3.0")
-        from gi.repository import Gtk, Gdk, GLib
+        from gi.repository import Gtk, Gdk, GLib, Pango
     except Exception as e:
         print(f"GTK3 initialization error: {e}", file=sys.stderr)
         return
@@ -960,6 +960,22 @@ def launch_gtk_gui(initial_tab=0):
     .window-subtitle {{
         font-size: 11px;
         color: {c_subtext0};
+    }}
+
+    button.btn-close {{
+        background-color: {c_surface0};
+        color: {c_subtext0};
+        border-radius: 8px;
+        padding: 4px 10px;
+        font-size: 13px;
+        font-weight: bold;
+        border: 1px solid transparent;
+        transition: all 150ms ease-in-out;
+    }}
+    button.btn-close:hover {{
+        background-color: {c_red};
+        color: {c_base};
+        border-color: {c_red};
     }}
 
     /* Native-feeling buttons */
@@ -1178,19 +1194,31 @@ def launch_gtk_gui(initial_tab=0):
             curr_desc = get_entry_description(info["current_lay"], info["current_var"], self.l_map, self.v_map)
             self.lbl_sub = Gtk.Label(label=f"Active: {curr_desc} ({info['current_tag'].upper()})", xalign=0)
             self.lbl_sub.get_style_context().add_class("window-subtitle")
+            self.lbl_sub.set_ellipsize(Pango.EllipsizeMode.END)
+            self.lbl_sub.set_max_width_chars(45)
             
             title_box.pack_start(lbl_title, False, False, 0)
             title_box.pack_start(self.lbl_sub, False, False, 0)
             header.pack_start(title_box, True, True, 0)
 
+            # Dedicated Close Button
+            btn_close = Gtk.Button(label="✕")
+            btn_close.get_style_context().add_class("btn-close")
+            btn_close.set_tooltip_text("Close (Esc, Ctrl+W)")
+            btn_close.connect("clicked", lambda b: self.destroy())
+            header.pack_end(btn_close, False, False, 0)
+
             # Quick Cycle Layout button
             btn_cycle = Gtk.Button(label="󰑐  Cycle Layout")
             btn_cycle.get_style_context().add_class("btn-accent")
-            btn_cycle.set_tooltip_text("Cycle to next configured keyboard layout (Super+Alt+Space)")
+            btn_cycle.set_tooltip_text("Cycle to next configured keyboard layout (Ctrl+R, Super+Alt+Space)")
             btn_cycle.connect("clicked", self.on_cycle_clicked)
-            header.pack_start(btn_cycle, False, False, 2)
+            header.pack_end(btn_cycle, False, False, 4)
 
             main_box.pack_start(header, False, False, 0)
+
+            # Keyboard shortcut listener
+            self.connect("key-press-event", self._on_key_press)
 
             # 2. Notebook Navigation
             self.notebook = Gtk.Notebook()
@@ -1226,6 +1254,24 @@ def launch_gtk_gui(initial_tab=0):
             self.refresh_catalog_list()
             self.refresh_devices_list()
             self.refresh_options_list()
+
+        def _on_key_press(self, widget, event):
+            if event.keyval in (Gdk.KEY_Escape,):
+                self.destroy()
+                return True
+            ctrl = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0
+            if ctrl and event.keyval in (Gdk.KEY_q, Gdk.KEY_Q, Gdk.KEY_w, Gdk.KEY_W):
+                self.destroy()
+                return True
+            if ctrl and event.keyval in (Gdk.KEY_r, Gdk.KEY_R):
+                self.on_cycle_clicked(None)
+                return True
+            if ctrl and event.keyval in (Gdk.KEY_f, Gdk.KEY_F):
+                self.notebook.set_current_page(1)
+                if hasattr(self, "search_entry"):
+                    self.search_entry.grab_focus()
+                return True
+            return False
 
         # =========================================================================
         # TAB 1: Configured Layouts & Quick Switcher
