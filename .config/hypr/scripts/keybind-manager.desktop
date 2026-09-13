@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Keybindings Manager
+GenericName=Hyprland Shortcuts & Hotkeys Manager
+Comment=Manage, override, disable, and create custom Hyprland keybindings
+Exec=python3 /home/kunal/.dotfiles/.config/hypr/scripts/keybind_manager.py
+Icon=preferences-desktop-keyboard
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;
+StartupWMClass=keybind_manager.py
+StartupNotify=true
+Keywords=hyprland;keybind;keys;shortcuts;hotkeys;binds;keyboard;actions;override;custom;
