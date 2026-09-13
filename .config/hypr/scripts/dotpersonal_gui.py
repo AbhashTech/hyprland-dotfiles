@@ -549,6 +549,23 @@ def launch_dotpersonal_gui(start_tab: int = 0, screenshot: str = None, expand_fo
         color: {c_subtext0};
     }}
 
+    .btn-close {{
+        background-color: {c_surface0};
+        color: {c_subtext1};
+        border-radius: 8px;
+        padding: 4px 10px;
+        font-size: 13px;
+        font-weight: bold;
+        border: 1px solid transparent;
+        transition: all 150ms ease-in-out;
+    }}
+
+    .btn-close:hover {{
+        background-color: {c_red};
+        color: {c_base};
+        border-color: {c_red};
+    }}
+
     notebook > header {{
         background-color: {c_mantle};
         border-bottom: 1px solid {c_surface0};
@@ -1011,20 +1028,34 @@ def launch_dotpersonal_gui(start_tab: int = 0, screenshot: str = None, expand_fo
             lbl_title.get_style_context().add_class("window-title")
             self.lbl_sub = Gtk.Label(label=f"Active System Theme: {theme_name.title()} ({theme_type})", xalign=0)
             self.lbl_sub.get_style_context().add_class("window-subtitle")
+            self.lbl_sub.set_ellipsize(Pango.EllipsizeMode.END)
+            self.lbl_sub.set_max_width_chars(50)
             title_box.pack_start(lbl_title, False, False, 0)
             title_box.pack_start(self.lbl_sub, False, False, 0)
             header.pack_start(title_box, True, True, 0)
 
+            # Dedicated Close Button
+            btn_close = Gtk.Button(label="✕")
+            btn_close.get_style_context().add_class("btn-close")
+            btn_close.set_tooltip_text("Close (Esc, Ctrl+W)")
+            btn_close.connect("clicked", lambda b: self.destroy())
+            header.pack_end(btn_close, False, False, 0)
+
             btn_refresh = Gtk.Button(label="󰑐  Refresh")
+            btn_refresh.set_tooltip_text("Refresh Personal Configs (Ctrl+R)")
             btn_refresh.connect("clicked", lambda b: self.refresh_all())
             header.pack_end(btn_refresh, False, False, 0)
 
             btn_new = Gtk.Button(label="󰐕  New Config")
             btn_new.get_style_context().add_class("accent")
+            btn_new.set_tooltip_text("Create New Personal Configuration (Ctrl+N)")
             btn_new.connect("clicked", lambda b: self.show_new_config_dialog())
             header.pack_end(btn_new, False, False, 0)
 
             main_box.pack_start(header, False, False, 0)
+
+            # Keyboard shortcut listener
+            self.connect("key-press-event", self._on_key_press)
 
             # Notebook Tabs
             self.notebook = Gtk.Notebook()
@@ -1047,6 +1078,33 @@ def launch_dotpersonal_gui(start_tab: int = 0, screenshot: str = None, expand_fo
             self.notebook.append_page(self.tab_vcs, Gtk.Label(label="🌿 Version Control"))
 
             self.refresh_all()
+
+        def _on_key_press(self, widget, event):
+            if event.keyval in (Gdk.KEY_Escape,):
+                self.destroy()
+                return True
+            ctrl = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0
+            if ctrl and event.keyval in (Gdk.KEY_q, Gdk.KEY_Q, Gdk.KEY_w, Gdk.KEY_W):
+                self.destroy()
+                return True
+            if ctrl and event.keyval in (Gdk.KEY_r, Gdk.KEY_R):
+                self.refresh_all()
+                return True
+            if ctrl and event.keyval in (Gdk.KEY_n, Gdk.KEY_N):
+                self.show_new_config_dialog()
+                return True
+            if ctrl and event.keyval in (Gdk.KEY_f, Gdk.KEY_F):
+                page = self.notebook.get_current_page()
+                if page == 0 and hasattr(self, "search_entry"):
+                    self.search_entry.grab_focus()
+                elif page == 1 and hasattr(self, "explorer_search"):
+                    self.explorer_search.grab_focus()
+                else:
+                    self.notebook.set_current_page(0)
+                    if hasattr(self, "search_entry"):
+                        self.search_entry.grab_focus()
+                return True
+            return False
 
         def build_files_tab(self):
             container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
