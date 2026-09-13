@@ -264,6 +264,45 @@ keybinds clear-defaults=true {
     }
 }
 themes {
+    tokyo-night {
+        bg "#3b4261"
+        fg "#c0caf5"
+        red "#f7768e"
+        green "#9ece6a"
+        blue "#7aa2f7"
+        yellow "#e0af68"
+        magenta "#bb9af7"
+        orange "#ff9e64"
+        cyan "#73daca"
+        black "#16161e"
+        white "#c0caf5"
+    }
+    solarized-light {
+        bg "#93a1a1"
+        fg "#657b83"
+        red "#dc322f"
+        green "#859900"
+        blue "#268bd2"
+        yellow "#b58900"
+        magenta "#d33682"
+        orange "#cb4b16"
+        cyan "#2aa198"
+        black "#eee8d5"
+        white "#657b83"
+    }
+    gruvbox-light {
+        bg "#a89984"
+        fg "#3c3836"
+        red "#9d0006"
+        green "#79740e"
+        blue "#076678"
+        yellow "#b57614"
+        magenta "#8f3f71"
+        orange "#af3a03"
+        cyan "#427b58"
+        black "#f2e5bc"
+        white "#3c3836"
+    }
     catppuccin-mocha {
         bg "#585b70"
         fg "#cdd6f4"
@@ -1308,7 +1347,7 @@ simplified_ui false
 // Choose the theme that is specified in the themes section.
 // Default: default
 // 
-theme "catppuccin-mocha"
+theme "gruvbox-light"
  
 // Theme to use when the host terminal reports a dark color palette.
 // Requires `theme_light` to also be set; otherwise `theme` is used.
