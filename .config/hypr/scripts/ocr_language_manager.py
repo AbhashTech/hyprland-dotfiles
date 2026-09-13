@@ -798,7 +798,10 @@ def launch_gtk_gui():
     class OCRLangWindow(Gtk.Window):
         def __init__(self):
             super().__init__(title="Tesseract OCR Language Hub")
-            self.set_default_size(800, 740)
+            GLib.set_prgname("ocr-language-manager")
+            GLib.set_application_name("Tesseract OCR Language Hub")
+            self.set_role("ocr-language-manager")
+            self.set_default_size(860, 740)
             self.set_position(Gtk.WindowPosition.CENTER)
             self.set_icon_name("ocr-language-manager")
             icon_file = Path.home() / ".local/share/icons/hicolor/512x512/apps/ocr-language-manager.png"

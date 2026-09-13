@@ -264,6 +264,16 @@ hl.window_rule({
     center = true,
 })
 
+-- OCR Multi-Language Model Manager GUI Dialog
+hl.window_rule({
+    name   = "float-ocr-language-manager",
+    match  = { class = "(ocr-language-manager|ocr_language_manager\\.py)" },
+    float  = true,
+    size   = "860 740",
+    center = true,
+})
+
+
 
 
 
