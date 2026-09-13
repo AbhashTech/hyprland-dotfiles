@@ -839,33 +839,56 @@ Split into dedicated files for each component:
 
 ---
 
-### 🛠️ Personal Settings Management Utility (`scripts/dotfiles-personal.sh`)
+### 🛠️ Personal Settings Management Utility (`scripts/dotfiles-personal.sh` & GUI)
 
-A dedicated CLI utility is provided at `~/.dotfiles/scripts/dotfiles-personal.sh` (or alias `dotpersonal`):
+A dedicated utility is provided as both an interactive GTK3 graphical app and CLI at `~/.dotfiles/scripts/dotfiles-personal.sh` (or alias `dotpersonal`):
 
 ```bash
-# 1. Inspect all active personal files and version control status
+# 1. Launch the interactive GTK3 Personal Settings Manager (also in App Launcher)
+dotpersonal gui
+
+# 2. Inspect all active personal files and version control status
 dotpersonal status
 
-# 2. Export all personal settings to an archive (for backup or transferring to a new machine)
+# 3. Export all personal settings to an archive (for backup or transferring to a new machine)
 dotpersonal export ~/my-personal-dotfiles.tar.gz
 
-# 3. Import and restore personal settings from an archive or folder
+# 4. Import and restore personal settings from an archive or folder
 dotpersonal import ~/my-personal-dotfiles.tar.gz
 
-# 4. Initialize a standalone, private Git repository for your personal settings
+# 5. Initialize a standalone, private Git repository for your personal settings
 dotpersonal init-repo
 
-# 5. Commit personal configuration updates to your private personal repo
+# 6. Commit personal configuration updates to your private personal repo
 dotpersonal save "feat: add python setup and custom keybinds"
 
-# 6. View diffs between active files and your private personal repo
+# 7. View diffs between active files and your private personal repo
 dotpersonal diff
 
-# 7. Push / pull personal configs to your private GitHub or GitLab repository
+# 8. Push / pull personal configs to your private GitHub or GitLab repository
 dotpersonal push
 dotpersonal pull
 ```
+
+---
+
+### ⌨️ Hyprland Keybindings Manager GUI (`keybind_manager.py`)
+
+A full-featured GTK3 graphical manager to inspect, override, disable/enable, and create custom shortcuts without touching tracked dotfiles:
+
+- **Launch**: Open from the Application Launcher as **Keybindings Manager**, or run:
+  ```bash
+  python3 ~/.config/hypr/scripts/keybind_manager.py
+  ```
+- **Default Keybinds Management**:
+  - **Disable/Enable**: Disable any upstream default keybind (e.g. freeing up shortcuts for your personal apps) without editing tracked files.
+  - **Override / Remap**: Remap any default shortcut trigger or action.
+  - **Reset to Default**: Instantly restores default behavior with one click.
+- **Custom Keybinds Management**:
+  - **Add Custom Shortcuts**: Build shortcuts with interactive modifier checkboxes and action presets (exec command, close window, toggle float, toggle fullscreen, or custom Lua).
+  - **Edit & Toggle**: Enable or disable custom shortcuts on the fly.
+- **Pristine Architecture**: All overrides and custom bindings are saved cleanly to `~/.config/hypr/user/keybinds.lua` and applied live instantly via `hyprctl reload`.
+- **Dynamic Theming**: Automatically adapts to the active system palette (Catppuccin Mocha, Gruvbox, Tokyo Night, etc.).
 
 
 

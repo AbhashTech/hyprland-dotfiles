@@ -33,7 +33,11 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
     ├── bluetooth_agent.py       # Background Bluetooth auto-pairing DBus agent
     ├── brightness_control.py    # Backlight & external DDC monitor brightness with OSD
     ├── clipboard_manager.py     # Image/text clipboard manager daemon & thumbnail cache
+    ├── dotpersonal-manager.desktop # Application menu entry for Personal Settings Manager
+    ├── dotpersonal_gui.py       # GTK3 graphical Personal Settings & modular dotfiles manager
     ├── hyprsunset-hypridle.desktop  # Application menu entry for Night Light & Idle Manager
+    ├── keybind-manager.desktop  # Application menu entry for Keybindings Manager
+    ├── keybind_manager.py       # GTK3 graphical Hyprland Keybindings & Shortcuts Manager
     ├── keybinds_viewer.py       # Dynamic keybindings parser & JSON provider
     ├── keyboard_layout.py       # Dynamic keyboard layout switcher & installer
     ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
