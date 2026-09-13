@@ -890,5 +890,25 @@ A full-featured GTK3 graphical manager to inspect, override, disable/enable, and
 - **Pristine Architecture**: All overrides and custom bindings are saved cleanly to `~/.config/hypr/user/keybinds.lua` and applied live instantly via `hyprctl reload`.
 - **Dynamic Theming**: Automatically adapts to the active system palette (Catppuccin Mocha, Gruvbox, Tokyo Night, etc.).
 
+---
+
+### 🪟 Dedicated Floating GUI Utilities & Control Centers Suite
+
+Every graphical management tool and dialog in this environment is paired with dedicated Hyprland window rules ([.config/hypr/modules/rules.lua](file:///home/kunal/.dotfiles/.config/hypr/modules/rules.lua)) to ensure it opens as a **centered, floating window** with tailored dimensions and explicit Wayland `app_id` bindings:
+
+| Utility | Desktop Launcher | Wayland `app_id` | Size | Shortcut | Description |
+| :--- | :--- | :--- | :---: | :---: | :--- |
+| **Theme Manager** | `theme-manager.desktop` | `theme-manager` | `1080×720` | `SUPER + ALT + T` | Palette switcher & theme studio |
+| **Keybindings Manager** | `keybind-manager.desktop` | `keybind-manager` | `1000×680` | `SUPER + /` | Shortcut visualizer & remap manager |
+| **Personal Settings Manager** | `dotpersonal-manager.desktop` | `dotpersonal-manager` | `960×680` | App Menu | Modular private configs & backup sync |
+| **Night Light & Idle Manager** | `hyprsunset-hypridle.desktop` | `sunset-idle-manager` | `640×720` | `SUPER + ALT + I` | Hyprsunset color temp & Hypridle timeouts |
+| **App Shortcut Creator** | `app-shortcut-creator.desktop` | `app-shortcut-creator` | `840×690` | `SUPER + ALT + S` | Custom `.desktop` launcher generator |
+| **Keyboard Layout Manager** | `keyboard-layout-manager.desktop` | `keyboard-layout-manager` | `680×560` | `SUPER + ALT + K` | Input layout & regional variant selector |
+| **OCR Language Manager** | `ocr-language-manager.desktop` | `ocr-language-manager` | `860×740` | `SUPER + ALT + O` | Tesseract model installer & language hub |
+| **Screen Capture Hub** | Interactive Menu Dialog | `screen-capture` | `480×520` | `SUPER + Print` | Screenshot & screen recording controller |
+| **Wallpaper Selector** | Interactive Menu Dialog | `wallpaper-switcher` | `540×580` | `SUPER + ALT + W` | Desktop wallpaper selector dialog |
+| **Resolution & Scaling** | Interactive Menu Dialog | `resolution-menu` | `460×480` | `SUPER + SHIFT + R` | Display resolution & monitor scale menu |
+
+
 
 

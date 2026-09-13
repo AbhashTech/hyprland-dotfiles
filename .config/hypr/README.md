@@ -39,6 +39,7 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
     ├── keybind-manager.desktop  # Application menu entry for Keybindings Manager
     ├── keybind_manager.py       # GTK3 graphical Hyprland Keybindings & Shortcuts Manager
     ├── keybinds_viewer.py       # Dynamic keybindings parser & JSON provider
+    ├── keyboard-layout-manager.desktop # Application menu entry for Keyboard Layout Manager
     ├── keyboard_layout.py       # Dynamic keyboard layout switcher & installer
     ├── monitor_workspace_manager.py # Automatic workspace allocator for external monitors
     ├── ocr-language-manager.desktop # Application menu entry for OCR Language Manager
@@ -323,6 +324,25 @@ sudo usermod -aG i2c $USER
 
 ---
 
+### 🪟 Floating GUI Utilities & Control Centers
+
+All built-in GTK graphical managers and interactive dialogs automatically open in **floating mode** centered on screen with optimized window geometries (configured via [modules/rules.lua](file:///home/kunal/.config/hypr/modules/rules.lua)):
+
+| Utility | Wayland `app_id` / Class | Floating Rule | Dimensions | Description |
+| :--- | :--- | :--- | :---: | :--- |
+| **Theme Manager** | `theme-manager` | `float-theme-manager` | `1080×720` | Desktop Theme & Palette Switcher |
+| **Keybindings Manager** | `keybind-manager` | `float-keybind-manager` | `1000×680` | Hyprland Shortcuts & Hotkeys Manager |
+| **Personal Settings Manager** | `dotpersonal-manager` | `float-dotpersonal-manager` | `960×680` | Modular Dotfiles & Private Backup Hub |
+| **Night Light & Idle Manager** | `sunset-idle-manager` | `float-sunset-idle-manager` | `640×720` | Display Power & Hyprsunset/Hypridle Hub |
+| **App Shortcut Creator** | `app-shortcut-creator` | `float-app-shortcut-creator` | `840×690` | Desktop Entry & App Launcher Creator |
+| **Keyboard Layout Manager** | `keyboard-layout-manager` | `float-keyboard-layout` | `680×560` | Input Layouts & Regional Variant Switcher |
+| **OCR Language Manager** | `ocr-language-manager` | `float-ocr-language-manager` | `860×740` | Tesseract OCR Language Hub & Model Manager |
+| **Screen Capture Hub** | `screen-capture` | `float-screen-capture` | `480×520` | Screenshot & Screen Recording Menu Dialog |
+| **Wallpaper Selector** | `wallpaper-switcher` | `float-wallpaper-switcher` | `540×580` | Desktop Wallpaper Selector Dialog |
+| **Resolution & Scaling** | `resolution-menu` | `float-resolution-menu` | `460×480` | Screen Resolution & Scale Switcher Dialog |
+
+---
+
 ## 💡 Customization & Tweaks
 
 - **Change Default Programs**: Edit [modules/programs.lua](file:///home/kunal/.config/hypr/modules/programs.lua).
@@ -332,4 +352,5 @@ sudo usermod -aG i2c $USER
 - **Configure Window Rules**: Edit [modules/rules.lua](file:///home/kunal/.config/hypr/modules/rules.lua).
 - **Autostarted Apps**: Edit [modules/autostart.lua](file:///home/kunal/.config/hypr/modules/autostart.lua).
 - **Monitors & Scaling**: Edit [modules/monitors.lua](file:///home/kunal/.config/hypr/modules/monitors.lua).
+
 
