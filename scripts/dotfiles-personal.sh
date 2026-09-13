@@ -6,7 +6,7 @@
 #   - Neovim:      .config/nvim/lua/plugins/personal_*.lua, .config/nvim/lua/custom/
 #   - Shell:       .config/shell/user/*, .config/shell/*.local.sh, ~/.zshenv
 #   - Hyprland:    .config/hypr/user/*
-#   - Quickshell:  .config/quickshell/custom_plugins/*
+#   - Extra:       User-selected .config folders & files via ~/.config/dotpersonal_includes.json
 #
 # Commands:
 #   status               Show all active personal config files & repo status
@@ -70,11 +70,26 @@ get_personal_files() {
         done < <(find "${DOTFILES_DIR}/.config/hypr/user" -mindepth 1 -type f -print0 2>/dev/null)
     fi
 
-    # 5. Quickshell custom plugins
-    if [ -d "${DOTFILES_DIR}/.config/quickshell/custom_plugins" ]; then
-        while IFS= read -r -d '' f; do
-            [ "$(basename "$f")" != "README.md" ] && files+=("$f")
-        done < <(find "${DOTFILES_DIR}/.config/quickshell/custom_plugins" -mindepth 1 -type f ! -path '*/.git*' ! -path '*/__pycache__*' -print0 2>/dev/null)
+    # 5. Extra user-included .config folders and files (from ~/.config/dotpersonal_includes.json)
+    local inc_json="${HOME}/.config/dotpersonal_includes.json"
+    if [ -f "$inc_json" ]; then
+        while IFS= read -r inc_f; do
+            if [ -n "$inc_f" ]; then
+                local full_f="${HOME}/${inc_f}"
+                [ -f "$full_f" ] && files+=("$full_f")
+            fi
+        done < <(python3 -c '
+import json, sys
+from pathlib import Path
+p = Path("'"$inc_json"'")
+if p.is_file():
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+        for f in data.get("custom_files", []):
+            print(f)
+    except Exception:
+        pass
+' 2>/dev/null)
     fi
 
     echo "${files[@]}"

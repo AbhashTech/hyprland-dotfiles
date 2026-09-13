@@ -29,6 +29,7 @@ DOTFILES_DIR = HOME / ".dotfiles"
 DOTFILES_CONFIG_DIR = DOTFILES_DIR / ".config"
 PERSONAL_REPO_DIR = HOME / ".dotfiles-personal"
 PERSONAL_SCRIPT = DOTFILES_DIR / "scripts" / "dotfiles-personal.sh"
+INCLUDES_CONFIG_FILE = CONFIG_DIR / "dotpersonal_includes.json"
 
 TEMPLATES = {
     "Hyprland Monitor Override (user/monitors.lua)": {
@@ -186,8 +187,113 @@ def get_contrast_color(hex_color, dark_fg="#11111b", light_fg="#ffffff"):
         return light_fg
 
 
-def get_personal_files_list():
-    """Retrieve all active personal files organized by package."""
+def load_included_config_state():
+    """Load user-selected extra .config inclusions from ~/.config/dotpersonal_includes.json."""
+    if INCLUDES_CONFIG_FILE.is_file():
+        try:
+            with open(INCLUDES_CONFIG_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return data
+        except Exception:
+            pass
+    return {"folders": {}, "custom_files": []}
+
+
+def save_included_config_state(state):
+    """Save user-selected extra .config inclusions to ~/.config/dotpersonal_includes.json."""
+    INCLUDES_CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    tmp = INCLUDES_CONFIG_FILE.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(state, f, indent=2)
+    tmp.replace(INCLUDES_CONFIG_FILE)
+
+
+def scan_available_config_folders():
+    """
+    Scan ~/.config for directories and files available for inclusion.
+    Excludes system caches, browser runtimes, and agent internals.
+    """
+    folders = []
+    ignored_names = {
+        "Antigravity", ".git", "session", "pulse", "dconf",
+        "google-chrome", "chromium", "BraveSoftware", "microsoft-edge",
+        "opera", "vivaldi", "mozilla", "librewolf"
+    }
+
+    if not CONFIG_DIR.is_dir():
+        return folders
+
+    # Scan directories
+    for entry in sorted(CONFIG_DIR.iterdir(), key=lambda p: p.name.lower()):
+        if entry.name.startswith(".") or entry.name in ignored_names:
+            continue
+        if not entry.is_dir():
+            continue
+
+        folder_files = []
+        try:
+            for p in sorted(entry.rglob("*")):
+                if p.is_file():
+                    try:
+                        rel_parts = p.relative_to(entry).parts
+                        if any(part.startswith(".") or part in ("__pycache__", "node_modules", "cache", "tmp") for part in rel_parts):
+                            continue
+                        st = p.stat()
+                        if st.st_size > 10 * 1024 * 1024:  # skip >10MB
+                            continue
+                        rel_to_home = str(p.relative_to(HOME))
+                        rel_to_folder = str(p.relative_to(entry))
+                        folder_files.append({
+                            "rel_to_home": rel_to_home,
+                            "rel_to_folder": rel_to_folder,
+                            "path": p,
+                            "size": st.st_size,
+                            "mtime": datetime.fromtimestamp(st.st_mtime)
+                        })
+                    except Exception:
+                        continue
+        except Exception:
+            continue
+
+        if folder_files:
+            total_size = sum(f["size"] for f in folder_files)
+            folders.append({
+                "name": entry.name,
+                "path": entry,
+                "files": folder_files,
+                "total_size": total_size
+            })
+
+    # Also scan root config files directly under ~/.config (e.g. starship.toml)
+    root_files = []
+    for p in sorted(CONFIG_DIR.iterdir(), key=lambda p: p.name.lower()):
+        if p.is_file() and not p.name.startswith(".") and p.name != "dotpersonal_includes.json":
+            try:
+                st = p.stat()
+                if st.st_size < 10 * 1024 * 1024:
+                    root_files.append({
+                        "rel_to_home": str(p.relative_to(HOME)),
+                        "rel_to_folder": p.name,
+                        "path": p,
+                        "size": st.st_size,
+                        "mtime": datetime.fromtimestamp(st.st_mtime)
+                    })
+            except Exception:
+                continue
+    if root_files:
+        folders.insert(0, {
+            "name": ".config (root files)",
+            "path": CONFIG_DIR,
+            "files": root_files,
+            "total_size": sum(f["size"] for f in root_files)
+        })
+
+    return folders
+
+
+def get_core_personal_files():
+    """Retrieve all built-in core personal files (Zsh, Neovim, Shell, Hyprland)."""
     items = []
 
     # 1. Shell ~/.zshenv
@@ -199,10 +305,11 @@ def get_personal_files_list():
             "pkg": "Shell",
             "badge": "shell",
             "size": zshenv.stat().st_size,
-            "mtime": datetime.fromtimestamp(zshenv.stat().st_mtime)
+            "mtime": datetime.fromtimestamp(zshenv.stat().st_mtime),
+            "is_extra": False
         })
 
-    # 2. Neovim personal plugins
+    # 2. Neovim personal plugins & custom files
     nvim_plugins = DOTFILES_DIR / ".config" / "nvim" / "lua" / "plugins"
     if nvim_plugins.is_dir():
         for p in nvim_plugins.glob("personal_*.lua"):
@@ -213,7 +320,8 @@ def get_personal_files_list():
                     "pkg": "Neovim",
                     "badge": "nvim",
                     "size": p.stat().st_size,
-                    "mtime": datetime.fromtimestamp(p.stat().st_mtime)
+                    "mtime": datetime.fromtimestamp(p.stat().st_mtime),
+                    "is_extra": False
                 })
 
     nvim_custom = DOTFILES_DIR / ".config" / "nvim" / "lua" / "custom"
@@ -227,10 +335,11 @@ def get_personal_files_list():
                     "pkg": "Neovim",
                     "badge": "nvim",
                     "size": p.stat().st_size,
-                    "mtime": datetime.fromtimestamp(p.stat().st_mtime)
+                    "mtime": datetime.fromtimestamp(p.stat().st_mtime),
+                    "is_extra": False
                 })
 
-    # 3. Shell personal files
+    # 3. Shell personal files & user local scripts
     shell_user = DOTFILES_DIR / ".config" / "shell" / "user"
     if shell_user.is_dir():
         for p in shell_user.rglob("*"):
@@ -242,7 +351,8 @@ def get_personal_files_list():
                     "pkg": "Shell",
                     "badge": "shell",
                     "size": p.stat().st_size,
-                    "mtime": datetime.fromtimestamp(p.stat().st_mtime)
+                    "mtime": datetime.fromtimestamp(p.stat().st_mtime),
+                    "is_extra": False
                 })
 
     shell_dir = DOTFILES_DIR / ".config" / "shell"
@@ -256,7 +366,8 @@ def get_personal_files_list():
                     "pkg": "Shell",
                     "badge": "shell",
                     "size": p.stat().st_size,
-                    "mtime": datetime.fromtimestamp(p.stat().st_mtime)
+                    "mtime": datetime.fromtimestamp(p.stat().st_mtime),
+                    "is_extra": False
                 })
 
     # 4. Hyprland personal modules
@@ -271,27 +382,46 @@ def get_personal_files_list():
                     "pkg": "Hyprland",
                     "badge": "hypr",
                     "size": p.stat().st_size,
-                    "mtime": datetime.fromtimestamp(p.stat().st_mtime)
+                    "mtime": datetime.fromtimestamp(p.stat().st_mtime),
+                    "is_extra": False
                 })
 
-    # 5. Quickshell custom plugins
-    qs_plugins = DOTFILES_DIR / ".config" / "quickshell" / "custom_plugins"
-    if qs_plugins.is_dir():
-        for p in qs_plugins.rglob("*"):
-            if p.is_file() and p.name != "README.md" and ".git" not in p.parts and "__pycache__" not in p.parts:
-                rel = p.relative_to(DOTFILES_DIR)
+    return items
+
+
+def get_personal_files_list():
+    """Retrieve all active personal files (core modules + extra user-included files)."""
+    items = get_core_personal_files()
+    seen_paths = {str(item["path"].resolve()) for item in items}
+
+    # 5. Extra user-included .config folders and files (from ~/.config/dotpersonal_includes.json)
+    inc_state = load_included_config_state()
+    for rel_path in inc_state.get("custom_files", []):
+        p = HOME / rel_path
+        try:
+            if p.is_file() and str(p.resolve()) not in seen_paths:
+                parts = Path(rel_path).parts
+                if len(parts) > 1 and parts[0] == ".config":
+                    pkg_name = parts[1].capitalize()
+                else:
+                    pkg_name = "Extra"
                 items.append({
                     "path": p,
-                    "rel_path": str(rel),
-                    "pkg": "Quickshell",
-                    "badge": "qs",
+                    "rel_path": rel_path,
+                    "pkg": pkg_name,
+                    "badge": "extra",
                     "size": p.stat().st_size,
-                    "mtime": datetime.fromtimestamp(p.stat().st_mtime)
+                    "mtime": datetime.fromtimestamp(p.stat().st_mtime),
+                    "is_extra": True
                 })
+                seen_paths.add(str(p.resolve()))
+        except Exception:
+            continue
 
     # Sort items by package name and relative path
     items.sort(key=lambda x: (x["pkg"], x["rel_path"]))
     return items
+
 
 
 def format_size(num_bytes):
@@ -336,7 +466,7 @@ def open_in_editor(file_path):
     subprocess.Popen([editor, str(file_path)])
 
 
-def launch_dotpersonal_gui(start_tab: int = 0):
+def launch_dotpersonal_gui(start_tab: int = 0, screenshot: str = None, expand_folder: str = None, filter_query: str = None):
     """Initialize and launch the GTK3 GUI application."""
     import gi
     gi.require_version("Gtk", "3.0")
@@ -775,6 +905,36 @@ def launch_dotpersonal_gui(start_tab: int = 0):
     label.badge-nvim, .badge-nvim {{ background-color: {c_green}; color: {green_fg}; font-weight: 700; }}
     label.badge-shell, .badge-shell {{ background-color: {c_yellow}; color: {yellow_fg}; font-weight: 700; }}
     label.badge-qs, .badge-qs {{ background-color: {c_sapphire}; color: {sapphire_fg}; font-weight: 700; }}
+    label.badge-extra, .badge-extra {{ background-color: {c_surface1}; color: {c_text}; border: 1px solid {c_accent}; font-weight: 700; }}
+    label.badge-included, .badge-included {{ background-color: {c_green}; color: {green_fg}; font-weight: 700; }}
+    label.badge-partial, .badge-partial {{ background-color: {c_yellow}; color: {yellow_fg}; font-weight: 700; }}
+    label.badge-none, .badge-none {{ background-color: {c_surface0}; color: {c_subtext0}; border: 1px solid {c_surface2}; font-weight: 600; }}
+
+    checkbutton {{
+        color: {c_text};
+    }}
+    checkbutton label {{
+        color: {c_text};
+        font-weight: 600;
+        font-size: 13px;
+    }}
+    checkbutton.subfile-check label {{
+        font-weight: 500;
+        font-size: 12px;
+        color: {c_text};
+    }}
+
+    .subfile-row {{
+        background-color: {c_base};
+        border: 1px solid {c_surface0};
+        border-radius: 6px;
+        padding: 5px 10px;
+        margin-bottom: 3px;
+    }}
+    .subfile-row:hover {{
+        border-color: {c_surface2};
+        background-color: {c_surface0};
+    }}
 
     .status-box {{
         background-color: {c_mantle};
@@ -827,8 +987,14 @@ def launch_dotpersonal_gui(start_tab: int = 0):
     class PersonalManagerWindow(Gtk.Window):
         def __init__(self):
             super().__init__(title="Personal Settings Manager")
-            self.set_default_size(880, 620)
+            self.set_default_size(900, 650)
             self.set_position(Gtk.WindowPosition.CENTER)
+
+            self._syncing_checks = False
+            self.included_state = load_included_config_state()
+            self.included_files = set(self.included_state.get("custom_files", []))
+            self.config_folders = scan_available_config_folders()
+            self.folder_widgets = {}
 
             main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
             self.add(main_box)
@@ -861,9 +1027,13 @@ def launch_dotpersonal_gui(start_tab: int = 0):
             self.notebook = Gtk.Notebook()
             main_box.pack_start(self.notebook, True, True, 0)
 
-            # Tab 1: Personal Files
+            # Tab 0: Active Personal Files
             self.tab_files = self.build_files_tab()
             self.notebook.append_page(self.tab_files, Gtk.Label(label="📂 Active Files"))
+
+            # Tab 1: Include .config Folders & Files
+            self.tab_explorer = self.build_explorer_tab()
+            self.notebook.append_page(self.tab_explorer, Gtk.Label(label="🗂️ Include .config Folders"))
 
             # Tab 2: Backup & Migration
             self.tab_backup = self.build_backup_tab()
@@ -890,14 +1060,20 @@ def launch_dotpersonal_gui(start_tab: int = 0):
             filter_row.pack_start(self.search_entry, True, True, 0)
 
             self.pkg_filter = Gtk.ComboBoxText()
-            self.pkg_filter.append("all", "All Packages")
+            self.pkg_filter.append("all", "All Files")
+            self.pkg_filter.append("core", "Core Personal Only")
+            self.pkg_filter.append("extra", "Extra Included Only")
             self.pkg_filter.append("Hyprland", "Hyprland")
             self.pkg_filter.append("Neovim", "Neovim")
             self.pkg_filter.append("Shell", "Shell")
-            self.pkg_filter.append("Quickshell", "Quickshell")
             self.pkg_filter.set_active(0)
             self.pkg_filter.connect("changed", lambda c: self.populate_files_list())
             filter_row.pack_start(self.pkg_filter, False, False, 0)
+
+            btn_manage_extra = Gtk.Button(label="🗂️ Manage Inclusions")
+            btn_manage_extra.set_tooltip_text("Open 'Include .config Folders' tab to select folders")
+            btn_manage_extra.connect("clicked", lambda b: self.notebook.set_current_page(1))
+            filter_row.pack_start(btn_manage_extra, False, False, 0)
 
             container.pack_start(filter_row, False, False, 0)
 
@@ -925,9 +1101,16 @@ def launch_dotpersonal_gui(start_tab: int = 0):
 
             files = get_personal_files_list()
             visible_count = 0
+            core_count = sum(1 for f in files if not f.get("is_extra"))
+            extra_count = len(files) - core_count
 
             for f in files:
-                if selected_pkg and selected_pkg != "all" and f["pkg"] != selected_pkg:
+                is_extra = f.get("is_extra", False)
+                if selected_pkg == "core" and is_extra:
+                    continue
+                if selected_pkg == "extra" and not is_extra:
+                    continue
+                if selected_pkg and selected_pkg not in ("all", "core", "extra") and f["pkg"] != selected_pkg:
                     continue
                 if query and query not in f["rel_path"].lower() and query not in f["pkg"].lower():
                     continue
@@ -939,8 +1122,15 @@ def launch_dotpersonal_gui(start_tab: int = 0):
                 # Package badge
                 badge = Gtk.Label(label=f["pkg"])
                 badge.get_style_context().add_class("badge")
-                badge.get_style_context().add_class(f"badge-{f['badge']}")
+                badge.get_style_context().add_class(f"badge-{f.get('badge', 'extra')}")
                 card.pack_start(badge, False, False, 0)
+
+                # Secondary badge for extra included files
+                if is_extra:
+                    badge_extra = Gtk.Label(label="Extra Included")
+                    badge_extra.get_style_context().add_class("badge")
+                    badge_extra.get_style_context().add_class("badge-extra")
+                    card.pack_start(badge_extra, False, False, 0)
 
                 # Path info
                 path_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
@@ -957,6 +1147,13 @@ def launch_dotpersonal_gui(start_tab: int = 0):
                 card.pack_start(path_box, True, True, 0)
 
                 # Action buttons
+                if is_extra:
+                    btn_exclude = Gtk.Button(label="󰅖 Exclude")
+                    btn_exclude.get_style_context().add_class("danger")
+                    btn_exclude.set_tooltip_text("Remove this file from personal backup & version control")
+                    btn_exclude.connect("clicked", lambda b, r=f["rel_path"]: self.exclude_single_file(r))
+                    card.pack_end(btn_exclude, False, False, 0)
+
                 btn_view = Gtk.Button(label="👁️ View")
                 btn_view.connect("clicked", lambda b, target=f["path"], title=f["rel_path"]: self.view_file_content(target, title))
                 card.pack_end(btn_view, False, False, 0)
@@ -972,14 +1169,401 @@ def launch_dotpersonal_gui(start_tab: int = 0):
                 empty_card.get_style_context().add_class("empty-card")
                 lbl_title = Gtk.Label(label="No matching personal configuration files found.", xalign=0.5)
                 lbl_title.get_style_context().add_class("empty-title")
-                lbl_sub = Gtk.Label(label="Click '+ New Config' above to create one from templates!", xalign=0.5)
+                lbl_sub = Gtk.Label(label="Click '+ New Config' or check extra folders in the 'Include .config Folders' tab!", xalign=0.5)
                 lbl_sub.get_style_context().add_class("empty-sub")
                 empty_card.pack_start(lbl_title, False, False, 0)
                 empty_card.pack_start(lbl_sub, False, False, 0)
                 self.files_listbox.add(empty_card)
 
             self.files_listbox.show_all()
-            self.lbl_files_count.set_text(f"Showing {visible_count} of {len(files)} active personal files (all ignored by Git).")
+            self.lbl_files_count.set_text(
+                f"Showing {visible_count} of {len(files)} active personal files ({core_count} core modules, {extra_count} extra included)."
+            )
+
+        def exclude_single_file(self, rel_path):
+            self.included_files.discard(rel_path)
+            for f_name, rec in self.folder_widgets.items():
+                if rel_path in rec.get("file_checkboxes", {}):
+                    self._syncing_checks = True
+                    try:
+                        rec["file_checkboxes"][rel_path].set_active(False)
+                    finally:
+                        self._syncing_checks = False
+                if any(f["rel_to_home"] == rel_path for f in rec["folder"]["files"]):
+                    self.update_folder_header_state(f_name)
+                    break
+            self.save_and_sync_inclusions()
+
+        def build_explorer_tab(self):
+            container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+            container.set_margin_top(14)
+            container.set_margin_bottom(14)
+            container.set_margin_start(16)
+            container.set_margin_end(16)
+
+            # Header card
+            header_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+            header_card.get_style_context().add_class("status-box")
+            lbl_title = Gtk.Label(label="🗂️ Include Additional ~/.config Folders & Files", xalign=0)
+            lbl_title.get_style_context().add_class("section-title")
+            header_card.pack_start(lbl_title, False, False, 0)
+
+            lbl_desc = Gtk.Label(
+                label="Check any folder in ~/.config to automatically include all its files in backups (.tar.gz) and private Git version control (~/.dotfiles-personal). Expand any folder (▶) to view and selectively pick individual files.",
+                xalign=0
+            )
+            lbl_desc.set_line_wrap(True)
+            lbl_desc.get_style_context().add_class("stat-label")
+            header_card.pack_start(lbl_desc, False, False, 0)
+            container.pack_start(header_card, False, False, 0)
+
+            # Toolbar: search and batch buttons
+            toolbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            self.explorer_search = Gtk.Entry()
+            self.explorer_search.set_placeholder_text("🔍 Filter folders or files...")
+            self.explorer_search.connect("changed", lambda e: self.filter_explorer_list())
+            toolbar.pack_start(self.explorer_search, True, True, 0)
+
+            btn_expand_all = Gtk.Button(label="󰘖 Expand All")
+            btn_expand_all.connect("clicked", lambda b: self.set_all_folder_expansion(True))
+            toolbar.pack_start(btn_expand_all, False, False, 0)
+
+            btn_collapse_all = Gtk.Button(label="󰘕 Collapse All")
+            btn_collapse_all.connect("clicked", lambda b: self.set_all_folder_expansion(False))
+            toolbar.pack_start(btn_collapse_all, False, False, 0)
+
+            btn_clear_all = Gtk.Button(label="󰅖 Deselect All")
+            btn_clear_all.get_style_context().add_class("danger")
+            btn_clear_all.connect("clicked", lambda b: self.clear_all_inclusions())
+            toolbar.pack_start(btn_clear_all, False, False, 0)
+
+            container.pack_start(toolbar, False, False, 0)
+
+            # Scrolled listbox for folder cards
+            scroller = Gtk.ScrolledWindow()
+            scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+            self.explorer_listbox = Gtk.ListBox()
+            self.explorer_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+            scroller.add(self.explorer_listbox)
+            container.pack_start(scroller, True, True, 0)
+
+            # Bottom status bar
+            bottom_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            self.lbl_explorer_summary = Gtk.Label(label="", xalign=0)
+            self.lbl_explorer_summary.get_style_context().add_class("stat-value")
+            bottom_bar.pack_start(self.lbl_explorer_summary, True, True, 0)
+
+            btn_refresh = Gtk.Button(label="󰑐 Refresh Folders")
+            btn_refresh.connect("clicked", lambda b: self.populate_explorer_tab())
+            bottom_bar.pack_end(btn_refresh, False, False, 0)
+
+            container.pack_start(bottom_bar, False, False, 0)
+
+            self.populate_explorer_tab()
+            return container
+
+        def populate_explorer_tab(self):
+            for child in self.explorer_listbox.get_children():
+                self.explorer_listbox.remove(child)
+
+            self.folder_widgets = {}
+            self.config_folders = scan_available_config_folders()
+
+            for folder in self.config_folders:
+                f_name = folder["name"]
+                f_files = folder["files"]
+                total_files = len(f_files)
+                total_size = folder["total_size"]
+
+                card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+                card.get_style_context().add_class("card")
+
+                header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+
+                # Master checkbox
+                master_chk = Gtk.CheckButton(label=f_name)
+                master_chk.set_tooltip_text(f"Toggle all {total_files} file{'s' if total_files != 1 else ''} in {f_name}")
+                header_box.pack_start(master_chk, False, False, 0)
+
+                # Folder size & count
+                lbl_info = Gtk.Label(label=f"({total_files} file{'s' if total_files != 1 else ''}, {format_size(total_size)})", xalign=0)
+                lbl_info.get_style_context().add_class("stat-label")
+                header_box.pack_start(lbl_info, False, False, 0)
+
+                # Status Badge
+                badge = Gtk.Label()
+                badge.get_style_context().add_class("badge")
+                header_box.pack_start(badge, False, False, 0)
+
+                # Expander button
+                btn_expand = Gtk.Button(label="▶ Details")
+                header_box.pack_end(btn_expand, False, False, 0)
+
+                card.pack_start(header_box, False, False, 0)
+
+                # Subfiles container (lazy-populated)
+                subfiles_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+                subfiles_box.set_margin_start(24)
+                subfiles_box.set_margin_end(6)
+                subfiles_box.set_margin_top(6)
+                subfiles_box.set_margin_bottom(6)
+                subfiles_box.set_visible(False)
+                card.pack_start(subfiles_box, False, False, 0)
+
+                record = {
+                    "folder": folder,
+                    "card": card,
+                    "master_chk": master_chk,
+                    "badge": badge,
+                    "btn_expand": btn_expand,
+                    "subfiles_box": subfiles_box,
+                    "expanded": False,
+                    "populated": False,
+                    "file_checkboxes": {}
+                }
+                self.folder_widgets[f_name] = record
+
+                btn_expand.connect("clicked", lambda b, fn=f_name: self.toggle_folder_expansion(fn))
+                master_chk.connect("toggled", lambda chk, fn=f_name: self.on_master_check_toggled(fn, chk))
+
+                self.update_folder_header_state(f_name)
+                self.explorer_listbox.add(card)
+
+            self.explorer_listbox.show_all()
+            for rec in self.folder_widgets.values():
+                rec["subfiles_box"].set_visible(False)
+
+            self.update_explorer_summary()
+
+        def update_folder_header_state(self, folder_name):
+            rec = self.folder_widgets.get(folder_name)
+            if not rec:
+                return
+
+            f_files = rec["folder"]["files"]
+            total = len(f_files)
+            sel_count = sum(1 for f in f_files if f["rel_to_home"] in self.included_files)
+
+            master_chk = rec["master_chk"]
+            badge = rec["badge"]
+
+            ctx = badge.get_style_context()
+            ctx.remove_class("badge-included")
+            ctx.remove_class("badge-partial")
+            ctx.remove_class("badge-none")
+
+            self._syncing_checks = True
+            try:
+                if sel_count == total and total > 0:
+                    master_chk.set_inconsistent(False)
+                    master_chk.set_active(True)
+                    badge.set_text(f"All {total} files included")
+                    ctx.add_class("badge-included")
+                elif sel_count > 0:
+                    master_chk.set_inconsistent(True)
+                    master_chk.set_active(True)
+                    badge.set_text(f"{sel_count}/{total} files included")
+                    ctx.add_class("badge-partial")
+                else:
+                    master_chk.set_inconsistent(False)
+                    master_chk.set_active(False)
+                    badge.set_text("Not included")
+                    ctx.add_class("badge-none")
+            finally:
+                self._syncing_checks = False
+
+        def on_master_check_toggled(self, folder_name, master_chk):
+            if self._syncing_checks:
+                return
+
+            rec = self.folder_widgets.get(folder_name)
+            if not rec:
+                return
+
+            is_active = master_chk.get_active()
+            f_files = rec["folder"]["files"]
+
+            self._syncing_checks = True
+            try:
+                master_chk.set_inconsistent(False)
+                for f in f_files:
+                    rel = f["rel_to_home"]
+                    if is_active:
+                        self.included_files.add(rel)
+                    else:
+                        self.included_files.discard(rel)
+
+                for rel, chk in rec["file_checkboxes"].items():
+                    chk.set_active(is_active)
+
+                self.update_folder_header_state(folder_name)
+            finally:
+                self._syncing_checks = False
+
+            self.save_and_sync_inclusions()
+
+        def toggle_folder_expansion(self, folder_name, force_state=None):
+            rec = self.folder_widgets.get(folder_name)
+            if not rec:
+                return
+
+            new_state = not rec["expanded"] if force_state is None else force_state
+            rec["expanded"] = new_state
+            rec["btn_expand"].set_label("▼ Hide" if new_state else "▶ Details")
+
+            if new_state:
+                if not rec["populated"]:
+                    self.populate_folder_subfiles(folder_name)
+                rec["subfiles_box"].set_visible(True)
+            else:
+                rec["subfiles_box"].set_visible(False)
+
+        def populate_folder_subfiles(self, folder_name):
+            rec = self.folder_widgets.get(folder_name)
+            if not rec or rec["populated"]:
+                return
+
+            sub_box = rec["subfiles_box"]
+            for child in sub_box.get_children():
+                sub_box.remove(child)
+
+            rec["file_checkboxes"] = {}
+            f_files = rec["folder"]["files"]
+
+            for f in f_files:
+                rel = f["rel_to_home"]
+                rel_short = f["rel_to_folder"]
+
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+                row.get_style_context().add_class("subfile-row")
+
+                chk = Gtk.CheckButton(label=rel_short)
+                chk.get_style_context().add_class("subfile-check")
+                chk.set_active(rel in self.included_files)
+                chk.connect("toggled", lambda c, fn=folder_name, r=rel: self.on_subfile_check_toggled(fn, r, c))
+                row.pack_start(chk, True, True, 0)
+                rec["file_checkboxes"][rel] = chk
+
+                lbl_meta = Gtk.Label(label=f"{format_size(f['size'])}  •  {f['mtime'].strftime('%b %d, %H:%M')}")
+                lbl_meta.get_style_context().add_class("stat-label")
+                row.pack_start(lbl_meta, False, False, 0)
+
+                btn_view = Gtk.Button(label="👁️")
+                btn_view.set_tooltip_text("Preview file content")
+                btn_view.connect("clicked", lambda b, p=f["path"], t=rel: self.view_file_content(p, t))
+                row.pack_end(btn_view, False, False, 0)
+
+                btn_edit = Gtk.Button(label="✏️")
+                btn_edit.set_tooltip_text("Open in editor")
+                btn_edit.connect("clicked", lambda b, p=f["path"]: open_in_editor(p))
+                row.pack_end(btn_edit, False, False, 0)
+
+                sub_box.pack_start(row, False, False, 0)
+
+            rec["populated"] = True
+            sub_box.show_all()
+
+        def on_subfile_check_toggled(self, folder_name, rel_path, chk):
+            if self._syncing_checks:
+                return
+
+            if chk.get_active():
+                self.included_files.add(rel_path)
+            else:
+                self.included_files.discard(rel_path)
+
+            self.update_folder_header_state(folder_name)
+            self.save_and_sync_inclusions()
+
+        def save_and_sync_inclusions(self):
+            folders_data = {}
+            for folder in self.config_folders:
+                f_name = folder["name"]
+                f_files = [f["rel_to_home"] for f in folder["files"]]
+                sel_in_folder = [f for f in f_files if f in self.included_files]
+                if sel_in_folder:
+                    mode = "all" if len(sel_in_folder) == len(f_files) else "custom"
+                    folders_data[f_name] = {
+                        "mode": mode,
+                        "files": sorted(sel_in_folder)
+                    }
+
+            state = {
+                "folders": folders_data,
+                "custom_files": sorted(list(self.included_files))
+            }
+            save_included_config_state(state)
+            self.update_explorer_summary()
+            self.populate_files_list()
+
+        def update_explorer_summary(self):
+            inc_count = len(self.included_files)
+            inc_folders = set()
+            total_inc_size = 0
+
+            for folder in self.config_folders:
+                for f in folder["files"]:
+                    if f["rel_to_home"] in self.included_files:
+                        inc_folders.add(folder["name"])
+                        total_inc_size += f["size"]
+
+            f_count = len(inc_folders)
+            self.lbl_explorer_summary.set_text(
+                f"Selected: {f_count} folder{'s' if f_count != 1 else ''}  •  {inc_count} file{'s' if inc_count != 1 else ''}  ({format_size(total_inc_size)} total)"
+            )
+
+        def set_all_folder_expansion(self, expand: bool):
+            for f_name in self.folder_widgets:
+                self.toggle_folder_expansion(f_name, force_state=expand)
+
+        def clear_all_inclusions(self):
+            if not self.included_files:
+                return
+
+            dialog = Gtk.MessageDialog(
+                flags=0,
+                message_type=Gtk.MessageType.QUESTION,
+                buttons=Gtk.ButtonsType.YES_NO,
+                text="Deselect All Extra Folders?"
+            )
+            dialog.format_secondary_text(
+                "This will uncheck all extra included folders and files from ~/.config. Core personal files will remain untouched."
+            )
+            res = dialog.run()
+            dialog.destroy()
+
+            if res == Gtk.ResponseType.YES:
+                self.included_files.clear()
+                self._syncing_checks = True
+                try:
+                    for f_name, rec in self.folder_widgets.items():
+                        rec["master_chk"].set_inconsistent(False)
+                        rec["master_chk"].set_active(False)
+                        for chk in rec["file_checkboxes"].values():
+                            chk.set_active(False)
+                        self.update_folder_header_state(f_name)
+                finally:
+                    self._syncing_checks = False
+                self.save_and_sync_inclusions()
+
+        def filter_explorer_list(self):
+            query = self.explorer_search.get_text().strip().lower()
+            for f_name, rec in self.folder_widgets.items():
+                card = rec["card"]
+                if not query:
+                    card.set_visible(True)
+                    continue
+
+                folder_matches = query in f_name.lower()
+                sub_matches = [f for f in rec["folder"]["files"] if query in f["rel_to_folder"].lower() or query in f["rel_to_home"].lower()]
+
+                if folder_matches or sub_matches:
+                    card.set_visible(True)
+                    if sub_matches and not folder_matches:
+                        self.toggle_folder_expansion(f_name, force_state=True)
+                else:
+                    card.set_visible(False)
+
 
         def build_backup_tab(self):
             container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
@@ -997,7 +1581,7 @@ def launch_dotpersonal_gui(start_tab: int = 0):
             card_export.pack_start(lbl_exp_title, False, False, 0)
 
             lbl_exp_desc = Gtk.Label(
-                label="Create a compressed .tar.gz backup archive of all your personal settings across Hyprland, Neovim, Shell, and Quickshell. Ideal for transferring to a second computer or storing safe backups.",
+                label="Create a compressed .tar.gz backup archive of all your personal settings across Hyprland, Neovim, Shell, and included ~/.config folders. Ideal for transferring to a second computer or storing safe backups.",
                 xalign=0
             )
             lbl_exp_desc.set_line_wrap(True)
@@ -1322,23 +1906,48 @@ def launch_dotpersonal_gui(start_tab: int = 0):
             dialog.destroy()
 
         def refresh_all(self):
+            self.included_state = load_included_config_state()
+            self.included_files = set(self.included_state.get("custom_files", []))
+            self.populate_explorer_tab()
             self.populate_files_list()
             self.refresh_vcs_status()
 
     win = PersonalManagerWindow()
     win.connect("destroy", Gtk.main_quit)
     win.show_all()
-    if start_tab and 0 <= start_tab < 3:
+    win.present()
+    if start_tab and 0 <= start_tab < 4:
         win.notebook.set_current_page(start_tab)
+    if filter_query:
+        win.explorer_search.set_text(filter_query)
+    if expand_folder and expand_folder in win.folder_widgets:
+        win.toggle_folder_expansion(expand_folder, force_state=True)
+
+    if screenshot:
+        def capture_and_quit():
+            subprocess.run(["grim", screenshot])
+            Gtk.main_quit()
+            return False
+        GLib.timeout_add(900, capture_and_quit)
+
     Gtk.main()
 
 
 if __name__ == "__main__":
     tab = 0
+    screenshot_path = None
+    expand_name = None
+    filter_arg = None
     for arg in sys.argv[1:]:
         if arg.startswith("--tab="):
             try:
                 tab = int(arg.split("=")[1])
             except ValueError:
                 pass
-    launch_dotpersonal_gui(start_tab=tab)
+        elif arg.startswith("--screenshot="):
+            screenshot_path = arg.split("=")[1]
+        elif arg.startswith("--expand="):
+            expand_name = arg.split("=")[1]
+        elif arg.startswith("--filter="):
+            filter_arg = arg.split("=")[1]
+    launch_dotpersonal_gui(start_tab=tab, screenshot=screenshot_path, expand_folder=expand_name, filter_query=filter_arg)
