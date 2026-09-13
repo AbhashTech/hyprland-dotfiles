@@ -455,11 +455,15 @@ def launch_menu(images):
         try:
             import gi
             gi.require_version("Gtk", "3.0")
-            from gi.repository import Gtk, Gdk
+            from gi.repository import Gtk, Gdk, GLib
+
+            GLib.set_prgname("wallpaper-switcher")
+            GLib.set_application_name("Wallpaper Selector")
 
             chosen = [None]
             dialog = Gtk.Dialog(title="Wallpaper Selector", flags=0)
-            dialog.set_default_size(500, 520)
+            dialog.set_role("wallpaper-switcher")
+            dialog.set_default_size(540, 580)
             dialog.set_position(Gtk.WindowPosition.CENTER)
 
             box = dialog.get_content_area()

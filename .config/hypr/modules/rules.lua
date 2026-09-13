@@ -282,6 +282,16 @@ hl.window_rule({
     center = true,
 })
 
+-- Wallpaper Selector GUI Dialog
+hl.window_rule({
+    name   = "float-wallpaper-switcher",
+    match  = { class = "(wallpaper-switcher|wallpaper_switcher\\.py)" },
+    float  = true,
+    size   = "540 580",
+    center = true,
+})
+
+
 
 
 
