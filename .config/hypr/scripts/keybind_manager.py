@@ -368,6 +368,8 @@ def launch_keybind_manager_gui():
     accent_fg = get_contrast_color(c_accent)
     green_fg = get_contrast_color(c_green)
     red_fg = get_contrast_color(c_red)
+    yellow_fg = get_contrast_color(c_yellow)
+    sapphire_fg = get_contrast_color(c_sapphire)
 
     css_provider = Gtk.CssProvider()
     css_data = f"""
@@ -417,38 +419,220 @@ def launch_keybind_manager_gui():
         border-bottom: 2px solid {c_accent};
     }}
 
+    /* Base Buttons */
     button {{
+        background-image: none;
+        box-shadow: none;
+        text-shadow: none;
         border-radius: 6px;
         font-weight: 600;
         font-size: 12px;
-        padding: 5px 12px;
-        border: 1px solid {c_surface1};
-        background-color: {c_mantle};
+        padding: 6px 14px;
+        border: 1px solid {c_surface2};
+        background-color: {c_surface0};
         color: {c_text};
         transition: all 120ms ease-in-out;
     }}
 
-    button:hover {{
-        background-color: {c_surface0};
-        border-color: {c_surface2};
+    button label {{
+        color: {c_text};
+        font-weight: 600;
+        font-size: 12px;
     }}
 
+    button:hover {{
+        background-color: {c_surface1};
+        border-color: {c_accent};
+        color: {c_text};
+    }}
+
+    button:hover label {{
+        color: {c_text};
+    }}
+
+    button:active {{
+        background-color: {c_surface2};
+    }}
+
+    /* Accent / Primary Button */
     button.accent {{
         background-color: {c_accent};
-        color: {accent_fg};
+        background-image: none;
         border: 1px solid {c_accent};
+        color: {accent_fg};
     }}
 
+    button.accent label {{
+        color: {accent_fg};
+        font-weight: 700;
+    }}
+
+    button.accent:hover {{
+        background-color: {c_accent};
+        border-color: {c_accent};
+        opacity: 0.88;
+    }}
+
+    button.accent:hover label {{
+        color: {accent_fg};
+        font-weight: 700;
+    }}
+
+    button.accent:active {{
+        opacity: 0.75;
+    }}
+
+    /* Success Button (Enable, Save) */
     button.success {{
         background-color: {c_green};
-        color: {green_fg};
+        background-image: none;
         border: 1px solid {c_green};
+        color: {green_fg};
     }}
 
+    button.success label {{
+        color: {green_fg};
+        font-weight: 700;
+    }}
+
+    button.success:hover {{
+        background-color: {c_green};
+        border-color: {c_green};
+        opacity: 0.88;
+    }}
+
+    button.success:hover label {{
+        color: {green_fg};
+        font-weight: 700;
+    }}
+
+    button.success:active {{
+        opacity: 0.75;
+    }}
+
+    /* Danger Button (Delete, Reset) */
     button.danger {{
         background-color: {c_red};
-        color: {red_fg};
+        background-image: none;
         border: 1px solid {c_red};
+        color: {red_fg};
+    }}
+
+    button.danger label {{
+        color: {red_fg};
+        font-weight: 700;
+    }}
+
+    button.danger:hover {{
+        background-color: {c_red};
+        border-color: {c_red};
+        opacity: 0.88;
+    }}
+
+    button.danger:hover label {{
+        color: {red_fg};
+        font-weight: 700;
+    }}
+
+    button.danger:active {{
+        opacity: 0.75;
+    }}
+
+    /* Dialog and Action Area Buttons */
+    dialog, messagedialog {{
+        background-color: {c_base};
+        color: {c_text};
+    }}
+
+    dialog button,
+    messagedialog button,
+    .dialog-action-area button {{
+        background-color: {c_surface0};
+        background-image: none;
+        box-shadow: none;
+        border: 1px solid {c_surface2};
+        border-radius: 6px;
+        padding: 6px 16px;
+        color: {c_text};
+    }}
+
+    dialog button label,
+    messagedialog button label,
+    .dialog-action-area button label {{
+        color: {c_text};
+        font-weight: 600;
+    }}
+
+    dialog button:hover,
+    messagedialog button:hover,
+    .dialog-action-area button:hover {{
+        background-color: {c_surface1};
+        border-color: {c_accent};
+        color: {c_text};
+    }}
+
+    dialog button:hover label,
+    messagedialog button:hover label,
+    .dialog-action-area button:hover label {{
+        color: {c_text};
+    }}
+
+    dialog button.accent,
+    messagedialog button.accent,
+    .dialog-action-area button.accent {{
+        background-color: {c_accent};
+        border: 1px solid {c_accent};
+        color: {accent_fg};
+    }}
+
+    dialog button.accent label,
+    messagedialog button.accent label,
+    .dialog-action-area button.accent label {{
+        color: {accent_fg};
+        font-weight: 700;
+    }}
+
+    dialog button.accent:hover,
+    messagedialog button.accent:hover,
+    .dialog-action-area button.accent:hover {{
+        background-color: {c_accent};
+        opacity: 0.88;
+    }}
+
+    dialog button.accent:hover label,
+    messagedialog button.accent:hover label,
+    .dialog-action-area button.accent:hover label {{
+        color: {accent_fg};
+        font-weight: 700;
+    }}
+
+    dialog button.success,
+    messagedialog button.success,
+    .dialog-action-area button.success {{
+        background-color: {c_green};
+        border: 1px solid {c_green};
+        color: {green_fg};
+    }}
+
+    dialog button.success label,
+    messagedialog button.success label,
+    .dialog-action-area button.success label {{
+        color: {green_fg};
+        font-weight: 700;
+    }}
+
+    dialog button.success:hover,
+    messagedialog button.success:hover,
+    .dialog-action-area button.success:hover {{
+        background-color: {c_green};
+        opacity: 0.88;
+    }}
+
+    dialog button.success:hover label,
+    messagedialog button.success:hover label,
+    .dialog-action-area button.success:hover label {{
+        color: {green_fg};
+        font-weight: 700;
     }}
 
     entry, textview {{
@@ -463,7 +647,7 @@ def launch_keybind_manager_gui():
         border-color: {c_accent};
     }}
 
-    .key-badge {{
+    label.key-badge, .key-badge {{
         background-color: {c_surface0};
         color: {c_text};
         border: 1px solid {c_surface1};
@@ -474,13 +658,14 @@ def launch_keybind_manager_gui():
         padding: 3px 8px;
     }}
 
-    .key-badge-overridden {{
+    label.key-badge-overridden, .key-badge-overridden {{
         background-color: {c_yellow};
-        color: #11111b;
+        color: {yellow_fg};
         border: 1px solid {c_yellow};
+        font-weight: 700;
     }}
 
-    .key-badge-disabled {{
+    label.key-badge-disabled, .key-badge-disabled {{
         background-color: {c_surface0};
         color: {c_subtext0};
         text-decoration: line-through;
@@ -500,17 +685,17 @@ def launch_keybind_manager_gui():
         background-color: {c_surface0};
     }}
 
-    .status-tag {{
+    label.status-tag, .status-tag {{
         border-radius: 4px;
         font-size: 10px;
         font-weight: 700;
         padding: 2px 6px;
     }}
 
-    .status-default {{ background-color: {c_surface1}; color: {c_text}; }}
-    .status-active {{ background-color: {c_green}; color: {green_fg}; }}
-    .status-override {{ background-color: {c_yellow}; color: #11111b; }}
-    .status-disabled {{ background-color: {c_red}; color: {red_fg}; }}
+    label.status-default, .status-default {{ background-color: {c_surface1}; color: {c_text}; }}
+    label.status-active, .status-active {{ background-color: {c_green}; color: {green_fg}; }}
+    label.status-override, .status-override {{ background-color: {c_yellow}; color: {yellow_fg}; }}
+    label.status-disabled, .status-disabled {{ background-color: {c_red}; color: {red_fg}; }}
 
     .stat-label {{
         font-size: 11px;
