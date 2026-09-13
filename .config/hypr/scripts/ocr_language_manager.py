@@ -475,7 +475,7 @@ def launch_gtk_gui():
     import gi
     gi.require_version("Gtk", "3.0")
     gi.require_version("Gdk", "3.0")
-    from gi.repository import Gtk, Gdk, GLib
+    from gi.repository import Gtk, Gdk, GLib, Pango
 
     colors = get_theme_colors()
 
@@ -545,6 +545,22 @@ def launch_gtk_gui():
         font-weight: bold;
         font-size: 12px;
         transition: all 120ms ease-in-out;
+    }}
+
+    button.btn-close {{
+        background-color: {c_surface0};
+        color: {c_subtext1};
+        border-radius: 8px;
+        padding: 4px 10px;
+        font-size: 13px;
+        font-weight: bold;
+        border: 1px solid transparent;
+        transition: all 150ms ease-in-out;
+    }}
+    button.btn-close:hover {{
+        background-color: {c_red};
+        color: {c_base};
+        border-color: {c_red};
     }}
 
     /* Reset button in active combo bar */
@@ -833,15 +849,28 @@ def launch_gtk_gui():
                 xalign=0
             )
             subtitle_label.get_style_context().add_class("subtitle-label")
+            subtitle_label.set_ellipsize(Pango.EllipsizeMode.END)
+            subtitle_label.set_max_width_chars(50)
             title_vbox.pack_start(title_label, False, False, 0)
             title_vbox.pack_start(subtitle_label, False, False, 0)
             header_box.pack_start(title_vbox, True, True, 0)
 
+            # Dedicated Close Button
+            btn_close = Gtk.Button(label="✕")
+            btn_close.get_style_context().add_class("btn-close")
+            btn_close.set_tooltip_text("Close (Esc, Ctrl+W)")
+            btn_close.connect("clicked", lambda b: self.destroy())
+            header_box.pack_end(btn_close, False, False, 0)
+
             # Prominent Capture & Test OCR Button
             test_btn = Gtk.Button(label="📸 Capture & Test OCR")
             test_btn.get_style_context().add_class("btn-capture")
+            test_btn.set_tooltip_text("Capture screen area and run OCR test (Ctrl+Return)")
             test_btn.connect("clicked", lambda b: run_ocr_grab())
-            header_box.pack_start(test_btn, False, False, 0)
+            header_box.pack_end(test_btn, False, False, 4)
+
+            # Keyboard shortcut listener
+            self.connect("key-press-event", self._on_key_press)
 
             # --- 2. Active Multi-Language Combination Bar ---
             self.combo_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -936,6 +965,23 @@ def launch_gtk_gui():
             self.update_chips_and_header()
             self.refresh_installed_list()
             self.refresh_available_list()
+
+        def _on_key_press(self, widget, event):
+            if event.keyval in (Gdk.KEY_Escape,):
+                self.destroy()
+                return True
+            ctrl = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0
+            if ctrl and event.keyval in (Gdk.KEY_q, Gdk.KEY_Q, Gdk.KEY_w, Gdk.KEY_W):
+                self.destroy()
+                return True
+            if ctrl and event.keyval in (Gdk.KEY_f, Gdk.KEY_F):
+                if hasattr(self, "search_entry"):
+                    self.search_entry.grab_focus()
+                return True
+            if ctrl and event.keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
+                run_ocr_grab()
+                return True
+            return False
 
         def update_chips_and_header(self):
             """Update active languages chips and command line preview."""
