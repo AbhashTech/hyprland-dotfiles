@@ -582,9 +582,10 @@ def run_gtk_gui():
     class ShortcutCreatorApp(Gtk.Window):
         def __init__(self):
             super().__init__(title="Application Shortcut Creator")
+            GLib.set_prgname("app-shortcut-creator")
+            GLib.set_application_name("Application Shortcut Creator")
             self.set_default_size(840, 690)
             self.set_position(Gtk.WindowPosition.CENTER)
-            self.set_wmclass("app-shortcut-creator", "app-shortcut-creator")
             self.set_role("app-shortcut-creator")
 
             # Header Bar
@@ -683,7 +684,7 @@ def run_gtk_gui():
 
             # --- Section 2: Command & Execution ---
             sec2_label = Gtk.Label(xalign=0)
-            sec2_label.set_markup("<b>󰆍 COMMAND & EXECUTION</b>")
+            sec2_label.set_markup("<b>󰆍 COMMAND &amp; EXECUTION</b>")
             sec2_label.get_style_context().add_class("section-header")
             content_box.pack_start(sec2_label, False, False, 4)
 
@@ -734,7 +735,7 @@ def run_gtk_gui():
 
             # --- Section 3: Icon & Visuals ---
             sec3_label = Gtk.Label(xalign=0)
-            sec3_label.set_markup("<b>󰀻 ICON & APPEARANCE</b>")
+            sec3_label.set_markup("<b>󰀻 ICON &amp; APPEARANCE</b>")
             sec3_label.get_style_context().add_class("section-header")
             content_box.pack_start(sec3_label, False, False, 4)
 
@@ -767,7 +768,7 @@ def run_gtk_gui():
 
             # --- Section 4: Categories & Desktop Options ---
             sec4_label = Gtk.Label(xalign=0)
-            sec4_label.set_markup("<b>🏷️ CATEGORIES & LAUNCH OPTIONS</b>")
+            sec4_label.set_markup("<b>🏷️ CATEGORIES &amp; LAUNCH OPTIONS</b>")
             sec4_label.get_style_context().add_class("section-header")
             content_box.pack_start(sec4_label, False, False, 4)
 

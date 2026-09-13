@@ -213,9 +213,9 @@ hl.window_rule({
 -- App Shortcut / Menu Entry Creator Dialog
 hl.window_rule({
     name   = "float-app-shortcut-creator",
-    match  = { class = "app-shortcut-creator" },
+    match  = { class = "(app-shortcut-creator|app_shortcut_creator\\.py)" },
     float  = true,
-    size   = "820 680",
+    size   = "840 690",
     center = true,
 })
 
