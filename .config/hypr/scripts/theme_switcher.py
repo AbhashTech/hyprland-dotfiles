@@ -1596,14 +1596,14 @@ def run_gui_theme_manager(themes=None):
             background-color: {base};
             color: {text};
         }}
-        headerbar {{
+        headerbar, .top-header {{
             background-color: {mantle};
             background-image: none;
             border-bottom: 1.5px solid {s0};
             padding: 8px 14px;
             color: {text};
         }}
-        headerbar .title, headerbar .subtitle {{
+        headerbar .title, headerbar .subtitle, .top-header .title, .top-header .subtitle {{
             color: {text};
         }}
         entry, entry.search-input, .entry {{
@@ -1880,10 +1880,26 @@ def run_gui_theme_manager(themes=None):
             txt_color = c.get("text", "#ffffff")
             sub_color = c.get("subtext1", "#bac2de")
 
-            # HeaderBar
-            header = Gtk.HeaderBar()
-            header.set_show_close_button(True)
-            
+            # Main vertical layout container
+            main_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+            self.add(main_vbox)
+
+            # Top Header Bar (in-window widget, not Wayland titlebar, ensuring clicks are never intercepted)
+            header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            header.get_style_context().add_class("top-header")
+
+            # Left: Action buttons (New Theme, Random)
+            btn_new = Gtk.Button(label="󰐕  New Theme")
+            btn_new.get_style_context().add_class("btn-new")
+            btn_new.connect("clicked", lambda b: self._open_theme_editor(create_new=True))
+            header.pack_start(btn_new, False, False, 0)
+
+            btn_random = Gtk.Button(label="🎲 Random")
+            btn_random.get_style_context().add_class("btn-random")
+            btn_random.connect("clicked", self._on_random_clicked)
+            header.pack_start(btn_random, False, False, 0)
+
+            # Center: Title & Subtitle
             title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
             self.title_lbl = Gtk.Label()
             self.title_lbl.set_markup(f"<span size='12288' weight='bold'>🎨 Desktop Theme Switcher &amp; Palette Manager</span>")
@@ -1891,32 +1907,21 @@ def run_gui_theme_manager(themes=None):
             self.subtitle_lbl.set_markup(f"<span size='10240'>{len(self.themes)} Handcrafted Palettes • Hyprland, Waybar &amp; Apps</span>")
             title_box.pack_start(self.title_lbl, False, False, 0)
             title_box.pack_start(self.subtitle_lbl, False, False, 0)
-            header.set_custom_title(title_box)
+            header.set_center_widget(title_box)
 
-            # Action Buttons in HeaderBar
-            btn_new = Gtk.Button(label="󰐕  New Theme")
-            btn_new.get_style_context().add_class("btn-new")
-            btn_new.connect("clicked", lambda b: self._open_theme_editor(create_new=True))
-            header.pack_start(btn_new)
-
-            btn_random = Gtk.Button(label="🎲 Random")
-            btn_random.get_style_context().add_class("btn-random")
-            btn_random.connect("clicked", self._on_random_clicked)
-            header.pack_start(btn_random)
-
-            # Close Button
+            # Right: Single Dedicated Close Button
             btn_close = Gtk.Button(label="✕")
             btn_close.get_style_context().add_class("btn-close")
             btn_close.set_tooltip_text("Close Theme Switcher (Esc, Super+C)")
             btn_close.connect("clicked", lambda b: self.destroy())
-            header.pack_end(btn_close)
+            header.pack_end(btn_close, False, False, 0)
 
-            self.set_titlebar(header)
+            main_vbox.pack_start(header, False, False, 0)
 
             # Main Layout
             main_paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
             main_paned.set_position(680)
-            self.add(main_paned)
+            main_vbox.pack_start(main_paned, True, True, 0)
 
             # Left Column (Search + Filters + Theme Grid)
             left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
@@ -2348,35 +2353,41 @@ def run_gui_theme_manager(themes=None):
             self._build_editor_ui()
 
         def _build_editor_ui(self):
-            # Header bar with Save & Cancel
-            header = Gtk.HeaderBar()
-            header.set_show_close_button(False)
-            
-            title_text = "Create New Theme"
-            if self.theme_to_edit:
-                title_text = "Duplicate Theme" if self.is_copy else "Edit Theme"
-
-            header.set_title(title_text)
-            header.set_subtitle("Customize color palette, metadata & live preview")
-
-            btn_cancel = Gtk.Button(label="Cancel")
-            btn_cancel.get_style_context().add_class("btn-action-small")
-            btn_cancel.connect("clicked", lambda b: self.destroy())
-            header.pack_start(btn_cancel)
-
-            btn_save = Gtk.Button(label="💾  Save & Apply")
-            btn_save.get_style_context().add_class("btn-new")
-            btn_save.connect("clicked", lambda b: self._save_theme(apply_now=True))
-            header.pack_end(btn_save)
-
-            self.set_titlebar(header)
-
             content_area = self.get_content_area()
             content_area.set_spacing(10)
             content_area.set_margin_start(16)
             content_area.set_margin_end(16)
             content_area.set_margin_top(12)
             content_area.set_margin_bottom(12)
+
+            title_text = "Create New Theme"
+            if self.theme_to_edit:
+                title_text = "Duplicate Theme" if self.is_copy else "Edit Theme"
+
+            # Top Header Bar (in-dialog widget, not Wayland titlebar)
+            header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            header.get_style_context().add_class("top-header")
+
+            btn_cancel = Gtk.Button(label="Cancel")
+            btn_cancel.get_style_context().add_class("btn-action-small")
+            btn_cancel.connect("clicked", lambda b: self.destroy())
+            header.pack_start(btn_cancel, False, False, 0)
+
+            title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            t_lbl = Gtk.Label()
+            t_lbl.set_markup(f"<span size='12288' weight='bold'>{title_text}</span>")
+            sub_lbl = Gtk.Label()
+            sub_lbl.set_markup("<span size='10240'>Customize color palette, metadata &amp; live preview</span>")
+            title_box.pack_start(t_lbl, False, False, 0)
+            title_box.pack_start(sub_lbl, False, False, 0)
+            header.set_center_widget(title_box)
+
+            btn_save = Gtk.Button(label="💾  Save & Apply")
+            btn_save.get_style_context().add_class("btn-new")
+            btn_save.connect("clicked", lambda b: self._save_theme(apply_now=True))
+            header.pack_end(btn_save, False, False, 0)
+
+            content_area.pack_start(header, False, False, 0)
 
             scrolled = Gtk.ScrolledWindow()
             scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -2530,7 +2541,7 @@ def run_gui_theme_manager(themes=None):
 
             for cat_title, color_list in categories:
                 cat_lbl = Gtk.Label()
-                cat_lbl.set_markup(f"<span size='11264' weight='bold'>{cat_title}</span>")
+                cat_lbl.set_markup(f"<span size='11264' weight='bold'>{GLib.markup_escape_text(cat_title)}</span>")
                 cat_lbl.set_xalign(0)
                 pal_frame.pack_start(cat_lbl, False, False, 2)
 
@@ -2545,7 +2556,7 @@ def run_gui_theme_manager(themes=None):
                     row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
                     
                     lbl = Gtk.Label()
-                    lbl.set_markup(f"<span size='10240' weight='bold'>{c_label}:</span>")
+                    lbl.set_markup(f"<span size='10240' weight='bold'>{GLib.markup_escape_text(c_label)}:</span>")
                     lbl.set_xalign(0)
                     lbl.set_size_request(130, -1)
                     lbl.set_tooltip_text(c_desc)
