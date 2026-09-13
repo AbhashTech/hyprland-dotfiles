@@ -117,6 +117,40 @@ window {{
     font-size: 13px;
 }}
 
+.top-header {{
+    background-color: {c.get("mantle", "#11111b")};
+    border-bottom: 1px solid {c.get("surface0", "#313244")};
+    padding: 10px 16px;
+}}
+
+.window-title {{
+    font-weight: bold;
+    font-size: 15px;
+    color: {c.get("accent", "#cba6f7")};
+}}
+
+.window-subtitle {{
+    color: {c.get("subtext1", "#bac2de")};
+    font-size: 11px;
+}}
+
+.btn-close {{
+    background-color: {c.get("surface0", "#313244")};
+    color: {c.get("subtext1", "#bac2de")};
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: bold;
+    border: 1px solid transparent;
+    transition: all 150ms ease-in-out;
+}}
+
+.btn-close:hover {{
+    background-color: {c.get("red", "#f38ba8")};
+    color: {red_fg};
+    border-color: {c.get("red", "#f38ba8")};
+}}
+
 headerbar {{
     background-color: {c.get("mantle", "#11111b")};
     background-image: none;
@@ -588,20 +622,37 @@ def run_gtk_gui():
             self.set_position(Gtk.WindowPosition.CENTER)
             self.set_role("app-shortcut-creator")
 
-            # Header Bar
-            header = Gtk.HeaderBar()
-            header.set_show_close_button(True)
-            header.set_title("App Shortcut Creator")
-            header.set_subtitle("Create & Manage App Menu Launchers")
-            self.set_titlebar(header)
-
-            # Header icon
-            header_icon = Gtk.Image.new_from_icon_name("preferences-desktop-keyboard-shortcuts", Gtk.IconSize.LARGE_TOOLBAR)
-            header.pack_start(header_icon)
-
             # Main container
             main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
             self.add(main_box)
+
+            # In-Window Top Header Bar (Wayland compatible, in-window controls)
+            header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+            header.get_style_context().add_class("top-header")
+
+            header_icon = Gtk.Image.new_from_icon_name("preferences-desktop-keyboard-shortcuts", Gtk.IconSize.LARGE_TOOLBAR)
+            header.pack_start(header_icon, False, False, 2)
+
+            title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            lbl_title = Gtk.Label(label="App Shortcut Creator", xalign=0)
+            lbl_title.get_style_context().add_class("window-title")
+            lbl_sub = Gtk.Label(label="Create & Manage Desktop Application Launchers", xalign=0)
+            lbl_sub.get_style_context().add_class("window-subtitle")
+            title_box.pack_start(lbl_title, False, False, 0)
+            title_box.pack_start(lbl_sub, False, False, 0)
+            header.pack_start(title_box, True, True, 0)
+
+            # Dedicated Close Button
+            btn_close = Gtk.Button(label="✕")
+            btn_close.get_style_context().add_class("btn-close")
+            btn_close.set_tooltip_text("Close (Esc, Ctrl+W)")
+            btn_close.connect("clicked", lambda b: self.destroy())
+            header.pack_end(btn_close, False, False, 0)
+
+            main_box.pack_start(header, False, False, 0)
+
+            # Keyboard shortcut listener
+            self.connect("key-press-event", self._on_key_press)
 
             # In-App Info / Status Notification Bar
             self.infobar = Gtk.InfoBar()
@@ -624,6 +675,29 @@ def run_gtk_gui():
 
             # Initial preview render
             self._update_preview()
+
+        def _on_key_press(self, widget, event):
+            if event.keyval in (Gdk.KEY_Escape,):
+                self.destroy()
+                return True
+            ctrl = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0
+            if ctrl and event.keyval in (Gdk.KEY_q, Gdk.KEY_Q, Gdk.KEY_w, Gdk.KEY_W):
+                self.destroy()
+                return True
+            if ctrl and event.keyval in (Gdk.KEY_f, Gdk.KEY_F):
+                self.notebook.set_current_page(1)
+                if hasattr(self, "search_entry"):
+                    self.search_entry.grab_focus()
+                return True
+            if ctrl and event.keyval in (Gdk.KEY_s, Gdk.KEY_S):
+                if self.notebook.get_current_page() == 0:
+                    self._on_save_clicked(None)
+                    return True
+            if ctrl and event.keyval in (Gdk.KEY_r, Gdk.KEY_R):
+                if self.notebook.get_current_page() == 1:
+                    self._load_shortcuts_list()
+                    return True
+            return False
 
         def _show_msg(self, text: str, msg_type=Gtk.MessageType.INFO):
             self.infobar.set_message_type(msg_type)
