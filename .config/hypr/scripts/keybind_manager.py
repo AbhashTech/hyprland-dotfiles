@@ -795,6 +795,23 @@ def launch_keybind_manager_gui(start_tab: int = 0):
         color: {c_subtext0};
     }}
 
+    .btn-close {{
+        background-color: {c_surface0};
+        color: {c_subtext1};
+        border-radius: 8px;
+        padding: 4px 10px;
+        font-size: 13px;
+        font-weight: bold;
+        border: 1px solid transparent;
+        transition: all 150ms ease-in-out;
+    }}
+
+    .btn-close:hover {{
+        background-color: {c_red};
+        color: {c_base};
+        border-color: {c_red};
+    }}
+
     notebook > header {{
         background-color: {c_mantle};
         border-bottom: 1px solid {c_surface0};
@@ -1476,20 +1493,34 @@ def launch_keybind_manager_gui(start_tab: int = 0):
                 xalign=0
             )
             self.lbl_sub.get_style_context().add_class("window-subtitle")
+            self.lbl_sub.set_ellipsize(Pango.EllipsizeMode.END)
+            self.lbl_sub.set_max_width_chars(50)
             title_box.pack_start(lbl_title, False, False, 0)
             title_box.pack_start(self.lbl_sub, False, False, 0)
             header.pack_start(title_box, True, True, 0)
 
+            # Dedicated Close Button
+            btn_close = Gtk.Button(label="✕")
+            btn_close.get_style_context().add_class("btn-close")
+            btn_close.set_tooltip_text("Close (Esc, Ctrl+W)")
+            btn_close.connect("clicked", lambda b: self.destroy())
+            header.pack_end(btn_close, False, False, 0)
+
             btn_reload = Gtk.Button(label="󰑐  Reload Hyprland")
+            btn_reload.set_tooltip_text("Reload Hyprland Config (Ctrl+R)")
             btn_reload.connect("clicked", lambda b: self.reload_hyprland())
             header.pack_end(btn_reload, False, False, 0)
 
             btn_add = Gtk.Button(label="󰐕  Add Custom Keybind")
             btn_add.get_style_context().add_class("accent")
+            btn_add.set_tooltip_text("Create new custom keybinding (Ctrl+N)")
             btn_add.connect("clicked", lambda b: self.show_add_custom_dialog())
             header.pack_end(btn_add, False, False, 0)
 
             main_box.pack_start(header, False, False, 0)
+
+            # Keyboard shortcut listener
+            self.connect("key-press-event", self._on_key_press)
 
             # Notebook Tabs
             self.notebook = Gtk.Notebook()
@@ -1512,6 +1543,33 @@ def launch_keybind_manager_gui(start_tab: int = 0):
             self.notebook.append_page(self.tab_lua, Gtk.Label(label="📄  user/keybinds.lua"))
 
             self.refresh_all()
+
+        def _on_key_press(self, widget, event):
+            if event.keyval in (Gdk.KEY_Escape,):
+                self.destroy()
+                return True
+            ctrl = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0
+            if ctrl and event.keyval in (Gdk.KEY_q, Gdk.KEY_Q, Gdk.KEY_w, Gdk.KEY_W):
+                self.destroy()
+                return True
+            if ctrl and event.keyval in (Gdk.KEY_r, Gdk.KEY_R):
+                self.reload_hyprland()
+                return True
+            if ctrl and event.keyval in (Gdk.KEY_n, Gdk.KEY_N):
+                self.show_add_custom_dialog()
+                return True
+            if ctrl and event.keyval in (Gdk.KEY_f, Gdk.KEY_F):
+                page = self.notebook.get_current_page()
+                if page == 0 and hasattr(self, "def_search_entry"):
+                    self.def_search_entry.grab_focus()
+                elif page == 2 and hasattr(self, "plugin_search_entry"):
+                    self.plugin_search_entry.grab_focus()
+                else:
+                    self.notebook.set_current_page(0)
+                    if hasattr(self, "def_search_entry"):
+                        self.def_search_entry.grab_focus()
+                return True
+            return False
 
         def check_conflict(self, candidate, exclude_id=None):
             """Evaluate candidate shortcut conflict across all system bindings."""
