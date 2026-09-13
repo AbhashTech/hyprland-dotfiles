@@ -235,6 +235,21 @@ def get_hypr_socket2(timeout_sec=15.0):
     return None
 
 
+def check_audio_sink():
+    """
+    Check if the current default audio sink is disconnected HDMI/DP,
+    and automatically switch to Speaker / Headphones.
+    """
+    try:
+        helper_path = os.path.expanduser("~/.config/quickshell/plugins/volume/audio_helper.py")
+        if os.path.exists(helper_path):
+            res = subprocess.run(["python3", helper_path, "auto-switch"], capture_output=True, text=True, timeout=2)
+            if "switched" in res.stdout:
+                log("Audio auto-switched to available sink (HDMI disconnected)")
+    except Exception as e:
+        log(f"Error checking audio sink: {e}")
+
+
 def listen_events():
     sock2_path = get_hypr_socket2()
     if not sock2_path:
@@ -243,11 +258,12 @@ def listen_events():
 
     log(f"Connected to Hyprland event socket: {sock2_path}")
     
-    # Run initial assignment in case monitor was plugged before script started
+    # Run initial assignment and audio sink verification
     try:
         assign_workspaces()
+        check_audio_sink()
     except Exception as e:
-        log(f"Error in initial assign_workspaces: {e}")
+        log(f"Error in initial assign_workspaces / audio check: {e}")
 
     while True:
         try:
@@ -256,6 +272,16 @@ def listen_events():
             buffer = ""
             
             while True:
+                # 10-second timeout for periodic watchdog check
+                r, _, _ = select.select([s], [], [], 10.0)
+                if not r:
+                    # Heartbeat check every 10 seconds
+                    try:
+                        check_audio_sink()
+                    except Exception:
+                        pass
+                    continue
+
                 data = s.recv(4096)
                 if not data:
                     break
@@ -267,17 +293,22 @@ def listen_events():
                     if not line:
                         continue
                     
-                    # Check for monitor connection events
-                    # Events: 'monitoradded>>HDMI-A-1' or 'monitoraddedv2>>0,HDMI-A-1,...'
+                    # Check for monitor connection and disconnection events
                     if line.startswith("monitoradded>>"):
                         mon_name = line.split(">>", 1)[1].strip()
                         log(f"Received event: {line}")
                         assign_monitor_workspace(mon_name)
+                        check_audio_sink()
                     elif line.startswith("monitoraddedv2>>"):
                         parts = line.split(">>", 1)[1].split(",")
                         mon_name = parts[1].strip() if len(parts) > 1 else parts[0].strip()
                         log(f"Received event: {line}")
                         assign_monitor_workspace(mon_name)
+                        check_audio_sink()
+                    elif line.startswith("monitorremoved>>") or line.startswith("monitorremovedv2>>"):
+                        log(f"Received event: {line}")
+                        assign_workspaces()
+                        check_audio_sink()
         except Exception as e:
             log(f"Socket connection error: {e}. Retrying in 2 seconds...")
             time.sleep(2.0)

@@ -307,10 +307,41 @@ def clean_device_name(raw_desc, is_source=False):
     desc = re.sub(r'\(HD Audio\)', '', desc).strip()
     return desc or raw_desc
 
+def is_external_display_connected():
+    """Check if any external monitor (HDMI / DisplayPort) is connected via DRM sysfs or Hyprland."""
+    import glob
+    try:
+        drm_paths = glob.glob("/sys/class/drm/*/status")
+        for p in drm_paths:
+            parent = os.path.basename(os.path.dirname(p)).upper()
+            if not any(internal in parent for internal in ["EDP", "LVDS", "DSI"]):
+                try:
+                    with open(p, "r") as f:
+                        if f.read().strip() == "connected":
+                            return True
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+    try:
+        raw = run_cmd(["hyprctl", "monitors", "-j"])
+        if raw:
+            mons = json.loads(raw)
+            for m in mons:
+                m_name = m.get("name", "").upper()
+                if not any(internal in m_name for internal in ["EDP", "LVDS", "DSI"]):
+                    return True
+    except Exception:
+        pass
+
+    return False
+
 def get_sinks_list():
     """Return a list of available audio sink devices."""
     default_sink = run_cmd(["pactl", "get-default-sink"])
     port_avail = get_port_availability()
+    ext_connected = is_external_display_connected()
     raw_sinks = run_cmd(["pactl", "-f", "json", "list", "sinks"])
     results = []
     seen_names = set()
@@ -322,8 +353,13 @@ def get_sinks_list():
                 ports = s.get("ports", [])
                 active_port = s.get("active_port")
 
+                is_hdmi = any(kw in name.lower() or kw in s.get("description", "").lower() for kw in ["hdmi", "displayport"])
                 is_unavail = False
-                if ports:
+                
+                # Check physical connection for HDMI/DisplayPort outputs
+                if is_hdmi and not ext_connected:
+                    is_unavail = True
+                elif ports:
                     is_unavail = all(p.get("availability") == "not available" for p in ports)
                 elif active_port and port_avail.get(active_port) == "not available":
                     is_unavail = True
@@ -337,7 +373,7 @@ def get_sinks_list():
                 idx = s.get("index")
                 is_default = (name == default_sink)
 
-                if is_unavail and not is_default:
+                if is_unavail:
                     continue
 
                 if desc in seen_names and not is_default:
@@ -355,6 +391,47 @@ def get_sinks_list():
         except Exception:
             pass
     return results
+
+def auto_switch_audio(notify=True):
+    """
+    Check if the current default sink is valid and physically connected.
+    If default sink is disconnected HDMI/DP, auto-switch to Speaker or Headphones.
+    """
+    default_sink = run_cmd(["pactl", "get-default-sink"])
+    if not default_sink:
+        return False
+    ext_connected = is_external_display_connected()
+    is_default_hdmi = any(kw in default_sink.lower() for kw in ["hdmi", "displayport"])
+    
+    if is_default_hdmi and not ext_connected:
+        sinks = get_sinks_list()
+        target_sink = None
+        # Priority: Headphones > Bluetooth > Speaker > First available
+        for s in sinks:
+            desc_l = s.get("description", "").lower()
+            name_l = s.get("name", "").lower()
+            if "headphone" in desc_l or "headset" in desc_l or "bluez" in name_l:
+                target_sink = s
+                break
+        if not target_sink:
+            for s in sinks:
+                desc_l = s.get("description", "").lower()
+                if "speaker" in desc_l:
+                    target_sink = s
+                    break
+        if not target_sink and sinks:
+            target_sink = sinks[0]
+            
+        if target_sink:
+            set_default_sink(target_sink["name"])
+            if notify:
+                show_notification(
+                    "🔊 Audio Switched to Speaker",
+                    f"Default output set to <b>{target_sink['description']}</b> (HDMI disconnected)",
+                    "audio-speakers"
+                )
+            return True
+    return False
 
 def get_sources_list():
     """Return a list of available audio input source devices (excluding monitors)."""
@@ -687,13 +764,16 @@ def main():
         print(json.dumps(get_sinks_list(), indent=2))
     elif cmd in ["list-sources"]:
         print(json.dumps(get_sources_list(), indent=2))
+    elif cmd in ["auto-switch", "check-switch", "auto-select"]:
+        switched = auto_switch_audio(notify=True)
+        print("switched" if switched else "noop")
     elif cmd in ["restart", "restart-server", "restart-sound"]:
         restart_sound_server()
     elif cmd in ["menu", "dmenu", "gui"]:
         interactive_menu()
     else:
         print(f"Unknown action: {cmd}")
-        print("Usage: volume_control.py [up|down|set|mute|mic-up|mic-down|mic-mute|next-sink|next-source|restart|menu|show]")
+        print("Usage: volume_control.py [up|down|set|mute|mic-up|mic-down|mic-mute|next-sink|next-source|auto-switch|restart|menu|show]")
         sys.exit(1)
 
 if __name__ == "__main__":
