@@ -562,11 +562,15 @@ def open_interactive_menu():
         try:
             import gi
             gi.require_version("Gtk", "3.0")
-            from gi.repository import Gtk, Gdk
+            from gi.repository import Gtk, Gdk, GLib
+
+            GLib.set_prgname("screen-capture")
+            GLib.set_application_name("Screen Capture & Recording Hub")
 
             selected = [""]
             dialog = Gtk.Dialog(title="Screen Capture & Recording Hub", flags=0)
-            dialog.set_default_size(440, 480)
+            dialog.set_role("screen-capture")
+            dialog.set_default_size(480, 520)
             dialog.set_position(Gtk.WindowPosition.CENTER)
 
             box = dialog.get_content_area()

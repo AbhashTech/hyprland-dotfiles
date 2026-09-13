@@ -273,6 +273,16 @@ hl.window_rule({
     center = true,
 })
 
+-- Screen Capture & Recording Hub GUI Dialog
+hl.window_rule({
+    name   = "float-screen-capture",
+    match  = { class = "(screen-capture|screen_capture\\.py)" },
+    float  = true,
+    size   = "480 520",
+    center = true,
+})
+
+
 
 
 
