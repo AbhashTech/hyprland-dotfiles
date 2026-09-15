@@ -128,26 +128,72 @@ Rectangle {
         navigate(parts.length === 0 ? "/" : "/" + parts.join("/"))
     }
 
-    // ── Listing ───────────────────────────────────────────────────────────────
+    // ── Listing & Sorting ───────────────────────────────────────────────────
+    function sortEntries(entriesList) {
+        if (!entriesList || entriesList.length === 0) return []
+        var dirs = entriesList.filter(function(e) { return e.isDir })
+        var files = entriesList.filter(function(e) { return !e.isDir })
+
+        function getFileKey(e) {
+            if (sortBy === "size") return (typeof e.size === "number" ? e.size : 0)
+            if (sortBy === "date" || sortBy === "modified") return (typeof e.modified === "number" ? e.modified : 0)
+            if (sortBy === "type" || sortBy === "ext") {
+                var n = (e.name || "").toLowerCase()
+                var dotIdx = n.lastIndexOf(".")
+                return dotIdx >= 0 ? n.substring(dotIdx) : ""
+            }
+            if (sortBy === "category") return (e.category || "").toLowerCase()
+            return (e.name || "").toLowerCase()
+        }
+
+        function getDirKey(e) {
+            if (sortBy === "size") return (typeof e.itemCount === "number" ? e.itemCount : 0)
+            if (sortBy === "date" || sortBy === "modified") return (typeof e.modified === "number" ? e.modified : 0)
+            if (sortBy === "category") return (e.category || "").toLowerCase()
+            return (e.name || "").toLowerCase()
+        }
+
+        function compareItems(a, b, isDirList) {
+            var keyA = isDirList ? getDirKey(a) : getFileKey(a)
+            var keyB = isDirList ? getDirKey(b) : getFileKey(b)
+            var cmp = 0
+            if (typeof keyA === "string" && typeof keyB === "string") {
+                cmp = keyA.localeCompare(keyB)
+            } else {
+                cmp = keyA < keyB ? -1 : (keyA > keyB ? 1 : 0)
+            }
+            if (cmp === 0) {
+                cmp = (a.name || "").toLowerCase().localeCompare((b.name || "").toLowerCase())
+            }
+            return sortAsc ? cmp : -cmp
+        }
+
+        dirs.sort(function(a, b) { return compareItems(a, b, true) })
+        files.sort(function(a, b) { return compareItems(a, b, false) })
+        return dirs.concat(files)
+    }
+
     function refreshListing() {
         var args = ["python3", helper, "list", currentPath]
         if (showHidden)              args.push("--hidden")
         if (mimeFilter !== "all")    { args.push("--mime"); args.push(mimeFilter) }
-        if (sortBy !== "name")       { args.push("--sort"); args.push(sortBy) }
+        args.push("--sort"); args.push(sortBy)
         if (!sortAsc)                args.push("--desc")
         listProc.command = args
-        if (!listProc.running) listProc.running = true
+        if (listProc.running) listProc.running = false
+        listProc.running = true
     }
 
     function applySearch() {
+        var base = allEntries || []
         var q = searchText.toLowerCase().trim()
-        if (q.length === 0) {
-            filteredEntries = allEntries
-        } else {
-            filteredEntries = allEntries.filter(function(e) {
+        var list = base
+        if (q.length > 0) {
+            list = base.filter(function(e) {
                 return e.name.toLowerCase().indexOf(q) !== -1
             })
         }
+        filteredEntries = sortEntries(list).slice()
         focusIndex = 0
         if (filteredEntries.length > 0) {
             loadPreview(filteredEntries[0])
@@ -183,6 +229,7 @@ Rectangle {
     }
 
     function handleEntryClick(entry) {
+        if (toolbar.sortMenuOpen) toolbar.sortMenuOpen = false
         if (!entry) return
         if (requestDirectory) {
             // Folder picker mode: single-click selects the directory
@@ -368,13 +415,20 @@ Rectangle {
     Component.onCompleted: grabFocus()
 
     // ── Process: directory listing ────────────────────────────────────────────
+    property string listBuffer: ""
     Process {
         id: listProc
+        onStarted: { listBuffer = "" }
         stdout: SplitParser {
             splitMarker: ""
             onRead: data => {
+                listBuffer += data
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0 && listBuffer.trim().length > 0) {
                 try {
-                    var parsed = JSON.parse(data)
+                    var parsed = JSON.parse(listBuffer.trim())
                     if (Array.isArray(parsed)) {
                         allEntries = parsed
                         modal.applySearch()
@@ -500,6 +554,11 @@ Rectangle {
     }
 
     Keys.onPressed: event => {
+        if (event.key === Qt.Key_Escape && toolbar.sortMenuOpen) {
+            toolbar.sortMenuOpen = false
+            event.accepted = true
+            return
+        }
         var isSuper = (event.modifiers & Qt.MetaModifier);
         var isAlt   = (event.modifiers & Qt.AltModifier);
         if ((isSuper && (event.key === Qt.Key_C || event.key === Qt.Key_Q || event.key === Qt.Key_W)) ||
@@ -528,11 +587,11 @@ Rectangle {
     }
 
     // ── Watchers ──────────────────────────────────────────────────────────────
-    onCurrentPathChanged:  { refreshListing(); recentsProc.running = true }
+    onCurrentPathChanged:  { if (toolbar.sortMenuOpen) toolbar.sortMenuOpen = false; refreshListing(); recentsProc.running = true }
     onShowHiddenChanged:   refreshListing()
-    onMimeFilterChanged:   refreshListing()
-    onSortByChanged:       refreshListing()
-    onSortAscChanged:      refreshListing()
+    onMimeFilterChanged:   { if (toolbar.sortMenuOpen) toolbar.sortMenuOpen = false; refreshListing() }
+    onSortByChanged:       { applySearch(); refreshListing() }
+    onSortAscChanged:      { applySearch(); refreshListing() }
     onSearchTextChanged:   applySearch()
 
     Connections {
@@ -764,6 +823,7 @@ Rectangle {
                 Layout.fillWidth:  true
                 Layout.fillHeight: true
                 spacing:           0
+                z:                 toolbar.sortMenuOpen ? 100 : 1
 
                 // Toolbar
                 FilePickerToolbar {
@@ -771,6 +831,7 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.margins:  8
                     Layout.bottomMargin: 4
+                    z:               toolbar.sortMenuOpen ? 100 : 1
 
                     currentPath:   modal.currentPath
                     canGoBack:     modal.canGoBack
@@ -787,7 +848,12 @@ Rectangle {
                     onNavigateTo:      (path) => modal.navigate(path)
                     onToggleHidden:    { modal.showHidden = !modal.showHidden }
                     onToggleViewMode:  { modal.viewMode = (modal.viewMode === "list" ? "grid" : "list") }
-                    onSetSortBy:       (by, asc) => { modal.sortBy = by; modal.sortAsc = asc }
+                    onSetSortBy:       (by, asc) => {
+                        modal.sortBy = by
+                        modal.sortAsc = asc
+                        modal.applySearch()
+                        modal.refreshListing()
+                    }
                     onSearchChanged:   (text) => { modal.searchText = text }
                 }
 
@@ -887,6 +953,16 @@ Rectangle {
                         selectedPaths: modal.selectedPaths
                         multiSelect:   modal.multiSelect
                         focusIndex:    modal.focusIndex
+                        sortBy:        modal.sortBy
+                        sortAsc:       modal.sortAsc
+
+                        onSortRequested: (by) => {
+                            var newAsc = (modal.sortBy === by) ? !modal.sortAsc : (by === "date" || by === "size" ? false : true)
+                            modal.sortBy = by
+                            modal.sortAsc = newAsc
+                            modal.applySearch()
+                            modal.refreshListing()
+                        }
 
                         onEntryClicked:       (entry) => modal.handleEntryClick(entry)
                         onEntryDoubleClicked: (entry) => modal.handleEntryDoubleClick(entry)

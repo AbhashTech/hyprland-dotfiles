@@ -5,7 +5,7 @@ Handles: directory listing, bookmarks, recents, MIME detection, thumbnails,
          confirm/cancel output for the XDG portal backend.
 
 Commands:
-  list <path> [--hidden] [--mime <filter>] [--sort name|size|date] [--desc]
+  list <path> [--hidden] [--mime <filter>] [--sort name|size|date|type|category] [--desc]
   bookmarks
   add-bookmark <path>
   remove-bookmark <path>
@@ -307,11 +307,27 @@ def cmd_list(args):
         return
 
     def file_key(e):
-        if sort_by == "size":  return e["size"]
-        if sort_by == "date":  return e["modified"]
+        if sort_by == "size":
+            return (e["size"], e["name"].lower())
+        if sort_by in ("date", "modified", "mtime"):
+            return (e["modified"], e["name"].lower())
+        if sort_by in ("type", "ext", "extension"):
+            ext = os.path.splitext(e["name"])[1].lower()
+            return (ext, e["name"].lower())
+        if sort_by == "category":
+            return (e["category"], e["name"].lower())
         return e["name"].lower()
 
-    dirs  = sorted([e for e in entries if e["isDir"]],  key=lambda e: e["name"].lower(), reverse=not sort_asc)
+    def dir_key(e):
+        if sort_by == "size":
+            return (e["itemCount"], e["name"].lower())
+        if sort_by in ("date", "modified", "mtime"):
+            return (e["modified"], e["name"].lower())
+        if sort_by == "category":
+            return (e["category"], e["name"].lower())
+        return e["name"].lower()
+
+    dirs  = sorted([e for e in entries if e["isDir"]],  key=dir_key, reverse=not sort_asc)
     files = sorted([e for e in entries if not e["isDir"]], key=file_key, reverse=not sort_asc)
     print(json.dumps(dirs + files))
 

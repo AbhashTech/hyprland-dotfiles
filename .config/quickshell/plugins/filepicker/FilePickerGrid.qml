@@ -125,9 +125,10 @@ Rectangle {
 
                         Text {
                             anchors.centerIn: parent
-                            text:           ""
+                            text:           "✓"
                             font.family:    Theme.fontFamily
                             font.pixelSize: 10
+                            font.bold:      true
                             color:          Theme.crust
                         }
                     }
@@ -149,7 +150,8 @@ Rectangle {
                             text:           "Folder"
                             font.family:    Theme.fontFamily
                             font.pixelSize: 9
-                            color:          Theme.blue
+                            font.bold:      true
+                            color:          Theme.peach
                         }
                     }
                 }
@@ -160,8 +162,8 @@ Rectangle {
                     text:            modelData.name
                     font.family:     Theme.fontFamily
                     font.pixelSize:  Theme.fontSizeSmall
-                    font.bold:       isSelected
-                    color:           isSelected ? Theme.accent : (modelData.isDir ? Theme.blue : Theme.text)
+                    font.bold:       isSelected || modelData.isDir
+                    color:           isSelected ? Theme.accent : (modelData.isDir ? Theme.peach : Theme.text)
                     elide:           Text.ElideRight
                     horizontalAlignment: Text.AlignHCenter
                 }

@@ -10,6 +10,7 @@ Rectangle {
 
     implicitHeight: 44
     color:          "transparent"
+    z:              sortMenuOpen ? 100 : 1
 
     // ── In-props ─────────────────────────────────────────────────────────────
     property string currentPath:   ""
@@ -17,7 +18,7 @@ Rectangle {
     property bool   canGoForward:  false
     property bool   showHidden:    false
     property string viewMode:      "list"   // "list" | "grid"
-    property string sortBy:        "name"   // "name" | "size" | "date"
+    property string sortBy:        "name"   // "name" | "date" | "size" | "type" | "category"
     property bool   sortAsc:       true
     property string searchText:    ""
 
@@ -255,106 +256,6 @@ Rectangle {
             tooltip: toolbar.viewMode === "list" ? "Grid view" : "List view"
             onClicked: toolbar.toggleViewMode()
         }
-
-        // ── Sort button ───────────────────────────────────────────────────────
-        ToolIconButton {
-            id:      sortBtn
-            icon:    "󰒺"
-            tooltip: "Sort"
-            onClicked: toolbar.sortMenuOpen = !toolbar.sortMenuOpen
-
-            // Sort dropdown popup
-            Rectangle {
-                id:      sortMenu
-                visible: toolbar.sortMenuOpen
-                z:       200
-                width:   140
-                implicitHeight: sortCol.implicitHeight + 12
-                anchors.top:    parent.bottom
-                anchors.right:  parent.right
-                anchors.topMargin: 4
-                radius:       Theme.pillRadius
-                color:        Theme.tooltipBg
-                border.color: Theme.tooltipBorder
-                border.width: 1
-
-                ColumnLayout {
-                    id:             sortCol
-                    anchors.left:   parent.left
-                    anchors.right:  parent.right
-                    anchors.top:    parent.top
-                    anchors.margins: 6
-                    spacing:        2
-
-                    Repeater {
-                        model: [
-                            { id: "name", label: "Name",         icon: "󰊓" },
-                            { id: "size", label: "Size",         icon: "󰙖" },
-                            { id: "date", label: "Date Modified", icon: "󰃰" },
-                        ]
-
-                        delegate: Rectangle {
-                            required property var modelData
-                            Layout.fillWidth: true
-                            implicitHeight: 28
-                            radius: 6
-                            color: sortItemMouse.containsMouse ? Theme.moduleHoverBg : "transparent"
-
-                            RowLayout {
-                                anchors.fill:        parent
-                                anchors.leftMargin:  8
-                                anchors.rightMargin: 8
-                                spacing: 6
-
-                                Text {
-                                    text:           modelData.icon
-                                    font.family:    Theme.fontFamily
-                                    font.pixelSize: 12
-                                    color:          toolbar.sortBy === modelData.id
-                                                        ? Theme.accent : Theme.subtext0
-                                }
-                                Text {
-                                    Layout.fillWidth: true
-                                    text:           modelData.label
-                                    font.family:    Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    font.bold:      toolbar.sortBy === modelData.id
-                                    color:          toolbar.sortBy === modelData.id
-                                                        ? Theme.accent : Theme.text
-                                }
-                                Text {
-                                    visible:        toolbar.sortBy === modelData.id
-                                    text:           toolbar.sortAsc ? "↑" : "↓"
-                                    font.family:    Theme.fontFamily
-                                    font.pixelSize: 11
-                                    color:          Theme.accent
-                                }
-                            }
-
-                            MouseArea {
-                                id:          sortItemMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape:  Qt.PointingHandCursor
-                                onClicked: {
-                                    var newAsc = (toolbar.sortBy === modelData.id) ? !toolbar.sortAsc : true
-                                    toolbar.setSortBy(modelData.id, newAsc)
-                                    toolbar.sortMenuOpen = false
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Close sort menu when clicking elsewhere
-    MouseArea {
-        anchors.fill: parent
-        z: -1
-        visible: toolbar.sortMenuOpen
-        onClicked: toolbar.sortMenuOpen = false
     }
 
     // ── Inline components ─────────────────────────────────────────────────────

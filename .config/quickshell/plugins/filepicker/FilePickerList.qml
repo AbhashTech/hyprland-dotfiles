@@ -15,12 +15,15 @@ Rectangle {
     property var    selectedPaths: []
     property bool   multiSelect:   false
     property int    focusIndex:    0
+    property string sortBy:        "name"
+    property bool   sortAsc:       true
 
     // ── Signals ───────────────────────────────────────────────────────────────
     signal entryClicked(var entry)
     signal entryDoubleClicked(var entry)
     signal selectionToggled(string path)
     signal itemFocusChanged(int index)
+    signal sortRequested(string by)
 
     // ── Computed ──────────────────────────────────────────────────────────────
     function isSelected(path) {
@@ -40,6 +43,49 @@ Rectangle {
         }
     }
 
+    function getItemIcon(entry) {
+        if (!entry) return "󰈚"
+        if (entry.isDir) return "󰉋"
+        var ext = (entry.name || "").toLowerCase()
+        if (ext.endsWith(".pdf")) return "󰈦"
+        if (ext.endsWith(".zip") || ext.endsWith(".tar") || ext.endsWith(".tar.gz") || ext.endsWith(".tar.xz") || ext.endsWith(".7z") || ext.endsWith(".gz") || ext.endsWith(".bz2")) return "󰛫"
+        if (entry.category === "image") return "󰈟"
+        if (entry.category === "video") return "󰕧"
+        if (entry.category === "audio") return "󰎆"
+        if (entry.category === "document") return "󰈦"
+        if (entry.category === "code") return "󰅩"
+        if (entry.category === "archive") return "󰛫"
+        if (entry.category === "text") return "󰈙"
+        return "󰈚"
+    }
+
+    function getItemColor(entry) {
+        if (!entry) return Theme.subtext0
+        if (entry.isDir) return Theme.peach
+        var ext = (entry.name || "").toLowerCase()
+        if (ext.endsWith(".pdf")) return Theme.red
+        if (entry.category === "image") return Theme.teal
+        if (entry.category === "video") return Theme.peach
+        if (entry.category === "audio") return Theme.mauve
+        if (entry.category === "document") return Theme.blue
+        if (entry.category === "code") return Theme.green
+        if (entry.category === "archive") return Theme.yellow
+        if (entry.category === "text") return Theme.subtext0
+        return Theme.subtext0
+    }
+
+    function getFileTypeStr(entry) {
+        if (!entry) return ""
+        if (entry.isDir) return "Folder"
+        var name = entry.name || ""
+        var dot = name.lastIndexOf(".")
+        if (dot > 0 && dot < name.length - 1) {
+            var ext = name.substring(dot + 1).toUpperCase()
+            if (ext.length <= 6) return ext
+        }
+        return "File"
+    }
+
     // ── Column headers ────────────────────────────────────────────────────────
     Rectangle {
         id:             header
@@ -52,35 +98,144 @@ Rectangle {
 
         RowLayout {
             anchors.fill:        parent
-            anchors.leftMargin:  40
+            anchors.leftMargin:  listRoot.multiSelect ? 68 : 42
             anchors.rightMargin: 12
             spacing: 0
 
-            Text {
+            // Name column
+            Rectangle {
                 Layout.fillWidth: true
-                text:           "Name"
-                font.family:    Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
-                font.bold:      true
-                color:          Theme.overlay0
+                implicitHeight:   24
+                color:            "transparent"
+
+                RowLayout {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 4
+
+                    Text {
+                        text:           "Name"
+                        font.family:    Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.bold:      true
+                        color:          listRoot.sortBy === "name" ? Theme.accent : Theme.overlay0
+                    }
+                    Text {
+                        visible:        listRoot.sortBy === "name"
+                        text:           listRoot.sortAsc ? "↑" : "↓"
+                        font.family:    Theme.fontFamily
+                        font.pixelSize: 11
+                        color:          Theme.accent
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape:  Qt.PointingHandCursor
+                    onClicked:    listRoot.sortRequested("name")
+                }
             }
-            Text {
+
+            // Type column
+            Rectangle {
+                Layout.preferredWidth: 68
+                implicitHeight:        24
+                color:                 "transparent"
+
+                RowLayout {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 4
+
+                    Text {
+                        text:           "Type"
+                        font.family:    Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.bold:      true
+                        color:          (listRoot.sortBy === "type" || listRoot.sortBy === "category") ? Theme.accent : Theme.overlay0
+                    }
+                    Text {
+                        visible:        listRoot.sortBy === "type" || listRoot.sortBy === "category"
+                        text:           listRoot.sortAsc ? "↑" : "↓"
+                        font.family:    Theme.fontFamily
+                        font.pixelSize: 11
+                        color:          Theme.accent
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape:  Qt.PointingHandCursor
+                    onClicked:    listRoot.sortRequested("type")
+                }
+            }
+
+            // Size column
+            Rectangle {
                 Layout.preferredWidth: 72
-                text:           "Size"
-                font.family:    Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
-                font.bold:      true
-                color:          Theme.overlay0
-                horizontalAlignment: Text.AlignRight
+                implicitHeight:        24
+                color:                 "transparent"
+
+                RowLayout {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 4
+
+                    Text {
+                        text:           "Size"
+                        font.family:    Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.bold:      true
+                        color:          listRoot.sortBy === "size" ? Theme.accent : Theme.overlay0
+                    }
+                    Text {
+                        visible:        listRoot.sortBy === "size"
+                        text:           listRoot.sortAsc ? "↑" : "↓"
+                        font.family:    Theme.fontFamily
+                        font.pixelSize: 11
+                        color:          Theme.accent
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape:  Qt.PointingHandCursor
+                    onClicked:    listRoot.sortRequested("size")
+                }
             }
-            Text {
+
+            // Modified column
+            Rectangle {
                 Layout.preferredWidth: 130
-                text:           "Modified"
-                font.family:    Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
-                font.bold:      true
-                color:          Theme.overlay0
-                horizontalAlignment: Text.AlignRight
+                implicitHeight:        24
+                color:                 "transparent"
+
+                RowLayout {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 4
+
+                    Text {
+                        text:           "Modified"
+                        font.family:    Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.bold:      true
+                        color:          (listRoot.sortBy === "date" || listRoot.sortBy === "modified") ? Theme.accent : Theme.overlay0
+                    }
+                    Text {
+                        visible:        listRoot.sortBy === "date" || listRoot.sortBy === "modified"
+                        text:           listRoot.sortAsc ? "↑" : "↓"
+                        font.family:    Theme.fontFamily
+                        font.pixelSize: 11
+                        color:          Theme.accent
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape:  Qt.PointingHandCursor
+                    onClicked:    listRoot.sortRequested("date")
+                }
             }
         }
     }
@@ -129,58 +284,68 @@ Rectangle {
                 anchors.rightMargin: 12
                 spacing: 8
 
-                // Multi-select checkbox / icon
+                // 1. Separate Multi-select checkbox
                 Rectangle {
-                    implicitWidth:  22
-                    implicitHeight: 22
-                    radius:         multiSelect ? 5 : 11
-                    color:          isSelected
-                                        ? Theme.accent
-                                        : (multiSelect ? Theme.moduleBg : "transparent")
-                    border.color:   multiSelect ? (isSelected ? Theme.accent : Theme.moduleBorder) : "transparent"
+                    visible:        listRoot.multiSelect
+                    implicitWidth:  18
+                    implicitHeight: 18
+                    radius:         4
+                    color:          isSelected ? Theme.accent : Theme.moduleBg
+                    border.color:   isSelected ? Theme.accent : Theme.moduleBorder
                     border.width:   1
 
                     Text {
                         anchors.centerIn: parent
-                        text:           multiSelect
-                                            ? (isSelected ? "" : "")
-                                            : modelData.icon
+                        visible:        isSelected
+                        text:           "✓"
                         font.family:    Theme.fontFamily
-                        font.pixelSize: multiSelect ? 11 : 14
-                        color:          multiSelect
-                                            ? (isSelected ? Theme.crust : Theme.overlay0)
-                                            : (isSelected ? Theme.accent : (modelData.isDir ? Theme.blue : Theme.subtext0))
-                    }
-
-                    // Non-multiselect: show thumbnail for images
-                    Image {
-                        anchors.fill:  parent
-                        visible:       !multiSelect && modelData.thumbnail !== "" && modelData.thumbnail !== undefined
-                        source:        (modelData.thumbnail && modelData.thumbnail !== "") ? ("file://" + modelData.thumbnail) : ""
-                        fillMode:      Image.PreserveAspectCrop
-                        asynchronous:  true
-                        smooth:        true
-                        layer.enabled: true
-                        layer.effect: null
-                        // Rounded clip
-                        Rectangle {
-                            anchors.fill: parent
-                            radius:       11
-                            color:        "transparent"
-                        }
+                        font.pixelSize: 11
+                        font.bold:      true
+                        color:          Theme.crust
                     }
                 }
 
-                // File name
+                // 2. Folder / File Icon container (ALWAYS VISIBLE!)
+                Rectangle {
+                    implicitWidth:  26
+                    implicitHeight: 26
+                    radius:         6
+                    readonly property color itemCol: listRoot.getItemColor(modelData)
+                    color:          Qt.rgba(itemCol.r, itemCol.g, itemCol.b, 0.16)
+                    border.color:   Qt.rgba(itemCol.r, itemCol.g, itemCol.b, 0.35)
+                    border.width:   1
+
+                    Text {
+                        anchors.centerIn: parent
+                        visible:        !(modelData.category === "image" && modelData.thumbnail && modelData.thumbnail !== "")
+                        text:           listRoot.getItemIcon(modelData)
+                        font.family:    Theme.fontFamily
+                        font.pixelSize: modelData.isDir ? 16 : 14
+                        color:          parent.itemCol
+                    }
+
+                    // Thumbnail for images if available
+                    Image {
+                        anchors.fill:    parent
+                        anchors.margins: 1
+                        visible:         modelData.category === "image" && modelData.thumbnail !== "" && modelData.thumbnail !== undefined
+                        source:          (modelData.thumbnail && modelData.thumbnail !== "") ? ("file://" + modelData.thumbnail) : ""
+                        fillMode:        Image.PreserveAspectCrop
+                        asynchronous:    true
+                        smooth:          true
+                    }
+                }
+
+                // 3. File / Folder name
                 Text {
                     Layout.fillWidth: true
                     text:           modelData.name
                     font.family:    Theme.fontFamily
                     font.pixelSize: Theme.fontSize
-                    font.bold:      isSelected || (modelData.isDir && isFocused)
+                    font.bold:      modelData.isDir || isSelected
                     color:          isSelected
                                         ? Theme.accent
-                                        : (modelData.isDir ? Theme.blue : Theme.text)
+                                        : (modelData.isDir ? Theme.peach : Theme.text)
                     elide:          Text.ElideMiddle
 
                     // Symlink badge
@@ -195,7 +360,19 @@ Rectangle {
                     }
                 }
 
-                // Size
+                // 4. Type / Extension column
+                Text {
+                    Layout.preferredWidth: 68
+                    text:            listRoot.getFileTypeStr(modelData)
+                    font.family:     Theme.fontFamily
+                    font.pixelSize:  Theme.fontSizeSmall
+                    font.bold:       modelData.isDir
+                    color:           modelData.isDir ? Theme.peach : Theme.overlay0
+                    horizontalAlignment: Text.AlignRight
+                    elide:           Text.ElideRight
+                }
+
+                // 5. Size column
                 Text {
                     Layout.preferredWidth: 72
                     text:            modelData.sizeStr
@@ -205,7 +382,7 @@ Rectangle {
                     horizontalAlignment: Text.AlignRight
                 }
 
-                // Modified date
+                // 6. Modified date column
                 Text {
                     Layout.preferredWidth: 130
                     text:            modelData.modifiedStr
