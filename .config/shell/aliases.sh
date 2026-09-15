@@ -93,10 +93,27 @@ alias theme-unskip="python3 ~/.config/hypr/scripts/theme_switcher.py --git-unski
 
 # --- Modular User Personal Aliases (Untracked) ---
 if [ -d "${HOME}/.config/shell/user" ]; then
+    _had_nullglob=0
+    if [ -n "$ZSH_VERSION" ]; then
+        [[ -o nullglob ]] && _had_nullglob=1
+        setopt nullglob
+    elif [ -n "$BASH_VERSION" ]; then
+        shopt -q nullglob && _had_nullglob=1
+        shopt -s nullglob
+    fi
+
     for _user_alias in "${HOME}/.config/shell/user"/aliases*.sh "${HOME}/.config/shell/user"/functions*.sh; do
         [ -f "$_user_alias" ] && source "$_user_alias"
     done
     unset _user_alias
+
+    if [ -n "$ZSH_VERSION" ]; then
+        [ "$_had_nullglob" -eq 0 ] && unsetopt nullglob
+        unset _had_nullglob
+    elif [ -n "$BASH_VERSION" ]; then
+        [ "$_had_nullglob" -eq 0 ] && shopt -u nullglob
+        unset _had_nullglob
+    fi
 fi
 [[ -f "${HOME}/.config/shell/aliases.local.sh" ]] && source "${HOME}/.config/shell/aliases.local.sh"
 

@@ -85,10 +85,27 @@ fi
 
 # --- Modular User Personal Environment (Untracked) ---
 if [ -d "${HOME}/.config/shell/user" ]; then
-    for _user_env in "${HOME}/.config/shell/user"/env*.sh "${HOME}/.config/shell/user"/paths*.sh; do
+    _had_nullglob=0
+    if [ -n "$ZSH_VERSION" ]; then
+        [[ -o nullglob ]] && _had_nullglob=1
+        setopt nullglob
+    elif [ -n "$BASH_VERSION" ]; then
+        shopt -q nullglob && _had_nullglob=1
+        shopt -s nullglob
+    fi
+
+    for _user_env in "${HOME}/.config/shell/user"/env*.sh "${HOME}/.config/shell/user"/paths*.sh "${HOME}/.config/shell/user"/tokens*.sh; do
         [ -f "$_user_env" ] && source "$_user_env"
     done
     unset _user_env
+
+    if [ -n "$ZSH_VERSION" ]; then
+        [ "$_had_nullglob" -eq 0 ] && unsetopt nullglob
+        unset _had_nullglob
+    elif [ -n "$BASH_VERSION" ]; then
+        [ "$_had_nullglob" -eq 0 ] && shopt -u nullglob
+        unset _had_nullglob
+    fi
 fi
 [[ -f "${HOME}/.config/shell/env.local.sh" ]] && source "${HOME}/.config/shell/env.local.sh"
 
