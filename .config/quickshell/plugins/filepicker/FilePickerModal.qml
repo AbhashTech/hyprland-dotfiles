@@ -358,21 +358,49 @@ Rectangle {
     }
 
     // ── Bookmarks ─────────────────────────────────────────────────────────────
+    Timer {
+        id: bmRefreshTimer
+        interval: 120
+        repeat: false
+        onTriggered: refreshBookmarks()
+    }
+
     function refreshBookmarks() {
         bmProc.command = ["python3", helper, "bookmarks"]
-        if (!bmProc.running) bmProc.running = true
+        if (bmProc.running) bmProc.running = false
+        bmProc.running = true
+    }
+
+    function isBookmarked(path) {
+        if (!path || !sidebarBookmarks) return false
+        return sidebarBookmarks.some(function(b) { return b.path === path })
     }
 
     function addBookmark(path) {
-        ctlProc.command = ["python3", helper, "add-bookmark", path]
-        if (!ctlProc.running) ctlProc.running = true
-        Qt.callLater(refreshBookmarks)
+        if (!path) return
+        ctlProc.exec(["python3", helper, "add-bookmark", path])
+        var name = path.split("/").filter(function(s) { return s.length > 0 }).pop() || path
+        if (!isBookmarked(path)) {
+            var nextBm = sidebarBookmarks.slice()
+            nextBm.push({ name: name, path: path, icon: "󰉋" })
+            sidebarBookmarks = nextBm
+        }
+        bmRefreshTimer.restart()
     }
 
     function removeBookmark(path) {
-        ctlProc.command = ["python3", helper, "remove-bookmark", path]
-        if (!ctlProc.running) ctlProc.running = true
-        Qt.callLater(refreshBookmarks)
+        if (!path) return
+        ctlProc.exec(["python3", helper, "remove-bookmark", path])
+        sidebarBookmarks = sidebarBookmarks.filter(function(b) { return b.path !== path })
+        bmRefreshTimer.restart()
+    }
+
+    function toggleBookmark(path) {
+        if (isBookmarked(path)) {
+            removeBookmark(path)
+        } else {
+            addBookmark(path)
+        }
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
@@ -581,7 +609,7 @@ Rectangle {
             event.accepted = true
         }
         if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_D) {
-            if (modal.currentPath) modal.addBookmark(modal.currentPath)
+            if (modal.currentPath) modal.toggleBookmark(modal.currentPath)
             event.accepted = true
         }
     }
@@ -739,14 +767,19 @@ Rectangle {
                     implicitWidth:  28
                     implicitHeight: 28
                     radius:         8
-                    color:          bmToggleMouse.containsMouse ? Theme.moduleHoverBg : "transparent"
+                    readonly property bool active: modal.isBookmarked(modal.currentPath)
+                    color:          active
+                                        ? Qt.rgba(Theme.yellow.r, Theme.yellow.g, Theme.yellow.b, 0.20)
+                                        : (bmToggleMouse.containsMouse ? Theme.moduleHoverBg : "transparent")
+                    border.color:   active ? Theme.yellow : "transparent"
+                    border.width:   1
 
                     Text {
                         anchors.centerIn: parent
                         text:           "󰃃"
                         font.family:    Theme.fontFamily
                         font.pixelSize: 14
-                        color:          bmToggleMouse.containsMouse ? Theme.yellow : Theme.subtext0
+                        color:          parent.active ? Theme.yellow : (bmToggleMouse.containsMouse ? Theme.yellow : Theme.subtext0)
                     }
 
                     MouseArea {
@@ -754,12 +787,12 @@ Rectangle {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape:  Qt.PointingHandCursor
-                        onClicked:    modal.addBookmark(modal.currentPath)
+                        onClicked:    modal.toggleBookmark(modal.currentPath)
                     }
 
                     ToolTip.visible: bmToggleMouse.containsMouse
-                    ToolTip.text:    "Bookmark current folder (Ctrl+D)"
-                    ToolTip.delay:   400
+                    ToolTip.text:    parent.active ? "Remove bookmark (Ctrl+D)" : "Bookmark current folder (Ctrl+D)"
+                    ToolTip.delay:   300
                 }
 
                 // Close button
@@ -806,8 +839,9 @@ Rectangle {
                 recentDirs:  modal.sidebarRecents
                 currentPath: modal.currentPath
 
-                onNavigateTo:    (path) => modal.navigate(path)
-                onRemoveBookmark: (path) => modal.removeBookmark(path)
+                onNavigateTo:            (path) => modal.navigate(path)
+                onAddBookmarkRequested: (path) => modal.addBookmark(path)
+                onRemoveBookmark:        (path) => modal.removeBookmark(path)
             }
 
             // Vertical divider

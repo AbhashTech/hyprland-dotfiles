@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 import "../.."
@@ -12,8 +13,10 @@ Rectangle {
     implicitHeight: 500
     color:          "transparent"
 
-    // Signals emitted when user clicks a location
+    // Signals emitted when user clicks a location or manages bookmarks
     signal navigateTo(string path)
+    signal addBookmarkRequested(string path)
+    signal removeBookmark(string path)
 
     // ── Data properties (populated by FilePickerModal) ──────────────────────
     property var quickLinks:  []
@@ -27,119 +30,167 @@ Rectangle {
         return currentPath === path
     }
 
-    // ── Layout ───────────────────────────────────────────────────────────────
-    ColumnLayout {
+    // ── Scrollable Sidebar Container ──────────────────────────────────────────
+    Flickable {
         anchors.fill:    parent
-        anchors.margins: 0
-        spacing:         0
+        contentWidth:    width
+        contentHeight:   sideCol.implicitHeight
+        clip:            true
+        boundsBehavior:  Flickable.StopAtBounds
 
-        // ── Quick Links ──────────────────────────────────────────────────────
-        Text {
-            Layout.fillWidth:  true
-            Layout.leftMargin: 12
-            Layout.topMargin:  12
-            Layout.bottomMargin: 4
-            text:      "PLACES"
-            font.family:    Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            font.bold:      true
-            font.letterSpacing: 1.2
-            color:     Theme.overlay0
+        ScrollBar.vertical: ScrollBar {
+            policy: ScrollBar.AsNeeded
+            width:  4
         }
 
-        Repeater {
-            model: sidebar.quickLinks
+        ColumnLayout {
+            id:              sideCol
+            width:           parent.width
+            spacing:         0
 
-            delegate: SidebarEntry {
-                required property var modelData
-                Layout.fillWidth: true
-                entryName:   modelData.name
-                entryPath:   modelData.path
-                entryIcon:   modelData.icon
-                active:      sidebar.isActive(modelData.path)
-                onClicked:   sidebar.navigateTo(modelData.path)
+            // ── Quick Links ──────────────────────────────────────────────────────
+            Text {
+                Layout.fillWidth:  true
+                Layout.leftMargin: 12
+                Layout.topMargin:  12
+                Layout.bottomMargin: 4
+                text:      "PLACES"
+                font.family:    Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                font.bold:      true
+                font.letterSpacing: 1.2
+                color:     Theme.overlay0
             }
-        }
 
-        // ── Bookmarks ────────────────────────────────────────────────────────
-        Rectangle {
-            Layout.fillWidth:  true
-            Layout.topMargin:  8
-            Layout.bottomMargin: 0
-            implicitHeight:    1
-            color:             Theme.barBorder
-            visible:           sidebar.bookmarks.length > 0
-        }
+            Repeater {
+                model: sidebar.quickLinks
 
-        Text {
-            Layout.fillWidth:  true
-            Layout.leftMargin: 12
-            Layout.topMargin:  8
-            Layout.bottomMargin: 4
-            text:      "BOOKMARKS"
-            font.family:    Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            font.bold:      true
-            font.letterSpacing: 1.2
-            color:     Theme.overlay0
-            visible:   sidebar.bookmarks.length > 0
-        }
-
-        Repeater {
-            model: sidebar.bookmarks
-
-            delegate: SidebarEntry {
-                required property var modelData
-                Layout.fillWidth: true
-                entryName:   modelData.name
-                entryPath:   modelData.path
-                entryIcon:   modelData.icon || "󰉋"
-                active:      sidebar.isActive(modelData.path)
-                showRemove:  true
-                onClicked:   sidebar.navigateTo(modelData.path)
-                onRemove:    sidebar.removeBookmark(modelData.path)
+                delegate: SidebarEntry {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    entryName:   modelData.name
+                    entryPath:   modelData.path
+                    entryIcon:   modelData.icon
+                    active:      sidebar.isActive(modelData.path)
+                    onClicked:   sidebar.navigateTo(modelData.path)
+                }
             }
-        }
 
-        // ── Recent Dirs ──────────────────────────────────────────────────────
-        Rectangle {
-            Layout.fillWidth:  true
-            Layout.topMargin:  8
-            Layout.bottomMargin: 0
-            implicitHeight:    1
-            color:             Theme.barBorder
-            visible:           sidebar.recentDirs.length > 0
-        }
-
-        Text {
-            Layout.fillWidth:  true
-            Layout.leftMargin: 12
-            Layout.topMargin:  8
-            Layout.bottomMargin: 4
-            text:      "RECENT"
-            font.family:    Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            font.bold:      true
-            font.letterSpacing: 1.2
-            color:     Theme.overlay0
-            visible:   sidebar.recentDirs.length > 0
-        }
-
-        Repeater {
-            model: sidebar.recentDirs.slice(0, 6)
-
-            delegate: SidebarEntry {
-                required property var modelData
-                Layout.fillWidth: true
-                entryName:   modelData.name
-                entryPath:   modelData.path
-                entryIcon:   "󰉋"
-                active:      sidebar.isActive(modelData.path)
-                onClicked:   sidebar.navigateTo(modelData.path)
+            // ── Bookmarks ────────────────────────────────────────────────────────
+            Rectangle {
+                Layout.fillWidth:  true
+                Layout.topMargin:  8
+                Layout.bottomMargin: 0
+                implicitHeight:    1
+                color:             Theme.barBorder
+                opacity:           0.5
+                visible:           sidebar.bookmarks.length > 0 || sidebar.currentPath !== ""
             }
-        }
 
-        Item { Layout.fillHeight: true }
+            RowLayout {
+                Layout.fillWidth:    true
+                Layout.leftMargin:   12
+                Layout.rightMargin:  8
+                Layout.topMargin:    8
+                Layout.bottomMargin: 4
+                visible:             sidebar.bookmarks.length > 0 || sidebar.currentPath !== ""
+
+                Text {
+                    Layout.fillWidth: true
+                    text:             "BOOKMARKS"
+                    font.family:      Theme.fontFamily
+                    font.pixelSize:   Theme.fontSizeSmall
+                    font.bold:        true
+                    font.letterSpacing: 1.2
+                    color:            Theme.overlay0
+                }
+
+                Rectangle {
+                    implicitWidth:  20
+                    implicitHeight: 20
+                    radius:         4
+                    color:          addBmMouse.containsMouse ? Theme.moduleHoverBg : "transparent"
+
+                    Text {
+                        anchors.centerIn: parent
+                        text:           "+"
+                        font.family:    Theme.fontFamily
+                        font.pixelSize: 14
+                        font.bold:      true
+                        color:          addBmMouse.containsMouse ? Theme.accent : Theme.overlay0
+                    }
+
+                    MouseArea {
+                        id:          addBmMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape:  Qt.PointingHandCursor
+                        onClicked:    sidebar.addBookmarkRequested(sidebar.currentPath)
+                    }
+
+                    ToolTip.visible: addBmMouse.containsMouse
+                    ToolTip.text:    "Bookmark current folder (Ctrl+D)"
+                    ToolTip.delay:   300
+                }
+            }
+
+            Repeater {
+                model: sidebar.bookmarks
+
+                delegate: SidebarEntry {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    entryName:   modelData.name
+                    entryPath:   modelData.path
+                    entryIcon:   modelData.icon || "󰉋"
+                    active:      sidebar.isActive(modelData.path)
+                    showRemove:  true
+                    onClicked:   sidebar.navigateTo(modelData.path)
+                    onRemove:    sidebar.removeBookmark(modelData.path)
+                }
+            }
+
+            // ── Recent Dirs ──────────────────────────────────────────────────────
+            Rectangle {
+                Layout.fillWidth:  true
+                Layout.topMargin:  8
+                Layout.bottomMargin: 0
+                implicitHeight:    1
+                color:             Theme.barBorder
+                opacity:           0.5
+                visible:           sidebar.recentDirs.length > 0
+            }
+
+            Text {
+                Layout.fillWidth:  true
+                Layout.leftMargin: 12
+                Layout.topMargin:  8
+                Layout.bottomMargin: 4
+                text:      "RECENT"
+                font.family:    Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                font.bold:      true
+                font.letterSpacing: 1.2
+                color:     Theme.overlay0
+                visible:   sidebar.recentDirs.length > 0
+            }
+
+            Repeater {
+                model: sidebar.recentDirs.slice(0, 5)
+
+                delegate: SidebarEntry {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    entryName:   modelData.name
+                    entryPath:   modelData.path
+                    entryIcon:   "󰉋"
+                    active:      sidebar.isActive(modelData.path)
+                    onClicked:   sidebar.navigateTo(modelData.path)
+                }
+            }
+
+            Item { Layout.fillHeight: true; implicitHeight: 12 }
+        }
     }
 
     // ── Inline: Sidebar row delegate ─────────────────────────────────────────
@@ -157,15 +208,16 @@ Rectangle {
         implicitHeight: 30
 
         Rectangle {
+            id:             rowBg
             anchors.fill:   parent
             anchors.leftMargin:  4
             anchors.rightMargin: 4
-            radius:  6
-            color:   active
-                         ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.18)
-                         : (rowMouse.containsMouse ? Theme.moduleHoverBg : "transparent")
-            border.color: active ? Theme.accent : "transparent"
-            border.width: 1
+            radius:         6
+            color:          active
+                                ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.18)
+                                : (itemClickMouse.containsMouse ? Theme.moduleHoverBg : "transparent")
+            border.color:   active ? Theme.accent : "transparent"
+            border.width:   1
 
             RowLayout {
                 anchors.fill:        parent
@@ -173,52 +225,71 @@ Rectangle {
                 anchors.rightMargin: 6
                 spacing: 6
 
-                Text {
-                    text:           entryIcon
-                    font.family:    Theme.fontFamily
-                    font.pixelSize: 13
-                    color:          active ? Theme.accent : Theme.subtext0
-                }
+                // Clickable area for navigating to the folder
+                Item {
+                    Layout.fillWidth:  true
+                    Layout.fillHeight: true
 
-                Text {
-                    Layout.fillWidth: true
-                    text:           entryName
-                    font.family:    Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.bold:      active
-                    color:          active ? Theme.accent : Theme.text
-                    elide:          Text.ElideRight
-                }
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing:      6
 
-                // Remove bookmark button
-                Text {
-                    visible:        showRemove && rowMouse.containsMouse
-                    text:           "󰅖"
-                    font.family:    Theme.fontFamily
-                    font.pixelSize: 11
-                    color:          Theme.red
+                        Text {
+                            text:           entryIcon
+                            font.family:    Theme.fontFamily
+                            font.pixelSize: 13
+                            color:          active ? Theme.accent : Theme.subtext0
+                        }
 
-                    MouseArea {
-                        anchors.fill:  parent
-                        cursorShape:   Qt.PointingHandCursor
-                        onClicked: (mouse) => {
-                            mouse.accepted = true
-                            entryRoot.remove()
+                        Text {
+                            Layout.fillWidth: true
+                            text:           entryName
+                            font.family:    Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            font.bold:      active
+                            color:          active ? Theme.accent : Theme.text
+                            elide:          Text.ElideRight
                         }
                     }
-                }
-            }
 
-            MouseArea {
-                id:          rowMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape:  Qt.PointingHandCursor
-                onClicked:    entryRoot.clicked()
+                    MouseArea {
+                        id:          itemClickMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape:  Qt.PointingHandCursor
+                        onClicked:    entryRoot.clicked()
+                    }
+                }
+
+                // Remove bookmark button (separate non-overlapping click target)
+                Rectangle {
+                    visible:        showRemove
+                    implicitWidth:  18
+                    implicitHeight: 18
+                    radius:         4
+                    color:          removeMouse.containsMouse ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.20) : "transparent"
+
+                    Text {
+                        anchors.centerIn: parent
+                        text:           "󰅖"
+                        font.family:    Theme.fontFamily
+                        font.pixelSize: 11
+                        color:          removeMouse.containsMouse ? Theme.red : Theme.subtext0
+                    }
+
+                    MouseArea {
+                        id:          removeMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape:  Qt.PointingHandCursor
+                        onClicked:    entryRoot.remove()
+                    }
+
+                    ToolTip.visible: removeMouse.containsMouse
+                    ToolTip.text:    "Remove bookmark"
+                    ToolTip.delay:   300
+                }
             }
         }
     }
-
-    // ── External functions (called by FilePickerModal) ────────────────────────
-    signal removeBookmark(string path)
 }
