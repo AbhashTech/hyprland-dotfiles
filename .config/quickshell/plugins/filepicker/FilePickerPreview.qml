@@ -20,10 +20,20 @@ Rectangle {
     property bool   isDirectoryMode: false
 
     // ── States ────────────────────────────────────────────────────────────────
-    readonly property bool hasEntry:   entry !== null && entry !== undefined
-    readonly property bool isImage:    hasEntry && entry.thumbnail !== "" && entry.thumbnail !== undefined
-    readonly property bool isText:     hasEntry && (entry.category === "text" || entry.category === "code")
-    readonly property bool isDir:      hasEntry && entry.isDir
+    readonly property bool hasEntry:   preview.entry !== null && preview.entry !== undefined
+    readonly property bool isImage:    preview.hasEntry && (preview.entry.category === "image" || (preview.entry.thumbnail !== "" && preview.entry.thumbnail !== undefined))
+    readonly property bool isDir:      preview.hasEntry && !!preview.entry.isDir
+    readonly property bool isText:     preview.hasEntry && !preview.isImage && !preview.isDir && (
+        preview.entry.category === "text" ||
+        preview.entry.category === "code" ||
+        (preview.entry.mime && preview.entry.mime.indexOf("text/") === 0) ||
+        (preview.entry.mime && (preview.entry.mime === "application/json" ||
+                                preview.entry.mime === "application/xml" ||
+                                preview.entry.mime === "application/javascript" ||
+                                preview.entry.mime === "application/x-sh" ||
+                                preview.entry.mime === "application/x-yaml" ||
+                                preview.entry.mime === "application/toml"))
+    )
 
     ColumnLayout {
         anchors.fill:    parent
@@ -71,10 +81,13 @@ Rectangle {
 
             Image {
                 anchors.fill:  parent
-                source:        preview.isImage ? ("file://" + preview.entry.thumbnail) : ""
+                source:        preview.isImage
+                                   ? ("file://" + ((preview.entry.thumbnail && preview.entry.thumbnail !== "") ? preview.entry.thumbnail : preview.entry.path))
+                                   : ""
                 fillMode:      Image.PreserveAspectFit
                 asynchronous:  true
                 smooth:        true
+                cache:         true
             }
         }
 
@@ -275,7 +288,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth:  true
             Layout.fillHeight: true
-            visible:           preview.hasEntry && preview.isText && preview.content.length > 0
+            visible:           preview.hasEntry && preview.isText
             radius:            Theme.pillRadius
             color:             Theme.moduleBg
             clip:              true
@@ -289,10 +302,10 @@ Rectangle {
                 Text {
                     id:              codeText
                     width:           parent.width
-                    text:            preview.content
+                    text:            preview.content.length > 0 ? preview.content : "Loading preview..."
                     font.family:     Theme.fontFamily
                     font.pixelSize:  10
-                    color:           Theme.subtext0
+                    color:           preview.content.length > 0 ? Theme.subtext0 : Theme.overlay0
                     wrapMode:        Text.WrapAnywhere
                 }
             }

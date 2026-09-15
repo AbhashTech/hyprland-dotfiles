@@ -149,6 +149,13 @@ Rectangle {
             })
         }
         focusIndex = 0
+        if (filteredEntries.length > 0) {
+            loadPreview(filteredEntries[0])
+        } else {
+            previewEntry = null
+            previewContent = ""
+            previewDirData = null
+        }
     }
 
     // ── Selection ─────────────────────────────────────────────────────────────
@@ -164,6 +171,15 @@ Rectangle {
             selectedPaths.splice(idx, 1)
         }
         selectedPaths = selectedPaths.slice()  // trigger binding
+
+        if (filteredEntries) {
+            for (var i = 0; i < filteredEntries.length; i++) {
+                if (filteredEntries[i].path === path) {
+                    loadPreview(filteredEntries[i])
+                    break
+                }
+            }
+        }
     }
 
     function handleEntryClick(entry) {
@@ -190,13 +206,18 @@ Rectangle {
             // Normal open mode
             if (entry.isDir) {
                 selectedPaths = [entry.path]
-                loadPreview(entry)
             } else if (multiSelect) {
-                toggleSelection(entry.path)
+                var sidx = selectedPaths.indexOf(entry.path)
+                if (sidx === -1) {
+                    selectedPaths.push(entry.path)
+                } else {
+                    selectedPaths.splice(sidx, 1)
+                }
+                selectedPaths = selectedPaths.slice()
             } else {
                 selectedPaths = [entry.path]
-                loadPreview(entry)
             }
+            loadPreview(entry)
         }
     }
 
@@ -221,7 +242,14 @@ Rectangle {
             if (dirPreviewProc.running) dirPreviewProc.running = false
             dirPreviewProc.command = ["python3", helper, "dir-preview", entry.path]
             dirPreviewProc.running = true
-        } else if (entry.category === "text" || entry.category === "code" || (entry.mime && entry.mime.indexOf("text/") === 0) || entry.category === "document") {
+        } else if (entry.category === "text" || entry.category === "code" ||
+                   (entry.mime && entry.mime.indexOf("text/") === 0) ||
+                   (entry.mime && (entry.mime === "application/json" ||
+                                   entry.mime === "application/xml" ||
+                                   entry.mime === "application/javascript" ||
+                                   entry.mime === "application/x-sh" ||
+                                   entry.mime === "application/x-yaml" ||
+                                   entry.mime === "application/toml"))) {
             if (previewProc.running) previewProc.running = false
             previewProc.command = ["head", "-c", "4000", entry.path]
             previewProc.running = true

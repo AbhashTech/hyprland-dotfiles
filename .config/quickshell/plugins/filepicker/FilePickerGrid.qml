@@ -175,11 +175,7 @@ Rectangle {
 
                 onClicked:  (mouse) => {
                     gridRoot.focusIndex = index
-                    if (gridRoot.multiSelect) {
-                        gridRoot.selectionToggled(modelData.path)
-                    } else {
-                        gridRoot.entryClicked(modelData)
-                    }
+                    gridRoot.entryClicked(modelData)
                 }
                 onDoubleClicked: (mouse) => {
                     gridRoot.entryDoubleClicked(modelData)

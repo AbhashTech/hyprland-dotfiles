@@ -225,11 +225,7 @@ Rectangle {
 
                 onClicked: (mouse) => {
                     listRoot.focusIndex = index
-                    if (listRoot.multiSelect) {
-                        listRoot.selectionToggled(modelData.path)
-                    } else {
-                        listRoot.entryClicked(modelData)
-                    }
+                    listRoot.entryClicked(modelData)
                 }
 
                 onDoubleClicked: (mouse) => {

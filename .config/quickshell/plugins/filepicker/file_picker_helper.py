@@ -216,9 +216,27 @@ def thumbnail_path(path, mime):
         if not os.path.exists(thumb):
             try:
                 subprocess.run(
-                    ["ffmpegthumbnailer", "-i", path, "-o", thumb, "-s", "128", "-t", "20%"],
+                    ["ffmpegthumbnailer", "-i", path, "-o", thumb, "-s", "256", "-t", "20%"],
                     capture_output=True, timeout=5
                 )
+            except Exception:
+                return ""
+        return thumb if os.path.exists(thumb) else ""
+    if mime == "application/pdf":
+        import hashlib
+        h = hashlib.md5(path.encode()).hexdigest()
+        thumb = os.path.join(THUMB_DIR, f"{h}.jpg")
+        if not os.path.exists(thumb):
+            try:
+                base_out = os.path.join(THUMB_DIR, h)
+                subprocess.run(
+                    ["pdftoppm", "-jpeg", "-f", "1", "-l", "1", "-scale-to", "256", path, base_out],
+                    capture_output=True, timeout=5
+                )
+                for candidate in (f"{base_out}-1.jpg", f"{base_out}-01.jpg"):
+                    if os.path.exists(candidate):
+                        os.replace(candidate, thumb)
+                        break
             except Exception:
                 return ""
         return thumb if os.path.exists(thumb) else ""
