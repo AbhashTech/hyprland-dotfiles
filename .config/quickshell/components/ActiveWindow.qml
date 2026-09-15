@@ -7,8 +7,11 @@ Rectangle {
     id: root
 
     implicitHeight: Theme.barHeight - 8
-    implicitWidth: Math.min(row.implicitWidth + 14, 240)
+    implicitWidth: Math.min(naturalWidth, 240)
     radius: Theme.capsuleRadius
+    clip: true
+
+    readonly property real naturalWidth: (iconTextItem ? iconTextItem.implicitWidth : 16) + (row ? row.spacing : 4) + (titleTextItem ? titleTextItem.implicitWidth : 50) + 16
 
     property var barWindow: null
     property string barSection: "left"
@@ -76,8 +79,8 @@ Rectangle {
                 }
 
                 root.fullTitle = title;
-                if (title.length > 28) {
-                    title = title.substring(0, 25) + "...";
+                if (title.length > 150) {
+                    title = title.substring(0, 150);
                 }
                 root.windowTitle = title;
             } catch (e) {}
@@ -103,7 +106,7 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: BarConfig.isDragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
-        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
 
         property real pressX: 0
         property real pressY: 0
@@ -136,8 +139,6 @@ Rectangle {
                 didDrag = false;
             } else if (mouse.button === Qt.LeftButton) {
                 ctlProc.exec(["hyprctl", "dispatch hl.dsp.window.float({action = 'toggle'})"]);
-            } else if (mouse.button === Qt.RightButton) {
-                ctlProc.exec(["hyprctl", "dispatch hl.dsp.window.close()"]);
             } else if (mouse.button === Qt.MiddleButton) {
                 ctlProc.exec(["hyprctl", "dispatch hl.dsp.window.fullscreen()"]);
             }
@@ -150,6 +151,7 @@ Rectangle {
         spacing: 4
 
         Text {
+            id: iconTextItem
             anchors.verticalCenter: parent.verticalCenter
             text: root.iconText
             font.family: Theme.fontFamily
@@ -159,6 +161,7 @@ Rectangle {
         }
 
         Text {
+            id: titleTextItem
             anchors.verticalCenter: parent.verticalCenter
             text: root.windowTitle
             font.family: Theme.fontFamily
@@ -166,6 +169,7 @@ Rectangle {
             font.bold: true
             color: Theme.text
             elide: Text.ElideRight
+            width: Math.min(implicitWidth, Math.max(0, root.width - (iconTextItem ? iconTextItem.implicitWidth : 16) - row.spacing - 16))
         }
     }
 }
