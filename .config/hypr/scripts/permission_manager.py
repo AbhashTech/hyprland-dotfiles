@@ -180,6 +180,24 @@ def get_contrast_color(hex_color, dark_fg="#11111b", light_fg="#ffffff"):
         return light_fg
 
 
+def hex_to_rgba(hex_color, alpha=1.0):
+    """Convert hex color code to rgba(...) CSS string."""
+    if not hex_color or not isinstance(hex_color, str) or not hex_color.startswith("#"):
+        return hex_color
+    h = hex_color.lstrip("#")
+    if len(h) == 3:
+        h = "".join(c + c for c in h)
+    if len(h) >= 6:
+        try:
+            r = int(h[0:2], 16)
+            g = int(h[2:4], 16)
+            b = int(h[4:6], 16)
+            return f"rgba({r}, {g}, {b}, {alpha})"
+        except Exception:
+            return hex_color
+    return hex_color
+
+
 class PermissionConfig:
     """Handles reading and writing ~/.config/hypr/modules/permissions.lua."""
 
@@ -300,6 +318,13 @@ def get_gui_css():
     yellow_fg = get_contrast_color(yellow)
     blue = c.get("blue", "#89b4fa")
     blue_fg = get_contrast_color(blue)
+    text_color = c.get("text", "#cdd6f4")
+    surface0 = c.get("surface0", "#313244")
+    surface1 = c.get("surface1", "#45475a")
+    surface2 = c.get("surface2", "#585b70")
+    base = c.get("base", "#1e1e2e")
+    mantle = c.get("mantle", "#181825")
+    subtext0 = c.get("subtext0", "#a6adc8")
 
     return f"""
     * {{
@@ -307,14 +332,14 @@ def get_gui_css():
     }}
 
     window {{
-        background-color: {c.get("base", "#1e1e2e")};
-        color: {c.get("text", "#cdd6f4")};
+        background-color: {base};
+        color: {text_color};
         font-size: 13px;
     }}
 
     .header-box {{
-        background-color: {c.get("mantle", "#181825")};
-        border-bottom: 1px solid {c.get("surface0", "#313244")};
+        background-color: {mantle};
+        border-bottom: 1px solid {surface0};
         padding: 14px 20px;
     }}
 
@@ -326,32 +351,32 @@ def get_gui_css():
 
     .window-subtitle {{
         font-size: 11px;
-        color: {c.get("subtext0", "#a6adc8")};
+        color: {subtext0};
     }}
 
     .card {{
-        background-color: {c.get("mantle", "#181825")};
-        border: 1px solid {c.get("surface0", "#313244")};
+        background-color: {mantle};
+        border: 1px solid {surface0};
         border-radius: 10px;
         padding: 14px;
         margin-bottom: 10px;
     }}
 
     .banner-warning {{
-        background-color: alpha({yellow}, 0.12);
-        border: 1px solid alpha({yellow}, 0.35);
+        background-color: {hex_to_rgba(yellow, 0.16)};
+        border: 1px solid {hex_to_rgba(yellow, 0.45)};
         border-radius: 8px;
         padding: 10px 14px;
     }}
 
     .banner-text {{
-        color: {c.get("text", "#cdd6f4")};
+        color: {text_color};
         font-size: 11.5px;
     }}
 
     .rule-row {{
-        background-color: {c.get("surface0", "#313244")};
-        border: 1px solid {c.get("surface1", "#45475a")};
+        background-color: {surface0};
+        border: 1px solid {surface1};
         border-radius: 8px;
         padding: 10px 14px;
         margin-bottom: 6px;
@@ -359,20 +384,20 @@ def get_gui_css():
     }}
 
     .rule-row:hover {{
-        background-color: {c.get("surface1", "#45475a")};
-        border-color: {c.get("surface2", "#585b70")};
+        background-color: {surface1};
+        border-color: {surface2};
     }}
 
     .rule-name {{
         font-weight: bold;
         font-size: 13px;
-        color: {c.get("text", "#cdd6f4")};
+        color: {text_color};
     }}
 
     .rule-binary {{
         font-family: monospace;
         font-size: 11px;
-        color: {c.get("subtext0", "#a6adc8")};
+        color: {subtext0};
     }}
 
     .badge-allow {{
@@ -403,60 +428,179 @@ def get_gui_css():
     }}
 
     .badge-type {{
-        background-color: {c.get("surface2", "#585b70")};
-        color: {c.get("text", "#cdd6f4")};
+        background-color: {surface2};
+        color: {text_color};
         font-size: 10px;
         padding: 3px 8px;
         border-radius: 6px;
     }}
 
+    /* Universal Button Reset */
+    button {{
+        background-image: none;
+        box-shadow: none;
+        text-shadow: none;
+        border-radius: 8px;
+        transition: all 120ms ease-in-out;
+    }}
+
+    /* Primary Buttons (+ Add Common Preset, Save & Apply) */
     button.btn-primary {{
         background-color: {accent};
+        background-image: none;
+        box-shadow: none;
+        text-shadow: none;
+        border: 1px solid {accent};
         color: {accent_fg};
         border-radius: 8px;
         padding: 6px 14px;
         font-weight: bold;
-        border: none;
+    }}
+
+    button.btn-primary label {{
+        color: {accent_fg};
+        font-weight: bold;
     }}
 
     button.btn-primary:hover {{
-        background-color: alpha({accent}, 0.85);
+        background-color: {hex_to_rgba(accent, 0.88)};
+        background-image: none;
+        box-shadow: none;
+        border-color: {hex_to_rgba(accent, 0.88)};
+        color: {accent_fg};
     }}
 
+    button.btn-primary:hover label {{
+        color: {accent_fg};
+        font-weight: bold;
+    }}
+
+    button.btn-primary:active {{
+        background-color: {hex_to_rgba(accent, 0.75)};
+        background-image: none;
+    }}
+
+    /* Secondary Buttons (+ Add Custom Rule, Reload Config) */
     button.btn-secondary {{
-        background-color: {c.get("surface0", "#313244")};
-        color: {c.get("text", "#cdd6f4")};
+        background-color: {surface0};
+        background-image: none;
+        box-shadow: none;
+        text-shadow: none;
+        color: {text_color};
         border-radius: 8px;
         padding: 6px 12px;
-        border: 1px solid {c.get("surface1", "#45475a")};
+        border: 1px solid {surface1};
+        font-weight: 600;
+    }}
+
+    button.btn-secondary label {{
+        color: {text_color};
+        font-weight: 600;
     }}
 
     button.btn-secondary:hover {{
-        background-color: {c.get("surface1", "#45475a")};
+        background-color: {surface1};
+        background-image: none;
+        box-shadow: none;
+        border-color: {accent};
+        color: {text_color};
     }}
 
+    button.btn-secondary:hover label {{
+        color: {text_color};
+    }}
+
+    button.btn-secondary:active {{
+        background-color: {surface2};
+        background-image: none;
+    }}
+
+    /* Danger Button (Delete) */
     button.btn-danger {{
-        background-color: alpha({red}, 0.15);
+        background-color: {hex_to_rgba(red, 0.15)};
+        background-image: none;
+        box-shadow: none;
+        text-shadow: none;
         color: {red};
         border-radius: 8px;
         padding: 4px 10px;
-        border: 1px solid alpha({red}, 0.4);
+        border: 1px solid {hex_to_rgba(red, 0.45)};
+        font-weight: bold;
+    }}
+
+    button.btn-danger label {{
+        color: {red};
+        font-weight: bold;
     }}
 
     button.btn-danger:hover {{
         background-color: {red};
+        background-image: none;
+        box-shadow: none;
+        border-color: {red};
         color: {red_fg};
     }}
 
-    entry, combobox button {{
-        background-color: {c.get("surface0", "#313244")};
-        color: {c.get("text", "#cdd6f4")};
-        border: 1px solid {c.get("surface1", "#45475a")};
+    button.btn-danger:hover label {{
+        color: {red_fg};
+        font-weight: bold;
+    }}
+
+    /* ComboBoxes & Selectors */
+    combobox button,
+    combobox button.combo {{
+        background-color: {surface0};
+        background-image: none;
+        box-shadow: none;
+        text-shadow: none;
+        color: {text_color};
+        border: 1px solid {surface1};
+        border-radius: 6px;
+        padding: 4px 8px;
+    }}
+
+    combobox button label,
+    combobox button cellview {{
+        color: {text_color};
+    }}
+
+    combobox button:hover {{
+        background-color: {surface1};
+        border-color: {accent};
+    }}
+
+    /* Dialog Buttons */
+    dialog button {{
+        background-color: {surface0};
+        background-image: none;
+        box-shadow: none;
+        text-shadow: none;
+        color: {text_color};
+        border: 1px solid {surface1};
+        border-radius: 6px;
+        padding: 6px 14px;
+        font-weight: 600;
+    }}
+
+    dialog button label {{
+        color: {text_color};
+        font-weight: 600;
+    }}
+
+    dialog button:hover {{
+        background-color: {surface1};
+        border-color: {accent};
+    }}
+
+    entry {{
+        background-color: {surface0};
+        color: {text_color};
+        border: 1px solid {surface1};
         border-radius: 6px;
         padding: 5px 8px;
     }}
 
-    entry:focus, combobox button:focus {{
+    entry:focus {{
         border-color: {accent};
     }}
     """
@@ -466,6 +610,11 @@ def launch_gui():
     import gi
     gi.require_version("Gtk", "3.0")
     from gi.repository import Gtk, Gdk, GLib
+
+    _, ttype, _ = get_active_theme_colors()
+    settings = Gtk.Settings.get_default()
+    if settings:
+        settings.set_property("gtk-application-prefer-dark-theme", ttype == "dark")
 
     cfg = PermissionConfig()
 
