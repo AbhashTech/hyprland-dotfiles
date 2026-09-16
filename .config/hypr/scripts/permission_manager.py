@@ -6,6 +6,8 @@ Hyprland Security & Permissions Manager (Desktop GUI & CLI)
 A modern GTK3 utility that dynamically adapts to the active system theme to:
 - Inspect and manage persistent Hyprland security permissions (screencopy, plugin)
 - Toggle Hyprland ecosystem permission enforcement (enforce_permissions)
+- Detect installed and active Hyprland compositor plugins
+- Manage plugin loaders (hyprpm, hyprctl) and individual plugin security rules
 - Add, edit, remove, and switch permission rules (allow, ask, deny)
 - Provide quick presets for common Hyprland & Wayland applications
 - Write modifications to ~/.config/hypr/modules/permissions.lua
@@ -16,6 +18,7 @@ import os
 import sys
 import re
 import json
+import shutil
 import argparse
 import subprocess
 from pathlib import Path
@@ -26,6 +29,8 @@ CONFIG_DIR = HOME / ".config"
 DOTFILES_DIR = HOME / ".dotfiles"
 DOTFILES_CONFIG_DIR = DOTFILES_DIR / ".config"
 PERMISSIONS_LUA = CONFIG_DIR / "hypr" / "modules" / "permissions.lua"
+ASSETS_DIR = CONFIG_DIR / "hypr" / "assets"
+DOTFILES_ASSETS_DIR = DOTFILES_CONFIG_DIR / "hypr" / "assets"
 
 # Common applications known to need Hyprland permissions
 KNOWN_APPS = [
@@ -121,6 +126,83 @@ KNOWN_APPS = [
     }
 ]
 
+# Hyprland Plugin Loaders that control plugin loading
+PLUGIN_LOADERS = [
+    {
+        "id": "hyprpm",
+        "name": "Hyprpm (Hyprland Plugin Manager)",
+        "binary": "/usr/(bin|local/bin)/hyprpm",
+        "type": "plugin",
+        "default_mode": "allow",
+        "icon": "system-software-install",
+        "desc": "Compiles, updates, and auto-reloads plugins via hyprpm reload",
+        "recommended": "allow (Recommended: avoids repeated permission prompts on reload)"
+    },
+    {
+        "id": "hyprctl",
+        "name": "Hyprctl (Compositor IPC Client)",
+        "binary": "/usr/(bin|local/bin)/hyprctl",
+        "type": "plugin",
+        "default_mode": "deny",
+        "icon": "utilities-terminal",
+        "desc": "General CLI that can execute 'hyprctl plugin load <path>'",
+        "recommended": "deny or ask (Recommended: prevents unvetted scripts from loading .so files)"
+    }
+]
+
+# Popular official and community Hyprland plugins
+POPULAR_PLUGINS = [
+    {
+        "id": "hyprbars",
+        "name": "Hyprbars",
+        "binary": "/usr/(lib|local/lib)/hyprland/hyprbars.so",
+        "repo": "hyprwm/hyprland-plugins",
+        "desc": "Adds window titlebars with customizable action buttons"
+    },
+    {
+        "id": "hyprexpo",
+        "name": "Hyprexpo",
+        "binary": "/usr/(lib|local/lib)/hyprland/hyprexpo.so",
+        "repo": "hyprwm/hyprland-plugins",
+        "desc": "Interactive overview grid of all active workspaces"
+    },
+    {
+        "id": "hyprtrails",
+        "name": "Hyprtrails",
+        "binary": "/usr/(lib|local/lib)/hyprland/hyprtrails.so",
+        "repo": "hyprwm/hyprland-plugins",
+        "desc": "Smooth graphical motion trails for moving windows"
+    },
+    {
+        "id": "hyprwinwrap",
+        "name": "Hyprwinwrap",
+        "binary": "/usr/(lib|local/lib)/hyprland/hyprwinwrap.so",
+        "repo": "hyprwm/hyprland-plugins",
+        "desc": "Embeds background apps (video/visualizers) directly into wallpaper canvas"
+    },
+    {
+        "id": "hycov",
+        "name": "Hycov",
+        "binary": "/usr/(lib|local/lib)/hyprland/hycov.so",
+        "repo": "DreamMaoMao/hycov",
+        "desc": "Expose-style overview and fast window switcher"
+    },
+    {
+        "id": "hyprsplit",
+        "name": "Hyprsplit",
+        "binary": "/usr/(lib|local/lib)/hyprland/hyprsplit.so",
+        "repo": "shezdy/hyprsplit",
+        "desc": "Independent workspace numbering per connected display"
+    },
+    {
+        "id": "hypr-dynamic-cursors",
+        "name": "Dynamic Cursors",
+        "binary": "/usr/(lib|local/lib)/hyprland/hypr-dynamic-cursors.so",
+        "repo": "VirtCode/hypr-dynamic-cursors",
+        "desc": "Physics-based cursor tilting, stretching, and motion dynamics"
+    }
+]
+
 
 def get_active_theme_colors():
     """Load colors from active theme JSON file with fallback."""
@@ -198,6 +280,84 @@ def hex_to_rgba(hex_color, alpha=1.0):
     return hex_color
 
 
+def detect_hyprland_plugins():
+    """Detect all installed, active, or configured Hyprland plugins."""
+    plugins = []
+    seen_names = set()
+
+    # 1. Live plugins reported by running compositor (hyprctl -j plugin list)
+    try:
+        res = subprocess.run(["hyprctl", "-j", "plugin", "list"], capture_output=True, text=True, timeout=2)
+        if res.returncode == 0 and res.stdout.strip():
+            data = json.loads(res.stdout)
+            if isinstance(data, list):
+                for p in data:
+                    name = p.get("name", "") or "Unnamed Plugin"
+                    handle = p.get("handle", "") or p.get("path", "")
+                    author = p.get("author", "")
+                    desc = p.get("description", "")
+                    seen_names.add(name.lower())
+                    plugins.append({
+                        "name": name,
+                        "author": author or "Author Unknown",
+                        "description": desc or "Currently loaded and running in Hyprland",
+                        "path": handle or f"hyprland-plugin:{name}",
+                        "status": "loaded",
+                        "source": "Active Compositor",
+                        "icon": "system-run"
+                    })
+    except Exception:
+        pass
+
+    # 2. Check hyprpm data directory (~/.local/share/hyprpm)
+    hyprpm_dir = Path.home() / ".local" / "share" / "hyprpm"
+    if hyprpm_dir.exists():
+        for so_file in hyprpm_dir.rglob("*.so"):
+            p_name = so_file.stem.replace("lib", "")
+            if p_name.lower() not in seen_names:
+                seen_names.add(p_name.lower())
+                plugins.append({
+                    "name": p_name.title(),
+                    "author": "hyprpm",
+                    "description": f"Compiled and managed by hyprpm ({so_file.name})",
+                    "path": str(so_file),
+                    "status": "installed",
+                    "source": "hyprpm",
+                    "icon": "application-x-sharedlib"
+                })
+
+    # 3. Check Hyprland configuration files for plugin declarations
+    config_dir = Path.home() / ".config" / "hypr"
+    if config_dir.exists():
+        for cfg_file in config_dir.glob("**/*"):
+            if cfg_file.is_file() and cfg_file.suffix in [".lua", ".conf"] and "permissions" not in cfg_file.name:
+                try:
+                    for line in cfg_file.read_text(encoding="utf-8").splitlines():
+                        sline = line.strip()
+                        if sline.startswith("#") or sline.startswith("--"):
+                            continue
+                        if "plugin" in sline and (".so" in sline or "load" in sline):
+                            match = re.search(r'["\']?([^"\'\s]+\.so)["\']?', sline)
+                            if match:
+                                so_path = match.group(1)
+                                p_name = Path(so_path).stem.replace("lib", "")
+                                if p_name.lower() not in seen_names:
+                                    seen_names.add(p_name.lower())
+                                    plugins.append({
+                                        "name": p_name.title(),
+                                        "author": "config",
+                                        "description": f"Configured in {cfg_file.name}",
+                                        "path": so_path,
+                                        "status": "configured",
+                                        "source": f"{cfg_file.name}",
+                                        "icon": "preferences-system"
+                                    })
+                except Exception:
+                    pass
+
+    return plugins
+
+
 class PermissionConfig:
     """Handles reading and writing ~/.config/hypr/modules/permissions.lua."""
 
@@ -253,7 +413,6 @@ class PermissionConfig:
                     "type": t_match.group(1).strip(),
                     "mode": m_match.group(1).strip()
                 }
-                # Prevent duplicate if already captured
                 if not any(r["binary"] == entry["binary"] and r["type"] == entry["type"] for r in self.rules):
                     self.rules.append(entry)
 
@@ -298,6 +457,14 @@ class PermissionConfig:
                 return False  # updated
         self.rules.append({"binary": binary, "type": ptype, "mode": mode})
         return True  # added new
+
+    def get_rule_mode(self, binary, ptype):
+        """Return mode if rule exists, else None."""
+        for rule in self.rules:
+            if rule["type"] == ptype:
+                if rule["binary"] == binary or (binary in rule["binary"]) or (rule["binary"] in binary):
+                    return rule["mode"]
+        return None
 
     def remove_rule(self, index):
         if 0 <= index < len(self.rules):
@@ -354,6 +521,45 @@ def get_gui_css():
         color: {subtext0};
     }}
 
+    /* Tab Switcher Segmented Bar */
+    .tab-bar {{
+        background-color: {mantle};
+        border-bottom: 1px solid {surface0};
+        padding: 0px 16px;
+    }}
+
+    button.tab-btn {{
+        background-color: transparent;
+        background-image: none;
+        box-shadow: none;
+        text-shadow: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        border-radius: 0px;
+        padding: 10px 18px;
+        font-weight: 600;
+        font-size: 13px;
+        color: {subtext0};
+    }}
+
+    button.tab-btn label {{
+        color: {subtext0};
+        font-weight: 600;
+    }}
+
+    button.tab-btn.active {{
+        border-bottom: 2px solid {accent};
+    }}
+
+    button.tab-btn.active label {{
+        color: {accent};
+        font-weight: bold;
+    }}
+
+    button.tab-btn:hover label {{
+        color: {text_color};
+    }}
+
     .card {{
         background-color: {mantle};
         border: 1px solid {surface0};
@@ -365,6 +571,13 @@ def get_gui_css():
     .banner-warning {{
         background-color: {hex_to_rgba(yellow, 0.16)};
         border: 1px solid {hex_to_rgba(yellow, 0.45)};
+        border-radius: 8px;
+        padding: 10px 14px;
+    }}
+
+    .banner-info {{
+        background-color: {hex_to_rgba(blue, 0.14)};
+        border: 1px solid {hex_to_rgba(blue, 0.35)};
         border-radius: 8px;
         padding: 10px 14px;
     }}
@@ -430,6 +643,24 @@ def get_gui_css():
     .badge-type {{
         background-color: {surface2};
         color: {text_color};
+        font-size: 10px;
+        padding: 3px 8px;
+        border-radius: 6px;
+    }}
+
+    .badge-loaded {{
+        background-color: {green};
+        color: {green_fg};
+        font-weight: bold;
+        font-size: 10px;
+        padding: 3px 8px;
+        border-radius: 6px;
+    }}
+
+    .badge-installed {{
+        background-color: {blue};
+        color: {blue_fg};
+        font-weight: bold;
         font-size: 10px;
         padding: 3px 8px;
         border-radius: 6px;
@@ -609,7 +840,7 @@ def get_gui_css():
 def launch_gui():
     import gi
     gi.require_version("Gtk", "3.0")
-    from gi.repository import Gtk, Gdk, GLib
+    from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
 
     _, ttype, _ = get_active_theme_colors()
     settings = Gtk.Settings.get_default()
@@ -618,10 +849,22 @@ def launch_gui():
 
     cfg = PermissionConfig()
 
-    win = Gtk.Window(title="Hyprland Permissions")
-    win.set_default_size(720, 680)
+    win = Gtk.Window(title="Hyprland Security & Permissions")
+    win.set_default_size(740, 720)
     win.set_position(Gtk.WindowPosition.CENTER)
-    win.set_icon_name("preferences-security")
+
+    # Set custom application icon
+    icon_file = ASSETS_DIR / "permission-manager.png"
+    if not icon_file.exists():
+        icon_file = DOTFILES_ASSETS_DIR / "permission-manager.png"
+
+    if icon_file.exists():
+        try:
+            win.set_icon_from_file(str(icon_file))
+        except Exception:
+            win.set_icon_name("permission-manager")
+    else:
+        win.set_icon_name("preferences-security")
 
     # Apply CSS
     css_provider = Gtk.CssProvider()
@@ -636,10 +879,19 @@ def launch_gui():
     win.add(main_vbox)
 
     # 1. Header Box
-    header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+    header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
     header_box.get_style_context().add_class("header-box")
 
-    icon_img = Gtk.Image.new_from_icon_name("preferences-security", Gtk.IconSize.DND)
+    # App icon in header
+    if icon_file.exists():
+        try:
+            pb = GdkPixbuf.Pixbuf.new_from_file_at_scale(str(icon_file), 38, 38, True)
+            icon_img = Gtk.Image.new_from_pixbuf(pb)
+        except Exception:
+            icon_img = Gtk.Image.new_from_icon_name("permission-manager", Gtk.IconSize.DND)
+    else:
+        icon_img = Gtk.Image.new_from_icon_name("preferences-security", Gtk.IconSize.DND)
+
     header_box.pack_start(icon_img, False, False, 0)
 
     title_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
@@ -647,7 +899,7 @@ def launch_gui():
     title_lbl.set_xalign(0)
     title_lbl.get_style_context().add_class("window-title")
 
-    sub_lbl = Gtk.Label(label="Manage persistent screencopy and plugin rules in Hyprland config")
+    sub_lbl = Gtk.Label(label="Manage persistent screen capture rules and compositor plugin permissions")
     sub_lbl.set_xalign(0)
     sub_lbl.get_style_context().add_class("window-subtitle")
 
@@ -662,15 +914,37 @@ def launch_gui():
 
     main_vbox.pack_start(header_box, False, False, 0)
 
-    # Content Container
-    content_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-    content_vbox.set_margin_top(14)
-    content_vbox.set_margin_bottom(14)
-    content_vbox.set_margin_start(16)
-    content_vbox.set_margin_end(16)
-    main_vbox.pack_start(content_vbox, True, True, 0)
+    # 2. Segmented Tab Bar (Rules vs Plugins)
+    tab_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+    tab_bar.get_style_context().add_class("tab-bar")
 
-    # 2. Enforcement Switch Card
+    btn_tab_rules = Gtk.Button(label="🛡️  Permissions & Rules")
+    btn_tab_rules.get_style_context().add_class("tab-btn")
+    btn_tab_rules.get_style_context().add_class("active")
+
+    btn_tab_plugins = Gtk.Button(label="🔌  Hyprland Plugins")
+    btn_tab_plugins.get_style_context().add_class("tab-btn")
+
+    tab_bar.pack_start(btn_tab_rules, False, False, 0)
+    tab_bar.pack_start(btn_tab_plugins, False, False, 0)
+    main_vbox.pack_start(tab_bar, False, False, 0)
+
+    # Stack container for view switching
+    stack = Gtk.Stack()
+    stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
+    stack.set_transition_duration(180)
+    main_vbox.pack_start(stack, True, True, 0)
+
+    # =========================================================================
+    # TAB 1: RULES & SCREENCOPY PERMISSIONS
+    # =========================================================================
+    rules_view = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+    rules_view.set_margin_top(14)
+    rules_view.set_margin_bottom(8)
+    rules_view.set_margin_start(16)
+    rules_view.set_margin_end(16)
+
+    # Enforcement Switch Card
     enforce_card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
     enforce_card.get_style_context().add_class("card")
 
@@ -692,10 +966,9 @@ def launch_gui():
     enforce_switch.set_active(cfg.enforce_permissions)
     enforce_switch.set_valign(Gtk.Align.CENTER)
     enforce_card.pack_end(enforce_switch, False, False, 0)
+    rules_view.pack_start(enforce_card, False, False, 0)
 
-    content_vbox.pack_start(enforce_card, False, False, 0)
-
-    # 3. Security Restart Banner
+    # Security Restart Banner
     banner_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
     banner_box.get_style_context().add_class("banner-warning")
 
@@ -710,10 +983,9 @@ def launch_gui():
     banner_lbl.set_xalign(0)
     banner_lbl.get_style_context().add_class("banner-text")
     banner_box.pack_start(banner_lbl, True, True, 0)
+    rules_view.pack_start(banner_box, False, False, 0)
 
-    content_vbox.pack_start(banner_box, False, False, 0)
-
-    # 4. Rules List Card
+    # Rules List Card
     rules_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
     rules_card.get_style_context().add_class("card")
 
@@ -730,24 +1002,116 @@ def launch_gui():
     btn_add_preset = Gtk.Button(label="+ Add Common Preset")
     btn_add_preset.get_style_context().add_class("btn-primary")
     rules_header.pack_end(btn_add_preset, False, False, 0)
-
     rules_card.pack_start(rules_header, False, False, 0)
 
     # Scrolled Window for Rules
     scrolled = Gtk.ScrolledWindow()
     scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-    scrolled.set_min_content_height(250)
+    scrolled.set_min_content_height(240)
 
     rules_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
     rules_list_box.set_margin_top(6)
     rules_list_box.set_margin_bottom(6)
     scrolled.add(rules_list_box)
     rules_card.pack_start(scrolled, True, True, 0)
+    rules_view.pack_start(rules_card, True, True, 0)
 
-    content_vbox.pack_start(rules_card, True, True, 0)
+    stack.add_named(rules_view, "rules")
 
-    # Status Label
+    # =========================================================================
+    # TAB 2: HYPRLAND PLUGINS & SECURITY
+    # =========================================================================
+    plugins_view = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+    plugins_view.set_margin_top(14)
+    plugins_view.set_margin_bottom(8)
+    plugins_view.set_margin_start(16)
+    plugins_view.set_margin_end(16)
+
+    # Plugin security explainer card
+    plugin_info_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+    plugin_info_box.get_style_context().add_class("banner-info")
+
+    pl_info_icon = Gtk.Image.new_from_icon_name("system-software-install", Gtk.IconSize.BUTTON)
+    plugin_info_box.pack_start(pl_info_icon, False, False, 0)
+
+    pl_info_lbl = Gtk.Label(
+        label="<b>Compositor Plugin Security:</b> Hyprland 0.55+ uses the <tt>plugin</tt> permission type to control which tools are allowed to load shared object (<tt>.so</tt>) extensions into the compositor process."
+    )
+    pl_info_lbl.set_use_markup(True)
+    pl_info_lbl.set_line_wrap(True)
+    pl_info_lbl.set_xalign(0)
+    pl_info_lbl.get_style_context().add_class("banner-text")
+    plugin_info_box.pack_start(pl_info_lbl, True, True, 0)
+    plugins_view.pack_start(plugin_info_box, False, False, 0)
+
+    # Scrolled container for plugins tab
+    plugins_scrolled = Gtk.ScrolledWindow()
+    plugins_scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+    plugins_scrolled.set_min_content_height(340)
+
+    plugins_inner_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+    plugins_scrolled.add(plugins_inner_vbox)
+
+    # Section 1: Plugin Loaders (hyprpm, hyprctl)
+    loaders_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+    loaders_card.get_style_context().add_class("card")
+
+    loaders_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+    loaders_title = Gtk.Label(label="Plugin Loaders & Managers")
+    loaders_title.get_style_context().add_class("rule-name")
+    loaders_title.set_xalign(0)
+    loaders_header.pack_start(loaders_title, True, True, 0)
+    loaders_card.pack_start(loaders_header, False, False, 0)
+
+    loaders_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+    loaders_card.pack_start(loaders_list_box, False, False, 0)
+    plugins_inner_vbox.pack_start(loaders_card, False, False, 0)
+
+    # Section 2: Detected Installed Plugins
+    detected_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+    detected_card.get_style_context().add_class("card")
+
+    detected_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+    detected_title = Gtk.Label(label="Detected Hyprland Plugins")
+    detected_title.get_style_context().add_class("rule-name")
+    detected_title.set_xalign(0)
+    detected_header.pack_start(detected_title, True, True, 0)
+
+    btn_scan_plugins = Gtk.Button(label="🔄 Scan & Refresh")
+    btn_scan_plugins.get_style_context().add_class("btn-secondary")
+    detected_header.pack_end(btn_scan_plugins, False, False, 0)
+    detected_card.pack_start(detected_header, False, False, 0)
+
+    detected_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+    detected_card.pack_start(detected_list_box, False, False, 0)
+    plugins_inner_vbox.pack_start(detected_card, False, False, 0)
+
+    # Section 3: Popular Plugins Quick-Add
+    popular_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+    popular_card.get_style_context().add_class("card")
+
+    pop_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+    pop_title = Gtk.Label(label="Official & Popular Plugins Catalog")
+    pop_title.get_style_context().add_class("rule-name")
+    pop_title.set_xalign(0)
+    pop_header.pack_start(pop_title, True, True, 0)
+    popular_card.pack_start(pop_header, False, False, 0)
+
+    popular_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+    popular_card.pack_start(popular_list_box, False, False, 0)
+    plugins_inner_vbox.pack_start(popular_card, False, False, 0)
+
+    plugins_view.pack_start(plugins_scrolled, True, True, 0)
+    stack.add_named(plugins_view, "plugins")
+
+    # =========================================================================
+    # BOTTOM ACTION & STATUS BAR
+    # =========================================================================
     status_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    status_bar.set_margin_start(16)
+    status_bar.set_margin_end(16)
+    status_bar.set_margin_bottom(14)
+
     status_lbl = Gtk.Label(label="")
     status_lbl.set_xalign(0)
     status_lbl.get_style_context().add_class("window-subtitle")
@@ -757,7 +1121,20 @@ def launch_gui():
     btn_save.get_style_context().add_class("btn-primary")
     status_bar.pack_end(btn_save, False, False, 0)
 
-    content_vbox.pack_start(status_bar, False, False, 0)
+    main_vbox.pack_start(status_bar, False, False, 0)
+
+    # Switch Tabs Function
+    def switch_tab(tab_name):
+        stack.set_visible_child_name(tab_name)
+        if tab_name == "rules":
+            btn_tab_rules.get_style_context().add_class("active")
+            btn_tab_plugins.get_style_context().remove_class("active")
+        else:
+            btn_tab_plugins.get_style_context().add_class("active")
+            btn_tab_rules.get_style_context().remove_class("active")
+
+    btn_tab_rules.connect("clicked", lambda b: switch_tab("rules"))
+    btn_tab_plugins.connect("clicked", lambda b: switch_tab("plugins"))
 
     def find_known_app(binary_str):
         for app in KNOWN_APPS:
@@ -783,7 +1160,7 @@ def launch_gui():
             row_box.get_style_context().add_class("rule-row")
 
             app_meta = find_known_app(rule["binary"])
-            icon_name = app_meta["icon"] if app_meta else "application-x-executable"
+            icon_name = app_meta["icon"] if app_meta else ("system-software-install" if rule["type"] == "plugin" else "application-x-executable")
             app_label = app_meta["name"] if app_meta else Path(rule["binary"].split("/")[-1].replace(")", "").replace("(", "")).name
 
             row_icon = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.LARGE_TOOLBAR)
@@ -816,6 +1193,7 @@ def launch_gui():
 
             def on_mode_changed(combo, r_idx=idx):
                 cfg.rules[r_idx]["mode"] = combo.get_active_id()
+                refresh_plugins_ui()
 
             mode_combo.connect("changed", on_mode_changed)
             row_box.pack_start(mode_combo, False, False, 0)
@@ -828,6 +1206,7 @@ def launch_gui():
             def on_delete_clicked(btn, r_idx=idx):
                 cfg.remove_rule(r_idx)
                 refresh_rules_ui()
+                refresh_plugins_ui()
 
             btn_del.connect("clicked", on_delete_clicked)
             row_box.pack_start(btn_del, False, False, 0)
@@ -835,6 +1214,171 @@ def launch_gui():
             rules_list_box.pack_start(row_box, False, False, 0)
 
         rules_list_box.show_all()
+
+    def refresh_plugins_ui():
+        # 1. Refresh Loaders
+        for child in loaders_list_box.get_children():
+            loaders_list_box.remove(child)
+
+        for loader in PLUGIN_LOADERS:
+            row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row_box.get_style_context().add_class("rule-row")
+
+            row_icon = Gtk.Image.new_from_icon_name(loader["icon"], Gtk.IconSize.LARGE_TOOLBAR)
+            row_box.pack_start(row_icon, False, False, 0)
+
+            text_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            name_lbl = Gtk.Label(label=loader["name"])
+            name_lbl.set_xalign(0)
+            name_lbl.get_style_context().add_class("rule-name")
+
+            desc_lbl = Gtk.Label(label=f"{loader['desc']} • {loader['recommended']}")
+            desc_lbl.set_xalign(0)
+            desc_lbl.get_style_context().add_class("rule-binary")
+
+            text_vbox.pack_start(name_lbl, False, False, 0)
+            text_vbox.pack_start(desc_lbl, False, False, 0)
+            row_box.pack_start(text_vbox, True, True, 0)
+
+            current_mode = cfg.get_rule_mode(loader["binary"], "plugin")
+            mode_combo = Gtk.ComboBoxText()
+            mode_combo.append("none", "Not Configured (Ask)")
+            mode_combo.append("allow", "Allow")
+            mode_combo.append("ask", "Ask")
+            mode_combo.append("deny", "Deny")
+            mode_combo.set_active_id(current_mode or "none")
+
+            def on_loader_mode_changed(combo, l_bin=loader["binary"]):
+                val = combo.get_active_id()
+                if val == "none":
+                    # Remove rule
+                    for i in range(len(cfg.rules) - 1, -1, -1):
+                        if cfg.rules[i]["type"] == "plugin" and l_bin in cfg.rules[i]["binary"]:
+                            del cfg.rules[i]
+                else:
+                    cfg.add_or_update_rule(l_bin, "plugin", val)
+                refresh_rules_ui()
+                status_lbl.set_text(f"Updated rule for {l_bin}. Click Save to apply.")
+
+            mode_combo.connect("changed", on_loader_mode_changed)
+            row_box.pack_start(mode_combo, False, False, 0)
+            loaders_list_box.pack_start(row_box, False, False, 0)
+
+        # 2. Refresh Detected Plugins
+        for child in detected_list_box.get_children():
+            detected_list_box.remove(child)
+
+        detected_plugins = detect_hyprland_plugins()
+        if not detected_plugins:
+            empty_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            empty_box.set_margin_top(12)
+            empty_box.set_margin_bottom(12)
+
+            no_pl_lbl = Gtk.Label(label="No third-party Hyprland plugins currently loaded or compiled in ~/.local/share/hyprpm.")
+            no_pl_lbl.get_style_context().add_class("window-subtitle")
+            empty_box.pack_start(no_pl_lbl, False, False, 0)
+
+            hint_lbl = Gtk.Label(label="When plugins are loaded or built, they will automatically be detected and listed here.")
+            hint_lbl.get_style_context().add_class("banner-text")
+            empty_box.pack_start(hint_lbl, False, False, 0)
+            detected_list_box.pack_start(empty_box, False, False, 0)
+        else:
+            for pl in detected_plugins:
+                row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+                row_box.get_style_context().add_class("rule-row")
+
+                row_icon = Gtk.Image.new_from_icon_name(pl["icon"], Gtk.IconSize.LARGE_TOOLBAR)
+                row_box.pack_start(row_icon, False, False, 0)
+
+                text_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                title_line = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+                name_lbl = Gtk.Label(label=pl["name"])
+                name_lbl.get_style_context().add_class("rule-name")
+                title_line.pack_start(name_lbl, False, False, 0)
+
+                # Status tag
+                st_badge = Gtk.Label(label="Active" if pl["status"] == "loaded" else "Installed")
+                st_badge.get_style_context().add_class("badge-loaded" if pl["status"] == "loaded" else "badge-installed")
+                title_line.pack_start(st_badge, False, False, 0)
+                text_vbox.pack_start(title_line, False, False, 0)
+
+                path_lbl = Gtk.Label(label=f"{pl['path']} ({pl['description']})")
+                path_lbl.set_xalign(0)
+                path_lbl.get_style_context().add_class("rule-binary")
+                text_vbox.pack_start(path_lbl, False, False, 0)
+                row_box.pack_start(text_vbox, True, True, 0)
+
+                # Permission Selector
+                curr_mode = cfg.get_rule_mode(pl["path"], "plugin")
+                mode_combo = Gtk.ComboBoxText()
+                mode_combo.append("none", "Default (Ask)")
+                mode_combo.append("allow", "Allow")
+                mode_combo.append("ask", "Ask")
+                mode_combo.append("deny", "Deny")
+                mode_combo.set_active_id(curr_mode or "none")
+
+                def on_plugin_mode_changed(combo, pl_path=pl["path"]):
+                    val = combo.get_active_id()
+                    if val == "none":
+                        for i in range(len(cfg.rules) - 1, -1, -1):
+                            if cfg.rules[i]["type"] == "plugin" and pl_path in cfg.rules[i]["binary"]:
+                                del cfg.rules[i]
+                    else:
+                        cfg.add_or_update_rule(pl_path, "plugin", val)
+                    refresh_rules_ui()
+                    status_lbl.set_text(f"Updated rule for {pl_path}. Click Save to apply.")
+
+                mode_combo.connect("changed", on_plugin_mode_changed)
+                row_box.pack_start(mode_combo, False, False, 0)
+                detected_list_box.pack_start(row_box, False, False, 0)
+
+        # 3. Refresh Catalog of Popular Plugins
+        for child in popular_list_box.get_children():
+            popular_list_box.remove(child)
+
+        for pop in POPULAR_PLUGINS:
+            row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row_box.get_style_context().add_class("rule-row")
+
+            row_icon = Gtk.Image.new_from_icon_name("system-software-install", Gtk.IconSize.LARGE_TOOLBAR)
+            row_box.pack_start(row_icon, False, False, 0)
+
+            text_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            name_lbl = Gtk.Label(label=f"{pop['name']} ({pop['repo']})")
+            name_lbl.set_xalign(0)
+            name_lbl.get_style_context().add_class("rule-name")
+
+            desc_lbl = Gtk.Label(label=pop["desc"])
+            desc_lbl.set_xalign(0)
+            desc_lbl.get_style_context().add_class("rule-binary")
+
+            text_vbox.pack_start(name_lbl, False, False, 0)
+            text_vbox.pack_start(desc_lbl, False, False, 0)
+            row_box.pack_start(text_vbox, True, True, 0)
+
+            curr_mode = cfg.get_rule_mode(pop["binary"], "plugin")
+            if curr_mode:
+                badge = Gtk.Label(label=curr_mode.upper())
+                badge.get_style_context().add_class(f"badge-{curr_mode}")
+                row_box.pack_start(badge, False, False, 0)
+            else:
+                btn_preauth = Gtk.Button(label="+ Pre-Authorize")
+                btn_preauth.get_style_context().add_class("btn-secondary")
+                def on_preauth_clicked(btn, p_bin=pop["binary"], p_name=pop["name"]):
+                    cfg.add_or_update_rule(p_bin, "plugin", "allow")
+                    refresh_rules_ui()
+                    refresh_plugins_ui()
+                    status_lbl.set_text(f"Pre-authorized '{p_name}'. Click Save to apply.")
+                btn_preauth.connect("clicked", on_preauth_clicked)
+                row_box.pack_start(btn_preauth, False, False, 0)
+
+            popular_list_box.pack_start(row_box, False, False, 0)
+
+        loaders_list_box.show_all()
+        detected_list_box.show_all()
+        popular_list_box.show_all()
+
+    btn_scan_plugins.connect("clicked", lambda b: refresh_plugins_ui())
 
     def show_add_custom_dialog():
         dialog = Gtk.Dialog(
@@ -855,7 +1399,6 @@ def launch_gui():
         box.set_margin_top(16)
         box.set_margin_bottom(16)
 
-        # Binary entry with file browse
         bin_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         bin_entry = Gtk.Entry()
         bin_entry.set_placeholder_text("e.g. /usr/(bin|local/bin)/hyprlock or /usr/bin/grim")
@@ -864,14 +1407,13 @@ def launch_gui():
         btn_browse = Gtk.Button(label="Browse...")
         def on_browse_clicked(btn):
             chooser = Gtk.FileChooserNative.new(
-                "Select Binary", win, Gtk.FileChooserAction.OPEN, "_Select", "_Cancel"
+                "Select Binary or Plugin", win, Gtk.FileChooserAction.OPEN, "_Select", "_Cancel"
             )
             chooser.set_current_folder("/usr/bin")
             res = chooser.run()
             if res == Gtk.ResponseType.ACCEPT:
                 fpath = chooser.get_filename()
                 if fpath:
-                    # If in /usr/bin or /usr/local/bin, make regex friendly
                     if fpath.startswith("/usr/bin/"):
                         app = fpath[len("/usr/bin/"):]
                         bin_entry.set_text(f"/usr/(bin|local/bin)/{app}")
@@ -885,7 +1427,6 @@ def launch_gui():
         box.pack_start(Gtk.Label(label="Binary Executable Path or Regex:", xalign=0), False, False, 0)
         box.pack_start(bin_box, False, False, 0)
 
-        # Type selection
         type_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         type_combo = Gtk.ComboBoxText()
         type_combo.append("screencopy", "screencopy (Screen Capture & Recording)")
@@ -896,7 +1437,6 @@ def launch_gui():
         box.pack_start(Gtk.Label(label="Permission Type:", xalign=0), False, False, 0)
         box.pack_start(type_box, False, False, 0)
 
-        # Mode selection
         mode_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         mode_combo = Gtk.ComboBoxText()
         mode_combo.append("allow", "allow (Permit always without prompt)")
@@ -917,6 +1457,7 @@ def launch_gui():
             if b_val:
                 cfg.add_or_update_rule(b_val, t_val, m_val)
                 refresh_rules_ui()
+                refresh_plugins_ui()
                 status_lbl.set_text(f"Added rule for '{b_val}'. Remember to Save!")
         dialog.destroy()
 
@@ -944,7 +1485,6 @@ def launch_gui():
         info_lbl.set_xalign(0)
         box.pack_start(info_lbl, False, False, 0)
 
-        # Preset List Store: [id, name, binary, type, desc, icon]
         store = Gtk.ListStore(str, str, str, str, str, str)
         for app in KNOWN_APPS:
             store.append([app["id"], app["name"], app["binary"], app["type"], app["desc"], app["icon"]])
@@ -973,7 +1513,6 @@ def launch_gui():
         scroll.add(tree)
         box.pack_start(scroll, True, True, 0)
 
-        # Mode selection
         mode_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         mode_box.pack_start(Gtk.Label(label="Mode:"), False, False, 0)
         mode_combo = Gtk.ComboBoxText()
@@ -995,6 +1534,7 @@ def launch_gui():
                 mode = mode_combo.get_active_id() or "allow"
                 cfg.add_or_update_rule(binary, ptype, mode)
                 refresh_rules_ui()
+                refresh_plugins_ui()
                 status_lbl.set_text(f"Added preset for {model.get_value(it, 1)}. Click Save to apply.")
         dialog.destroy()
 
@@ -1006,7 +1546,7 @@ def launch_gui():
             subprocess.run([
                 "notify-send",
                 "-a", "Hyprland Permissions",
-                "-i", "preferences-security",
+                "-i", "permission-manager",
                 "Permissions Saved",
                 f"Successfully saved rules to {PERMISSIONS_LUA.name}. Hyprland restart required to apply."
             ], check=False)
@@ -1017,6 +1557,7 @@ def launch_gui():
         cfg.load()
         enforce_switch.set_active(cfg.enforce_permissions)
         refresh_rules_ui()
+        refresh_plugins_ui()
         status_lbl.set_text("Reloaded configuration from disk.")
 
     btn_add_rule.connect("clicked", lambda b: show_add_custom_dialog())
@@ -1026,14 +1567,16 @@ def launch_gui():
 
     win.connect("destroy", Gtk.main_quit)
     refresh_rules_ui()
+    refresh_plugins_ui()
     win.show_all()
     Gtk.main()
 
 
 def cli_main():
-    parser = argparse.ArgumentParser(description="Hyprland Permissions Manager CLI & GUI")
+    parser = argparse.ArgumentParser(description="Hyprland Permissions & Plugins Manager CLI & GUI")
     parser.add_argument("--gui", action="store_true", help="Launch Graphical GTK3 Manager")
     parser.add_argument("--list", action="store_true", help="List all persistent permission rules")
+    parser.add_argument("--plugins", action="store_true", help="Detect and list Hyprland plugins")
     parser.add_argument("--add", nargs=3, metavar=("BINARY", "TYPE", "MODE"),
                         help="Add or update rule: e.g. --add '/usr/bin/hyprlock' screencopy allow")
     parser.add_argument("--remove", metavar="BINARY", help="Remove rule matching binary")
@@ -1046,6 +1589,22 @@ def cli_main():
         return
 
     cfg = PermissionConfig()
+
+    if args.plugins:
+        plugins = detect_hyprland_plugins()
+        print(f"Detected Hyprland Plugins: {len(plugins)}")
+        print("-" * 75)
+        for idx, p in enumerate(plugins, 1):
+            rule_mode = cfg.get_rule_mode(p["path"], "plugin") or "UNSET"
+            print(f"[{idx}] {p['name']} ({p['status']}) - Source: {p['source']}")
+            print(f"    Path: {p['path']}")
+            print(f"    Permission Rule: {rule_mode}")
+        print("-" * 75)
+        print("Configured Plugin Loaders:")
+        for ldr in PLUGIN_LOADERS:
+            mode = cfg.get_rule_mode(ldr["binary"], "plugin") or "UNSET"
+            print(f"    {ldr['name']} ({ldr['binary']}): {mode}")
+        return
 
     if args.list:
         print(f"Ecosystem Enforcement: {'ENABLED' if cfg.enforce_permissions else 'DISABLED'}")
