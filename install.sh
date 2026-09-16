@@ -517,6 +517,22 @@ StartupNotify=true
 Keywords=hyprland;keybind;keys;shortcuts;hotkeys;binds;keyboard;actions;override;custom;
 EOF
 
+cat > "${HOME}/.local/share/applications/permission-manager.desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Hyprland Permissions
+GenericName=Security & Permission Rules Manager
+Comment=Manage persistent screencopy and plugin security permissions for Hyprland
+Exec=python3 ${HOME}/.config/hypr/scripts/permission_manager.py --gui
+Icon=preferences-security
+Terminal=false
+Categories=Settings;DesktopSettings;Security;
+StartupWMClass=permission-manager
+StartupNotify=true
+Keywords=permission;security;hyprland;screencopy;hyprlock;capture;portal;plugin;
+EOF
+
 chmod +x "${HOME}/.local/share/applications/"*.desktop 2>/dev/null || true
 
 if [ -f "${DOTFILES_DIR}/.config/hypr/assets/ocr-language-manager.png" ]; then
