@@ -834,13 +834,41 @@ def get_gui_css():
     entry:focus {{
         border-color: {accent};
     }}
+
+    .footer-box {{
+        background-color: {mantle};
+        border-top: 1px solid {surface0};
+        padding: 10px 16px;
+    }}
+
+    scrolledwindow {{
+        background-color: transparent;
+        border: none;
+    }}
+
+    scrollbar {{
+        background-color: transparent;
+        border: none;
+    }}
+
+    scrollbar slider {{
+        background-color: {surface1};
+        border-radius: 6px;
+        min-width: 6px;
+        min-height: 6px;
+        border: none;
+    }}
+
+    scrollbar slider:hover {{
+        background-color: {surface2};
+    }}
     """
 
 
 def launch_gui():
     import gi
     gi.require_version("Gtk", "3.0")
-    from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
+    from gi.repository import Gtk, Gdk, GdkPixbuf, GLib, Pango
 
     _, ttype, _ = get_active_theme_colors()
     settings = Gtk.Settings.get_default()
@@ -850,7 +878,8 @@ def launch_gui():
     cfg = PermissionConfig()
 
     win = Gtk.Window(title="Hyprland Security & Permissions")
-    win.set_default_size(740, 720)
+    win.set_default_size(720, 580)
+    win.set_size_request(460, 380)
     win.set_position(Gtk.WindowPosition.CENTER)
 
     # Set custom application icon
@@ -897,10 +926,12 @@ def launch_gui():
     title_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
     title_lbl = Gtk.Label(label="Hyprland Security & Permissions")
     title_lbl.set_xalign(0)
+    title_lbl.set_ellipsize(Pango.EllipsizeMode.END)
     title_lbl.get_style_context().add_class("window-title")
 
     sub_lbl = Gtk.Label(label="Manage persistent screen capture rules and compositor plugin permissions")
     sub_lbl.set_xalign(0)
+    sub_lbl.set_ellipsize(Pango.EllipsizeMode.END)
     sub_lbl.get_style_context().add_class("window-subtitle")
 
     title_vbox.pack_start(title_lbl, False, False, 0)
@@ -938,11 +969,16 @@ def launch_gui():
     # =========================================================================
     # TAB 1: RULES & SCREENCOPY PERMISSIONS
     # =========================================================================
+    rules_scrolled = Gtk.ScrolledWindow()
+    rules_scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+    rules_scrolled.set_overlay_scrolling(True)
+
     rules_view = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
     rules_view.set_margin_top(14)
-    rules_view.set_margin_bottom(8)
+    rules_view.set_margin_bottom(12)
     rules_view.set_margin_start(16)
     rules_view.set_margin_end(16)
+    rules_scrolled.add(rules_view)
 
     # Enforcement Switch Card
     enforce_card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
@@ -989,43 +1025,43 @@ def launch_gui():
     rules_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
     rules_card.get_style_context().add_class("card")
 
-    rules_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+    rules_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
     rules_title = Gtk.Label(label="Configured Persistent Rules")
     rules_title.get_style_context().add_class("rule-name")
     rules_title.set_xalign(0)
+    rules_title.set_ellipsize(Pango.EllipsizeMode.END)
     rules_header.pack_start(rules_title, True, True, 0)
 
-    btn_add_rule = Gtk.Button(label="+ Add Custom Rule")
+    btn_add_rule = Gtk.Button(label="+ Custom Rule")
     btn_add_rule.get_style_context().add_class("btn-secondary")
     rules_header.pack_end(btn_add_rule, False, False, 0)
 
-    btn_add_preset = Gtk.Button(label="+ Add Common Preset")
+    btn_add_preset = Gtk.Button(label="+ Common Preset")
     btn_add_preset.get_style_context().add_class("btn-primary")
     rules_header.pack_end(btn_add_preset, False, False, 0)
     rules_card.pack_start(rules_header, False, False, 0)
 
-    # Scrolled Window for Rules
-    scrolled = Gtk.ScrolledWindow()
-    scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-    scrolled.set_min_content_height(240)
-
     rules_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
     rules_list_box.set_margin_top(6)
     rules_list_box.set_margin_bottom(6)
-    scrolled.add(rules_list_box)
-    rules_card.pack_start(scrolled, True, True, 0)
-    rules_view.pack_start(rules_card, True, True, 0)
+    rules_card.pack_start(rules_list_box, False, False, 0)
+    rules_view.pack_start(rules_card, False, False, 0)
 
-    stack.add_named(rules_view, "rules")
+    stack.add_named(rules_scrolled, "rules")
 
     # =========================================================================
     # TAB 2: HYPRLAND PLUGINS & SECURITY
     # =========================================================================
+    plugins_scrolled = Gtk.ScrolledWindow()
+    plugins_scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+    plugins_scrolled.set_overlay_scrolling(True)
+
     plugins_view = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
     plugins_view.set_margin_top(14)
-    plugins_view.set_margin_bottom(8)
+    plugins_view.set_margin_bottom(12)
     plugins_view.set_margin_start(16)
     plugins_view.set_margin_end(16)
+    plugins_scrolled.add(plugins_view)
 
     # Plugin security explainer card
     plugin_info_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
@@ -1044,14 +1080,6 @@ def launch_gui():
     plugin_info_box.pack_start(pl_info_lbl, True, True, 0)
     plugins_view.pack_start(plugin_info_box, False, False, 0)
 
-    # Scrolled container for plugins tab
-    plugins_scrolled = Gtk.ScrolledWindow()
-    plugins_scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-    plugins_scrolled.set_min_content_height(340)
-
-    plugins_inner_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-    plugins_scrolled.add(plugins_inner_vbox)
-
     # Section 1: Plugin Loaders (hyprpm, hyprctl)
     loaders_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
     loaders_card.get_style_context().add_class("card")
@@ -1065,7 +1093,7 @@ def launch_gui():
 
     loaders_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
     loaders_card.pack_start(loaders_list_box, False, False, 0)
-    plugins_inner_vbox.pack_start(loaders_card, False, False, 0)
+    plugins_view.pack_start(loaders_card, False, False, 0)
 
     # Section 2: Detected Installed Plugins
     detected_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -1084,7 +1112,7 @@ def launch_gui():
 
     detected_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
     detected_card.pack_start(detected_list_box, False, False, 0)
-    plugins_inner_vbox.pack_start(detected_card, False, False, 0)
+    plugins_view.pack_start(detected_card, False, False, 0)
 
     # Section 3: Popular Plugins Quick-Add
     popular_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -1099,29 +1127,27 @@ def launch_gui():
 
     popular_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
     popular_card.pack_start(popular_list_box, False, False, 0)
-    plugins_inner_vbox.pack_start(popular_card, False, False, 0)
+    plugins_view.pack_start(popular_card, False, False, 0)
 
-    plugins_view.pack_start(plugins_scrolled, True, True, 0)
-    stack.add_named(plugins_view, "plugins")
+    stack.add_named(plugins_scrolled, "plugins")
 
     # =========================================================================
-    # BOTTOM ACTION & STATUS BAR
+    # BOTTOM ACTION & STATUS BAR (Fixed footer, always visible)
     # =========================================================================
-    status_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-    status_bar.set_margin_start(16)
-    status_bar.set_margin_end(16)
-    status_bar.set_margin_bottom(14)
+    footer_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+    footer_box.get_style_context().add_class("footer-box")
 
     status_lbl = Gtk.Label(label="")
     status_lbl.set_xalign(0)
+    status_lbl.set_ellipsize(Pango.EllipsizeMode.END)
     status_lbl.get_style_context().add_class("window-subtitle")
-    status_bar.pack_start(status_lbl, True, True, 0)
+    footer_box.pack_start(status_lbl, True, True, 0)
 
     btn_save = Gtk.Button(label="Save & Apply to Config")
     btn_save.get_style_context().add_class("btn-primary")
-    status_bar.pack_end(btn_save, False, False, 0)
+    footer_box.pack_end(btn_save, False, False, 0)
 
-    main_vbox.pack_start(status_bar, False, False, 0)
+    main_vbox.pack_end(footer_box, False, False, 0)
 
     # Switch Tabs Function
     def switch_tab(tab_name):
@@ -1148,6 +1174,7 @@ def launch_gui():
 
         if not cfg.rules:
             empty_lbl = Gtk.Label(label="No persistent permission rules configured.")
+            empty_lbl.set_line_wrap(True)
             empty_lbl.get_style_context().add_class("window-subtitle")
             empty_lbl.set_margin_top(30)
             empty_lbl.set_margin_bottom(30)
@@ -1169,10 +1196,13 @@ def launch_gui():
             text_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
             name_lbl = Gtk.Label(label=app_label)
             name_lbl.set_xalign(0)
+            name_lbl.set_ellipsize(Pango.EllipsizeMode.END)
             name_lbl.get_style_context().add_class("rule-name")
 
             bin_lbl = Gtk.Label(label=rule["binary"])
             bin_lbl.set_xalign(0)
+            bin_lbl.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+            bin_lbl.set_tooltip_text(rule["binary"])
             bin_lbl.get_style_context().add_class("rule-binary")
 
             text_vbox.pack_start(name_lbl, False, False, 0)
@@ -1230,10 +1260,13 @@ def launch_gui():
             text_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
             name_lbl = Gtk.Label(label=loader["name"])
             name_lbl.set_xalign(0)
+            name_lbl.set_ellipsize(Pango.EllipsizeMode.END)
             name_lbl.get_style_context().add_class("rule-name")
 
             desc_lbl = Gtk.Label(label=f"{loader['desc']} • {loader['recommended']}")
             desc_lbl.set_xalign(0)
+            desc_lbl.set_ellipsize(Pango.EllipsizeMode.END)
+            desc_lbl.set_tooltip_text(f"{loader['desc']} • {loader['recommended']}")
             desc_lbl.get_style_context().add_class("rule-binary")
 
             text_vbox.pack_start(name_lbl, False, False, 0)
@@ -1275,10 +1308,12 @@ def launch_gui():
             empty_box.set_margin_bottom(12)
 
             no_pl_lbl = Gtk.Label(label="No third-party Hyprland plugins currently loaded or compiled in ~/.local/share/hyprpm.")
+            no_pl_lbl.set_line_wrap(True)
             no_pl_lbl.get_style_context().add_class("window-subtitle")
             empty_box.pack_start(no_pl_lbl, False, False, 0)
 
             hint_lbl = Gtk.Label(label="When plugins are loaded or built, they will automatically be detected and listed here.")
+            hint_lbl.set_line_wrap(True)
             hint_lbl.get_style_context().add_class("banner-text")
             empty_box.pack_start(hint_lbl, False, False, 0)
             detected_list_box.pack_start(empty_box, False, False, 0)
@@ -1293,6 +1328,7 @@ def launch_gui():
                 text_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
                 title_line = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
                 name_lbl = Gtk.Label(label=pl["name"])
+                name_lbl.set_ellipsize(Pango.EllipsizeMode.END)
                 name_lbl.get_style_context().add_class("rule-name")
                 title_line.pack_start(name_lbl, False, False, 0)
 
@@ -1304,6 +1340,8 @@ def launch_gui():
 
                 path_lbl = Gtk.Label(label=f"{pl['path']} ({pl['description']})")
                 path_lbl.set_xalign(0)
+                path_lbl.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+                path_lbl.set_tooltip_text(f"{pl['path']} ({pl['description']})")
                 path_lbl.get_style_context().add_class("rule-binary")
                 text_vbox.pack_start(path_lbl, False, False, 0)
                 row_box.pack_start(text_vbox, True, True, 0)
@@ -1346,10 +1384,13 @@ def launch_gui():
             text_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
             name_lbl = Gtk.Label(label=f"{pop['name']} ({pop['repo']})")
             name_lbl.set_xalign(0)
+            name_lbl.set_ellipsize(Pango.EllipsizeMode.END)
             name_lbl.get_style_context().add_class("rule-name")
 
             desc_lbl = Gtk.Label(label=pop["desc"])
             desc_lbl.set_xalign(0)
+            desc_lbl.set_ellipsize(Pango.EllipsizeMode.END)
+            desc_lbl.set_tooltip_text(pop["desc"])
             desc_lbl.get_style_context().add_class("rule-binary")
 
             text_vbox.pack_start(name_lbl, False, False, 0)
