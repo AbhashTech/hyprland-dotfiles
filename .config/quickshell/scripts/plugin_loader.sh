@@ -81,7 +81,19 @@ if os.path.isdir(custom_dir):
 
         # 3. Services / Background items
         plugin_services = []
-        if "service" in entry_points:
+        qmldir_path = os.path.join(plugin_path, "qmldir")
+        singletons = set()
+        if os.path.isfile(qmldir_path):
+            try:
+                with open(qmldir_path, "r") as qf:
+                    for qline in qf:
+                        parts = qline.strip().split()
+                        if len(parts) >= 4 and parts[0] == "singleton":
+                            singletons.add(parts[3])
+            except Exception:
+                pass
+
+        if "service" in entry_points and entry_points["service"]:
             plugin_services.append(entry_points["service"])
         elif "services" in entry_points and isinstance(entry_points["services"], list):
             plugin_services.extend(entry_points["services"])
@@ -91,6 +103,8 @@ if os.path.isdir(custom_dir):
                     plugin_services.append(f)
 
         for srv in plugin_services:
+            if srv in singletons:
+                continue
             if os.path.isfile(os.path.join(plugin_path, srv)):
                 services.append({"id": plugin_id, "url": f"file://{plugin_path}/{srv}"})
 
