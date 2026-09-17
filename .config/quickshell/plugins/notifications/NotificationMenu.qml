@@ -46,11 +46,15 @@ Rectangle {
         root.selectedIndex = 0;
     }
 
-    function dismissItem(item) {
+    function deleteItem(item) {
         if (!item) return;
-        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py", "dismiss", item.id.toString()]);
+        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py", "delete", item.id.toString()]);
         root.allNotifications = root.allNotifications.filter(it => it.id !== item.id);
         root.filterNotifications();
+    }
+
+    function dismissItem(item) {
+        root.deleteItem(item);
     }
 
     function copyItem(item, mode) {
@@ -344,6 +348,11 @@ Rectangle {
                             root.invokeItem(root.filteredNotifications[root.selectedIndex]);
                         }
                     }
+                    Keys.onDeletePressed: {
+                        if (root.filteredNotifications.length > 0 && root.selectedIndex >= 0 && root.selectedIndex < root.filteredNotifications.length) {
+                            root.deleteItem(root.filteredNotifications[root.selectedIndex]);
+                        }
+                    }
                     Keys.onPressed: event => {
                         if (event.modifiers & Qt.ControlModifier) {
                             if (event.key === Qt.Key_C && searchInput.selectedText.length === 0) {
@@ -355,6 +364,12 @@ Rectangle {
                             } else if (event.key === Qt.Key_R) {
                                 if (root.filteredNotifications.length > 0 && root.selectedIndex >= 0 && root.selectedIndex < root.filteredNotifications.length) {
                                     root.replayItem(root.filteredNotifications[root.selectedIndex]);
+                                    event.accepted = true;
+                                    return;
+                                }
+                            } else if (event.key === Qt.Key_D) {
+                                if (root.filteredNotifications.length > 0 && root.selectedIndex >= 0 && root.selectedIndex < root.filteredNotifications.length) {
+                                    root.deleteItem(root.filteredNotifications[root.selectedIndex]);
                                     event.accepted = true;
                                     return;
                                 }
@@ -440,6 +455,8 @@ Rectangle {
                             font.pixelSize: 11
                             font.bold: true
                             color: Theme.accent
+                            elide: Text.ElideRight
+                            Layout.maximumWidth: 160
                         }
 
                         // Live badge
@@ -547,7 +564,7 @@ Rectangle {
                                 ToolTip.delay: 300
                             }
 
-                            // Single dismiss button
+                            // Single delete button
                             Rectangle {
                                 implicitWidth: 24
                                 implicitHeight: 24
@@ -567,11 +584,11 @@ Rectangle {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: root.dismissItem(modelData)
+                                    onClicked: root.deleteItem(modelData)
                                 }
 
                                 ToolTip.visible: delMouse.containsMouse
-                                ToolTip.text: "Dismiss"
+                                ToolTip.text: "Delete notification"
                                 ToolTip.delay: 300
                             }
                         }

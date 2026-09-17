@@ -356,7 +356,7 @@ if __name__ == "__main__":
             print(len(all_ids))
         except Exception:
             print(0)
-    elif cmd == "dismiss":
+    elif cmd in ("dismiss", "delete"):
         nid = sys.argv[2] if len(sys.argv) > 2 else ""
         dismiss_single(nid)
     elif cmd == "invoke":
