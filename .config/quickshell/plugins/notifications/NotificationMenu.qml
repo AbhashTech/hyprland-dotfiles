@@ -8,12 +8,14 @@ import "../.."
 Rectangle {
     id: root
 
+    width: 460
     implicitWidth: 460
     implicitHeight: 520
     radius: Theme.barRadius
     color: Theme.barBg
     border.color: Theme.barBorder
     border.width: 1
+    clip: true
 
     property var allNotifications: []
     property var filteredNotifications: []
@@ -180,12 +182,14 @@ Rectangle {
     }
 
     ColumnLayout {
+        id: mainCol
         anchors.fill: parent
         anchors.margins: 16
         spacing: 12
 
         // Header
         RowLayout {
+            id: headerRow
             Layout.fillWidth: true
             spacing: 8
 
@@ -296,6 +300,7 @@ Rectangle {
 
         // Search Input Bar
         Rectangle {
+            id: searchBar
             Layout.fillWidth: true
             implicitHeight: 38
             radius: Theme.pillRadius
@@ -633,7 +638,9 @@ Rectangle {
 
         // Status row
         RowLayout {
+            id: statusRow
             Layout.fillWidth: true
+            Layout.maximumWidth: root.width - 32
 
             Text {
                 text: root.filteredNotifications.length + " Notifications"
@@ -645,10 +652,11 @@ Rectangle {
             Item { Layout.fillWidth: true }
 
             Text {
-                text: "Click: View • Ctrl+C: Copy • Ctrl+R: Replay • Esc: Close"
+                text: "Ctrl+C Copy • Ctrl+R Replay • Esc Close"
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
+                font.pixelSize: 10
                 color: Theme.overlay0
+                elide: Text.ElideRight
             }
         }
     }

@@ -27,6 +27,8 @@ PanelWindow {
 
         NotificationMenu {
             id: notificationMenuItem
+            width: implicitWidth
+            height: implicitHeight
             anchors.top: parent.top
             anchors.topMargin: Theme.barHeight + 16
             anchors.right: parent.right
