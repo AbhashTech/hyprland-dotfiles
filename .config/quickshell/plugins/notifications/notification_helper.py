@@ -207,6 +207,96 @@ def toggle_dnd():
     except Exception:
         pass
 
+def find_raw_notification(nid):
+    nid_int = None
+    try:
+        nid_int = int(nid)
+    except (ValueError, TypeError):
+        pass
+
+    for cmd in [["makoctl", "list", "-j"], ["makoctl", "history", "-j"]]:
+        try:
+            p = subprocess.run(cmd, capture_output=True, text=True, timeout=2)
+            items = extract_items(json.loads(p.stdout) if p.stdout.strip() else [])
+            for item in items:
+                raw_id = get_field_val(item, "id", default=None)
+                try:
+                    if int(raw_id) == nid_int:
+                        return item
+                except (ValueError, TypeError):
+                    continue
+        except Exception:
+            pass
+    return None
+
+def replay_notification(nid, fallback_summary="", fallback_body="", fallback_app="", fallback_urgency="normal"):
+    item = find_raw_notification(nid) if nid else None
+    if item:
+        app_name = str(get_field_val(item, "app-name", "app_name", default=fallback_app or "System"))
+        summary = str(get_field_val(item, "summary", default=fallback_summary or ""))
+        body = str(get_field_val(item, "body", default=fallback_body or ""))
+        urgency = str(get_field_val(item, "urgency", default=fallback_urgency or "normal"))
+        app_icon = str(get_field_val(item, "app-icon", "app_icon", default=""))
+        category = str(get_field_val(item, "category", default=""))
+    else:
+        app_name = fallback_app or "System"
+        summary = fallback_summary or ""
+        body = fallback_body or ""
+        urgency = fallback_urgency or "normal"
+        app_icon = ""
+        category = ""
+
+    title = summary.strip() if summary.strip() else (app_name.strip() or "Notification")
+
+    cmd = ["notify-send"]
+    if app_name and app_name.strip():
+        cmd.extend(["-a", app_name.strip()])
+    if urgency in ["low", "normal", "critical"]:
+        cmd.extend(["-u", urgency])
+    if app_icon and app_icon.strip() and app_icon.strip().lower() not in ["none", "null"]:
+        cmd.extend(["-i", app_icon.strip()])
+    if category and category.strip() and category.strip().lower() not in ["none", "null"]:
+        cmd.extend(["-c", category.strip()])
+
+    cmd.append(title)
+    if body and body.strip():
+        cmd.append(body.strip())
+
+    try:
+        subprocess.run(cmd, timeout=3)
+    except Exception as e:
+        sys.stderr.write(f"Replay error: {e}\n")
+
+def copy_notification(nid, mode="message", fallback_summary="", fallback_body=""):
+    item = find_raw_notification(nid) if nid else None
+    if item:
+        summary = str(get_field_val(item, "summary", default=fallback_summary or ""))
+        body = str(get_field_val(item, "body", default=fallback_body or ""))
+    else:
+        summary = fallback_summary or ""
+        body = fallback_body or ""
+
+    summary = clean_text(summary, max_len=1000000)
+    body = clean_text(body, max_len=1000000)
+
+    if mode == "full":
+        if summary and body:
+            text = f"{summary}\n{body}"
+        elif body:
+            text = body
+        else:
+            text = summary
+    else:
+        # Default: message body if available, else summary
+        text = body if body.strip() else summary
+
+    if text:
+        try:
+            p = subprocess.Popen(["wl-copy"], stdin=subprocess.PIPE)
+            p.communicate(input=text.encode("utf-8"), timeout=2)
+        except Exception as e:
+            sys.stderr.write(f"Copy error: {e}\n")
+
 def get_status():
     count = 0
     dnd = False
@@ -272,6 +362,19 @@ if __name__ == "__main__":
     elif cmd == "invoke":
         nid = sys.argv[2] if len(sys.argv) > 2 else ""
         invoke_action(nid)
+    elif cmd == "replay":
+        nid = sys.argv[2] if len(sys.argv) > 2 else ""
+        fallback_summary = sys.argv[3] if len(sys.argv) > 3 else ""
+        fallback_body = sys.argv[4] if len(sys.argv) > 4 else ""
+        fallback_app = sys.argv[5] if len(sys.argv) > 5 else ""
+        fallback_urgency = sys.argv[6] if len(sys.argv) > 6 else "normal"
+        replay_notification(nid, fallback_summary, fallback_body, fallback_app, fallback_urgency)
+    elif cmd == "copy":
+        nid = sys.argv[2] if len(sys.argv) > 2 else ""
+        mode = sys.argv[3] if len(sys.argv) > 3 else "message"
+        fallback_summary = sys.argv[4] if len(sys.argv) > 4 else ""
+        fallback_body = sys.argv[5] if len(sys.argv) > 5 else ""
+        copy_notification(nid, mode, fallback_summary, fallback_body)
     elif cmd == "dismiss-all":
         dismiss_all()
     elif cmd == "toggle-dnd":

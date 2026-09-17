@@ -51,6 +51,42 @@ Rectangle {
         root.filterNotifications();
     }
 
+    function copyItem(item, mode) {
+        if (!item) return;
+        var m = mode || "message";
+        ctlProc.exec([
+            "python3",
+            Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py",
+            "copy",
+            item.id.toString(),
+            m,
+            item.summary || "",
+            item.body || ""
+        ]);
+    }
+
+    function replayItem(item) {
+        if (!item) return;
+        ctlProc.exec([
+            "python3",
+            Quickshell.env("HOME") + "/.config/quickshell/plugins/notifications/notification_helper.py",
+            "replay",
+            item.id.toString(),
+            item.summary || "",
+            item.body || "",
+            item.appName || "",
+            item.urgency || "normal"
+        ]);
+        replayTimer.restart();
+    }
+
+    Timer {
+        id: replayTimer
+        interval: 350
+        repeat: false
+        onTriggered: root.refreshNotifications()
+    }
+
     function invokeItem(item) {
         if (!item) return;
         PluginManager.closeAll();
@@ -303,6 +339,23 @@ Rectangle {
                             root.invokeItem(root.filteredNotifications[root.selectedIndex]);
                         }
                     }
+                    Keys.onPressed: event => {
+                        if (event.modifiers & Qt.ControlModifier) {
+                            if (event.key === Qt.Key_C && searchInput.selectedText.length === 0) {
+                                if (root.filteredNotifications.length > 0 && root.selectedIndex >= 0 && root.selectedIndex < root.filteredNotifications.length) {
+                                    root.copyItem(root.filteredNotifications[root.selectedIndex], (event.modifiers & Qt.ShiftModifier) ? "full" : "message");
+                                    event.accepted = true;
+                                    return;
+                                }
+                            } else if (event.key === Qt.Key_R) {
+                                if (root.filteredNotifications.length > 0 && root.selectedIndex >= 0 && root.selectedIndex < root.filteredNotifications.length) {
+                                    root.replayItem(root.filteredNotifications[root.selectedIndex]);
+                                    event.accepted = true;
+                                    return;
+                                }
+                            }
+                        }
+                    }
                     Keys.onDownPressed: {
                         if (root.selectedIndex < root.filteredNotifications.length - 1) {
                             root.selectedIndex++;
@@ -333,6 +386,23 @@ Rectangle {
                 required property var modelData
                 required property int index
 
+                property bool isCopied: false
+                property bool isReplayed: false
+
+                Timer {
+                    id: copyResetTimer
+                    interval: 1500
+                    repeat: false
+                    onTriggered: notifCard.isCopied = false
+                }
+
+                Timer {
+                    id: replayResetTimer
+                    interval: 1200
+                    repeat: false
+                    onTriggered: notifCard.isReplayed = false
+                }
+
                 width: notifListView.width
                 implicitHeight: cardContent.implicitHeight + 20
                 radius: Theme.pillRadius
@@ -346,7 +416,7 @@ Rectangle {
                     anchors.margins: 10
                     spacing: 4
 
-                    // App Name & Live Tag & Dismiss
+                    // App Name & Live Tag & Actions
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 6
@@ -387,28 +457,117 @@ Rectangle {
 
                         Item { Layout.fillWidth: true }
 
-                        // Single dismiss button
-                        Rectangle {
-                            implicitWidth: 24
-                            implicitHeight: 24
-                            radius: 12
-                            color: delMouse.containsMouse ? Theme.red : "transparent"
+                        RowLayout {
+                            spacing: 4
                             z: 10
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: "󰅖"
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 11
-                                color: delMouse.containsMouse ? "#ffffff" : Theme.overlay0
+                            // Replay button
+                            Rectangle {
+                                implicitWidth: 24
+                                implicitHeight: 24
+                                radius: 12
+                                color: notifCard.isReplayed
+                                    ? Qt.rgba(Theme.peach.r, Theme.peach.g, Theme.peach.b, 0.25)
+                                    : (replayMouse.containsMouse ? Theme.moduleHoverBg : "transparent")
+                                border.color: notifCard.isReplayed ? Theme.peach : "transparent"
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: notifCard.isReplayed ? "󰄬" : "󰑐"
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 12
+                                    color: notifCard.isReplayed
+                                        ? Theme.peach
+                                        : (replayMouse.containsMouse ? Theme.accent : Theme.overlay0)
+                                }
+
+                                MouseArea {
+                                    id: replayMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        notifCard.isReplayed = true;
+                                        replayResetTimer.restart();
+                                        root.replayItem(modelData);
+                                    }
+                                }
+
+                                ToolTip.visible: replayMouse.containsMouse
+                                ToolTip.text: "Replay notification"
+                                ToolTip.delay: 300
                             }
 
-                            MouseArea {
-                                id: delMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.dismissItem(modelData)
+                            // Copy button
+                            Rectangle {
+                                implicitWidth: 24
+                                implicitHeight: 24
+                                radius: 12
+                                color: notifCard.isCopied
+                                    ? Qt.rgba(Theme.green.r, Theme.green.g, Theme.green.b, 0.25)
+                                    : (copyMouse.containsMouse ? Theme.moduleHoverBg : "transparent")
+                                border.color: notifCard.isCopied ? Theme.green : "transparent"
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: notifCard.isCopied ? "󰄬" : "󰆏"
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 12
+                                    color: notifCard.isCopied
+                                        ? Theme.green
+                                        : (copyMouse.containsMouse ? Theme.accent : Theme.overlay0)
+                                }
+
+                                MouseArea {
+                                    id: copyMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                    onClicked: mouse => {
+                                        notifCard.isCopied = true;
+                                        copyResetTimer.restart();
+                                        if (mouse.button === Qt.RightButton) {
+                                            root.copyItem(modelData, "full");
+                                        } else {
+                                            root.copyItem(modelData, "message");
+                                        }
+                                    }
+                                }
+
+                                ToolTip.visible: copyMouse.containsMouse
+                                ToolTip.text: "Copy message (Right-click: Full text)"
+                                ToolTip.delay: 300
+                            }
+
+                            // Single dismiss button
+                            Rectangle {
+                                implicitWidth: 24
+                                implicitHeight: 24
+                                radius: 12
+                                color: delMouse.containsMouse ? Theme.red : "transparent"
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "󰅖"
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 11
+                                    color: delMouse.containsMouse ? "#ffffff" : Theme.overlay0
+                                }
+
+                                MouseArea {
+                                    id: delMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.dismissItem(modelData)
+                                }
+
+                                ToolTip.visible: delMouse.containsMouse
+                                ToolTip.text: "Dismiss"
+                                ToolTip.delay: 300
                             }
                         }
                     }
@@ -486,7 +645,7 @@ Rectangle {
             Item { Layout.fillWidth: true }
 
             Text {
-                text: "Click to View • Esc to close"
+                text: "Click: View • Ctrl+C: Copy • Ctrl+R: Replay • Esc: Close"
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.overlay0
