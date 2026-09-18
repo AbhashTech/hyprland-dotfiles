@@ -11,6 +11,7 @@ import json
 import os
 import re
 import select
+import shutil
 import socket
 import subprocess
 import sys
@@ -250,6 +251,58 @@ def check_audio_sink():
         log(f"Error checking audio sink: {e}")
 
 
+def sync_mako_active_output(mon_name: str = None):
+    """
+    Direct Mako notifications to appear on the currently active / focused monitor only.
+    Preserves other active modes (e.g. 'dnd') while atomically updating output mode.
+    """
+    if not mon_name:
+        # Determine currently focused monitor from hyprctl
+        for m in get_monitors():
+            if m.get("focused"):
+                mon_name = m.get("name")
+                break
+    if not mon_name:
+        return
+
+    try:
+        if not shutil.which("makoctl"):
+            return
+
+        res = subprocess.run(["makoctl", "mode"], capture_output=True, text=True, timeout=1)
+        if res.returncode != 0:
+            return
+
+        current_modes = [m.strip() for m in res.stdout.splitlines() if m.strip()]
+        target_mode = f"output-{mon_name}"
+        if target_mode in current_modes:
+            return
+
+        # Ensure monitor has a mode definition in ~/.config/mako/config
+        mako_cfg_path = os.path.expanduser("~/.config/mako/config")
+        if os.path.exists(mako_cfg_path):
+            try:
+                with open(mako_cfg_path, "r") as f:
+                    cfg_text = f.read()
+                if f"[mode={target_mode}]" not in cfg_text:
+                    with open(mako_cfg_path, "a") as f:
+                        f.write(f"\n[mode={target_mode}]\noutput={mon_name}\n")
+                    subprocess.run(["makoctl", "reload"], timeout=1)
+            except Exception:
+                pass
+
+        # Switch mode: remove old output mode, add new output mode atomically
+        args = ["makoctl", "mode"]
+        for m in current_modes:
+            if m.startswith("output-"):
+                args.extend(["-r", m])
+        args.extend(["-a", target_mode])
+        subprocess.run(args, timeout=1)
+        log(f"Synchronized Mako active notification output to: {mon_name}")
+    except Exception as e:
+        log(f"Error syncing Mako active output: {e}")
+
+
 def listen_events():
     sock2_path = get_hypr_socket2()
     if not sock2_path:
@@ -258,12 +311,13 @@ def listen_events():
 
     log(f"Connected to Hyprland event socket: {sock2_path}")
     
-    # Run initial assignment and audio sink verification
+    # Run initial assignment, audio sink verification, and notification output sync
     try:
         assign_workspaces()
         check_audio_sink()
+        sync_mako_active_output()
     except Exception as e:
-        log(f"Error in initial assign_workspaces / audio check: {e}")
+        log(f"Error in initial assign_workspaces / audio check / mako sync: {e}")
 
     while True:
         try:
@@ -293,22 +347,29 @@ def listen_events():
                     if not line:
                         continue
                     
-                    # Check for monitor connection and disconnection events
-                    if line.startswith("monitoradded>>"):
+                    # Check for monitor focus, connection, and disconnection events
+                    if line.startswith("focusedmon>>") or line.startswith("focusedmonv2>>"):
+                        parts = line.split(">>", 1)[1].split(",")
+                        mon_name = parts[0].strip()
+                        sync_mako_active_output(mon_name)
+                    elif line.startswith("monitoradded>>"):
                         mon_name = line.split(">>", 1)[1].strip()
                         log(f"Received event: {line}")
                         assign_monitor_workspace(mon_name)
                         check_audio_sink()
+                        sync_mako_active_output(mon_name)
                     elif line.startswith("monitoraddedv2>>"):
                         parts = line.split(">>", 1)[1].split(",")
                         mon_name = parts[1].strip() if len(parts) > 1 else parts[0].strip()
                         log(f"Received event: {line}")
                         assign_monitor_workspace(mon_name)
                         check_audio_sink()
+                        sync_mako_active_output(mon_name)
                     elif line.startswith("monitorremoved>>") or line.startswith("monitorremovedv2>>"):
                         log(f"Received event: {line}")
                         assign_workspaces()
                         check_audio_sink()
+                        sync_mako_active_output()
         except Exception as e:
             log(f"Socket connection error: {e}. Retrying in 2 seconds...")
             time.sleep(2.0)

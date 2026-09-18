@@ -121,7 +121,7 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | **Compositor & Portals** | `hyprland`, `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk`, `xdg-utils`, `xdg-user-dirs`, `hyprpolkitagent` | Wayland compositor, XDG portals for screen sharing & file dialogs, and Polkit agent |
 | **Session, Lock & Logout** | `hyprlock`, `hypridle`, `quickshell` | Catppuccin Mocha lockscreen, idle management, and Quickshell Power Menu plugin |
 | **Status Bar & Desktop Suite** | `quickshell`, `power-profiles-daemon`, `upower` | Modern Quickshell status bar, modular capsules, hardware stats, power profile selector & battery metrics |
-| **Notifications** | `mako`, `libnotify` | Notification daemon & `notify-send` for OSDs (with click-to-focus) |
+| **Notifications** | `mako`, `libnotify` | Notification daemon with dynamic active-monitor routing in multi-display setups & `notify-send` for OSDs (with click-to-focus) |
 | **Wallpaper** | `hyprpaper` | Fast Wayland wallpaper daemon |
 | **App Launchers & Theming** | `quickshell`, `fuzzel`, `nwg-look`, `gsettings-desktop-schemas`, `dconf`, `xsettingsd` | Fast Quickshell Application Menu plugin, Fuzzel dmenu launcher for scripts/theming, and GTK3/4 & DConf settings sync |
 | **Qt/GTK Unified Integration** | `qt5-wayland`, `qt6-wayland`, `qt5ct`, `qt6ct`, `kvantum`, `kvantum-qt5` | Native Wayland runtime and uniform theme/font/icon syncing across Qt5/Qt6 & GTK apps |
@@ -639,6 +639,10 @@ The dotfiles include a dedicated GUI and CLI utility ([`app_shortcut_creator.py`
 ---
 
 ### 🔔 Notifications & Clipboard History
+
+> [!TIP]
+> **Multi-Display Active Screen Routing**: Notifications automatically detect which monitor currently holds user focus (via Hyprland's `socket2` focused monitor stream handled by `monitor_workspace_manager.py`) and route popups exclusively to the active screen without being trapped on secondary or inactive displays.
+
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
 | `SUPER + N` | **Notifications Center** | Open notification history and management center (**Quickshell**) |
