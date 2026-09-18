@@ -11,4 +11,5 @@ MainScript=Main.qml
 ConfigFile=theme.conf
 Theme-Id=catppuccin-mocha
 Theme-API=2.0
+QtVersion=6
 Website=https://github.com

@@ -346,10 +346,26 @@ if command -v tldr >/dev/null 2>&1; then
     tldr --update >/dev/null 2>&1 || true
 fi
 
-# 7. SDDM Theme Installation & Activation
+# 7. SDDM Display Manager & Theme Installation & Activation
 if [ -d "${DOTFILES_DIR}/sddm/themes/catppuccin-mocha" ]; then
-    log_info "Deploying Catppuccin Mocha SDDM Theme..."
+    log_info "Deploying SDDM Display Manager & Catppuccin Mocha Theme..."
     if command -v sudo >/dev/null 2>&1; then
+        # Ensure SDDM and Qt6 dependencies are installed
+        if ! command -v sddm >/dev/null 2>&1; then
+            log_info "SDDM is not installed. Auto-installing SDDM..."
+            if command -v pacman >/dev/null 2>&1; then
+                sudo pacman -S --needed --noconfirm sddm qt6-declarative qt6-svg qt6-5compat
+            elif command -v dnf >/dev/null 2>&1; then
+                sudo dnf install -y sddm qt6-qtdeclarative qt6-qtsvg
+            elif command -v apt-get >/dev/null 2>&1; then
+                sudo apt-get update && sudo apt-get install -y sddm qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts
+            elif command -v zypper >/dev/null 2>&1; then
+                sudo zypper install -y sddm
+            else
+                log_warn "Package manager not recognized. Please install SDDM manually."
+            fi
+        fi
+
         # Restore original sddm-greeter if previously symlinked
         if [ -f "/usr/bin/sddm-greeter.qt5" ] && [ -L "/usr/bin/sddm-greeter" ]; then
             sudo rm /usr/bin/sddm-greeter 2>/dev/null || true
@@ -358,12 +374,15 @@ if [ -d "${DOTFILES_DIR}/sddm/themes/catppuccin-mocha" ]; then
         sudo mkdir -p /usr/share/sddm/themes
         sudo rm -rf /usr/share/sddm/themes/catppuccin-mocha
         sudo cp -r "${DOTFILES_DIR}/sddm/themes/catppuccin-mocha" /usr/share/sddm/themes/catppuccin-mocha
+        sudo chmod -R 755 /usr/share/sddm/themes/catppuccin-mocha
         sudo mkdir -p /etc/sddm.conf.d
         sudo tee /etc/sddm.conf.d/theme.conf >/dev/null << 'EOF'
 [Theme]
 Current=catppuccin-mocha
 EOF
-        log_success "Catppuccin Mocha SDDM theme installed and activated (/etc/sddm.conf.d/theme.conf)."
+        log_info "Enabling sddm.service..."
+        sudo systemctl enable sddm.service 2>/dev/null || true
+        log_success "Catppuccin Mocha SDDM theme installed, activated (/etc/sddm.conf.d/theme.conf), and sddm.service enabled."
     else
         log_warn "Sudo not available. Run 'sddm/scripts/install-theme.sh' with root privileges to activate the SDDM theme."
     fi

@@ -175,7 +175,7 @@ The installer will:
 - Hide internal, technical, and background helper apps from application launchers.
 - Set executable permissions on all Python and Shell scripts.
 - Initialize tealdeer cheatsheets, directories (`~/Pictures/Screenshots`, `~/Videos/Recordings`), and `i2c-dev`.
-- Deploy and activate the Catppuccin Mocha SDDM theme.
+- Auto-install SDDM, deploy and activate the Catppuccin Mocha Qt6 SDDM theme, and automatically enable `sddm.service` (`sudo systemctl enable sddm.service`).
 
 ### Shell Integration
 
@@ -744,17 +744,25 @@ A sleek, modern split-screen design layout unifying both the **SDDM Display Mana
 - **Power Menu & Confirmation**: Pinned at the bottom with **Suspend**, **Reboot**, and **Shutdown** actions featuring icons, text labels, interactive hover tooltips ("Suspend System", "Restart System", "Shut Down System"), and safety confirmation modals.
 
 ### 🧪 Live Preview & SDDM Deployment
+
+The Catppuccin Mocha SDDM theme is built natively with **Qt 6 QML** components. Its `metadata.desktop` explicitly defines `QtVersion=6`, allowing SDDM (0.21+) to dynamically invoke the Qt6 greeter (`sddm-greeter-qt6`) and prevent legacy Qt5 import version errors.
+
 ```bash
 # Preview SDDM theme in test mode without logging out:
 ~/.dotfiles/sddm/test-theme.sh
 
-# Or directly with sddm-greeter-qt6 / qml6:
+# Or directly with sddm-greeter-qt6:
 sddm-greeter-qt6 --test-mode --theme ~/.dotfiles/sddm/themes/catppuccin-mocha
-qml6 ~/.dotfiles/sddm/themes/catppuccin-mocha/Main.qml
 
-# Install and activate theme systemwide in /usr/share/sddm/themes/:
+# Install, activate theme systemwide in /usr/share/sddm/themes/, and enable sddm.service:
 ~/.dotfiles/sddm/scripts/install-theme.sh
+
+# Or run the full unified system installer (which auto-installs SDDM and enables the service):
+./install.sh
 ```
+
+> [!NOTE]
+> Installing the theme automatically registers `/etc/sddm.conf.d/theme.conf` with `Current=catppuccin-mocha` and enables the systemd service via `sudo systemctl enable sddm.service`.
 
 ### ⚙️ Theme Customization (`sddm/themes/catppuccin-mocha/theme.conf`)
 Modify `~/.dotfiles/sddm/themes/catppuccin-mocha/theme.conf` to customize:
