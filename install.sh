@@ -472,8 +472,14 @@ if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/wallpaper_switcher.py" ]; then
     python3 "${DOTFILES_DIR}/.config/hypr/scripts/wallpaper_switcher.py" --init --silent 2>/dev/null || true
     log_success "Desktop wallpaper initialized."
 fi
+# 10. Implement Dotfiles Sync & User Config Isolation by Default
+log_info "Enforcing Dotfiles Sync & User Config Isolation (skip-worktree)..."
 if [ -f "${DOTFILES_DIR}/scripts/dotfiles-push.sh" ]; then
-    bash "${DOTFILES_DIR}/scripts/dotfiles-push.sh" --skip >/dev/null 2>&1 || true
+    mkdir -p "${HOME}/.local/bin"
+    ln -sf "${DOTFILES_DIR}/scripts/dotfiles-push.sh" "${HOME}/.local/bin/dotfiles-push"
+    ln -sf "${DOTFILES_DIR}/scripts/dotfiles-push.sh" "${HOME}/.local/bin/dotpush"
+    DOTFILES_DIR="${DOTFILES_DIR}" bash "${DOTFILES_DIR}/scripts/dotfiles-push.sh" --skip
+    log_success "User config isolation enforced: runtime theme and preferences protected from git tracking."
 fi
 
 # 10. System Enhancements: Fontconfig, ZRAM, Pacman Cache & Bluetooth
@@ -513,10 +519,19 @@ EOF' 2>/dev/null || true
     log_success "System enhancements configured."
 fi
 
-# 11. Personal Settings Verification
+# 12. Personal Configurations & Modular Extensions Initialization
+log_info "Initializing modular personal configuration environment..."
+mkdir -p "${HOME}/.local/bin"
+mkdir -p "${DOTFILES_DIR}/.config/hypr/user"
+mkdir -p "${DOTFILES_DIR}/.config/shell/user"
+mkdir -p "${DOTFILES_DIR}/.config/nvim/lua/custom"
+mkdir -p "${DOTFILES_DIR}/.config/nvim/lua/plugins"
+
 if [ -f "${DOTFILES_DIR}/scripts/dotfiles-personal.sh" ]; then
-    echo ""
-    log_info "Modular personal configuration environment initialized."
+    ln -sf "${DOTFILES_DIR}/scripts/dotfiles-personal.sh" "${HOME}/.local/bin/dotfiles-personal"
+    ln -sf "${DOTFILES_DIR}/scripts/dotfiles-personal.sh" "${HOME}/.local/bin/dotpersonal"
+    DOTFILES_DIR="${DOTFILES_DIR}" bash "${DOTFILES_DIR}/scripts/dotfiles-personal.sh" status >/dev/null 2>&1 || true
+    log_success "Personal modular extensions and CLI utility (dotpersonal) initialized."
 fi
 
 echo ""
@@ -538,7 +553,8 @@ echo -e "  • Notification Center: ${COLOR_BOLD}SUPER + N${COLOR_RESET} (or top
 echo -e "  • Git TUI Overlay:   ${COLOR_BOLD}SUPER + G${COLOR_RESET} (lazygit)"
 echo -e "  • File Picker Modal: ${COLOR_BOLD}SUPER + SHIFT + F${COLOR_RESET} (or ${COLOR_BOLD}SUPER + ALT + F${COLOR_RESET} for Image Grid)"
 echo -e "  • Notification Mako: ${COLOR_BOLD}makoctl reload${COLOR_RESET}"
-echo -e "  • Test SDDM Theme:   ${COLOR_BOLD}~/.dotfiles/sddm/test-theme.sh${COLOR_RESET}"
-echo -e "  • Push Dotfiles:     ${COLOR_BOLD}~/.dotfiles/scripts/dotfiles-push.sh${COLOR_RESET} (safely syncs & isolates local configs)"
-echo -e "  • Personal Configs:  ${COLOR_BOLD}~/.dotfiles/scripts/dotfiles-personal.sh${COLOR_RESET} (export, import, version control)"
+echo -e "  • Test SDDM Theme:   ${COLOR_BOLD}${DOTFILES_DIR}/sddm/scripts/test-theme.sh${COLOR_RESET}"
+echo -e "  • Push Dotfiles:     ${COLOR_BOLD}dotpush${COLOR_RESET} (or ${COLOR_BOLD}${DOTFILES_DIR}/scripts/dotfiles-push.sh${COLOR_RESET})"
+echo -e "  • Personal Configs:  ${COLOR_BOLD}dotpersonal${COLOR_RESET} (or ${COLOR_BOLD}${DOTFILES_DIR}/scripts/dotfiles-personal.sh${COLOR_RESET})"
+echo -e "  • Personal GUI:      ${COLOR_BOLD}dotpersonal gui${COLOR_RESET} (or App Menu: Personal Settings Manager)"
 

@@ -21,7 +21,8 @@
 
 set -e
 
-DOTFILES_DIR="${HOME}/.dotfiles"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 PERSONAL_REPO_DIR="${HOME}/.dotfiles-personal"
 
 # ANSI Colors

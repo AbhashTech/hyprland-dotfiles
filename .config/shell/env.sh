@@ -7,6 +7,7 @@ export STARSHIP_CONFIG="${HOME}/.config/starship.toml"
 export EDITOR="foot -e nano"
 export TERMINAL="foot"
 export VISUAL="${EDITOR}"
+export PATH="${HOME}/.local/bin:${PATH}"
 export PAGER="bat --style=plain"
 
 CACHE_DIR="${HOME}/.cache/shell"
