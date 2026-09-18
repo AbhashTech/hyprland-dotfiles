@@ -278,6 +278,41 @@ if [ -f "${DOTFILES_DIR}/.zshrc" ]; then
     log_success "Symlinked ~/.zshrc -> ${DOTFILES_DIR}/.zshrc"
 fi
 
+# Configure Starship prompt & modern shell environment as default in ~/.bashrc
+BASHRC="${HOME}/.bashrc"
+log_info "Configuring Starship prompt and modern shell environment as default in ~/.bashrc..."
+if [ -f "$BASHRC" ]; then
+    if ! grep -q "\.config/shell/env\.sh" "$BASHRC"; then
+        cat >> "$BASHRC" << 'EOF'
+
+# Load unified shell environment, Starship prompt, and productivity suite
+if [ -f "${HOME}/.config/shell/env.sh" ]; then
+    source "${HOME}/.config/shell/env.sh"
+fi
+if [ -f "${HOME}/.config/shell/aliases.sh" ]; then
+    source "${HOME}/.config/shell/aliases.sh"
+fi
+EOF
+        log_success "Starship prompt enabled as default in ~/.bashrc."
+    else
+        log_info "Starship shell loader already present in ~/.bashrc."
+    fi
+else
+    cat > "$BASHRC" << 'EOF'
+# ~/.bashrc
+[[ $- != *i* ]] && return
+
+# Load unified shell environment, Starship prompt, and productivity suite
+if [ -f "${HOME}/.config/shell/env.sh" ]; then
+    source "${HOME}/.config/shell/env.sh"
+fi
+if [ -f "${HOME}/.config/shell/aliases.sh" ]; then
+    source "${HOME}/.config/shell/aliases.sh"
+fi
+EOF
+    log_success "Created ~/.bashrc with Starship prompt enabled by default."
+fi
+
 # 3. Ensure Permissions
 log_info "Configuring executable permissions for all custom scripts..."
 find "${DOTFILES_DIR}/.config" -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod +x {} + 2>/dev/null || true

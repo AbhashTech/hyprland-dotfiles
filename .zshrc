@@ -39,10 +39,18 @@ autoload -Uz add-zsh-hook
 add-zsh-hook precmd set_win_title
 
 # --- Modular Shell Suite (Environment, Starship, Atuin, Zoxide, Direnv, Mise) ---
-[[ -f "${HOME}/.dotfiles/.config/shell/env.sh" ]] && source "${HOME}/.dotfiles/.config/shell/env.sh"
+if [[ -f "${HOME}/.config/shell/env.sh" ]]; then
+    source "${HOME}/.config/shell/env.sh"
+elif [[ -f "${HOME}/.dotfiles/.config/shell/env.sh" ]]; then
+    source "${HOME}/.dotfiles/.config/shell/env.sh"
+fi
 
 # --- Shell Productivity Aliases ---
-[[ -f "${HOME}/.dotfiles/.config/shell/aliases.sh" ]] && source "${HOME}/.dotfiles/.config/shell/aliases.sh"
+if [[ -f "${HOME}/.config/shell/aliases.sh" ]]; then
+    source "${HOME}/.config/shell/aliases.sh"
+elif [[ -f "${HOME}/.dotfiles/.config/shell/aliases.sh" ]]; then
+    source "${HOME}/.dotfiles/.config/shell/aliases.sh"
+fi
 
 # --- Preferred Editor ---
 export EDITOR="nvim"

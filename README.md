@@ -170,16 +170,19 @@ chmod +x ~/.dotfiles/install.sh
 
 The installer will:
 - Install all official Arch Linux packages via `pacman`.
-- Symlink all `~/.dotfiles/.config/*` into `~/.config/` (safely backing up existing folders).
+- Symlink all `.config/*` directories and standalone configs into `~/.config/` (safely backing up existing folders).
 - Deploy unified default MIME associations (`mimeapps.list`).
-- Hide internal, technical, and background helper apps from application launchers.
-- Set executable permissions on all Python and Shell scripts.
-- Initialize tealdeer cheatsheets, directories (`~/Pictures/Screenshots`, `~/Videos/Recordings`), and `i2c-dev`.
-- Auto-install SDDM, deploy and activate the Catppuccin Mocha Qt6 SDDM theme, and automatically enable `sddm.service` (`sudo systemctl enable sddm.service`).
+- Deploy base desktop wallpapers to `~/Wallpaper` and initialize wallpaper configuration.
+- **Enable Starship Prompt by Default**: Automatically configures the Starship prompt and modern shell environment in both `~/.bashrc` and `~/.zshrc`.
+- **Enforce Dotfiles Sync & User Config Isolation by Default**: Protects dynamic theme and local runtime preferences via Git's `skip-worktree` and installs the `dotpush` CLI tool into `~/.local/bin/`.
+- **Initialize Personal Configurations & Modular Extensions**: Scaffolds modular personal configuration extension points (`~/.config/hypr/user/`, `~/.config/shell/user/`, `~/.config/nvim/lua/custom/`, `~/.zshenv`) and installs the `dotpersonal` CLI tool into `~/.local/bin/`.
+- Deploy desktop application menu shortcuts from `hypr/scripts/` into `~/.local/share/applications/`.
+- Enable essential user and system services (`gnome-keyring-daemon`, `hyprpolkitagent`, `pipewire`, `wireplumber`, `mpris-proxy`, `udisks2`, `upower`, `thermald`, `bluetooth`, `systemd-timesyncd`, `fstrim.timer`).
+- Auto-install SDDM, deploy and activate the Catppuccin Mocha Qt6 SDDM theme, and automatically enable `sddm.service`.
 
 ### Shell Integration
 
-Add the following lines to your `~/.bashrc` or `~/.zshrc`:
+Starship and the modern shell suite are enabled by default during installation. To manually load or reload the environment in any shell:
 ```bash
 source ~/.config/shell/env.sh
 source ~/.config/shell/aliases.sh
@@ -789,22 +792,22 @@ Hyprland's screen locker is styled with the exact same left-sidebar aesthetic:
 
 When developing on or tweaking your dotfiles, local personal preferences (such as dynamic active desktop theme colors, custom idle timeouts, active wallpaper assignments, or keyboard layouts) are automatically protected using Git's **`skip-worktree`** mechanism. This ensures that personal machine runtime state never dirties `git status` or conflicts with git pulls.
 
-### 🚀 Using `scripts/dotfiles-push.sh`
+### 🚀 Using `dotpush` (`scripts/dotfiles-push.sh`)
 
-A dedicated helper script is provided at `~/.dotfiles/scripts/dotfiles-push.sh`:
+A dedicated helper script is provided via the `dotpush` CLI command (or `scripts/dotfiles-push.sh`):
 
 ```bash
 # Push dotfiles changes to remote (automatically syncs theme and enforces skip-worktree)
-~/.dotfiles/scripts/dotfiles-push.sh
+dotpush
 
 # Check the skip-worktree protection status of all user configuration files
-~/.dotfiles/scripts/dotfiles-push.sh --status
+dotpush --status
 
 # Explicitly isolate all user configuration files (clean working tree)
-~/.dotfiles/scripts/dotfiles-push.sh --skip
+dotpush --skip
 
 # Temporarily un-skip files if you intend to commit a core template change
-~/.dotfiles/scripts/dotfiles-push.sh --unskip
+dotpush --unskip
 ```
 
 ### 🛡️ Protected User Configuration Files
@@ -821,7 +824,7 @@ All personal files in these directories are automatically ignored by Git.
 
 ### 📂 Self-Descriptive Personal File Structure
 
-#### 1. 🖥️ Hyprland (`~/.dotfiles/.config/hypr/user/`)
+#### 1. 🖥️ Hyprland (`~/.config/hypr/user/`)
 Split into dedicated files for each component:
 - `monitors.lua`: Custom multi-display resolutions, refresh rates, and positioning (e.g. `hyprland.monitor(...)`). Automatically written by the Screen Resolution & Display Scaling Manager (`Super+Shift+D` / `resolution_menu.py`).
 - `input.lua`: Keyboard layouts, variants, options, mouse sensitivity, and touchpad natural scroll. Automatically written by the Keyboard Layout & Variant Manager (`Super+Shift+K` / `keyboard_layout.py`).
@@ -831,14 +834,14 @@ Split into dedicated files for each component:
 - `env.lua`: Personal compositor environment variables.
 - `workspaces.lua`: Custom workspace monitors and behavior.
 
-#### 2. 🐚 Shell (`~/.dotfiles/.config/shell/user/` & `~/.zshenv`)
+#### 2. 🐚 Shell (`~/.config/shell/user/` & `~/.zshenv`)
 - `~/.zshenv`: Machine-wide environment variables loaded by all Zsh shells and tools (outside git).
 - `~/.config/shell/user/env.sh` / `paths.sh`: Personal PATH additions (e.g. `$GOPATH/bin`, Cargo).
 - `~/.config/shell/user/aliases.sh`: Custom command aliases.
 - `~/.config/shell/user/functions.sh`: Custom shell helper functions.
 - `~/.config/shell/user/tokens.sh`: Private API tokens and credentials.
 
-#### 3. 📝 Neovim (`~/.dotfiles/.config/nvim/lua/plugins/`)
+#### 3. 📝 Neovim (`~/.config/nvim/lua/plugins/` & `~/.config/nvim/lua/custom/`)
 - `personal_go.lua`: Golang development suite (`go.nvim`, `nvim-dap-go`, Delve debugger).
 - `personal_web.lua`: React, Next.js, and TypeScript JSX/TSX helpers (`nvim-ts-autotag`).
 - `personal_terminal.lua`: ToggleTerm suite (`<leader>tt` floating terminal, splits, and floating Lazygit).
@@ -849,7 +852,7 @@ Split into dedicated files for each component:
 
 ### 🛠️ Personal Settings Management Utility (`scripts/dotfiles-personal.sh` & GUI)
 
-A dedicated utility is provided as both an interactive GTK3 graphical app and CLI at `~/.dotfiles/scripts/dotfiles-personal.sh` (or alias `dotpersonal`):
+A dedicated utility is provided as both an interactive GTK3 graphical app and CLI via `dotpersonal` (or `scripts/dotfiles-personal.sh`):
 
 ```bash
 # 1. Launch the interactive GTK3 Personal Settings Manager (also in App Launcher)
