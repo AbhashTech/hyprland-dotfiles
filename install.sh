@@ -291,10 +291,19 @@ mkdir -p "${HOME}/.cache/qs_filepicker/thumbnails"
 mkdir -p "${HOME}/.cache/quickshell/window_previews"
 mkdir -p "${HOME}/Pictures/Screenshots"
 mkdir -p "${HOME}/Videos/Recordings"
+mkdir -p "${HOME}/Wallpaper"
+mkdir -p "${HOME}/Pictures/Wallpapers"
 mkdir -p "${HOME}/.local/share/tessdata"
 mkdir -p "${HOME}/.local/share/xdg-desktop-portal/portals"
 mkdir -p "${HOME}/.local/share/dbus-1/services"
 mkdir -p "${DOTFILES_DIR}/.config/quickshell/custom_plugins"
+
+# Deploy base wallpapers to ~/Wallpaper
+if [ -d "${DOTFILES_DIR}/wallpaper" ]; then
+    log_info "Deploying base wallpapers from ${DOTFILES_DIR}/wallpaper to ${HOME}/Wallpaper..."
+    cp -rn "${DOTFILES_DIR}/wallpaper/"* "${HOME}/Wallpaper/" 2>/dev/null || true
+    log_success "Base wallpapers deployed to ${HOME}/Wallpaper."
+fi
 
 # Register Quickshell FileChooser portal backend and D-Bus auto-activation service
 if [ -f "${DOTFILES_DIR}/.config/quickshell/plugins/filepicker/quickshell.portal" ]; then
@@ -582,11 +591,15 @@ if command -v update-desktop-database >/dev/null 2>&1; then
 fi
 log_success "Application menus and icons deployed."
 
-# 9. Initialize Theme & Color Variables
+# 9. Initialize Theme, Wallpaper & Color Variables
 log_info "Initializing desktop theme and dynamic color variables..."
 if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" ]; then
     python3 "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" --set catppuccin-mocha --silent 2>/dev/null || true
     log_success "Catppuccin Mocha theme variables initialized."
+fi
+if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/wallpaper_switcher.py" ]; then
+    python3 "${DOTFILES_DIR}/.config/hypr/scripts/wallpaper_switcher.py" --init --silent 2>/dev/null || true
+    log_success "Desktop wallpaper initialized."
 fi
 if [ -f "${DOTFILES_DIR}/scripts/dotfiles-push.sh" ]; then
     bash "${DOTFILES_DIR}/scripts/dotfiles-push.sh" --skip >/dev/null 2>&1 || true
