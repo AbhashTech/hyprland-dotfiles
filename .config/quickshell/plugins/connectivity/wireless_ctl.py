@@ -10,6 +10,8 @@ import re
 import json
 import subprocess
 import shutil
+import time
+import signal
 
 ANSI_ESCAPE = re.compile(r'\x1b\[[0-9;]*[a-zA-Z]')
 
@@ -261,10 +263,26 @@ def wifi_scan() -> bool:
     except Exception:
         return False
 
+BT_SCAN_PID_FILE = "/tmp/quickshell_bt_scan.pid"
+BT_CACHE_FILE = "/tmp/quickshell_bt_discovered.json"
+
+def get_dbus_adapter():
+    try:
+        import dbus
+        bus = dbus.SystemBus()
+        manager = dbus.Interface(bus.get_object('org.bluez', '/'), 'org.freedesktop.DBus.ObjectManager')
+        objects = manager.GetManagedObjects()
+        for path, ifaces in objects.items():
+            if 'org.bluez.Adapter1' in ifaces:
+                return bus, path, ifaces['org.bluez.Adapter1'], objects
+        return bus, None, None, objects
+    except Exception:
+        return None, None, None, {}
+
 def get_bt_icon(device_class: str, icon_str: str) -> str:
     i = icon_str.lower()
-    c = device_class.lower()
-    if 'headset' in i or 'headphone' in i or 'audio' in i or 'headset' in c:
+    c = str(device_class).lower()
+    if any(k in i or k in c for k in ['headset', 'headphone', 'audio', 'earbud']):
         return 'audio-headset'
     if 'mouse' in i or 'mouse' in c:
         return 'input-mouse'
@@ -272,92 +290,151 @@ def get_bt_icon(device_class: str, icon_str: str) -> str:
         return 'input-keyboard'
     if 'phone' in i or 'phone' in c:
         return 'phone'
+    if 'computer' in i or 'laptop' in i or 'desktop' in c:
+        return 'computer'
     return 'bluetooth'
 
 def get_bt_status() -> dict:
-    show_out = run_cmd(['bluetoothctl', 'show'])
-    powered = 'Powered: yes' in show_out
-    discovering = 'Discovering: yes' in show_out
+    bus, adapter_path, adapter, objects = get_dbus_adapter()
+    if not bus or not adapter_path:
+        # Fallback if DBus query fails
+        show_out = run_cmd(['bluetoothctl', 'show'])
+        powered = 'Powered: yes' in show_out
+        discovering = 'Discovering: yes' in show_out
+        discoverable = 'Discoverable: yes' in show_out
+        return {
+            "powered": powered,
+            "discovering": discovering,
+            "discoverable": discoverable,
+            "pairable": True,
+            "adapter_name": "abhashtech",
+            "adapter_mac": "",
+            "connected_count": 0,
+            "devices": [],
+            "discovered": []
+        }
 
-    result = {
-        "powered": powered,
-        "discovering": discovering,
-        "connected_count": 0,
-        "devices": [],
-        "discovered": []
-    }
+    powered = bool(adapter.get('Powered', False))
+    discovering = bool(adapter.get('Discovering', False))
+    discoverable = bool(adapter.get('Discoverable', False))
+    pairable = bool(adapter.get('Pairable', False))
+    adapter_name = str(adapter.get('Alias', adapter.get('Name', 'abhashtech')))
+    adapter_mac = str(adapter.get('Address', ''))
 
-    # Fetch paired devices
-    paired_out = run_cmd(['bluetoothctl', 'devices', 'Paired'])
-    if not paired_out:
-        paired_out = run_cmd(['bluetoothctl', 'devices'])
+    if powered and not pairable:
+        try:
+            import dbus
+            props = dbus.Interface(bus.get_object('org.bluez', adapter_path), 'org.freedesktop.DBus.Properties')
+            props.Set('org.bluez.Adapter1', 'Pairable', dbus.Boolean(True))
+            pairable = True
+        except Exception:
+            pass
 
-    conn_out = run_cmd(['bluetoothctl', 'devices', 'Connected'])
-    conn_macs = set()
-    for l in conn_out.splitlines():
-        p = l.split()
-        if len(p) >= 2 and p[0] == 'Device':
-            conn_macs.add(p[1])
+    # Check if detached scan daemon is running to verify discovering flag
+    if not discovering and os.path.exists(BT_SCAN_PID_FILE):
+        try:
+            with open(BT_SCAN_PID_FILE) as f:
+                pid = int(f.read().strip())
+            os.kill(pid, 0)
+            discovering = True
+        except Exception:
+            if os.path.exists(BT_SCAN_PID_FILE):
+                try:
+                    os.remove(BT_SCAN_PID_FILE)
+                except Exception:
+                    pass
 
-    paired_macs = set()
-    for l in paired_out.splitlines():
-        p = l.split()
-        if len(p) >= 3 and p[0] == 'Device':
-            mac = p[1]
-            name = ' '.join(p[2:])
-            paired_macs.add(mac)
-            is_conn = mac in conn_macs
+    paired_devices = []
+    discovered_devices = []
+    connected_count = 0
 
-            # Get detail info
-            d_info = run_cmd(['bluetoothctl', 'info', mac])
-            icon_type = 'bluetooth'
+    for path, ifaces in objects.items():
+        if 'org.bluez.Device1' in ifaces:
+            d = ifaces['org.bluez.Device1']
+            mac = str(d.get('Address', ''))
+            name = str(d.get('Name', ''))
+            alias = str(d.get('Alias', ''))
+            display_name = name or alias
+            if not display_name or display_name.replace('-', ':').replace('_', ':').upper() == mac.upper():
+                display_name = f"Device ({mac[-8:]})"
+
+            is_paired = bool(d.get('Paired', False))
+            is_conn = bool(d.get('Connected', False))
+            rssi = int(d.get('RSSI', 0))
+            icon_raw = str(d.get('Icon', ''))
+            class_num = str(d.get('Class', ''))
+            icon_type = get_bt_icon(class_num, icon_raw)
+
             battery = -1
-            for dl in d_info.splitlines():
-                if 'Icon:' in dl:
-                    icon_type = get_bt_icon('', dl.split('Icon:')[-1].strip())
-                elif 'Connected: yes' in dl:
-                    is_conn = True
-                elif 'Battery Percentage:' in dl:
-                    try:
-                        m = re.search(r'\((\d+)\)', dl)
-                        if m:
-                            battery = int(m.group(1))
-                    except Exception:
-                        pass
+            if 'org.bluez.Battery1' in ifaces:
+                try:
+                    battery = int(ifaces['org.bluez.Battery1'].get('Percentage', -1))
+                except Exception:
+                    pass
 
-            if is_conn:
-                result['connected_count'] += 1
-
-            result['devices'].append({
+            dev_info = {
                 'mac': mac,
-                'name': name,
+                'name': display_name,
                 'icon': icon_type,
                 'connected': is_conn,
-                'paired': True,
-                'battery': battery
-            })
+                'paired': is_paired,
+                'battery': battery,
+                'rssi': rssi
+            }
 
-    # Sort devices: connected first, then alphabetical
-    result['devices'].sort(key=lambda d: (d['connected'], d['name'].lower()), reverse=True)
+            if is_paired:
+                if is_conn:
+                    connected_count += 1
+                paired_devices.append(dev_info)
+            else:
+                discovered_devices.append(dev_info)
 
-    # If discovering, look for unpaired devices
-    if discovering:
-        all_devs = run_cmd(['bluetoothctl', 'devices'])
-        for l in all_devs.splitlines():
-            p = l.split()
-            if len(p) >= 3 and p[0] == 'Device':
-                mac = p[1]
-                name = ' '.join(p[2:])
-                if mac not in paired_macs and not name.replace('-', ':').replace('_', ':') == mac:
-                    result['discovered'].append({
-                        'mac': mac,
-                        'name': name,
-                        'icon': 'bluetooth'
-                    })
+    paired_devices.sort(key=lambda d: (d['connected'], d['name'].lower()), reverse=True)
+    discovered_devices.sort(key=lambda d: (d.get('rssi', -999) if d.get('rssi', 0) != 0 else -100), reverse=True)
 
-    return result
+    # Persist or read cache for discovered devices so list doesn't immediately clear when scan stops
+    if discovered_devices:
+        try:
+            with open(BT_CACHE_FILE, 'w') as f:
+                json.dump({'timestamp': time.time(), 'devices': discovered_devices}, f)
+        except Exception:
+            pass
+    elif not discovering and os.path.exists(BT_CACHE_FILE):
+        try:
+            with open(BT_CACHE_FILE) as f:
+                cached = json.load(f)
+                if time.time() - cached.get('timestamp', 0) < 300:
+                    discovered_devices = cached.get('devices', [])
+        except Exception:
+            pass
+
+    return {
+        "powered": powered,
+        "discovering": discovering,
+        "discoverable": discoverable,
+        "pairable": pairable,
+        "adapter_name": adapter_name,
+        "adapter_mac": adapter_mac,
+        "connected_count": connected_count,
+        "devices": paired_devices,
+        "discovered": discovered_devices
+    }
 
 def bt_toggle() -> bool:
+    bus, adapter_path, adapter, _ = get_dbus_adapter()
+    if bus and adapter_path:
+        try:
+            import dbus
+            props = dbus.Interface(bus.get_object('org.bluez', adapter_path), 'org.freedesktop.DBus.Properties')
+            cur = bool(adapter.get('Powered', False))
+            if not cur:
+                run_cmd(['rfkill', 'unblock', 'bluetooth'])
+            props.Set('org.bluez.Adapter1', 'Powered', dbus.Boolean(not cur))
+            return True
+        except Exception:
+            pass
+
+    # Subprocess fallback
     show_out = run_cmd(['bluetoothctl', 'show'])
     powered = 'Powered: yes' in show_out
     if powered:
@@ -367,14 +444,186 @@ def bt_toggle() -> bool:
         run_cmd(['bluetoothctl', 'power', 'on'])
     return True
 
-def bt_scan_toggle() -> bool:
-    show_out = run_cmd(['bluetoothctl', 'show'])
-    discovering = 'Discovering: yes' in show_out
-    if discovering:
-        run_cmd(['bluetoothctl', 'scan', 'off'])
-    else:
-        run_cmd(['bluetoothctl', 'scan', 'on'])
+def bt_scan_daemon(duration: int = 30):
+    """Background daemon that holds BlueZ discovery active for `duration` seconds."""
+    try:
+        import dbus
+        bus = dbus.SystemBus()
+        manager = dbus.Interface(bus.get_object('org.bluez', '/'), 'org.freedesktop.DBus.ObjectManager')
+        objects = manager.GetManagedObjects()
+        adapter_path = None
+        for path, ifaces in objects.items():
+            if 'org.bluez.Adapter1' in ifaces:
+                adapter_path = path
+                break
+        if not adapter_path:
+            sys.exit(1)
+
+        adapter = dbus.Interface(bus.get_object('org.bluez', adapter_path), 'org.bluez.Adapter1')
+
+        def cleanup(signum, frame):
+            try:
+                adapter.StopDiscovery()
+            except Exception:
+                pass
+            if os.path.exists(BT_SCAN_PID_FILE):
+                try:
+                    os.remove(BT_SCAN_PID_FILE)
+                except Exception:
+                    pass
+            sys.exit(0)
+
+        signal.signal(signal.SIGTERM, cleanup)
+        signal.signal(signal.SIGINT, cleanup)
+
+        with open(BT_SCAN_PID_FILE, 'w') as f:
+            f.write(str(os.getpid()))
+
+        try:
+            adapter.StartDiscovery()
+        except Exception as e:
+            if 'Already' not in str(e):
+                if os.path.exists(BT_SCAN_PID_FILE):
+                    try:
+                        os.remove(BT_SCAN_PID_FILE)
+                    except Exception:
+                        pass
+                sys.exit(1)
+
+        for _ in range(duration * 10):
+            time.sleep(0.1)
+
+        try:
+            adapter.StopDiscovery()
+        except Exception:
+            pass
+        if os.path.exists(BT_SCAN_PID_FILE):
+            try:
+                os.remove(BT_SCAN_PID_FILE)
+            except Exception:
+                pass
+    except Exception:
+        if os.path.exists(BT_SCAN_PID_FILE):
+            try:
+                os.remove(BT_SCAN_PID_FILE)
+            except Exception:
+                pass
+        sys.exit(1)
+
+def bt_scan_start(duration: int = 30) -> bool:
+    bt_scan_stop()
+    if os.path.exists(BT_CACHE_FILE):
+        try:
+            os.remove(BT_CACHE_FILE)
+        except Exception:
+            pass
+
+    script_path = os.path.abspath(__file__)
+    subprocess.Popen(
+        [sys.executable, script_path, 'bt-scan-daemon', str(duration)],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+        close_fds=True
+    )
+    time.sleep(0.2)
     return True
+
+def bt_scan_stop() -> bool:
+    if os.path.exists(BT_SCAN_PID_FILE):
+        try:
+            with open(BT_SCAN_PID_FILE) as f:
+                pid = int(f.read().strip())
+            os.kill(pid, signal.SIGTERM)
+            time.sleep(0.1)
+        except Exception:
+            pass
+        try:
+            os.remove(BT_SCAN_PID_FILE)
+        except Exception:
+            pass
+
+    try:
+        import dbus
+        bus = dbus.SystemBus()
+        manager = dbus.Interface(bus.get_object('org.bluez', '/'), 'org.freedesktop.DBus.ObjectManager')
+        for path, ifaces in manager.GetManagedObjects().items():
+            if 'org.bluez.Adapter1' in ifaces:
+                adapter = dbus.Interface(bus.get_object('org.bluez', path), 'org.bluez.Adapter1')
+                adapter.StopDiscovery()
+                break
+    except Exception:
+        pass
+    return True
+
+def bt_scan_toggle() -> bool:
+    is_scanning = False
+    if os.path.exists(BT_SCAN_PID_FILE):
+        try:
+            with open(BT_SCAN_PID_FILE) as f:
+                pid = int(f.read().strip())
+            os.kill(pid, 0)
+            is_scanning = True
+        except Exception:
+            if os.path.exists(BT_SCAN_PID_FILE):
+                try:
+                    os.remove(BT_SCAN_PID_FILE)
+                except Exception:
+                    pass
+
+    if not is_scanning:
+        try:
+            import dbus
+            bus = dbus.SystemBus()
+            manager = dbus.Interface(bus.get_object('org.bluez', '/'), 'org.freedesktop.DBus.ObjectManager')
+            for path, ifaces in manager.GetManagedObjects().items():
+                if 'org.bluez.Adapter1' in ifaces:
+                    is_scanning = bool(ifaces['org.bluez.Adapter1'].get('Discovering', False))
+                    break
+        except Exception:
+            pass
+
+    if is_scanning:
+        return bt_scan_stop()
+    else:
+        return bt_scan_start(duration=30)
+
+def bt_discoverable_toggle() -> bool:
+    try:
+        import dbus
+        bus = dbus.SystemBus()
+        manager = dbus.Interface(bus.get_object('org.bluez', '/'), 'org.freedesktop.DBus.ObjectManager')
+        for path, ifaces in manager.GetManagedObjects().items():
+            if 'org.bluez.Adapter1' in ifaces:
+                props = dbus.Interface(bus.get_object('org.bluez', path), 'org.freedesktop.DBus.Properties')
+                cur = bool(props.Get('org.bluez.Adapter1', 'Discoverable'))
+                new_val = not cur
+                props.Set('org.bluez.Adapter1', 'Discoverable', dbus.Boolean(new_val))
+                props.Set('org.bluez.Adapter1', 'Pairable', dbus.Boolean(True))
+                if new_val:
+                    props.Set('org.bluez.Adapter1', 'DiscoverableTimeout', dbus.UInt32(180))
+                return new_val
+    except Exception:
+        pass
+    return False
+
+def bt_discoverable_set(val: bool) -> bool:
+    try:
+        import dbus
+        bus = dbus.SystemBus()
+        manager = dbus.Interface(bus.get_object('org.bluez', '/'), 'org.freedesktop.DBus.ObjectManager')
+        for path, ifaces in manager.GetManagedObjects().items():
+            if 'org.bluez.Adapter1' in ifaces:
+                props = dbus.Interface(bus.get_object('org.bluez', path), 'org.freedesktop.DBus.Properties')
+                props.Set('org.bluez.Adapter1', 'Discoverable', dbus.Boolean(val))
+                props.Set('org.bluez.Adapter1', 'Pairable', dbus.Boolean(True))
+                if val:
+                    props.Set('org.bluez.Adapter1', 'DiscoverableTimeout', dbus.UInt32(180))
+                return True
+    except Exception:
+        pass
+    return False
 
 def bt_connect(mac: str) -> bool:
     out = run_cmd(['bluetoothctl', 'connect', mac], timeout=8)
@@ -384,11 +633,27 @@ def bt_disconnect(mac: str) -> bool:
     out = run_cmd(['bluetoothctl', 'disconnect', mac], timeout=5)
     return "Successful disconnected" in out
 
-def bt_pair(mac: str) -> bool:
-    run_cmd(['bluetoothctl', 'pair', mac], timeout=10)
-    run_cmd(['bluetoothctl', 'trust', mac], timeout=5)
-    run_cmd(['bluetoothctl', 'connect', mac], timeout=8)
-    return True
+def bt_pair(mac: str) -> dict:
+    if not mac:
+        return {"success": False, "error": "No MAC address provided"}
+    mac = mac.strip().upper()
+    try:
+        pair_out = run_cmd(['bluetoothctl', 'pair', mac], timeout=15)
+        trust_out = run_cmd(['bluetoothctl', 'trust', mac], timeout=5)
+        conn_out = run_cmd(['bluetoothctl', 'connect', mac], timeout=10)
+        ok = "successful" in pair_out.lower() or "already paired" in pair_out.lower() or "connection successful" in conn_out.lower()
+        if os.path.exists(BT_CACHE_FILE):
+            try:
+                with open(BT_CACHE_FILE) as f:
+                    c = json.load(f)
+                c['devices'] = [d for d in c.get('devices', []) if d.get('mac', '').upper() != mac]
+                with open(BT_CACHE_FILE, 'w') as f:
+                    json.dump(c, f)
+            except Exception:
+                pass
+        return {"success": ok, "output": f"{pair_out} {conn_out}".strip()}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 def bt_remove(mac: str) -> bool:
     out = run_cmd(['bluetoothctl', 'remove', mac], timeout=5)
@@ -430,6 +695,25 @@ def main():
     elif action == 'bt-scan-toggle':
         ok = bt_scan_toggle()
         print(json.dumps({"success": ok}))
+    elif action == 'bt-scan-start':
+        duration = int(sys.argv[2]) if len(sys.argv) > 2 else 30
+        ok = bt_scan_start(duration)
+        print(json.dumps({"success": ok}))
+    elif action == 'bt-scan-stop':
+        ok = bt_scan_stop()
+        print(json.dumps({"success": ok}))
+    elif action == 'bt-scan-daemon':
+        duration = int(sys.argv[2]) if len(sys.argv) > 2 else 30
+        bt_scan_daemon(duration)
+    elif action == 'bt-discoverable-toggle':
+        val = bt_discoverable_toggle()
+        print(json.dumps({"success": True, "discoverable": val}))
+    elif action == 'bt-discoverable-on':
+        ok = bt_discoverable_set(True)
+        print(json.dumps({"success": ok, "discoverable": True}))
+    elif action == 'bt-discoverable-off':
+        ok = bt_discoverable_set(False)
+        print(json.dumps({"success": ok, "discoverable": False}))
     elif action == 'bt-connect':
         mac = sys.argv[2] if len(sys.argv) > 2 else ""
         ok = bt_connect(mac)
@@ -440,8 +724,8 @@ def main():
         print(json.dumps({"success": ok}))
     elif action == 'bt-pair':
         mac = sys.argv[2] if len(sys.argv) > 2 else ""
-        ok = bt_pair(mac)
-        print(json.dumps({"success": ok}))
+        res = bt_pair(mac)
+        print(json.dumps(res))
     elif action == 'bt-remove':
         mac = sys.argv[2] if len(sys.argv) > 2 else ""
         ok = bt_remove(mac)

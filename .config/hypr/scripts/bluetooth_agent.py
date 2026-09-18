@@ -59,6 +59,7 @@ class BluetoothAgent(dbus.service.Object):
                     "-i", "bluetooth",
                     "-u", "critical",
                     "-t", str(timeout * 1000),
+                    "--action=default=Allow",
                     "--action=allow=Allow",
                     "--action=deny=Deny",
                     title,
@@ -68,7 +69,8 @@ class BluetoothAgent(dbus.service.Object):
                 text=True,
                 timeout=timeout
             )
-            return res.stdout.strip() == "allow"
+            out = res.stdout.strip().lower()
+            return out in ("default", "allow", "0")
         except Exception:
             return False
 
@@ -79,6 +81,14 @@ class BluetoothAgent(dbus.service.Object):
             return bool(props.Get("org.bluez.Device1", "Trusted"))
         except Exception:
             return False
+
+    def _set_device_trusted(self, device_path, trusted=True):
+        try:
+            dev_obj = self.bus.get_object("org.bluez", device_path)
+            props = dbus.Interface(dev_obj, "org.freedesktop.DBus.Properties")
+            props.Set("org.bluez.Device1", "Trusted", dbus.Boolean(trusted))
+        except Exception:
+            pass
 
     @dbus.service.method("org.bluez.Agent1", in_signature="", out_signature="")
     def Release(self):
@@ -99,18 +109,21 @@ class BluetoothAgent(dbus.service.Object):
         )
         if not allowed:
             raise dbus.exceptions.DBusException("Service authorization rejected", name="org.bluez.Error.Rejected")
+        self._set_device_trusted(device, True)
 
     @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="s")
     def RequestPinCode(self, device):
         dev_name = self._get_device_name(device)
-        self._notify("󰂯 Bluetooth Pairing Blocked", f"Untrusted device '{dev_name}' requested legacy PIN. Auto-pairing rejected for security.", urgency="critical")
-        raise dbus.exceptions.DBusException("Automatic PIN pairing is disabled for security", name="org.bluez.Error.Rejected")
+        self._notify("󰂯 Bluetooth Pairing", f"Device '{dev_name}' requested PIN. Providing default PIN '0000'.", timeout=10000)
+        self._set_device_trusted(device, True)
+        return "0000"
 
     @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="u")
     def RequestPasskey(self, device):
         dev_name = self._get_device_name(device)
-        self._notify("󰂯 Bluetooth Pairing Blocked", f"Untrusted device '{dev_name}' requested legacy Passkey. Auto-pairing rejected for security.", urgency="critical")
-        raise dbus.exceptions.DBusException("Automatic passkey pairing is disabled for security", name="org.bluez.Error.Rejected")
+        self._notify("󰂯 Bluetooth Pairing", f"Device '{dev_name}' requested passkey. Providing default passkey '000000'.", timeout=10000)
+        self._set_device_trusted(device, True)
+        return dbus.UInt32(0)
 
     @dbus.service.method("org.bluez.Agent1", in_signature="ouq", out_signature="")
     def DisplayPasskey(self, device, passkey, entered):
@@ -143,6 +156,7 @@ class BluetoothAgent(dbus.service.Object):
         )
         if not allowed:
             raise dbus.exceptions.DBusException("Pairing rejected by user", name="org.bluez.Error.Rejected")
+        self._set_device_trusted(device, True)
 
     @dbus.service.method("org.bluez.Agent1", in_signature="o", out_signature="")
     def RequestAuthorization(self, device):
@@ -155,6 +169,7 @@ class BluetoothAgent(dbus.service.Object):
         )
         if not allowed:
             raise dbus.exceptions.DBusException("Authorization rejected by user", name="org.bluez.Error.Rejected")
+        self._set_device_trusted(device, True)
 
     @dbus.service.method("org.bluez.Agent1", in_signature="", out_signature="")
     def Cancel(self):

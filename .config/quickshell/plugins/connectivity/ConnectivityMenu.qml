@@ -37,9 +37,15 @@ Rectangle {
     // Bluetooth State
     property bool btPowered: false
     property bool btDiscovering: false
+    property bool btDiscoverable: false
+    property string btAdapterName: "abhashtech"
+    property string btAdapterMac: ""
     property int btConnectedCount: 0
     property var btDevices: []
     property var btDiscovered: []
+    property bool showManualPair: false
+    property string manualPairAddress: ""
+    property string pairingStatusText: ""
 
     // Refresh timers & functions
     function refreshWifi() {
@@ -88,6 +94,11 @@ Rectangle {
         scanDelayTimer.restart();
     }
 
+    function toggleBtDiscoverable() {
+        ctlProc.exec(["python3", root.scriptPath, "bt-discoverable-toggle"]);
+        scanDelayTimer.restart();
+    }
+
     function toggleBtScan() {
         ctlProc.exec(["python3", root.scriptPath, "bt-scan-toggle"]);
         scanDelayTimer.restart();
@@ -104,6 +115,8 @@ Rectangle {
     }
 
     function pairBt(mac) {
+        if (!mac) return;
+        root.pairingStatusText = "Pairing with " + mac + "...";
         ctlProc.exec(["python3", root.scriptPath, "bt-pair", mac]);
         scanDelayTimer.restart();
     }
@@ -185,6 +198,9 @@ Rectangle {
                     var obj = JSON.parse(data);
                     root.btPowered = obj.powered;
                     root.btDiscovering = obj.discovering;
+                    root.btDiscoverable = obj.discoverable;
+                    root.btAdapterName = obj.adapter_name || "abhashtech";
+                    root.btAdapterMac = obj.adapter_mac || "";
                     root.btConnectedCount = obj.connected_count || 0;
                     root.btDevices = obj.devices || [];
                     root.btDiscovered = obj.discovered || [];
@@ -216,8 +232,14 @@ Rectangle {
         }
         function onConnectivityTabChanged() {
             root.activeTab = PluginManager.connectivityTab;
-            if (root.activeTab === "wifi") root.refreshWifi();
-            else root.refreshBluetooth();
+            if (root.activeTab === "wifi") {
+                root.refreshWifi();
+            } else {
+                root.refreshBluetooth();
+                if (root.btPowered && !root.btDiscovering) {
+                    root.toggleBtScan();
+                }
+            }
         }
     }
 
@@ -1040,14 +1062,14 @@ Rectangle {
             visible: root.activeTab === "bluetooth"
             spacing: 10
 
-            // Subheader: Power Switch & Discovery Scan Button
+            // Subheader: Power Switch, Discoverable Pill, & Discovery Scan Button
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
 
                 // Power Toggle Pill
                 Rectangle {
-                    implicitWidth: 140
+                    implicitWidth: 125
                     implicitHeight: 34
                     radius: Theme.pillRadius
                     color: root.btPowered ? Theme.surface1 : Theme.surface0
@@ -1078,6 +1100,45 @@ Rectangle {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.toggleBtPower()
+                    }
+                }
+
+                // Discoverable Toggle Pill (Pairing this machine with others)
+                Rectangle {
+                    implicitWidth: 135
+                    implicitHeight: 34
+                    radius: Theme.pillRadius
+                    color: root.btDiscoverable ? Qt.rgba(Theme.blue.r, Theme.blue.g, Theme.blue.b, 0.2) : (btDiscHover.containsMouse ? Theme.surface1 : Theme.surface0)
+                    border.color: root.btDiscoverable ? Theme.blue : Theme.moduleBorder
+                    border.width: 1
+                    visible: root.btPowered
+
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: 6
+
+                        Text {
+                            text: root.btDiscoverable ? "󰂯" : "󰂲"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            color: root.btDiscoverable ? Theme.blue : Theme.overlay0
+                        }
+
+                        Text {
+                            text: root.btDiscoverable ? "Visible to Others" : "Not Discoverable"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            font.bold: root.btDiscoverable
+                            color: root.btDiscoverable ? Theme.blue : Theme.text
+                        }
+                    }
+
+                    MouseArea {
+                        id: btDiscHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.toggleBtDiscoverable()
                     }
                 }
 
@@ -1113,7 +1174,7 @@ Rectangle {
                         }
 
                         Text {
-                            text: root.btDiscovering ? "Scanning..." : "Pair Device"
+                            text: root.btDiscovering ? "Scanning..." : "Scan Nearby"
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSizeSmall
                             color: root.btDiscovering ? Theme.blue : Theme.text
@@ -1184,258 +1245,500 @@ Rectangle {
                 }
             }
 
-            // If Bluetooth is enabled: Paired Devices List & Discovered Devices
+            // If Bluetooth is enabled: Machine Status Card + Scrollable Lists
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 visible: root.btPowered
                 spacing: 8
 
-                Text {
-                    text: "Paired Devices (" + root.btDevices.length + ")"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.bold: true
-                    color: Theme.overlay0
+                // Machine Visibility & Identity Card
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 40
+                    radius: Theme.pillRadius
+                    color: Theme.surface0
+                    border.color: root.btDiscoverable ? Theme.blue : Theme.moduleBorder
+                    border.width: 1
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        spacing: 8
+
+                        Text {
+                            text: "󰌢"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                            color: Theme.blue
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 1
+
+                            Text {
+                                text: "This PC: " + (root.btAdapterName || "abhashtech")
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                font.bold: true
+                                color: Theme.text
+                                elide: Text.ElideRight
+                            }
+
+                            Text {
+                                text: root.btDiscoverable ? "Visible to other devices for pairing" : "Hidden from other devices"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 9
+                                color: root.btDiscoverable ? Theme.green : Theme.overlay0
+                            }
+                        }
+
+                        // Toggle manual pair button
+                        Rectangle {
+                            implicitWidth: 80
+                            implicitHeight: 24
+                            radius: 4
+                            color: root.showManualPair ? Theme.accent : Theme.surface2
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.showManualPair ? "Close" : "+ Pair MAC"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                font.bold: true
+                                color: root.showManualPair ? Theme.mantle : Theme.text
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.showManualPair = !root.showManualPair
+                            }
+                        }
+                    }
                 }
 
-                ListView {
-                    id: btListView
+                // Manual MAC Pair Bar (expandable)
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 40
+                    radius: Theme.pillRadius
+                    color: Theme.surface0
+                    border.color: Theme.accent
+                    border.width: 1
+                    visible: root.showManualPair
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 6
+                        spacing: 8
+
+                        Text {
+                            text: "󰌘"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            color: Theme.accent
+                        }
+
+                        TextInput {
+                            id: manualMacInput
+                            Layout.fillWidth: true
+                            text: root.manualPairAddress
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            color: Theme.text
+                            clip: true
+                            onTextChanged: root.manualPairAddress = text
+                            onAccepted: {
+                                if (root.manualPairAddress.trim().length > 0) {
+                                    root.pairBt(root.manualPairAddress.trim());
+                                    root.manualPairAddress = "";
+                                    root.showManualPair = false;
+                                }
+                            }
+
+                            Text {
+                                text: "Enter device MAC (e.g. AA:BB:CC:DD:EE:FF)"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.overlay0
+                                visible: !manualMacInput.text && !manualMacInput.activeFocus
+                            }
+                        }
+
+                        Rectangle {
+                            implicitWidth: 50
+                            implicitHeight: 26
+                            radius: 4
+                            color: Theme.accent
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "Pair"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                font.bold: true
+                                color: Theme.mantle
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (root.manualPairAddress.trim().length > 0) {
+                                        root.pairBt(root.manualPairAddress.trim());
+                                        root.manualPairAddress = "";
+                                        root.showManualPair = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Transient Pairing Status text
+                Text {
+                    Layout.fillWidth: true
+                    text: root.pairingStatusText
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 10
+                    color: Theme.accent
+                    visible: root.pairingStatusText.length > 0
+                }
+
+                // Scrollable Container for Paired Devices and Nearby Discovered Devices
+                Flickable {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
-                    spacing: 4
-                    model: root.btDevices
+                    contentWidth: width
+                    contentHeight: btScrollContent.implicitHeight
+                    boundsBehavior: Flickable.StopAtBounds
 
-                    delegate: Rectangle {
-                        required property var modelData
-                        required property int index
+                    ColumnLayout {
+                        id: btScrollContent
+                        width: parent.width
+                        spacing: 10
 
-                        width: btListView.width
-                        implicitHeight: 48
-                        radius: Theme.pillRadius
-                        color: btDevHover.containsMouse ? Theme.surface1 : Theme.surface0
-                        border.color: modelData.connected ? Theme.blue : (btDevHover.containsMouse ? Theme.moduleHoverBorder : Theme.moduleBorder)
-                        border.width: 1
+                        // ------------------------------
+                        // SECTION 1: PAIRED DEVICES
+                        // ------------------------------
+                        Text {
+                            text: "Paired Devices (" + root.btDevices.length + ")"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            font.bold: true
+                            color: Theme.overlay0
+                        }
 
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 10
+                        Text {
+                            visible: root.btDevices.length === 0
+                            text: "No paired Bluetooth devices in memory"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            color: Theme.overlay0
+                        }
 
-                            // Device Icon
-                            Rectangle {
-                                implicitWidth: 32
-                                implicitHeight: 32
-                                radius: 16
-                                color: modelData.connected ? Qt.rgba(Theme.blue.r, Theme.blue.g, Theme.blue.b, 0.18) : Theme.surface2
+                        Repeater {
+                            model: root.btDevices
 
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: {
-                                        var ic = modelData.icon || "";
-                                        if (ic === "audio-headset") return "󰋋";
-                                        if (ic === "input-mouse") return "󰍽";
-                                        if (ic === "input-keyboard") return "󰌌";
-                                        if (ic === "phone") return "󰏲";
-                                        return "󰂯";
-                                    }
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize
-                                    color: modelData.connected ? Theme.blue : Theme.text
-                                }
-                            }
+                            delegate: Rectangle {
+                                required property var modelData
+                                required property int index
 
-                            // Device Details
-                            ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: 2
+                                implicitHeight: 46
+                                radius: Theme.pillRadius
+                                color: btDevHover.containsMouse ? Theme.surface1 : Theme.surface0
+                                border.color: modelData.connected ? Theme.blue : (btDevHover.containsMouse ? Theme.moduleHoverBorder : Theme.moduleBorder)
+                                border.width: 1
 
                                 RowLayout {
-                                    spacing: 6
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    spacing: 10
 
-                                    Text {
-                                        text: modelData.name || modelData.mac
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSize
-                                        font.bold: modelData.connected
-                                        color: modelData.connected ? Theme.blue : Theme.text
-                                        elide: Text.ElideRight
-                                        Layout.maximumWidth: 170
-                                    }
-
-                                    // Battery level if available
+                                    // Device Icon
                                     Rectangle {
-                                        implicitWidth: 42
-                                        implicitHeight: 16
-                                        radius: 4
-                                        color: Qt.rgba(Theme.green.r, Theme.green.g, Theme.green.b, 0.2)
-                                        visible: modelData.battery >= 0
+                                        implicitWidth: 30
+                                        implicitHeight: 30
+                                        radius: 15
+                                        color: modelData.connected ? Qt.rgba(Theme.blue.r, Theme.blue.g, Theme.blue.b, 0.18) : Theme.surface2
 
                                         Text {
                                             anchors.centerIn: parent
-                                            text: "󰁹 " + modelData.battery + "%"
+                                            text: {
+                                                var ic = modelData.icon || "";
+                                                if (ic === "audio-headset") return "󰋋";
+                                                if (ic === "input-mouse") return "󰍽";
+                                                if (ic === "input-keyboard") return "󰌌";
+                                                if (ic === "phone") return "󰏲";
+                                                if (ic === "computer") return "󰌢";
+                                                return "󰂯";
+                                            }
                                             font.family: Theme.fontFamily
-                                            font.pixelSize: 9
-                                            color: Theme.green
+                                            font.pixelSize: Theme.fontSize
+                                            color: modelData.connected ? Theme.blue : Theme.text
+                                        }
+                                    }
+
+                                    // Device Details
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        RowLayout {
+                                            spacing: 6
+
+                                            Text {
+                                                text: modelData.name || modelData.mac
+                                                font.family: Theme.fontFamily
+                                                font.pixelSize: Theme.fontSizeSmall
+                                                font.bold: modelData.connected
+                                                color: modelData.connected ? Theme.blue : Theme.text
+                                                elide: Text.ElideRight
+                                                Layout.maximumWidth: 170
+                                            }
+
+                                            // Battery level
+                                            Rectangle {
+                                                implicitWidth: 40
+                                                implicitHeight: 16
+                                                radius: 4
+                                                color: Qt.rgba(Theme.green.r, Theme.green.g, Theme.green.b, 0.2)
+                                                visible: modelData.battery >= 0
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: "󰁹 " + modelData.battery + "%"
+                                                    font.family: Theme.fontFamily
+                                                    font.pixelSize: 9
+                                                    color: Theme.green
+                                                }
+                                            }
+                                        }
+
+                                        Text {
+                                            text: modelData.connected ? "Connected" : modelData.mac
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: 10
+                                            color: modelData.connected ? Theme.green : Theme.overlay0
+                                        }
+                                    }
+
+                                    // Connect / Disconnect button
+                                    Rectangle {
+                                        implicitWidth: modelData.connected ? 70 : 62
+                                        implicitHeight: 26
+                                        radius: 6
+                                        color: modelData.connected ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.2) : (btConnHover.containsMouse ? Theme.accent : Theme.surface2)
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: modelData.connected ? "Disconnect" : "Connect"
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: 10
+                                            font.bold: true
+                                            color: modelData.connected ? Theme.red : (btConnHover.containsMouse ? Theme.mantle : Theme.text)
+                                        }
+
+                                        MouseArea {
+                                            id: btConnHover
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                if (modelData.connected) {
+                                                    root.disconnectBt(modelData.mac);
+                                                } else {
+                                                    root.connectBt(modelData.mac);
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Forget / Remove device icon
+                                    Rectangle {
+                                        implicitWidth: 26
+                                        implicitHeight: 26
+                                        radius: 4
+                                        color: rmArea.containsMouse ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.2) : "transparent"
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "󰆴"
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: 12
+                                            color: rmArea.containsMouse ? Theme.red : Theme.overlay0
+                                        }
+
+                                        MouseArea {
+                                            id: rmArea
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: root.removeBt(modelData.mac)
                                         }
                                     }
                                 }
 
-                                Text {
-                                    text: modelData.connected ? "Connected" : modelData.mac
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 10
-                                    color: modelData.connected ? Theme.green : Theme.overlay0
-                                }
-                            }
-
-                            // Connect / Disconnect button
-                            Rectangle {
-                                implicitWidth: modelData.connected ? 74 : 64
-                                implicitHeight: 28
-                                radius: 6
-                                color: modelData.connected ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.2) : (btConnHover.containsMouse ? Theme.accent : Theme.surface2)
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: modelData.connected ? "Disconnect" : "Connect"
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 10
-                                    font.bold: true
-                                    color: modelData.connected ? Theme.red : (btConnHover.containsMouse ? Theme.mantle : Theme.text)
-                                }
-
                                 MouseArea {
-                                    id: btConnHover
+                                    id: btDevHover
                                     anchors.fill: parent
                                     hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        if (modelData.connected) {
-                                            root.disconnectBt(modelData.mac);
-                                        } else {
-                                            root.connectBt(modelData.mac);
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Forget / Remove device icon
-                            Rectangle {
-                                implicitWidth: 26
-                                implicitHeight: 26
-                                radius: 4
-                                color: rmArea.containsMouse ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.2) : "transparent"
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "󰆴"
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 12
-                                    color: rmArea.containsMouse ? Theme.red : Theme.overlay0
-                                }
-
-                                MouseArea {
-                                    id: rmArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: root.removeBt(modelData.mac)
+                                    acceptedButtons: Qt.NoButton
                                 }
                             }
                         }
 
-                        MouseArea {
-                            id: btDevHover
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.NoButton
+                        // ------------------------------
+                        // SECTION 2: NEARBY DISCOVERED DEVICES
+                        // ------------------------------
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
+
+                            Text {
+                                text: "Nearby Devices (" + root.btDiscovered.length + ")"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                font.bold: true
+                                color: Theme.blue
+                            }
+
+                            Text {
+                                text: root.btDiscovering ? "• Scanning..." : ""
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                color: Theme.overlay0
+                            }
                         }
-                    }
 
-                    Text {
-                        anchors.centerIn: parent
-                        visible: root.btDevices.length === 0
-                        text: "No paired Bluetooth devices"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
-                        color: Theme.overlay0
-                    }
-                }
-
-                // Discovered Devices Section (if scanning)
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    visible: root.btDiscovering
-                    spacing: 6
-
-                    Text {
-                        text: "Nearby Devices Found (" + root.btDiscovered.length + ")"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        font.bold: true
-                        color: Theme.blue
-                    }
-
-                    ListView {
-                        id: discListView
-                        Layout.fillWidth: true
-                        implicitHeight: Math.min(110, count * 40)
-                        clip: true
-                        spacing: 4
-                        model: root.btDiscovered
-
-                        delegate: Rectangle {
-                            required property var modelData
-                            width: discListView.width
-                            implicitHeight: 36
+                        // Empty / Scanning state indicator
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: 44
                             radius: Theme.pillRadius
                             color: Theme.surface0
                             border.color: Theme.moduleBorder
                             border.width: 1
+                            visible: root.btDiscovered.length === 0
 
                             RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 6
+                                anchors.centerIn: parent
                                 spacing: 8
 
                                 Text {
-                                    text: "󰂯"
+                                    text: root.btDiscovering ? "󰍉" : "󰂲"
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSize
-                                    color: Theme.blue
+                                    color: root.btDiscovering ? Theme.blue : Theme.overlay0
+
+                                    RotationAnimator on rotation {
+                                        running: root.btDiscovering
+                                        from: 0
+                                        to: 360
+                                        loops: Animation.Infinite
+                                        duration: 1200
+                                    }
                                 }
 
                                 Text {
-                                    Layout.fillWidth: true
-                                    text: modelData.name
+                                    text: root.btDiscovering ? "Scanning for nearby devices... Put device in pairing mode" : "No nearby devices found. Click 'Scan Nearby' above."
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSizeSmall
-                                    color: Theme.text
-                                    elide: Text.ElideRight
+                                    color: Theme.overlay0
                                 }
+                            }
+                        }
 
-                                Rectangle {
-                                    implicitWidth: 50
-                                    implicitHeight: 24
-                                    radius: 4
-                                    color: Theme.accent
+                        // Discovered Devices List
+                        Repeater {
+                            model: root.btDiscovered
+
+                            delegate: Rectangle {
+                                required property var modelData
+                                Layout.fillWidth: true
+                                implicitHeight: 42
+                                radius: Theme.pillRadius
+                                color: btDiscDevHover.containsMouse ? Theme.surface1 : Theme.surface0
+                                border.color: btDiscDevHover.containsMouse ? Theme.moduleHoverBorder : Theme.moduleBorder
+                                border.width: 1
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 6
+                                    anchors.leftMargin: 8
+                                    anchors.rightMargin: 8
+                                    spacing: 8
 
                                     Text {
-                                        anchors.centerIn: parent
-                                        text: "Pair"
+                                        text: {
+                                            var ic = modelData.icon || "";
+                                            if (ic === "audio-headset") return "󰋋";
+                                            if (ic === "input-mouse") return "󰍽";
+                                            if (ic === "input-keyboard") return "󰌌";
+                                            if (ic === "phone") return "󰏲";
+                                            if (ic === "computer") return "󰌢";
+                                            return "󰂯";
+                                        }
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: 10
-                                        font.bold: true
-                                        color: Theme.mantle
+                                        font.pixelSize: Theme.fontSize
+                                        color: Theme.blue
                                     }
 
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.pairBt(modelData.mac)
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 1
+
+                                        Text {
+                                            text: modelData.name || modelData.mac
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: Theme.fontSizeSmall
+                                            color: Theme.text
+                                            elide: Text.ElideRight
+                                        }
+
+                                        Text {
+                                            text: modelData.mac + (modelData.rssi ? (" • " + modelData.rssi + " dBm") : "")
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: 9
+                                            color: Theme.overlay0
+                                        }
                                     }
+
+                                    Rectangle {
+                                        implicitWidth: 54
+                                        implicitHeight: 26
+                                        radius: 4
+                                        color: discPairHover.containsMouse ? Theme.surface2 : Theme.accent
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "Pair"
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: 10
+                                            font.bold: true
+                                            color: discPairHover.containsMouse ? Theme.accent : Theme.mantle
+                                        }
+
+                                        MouseArea {
+                                            id: discPairHover
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: root.pairBt(modelData.mac)
+                                        }
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: btDiscDevHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    acceptedButtons: Qt.NoButton
                                 }
                             }
                         }
