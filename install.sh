@@ -642,8 +642,14 @@ EOF' 2>/dev/null || true
         sudo systemctl start /dev/zram0 2>/dev/null || true
     fi
 
-    # Automated Pacman cache cleaning timer
+    # Automated Pacman cache cleaning timer & periodic SSD TRIM
     sudo systemctl enable --now paccache.timer 2>/dev/null || true
+    sudo systemctl enable --now fstrim.timer 2>/dev/null || true
+
+    # Core system services: storage, power, thermal, time sync, smartcard, and bluetooth
+    sudo systemctl enable --now udisks2.service upower.service bluetooth.service systemd-timesyncd.service 2>/dev/null || true
+    sudo systemctl enable --now thermald.service 2>/dev/null || true
+    sudo systemctl enable pcscd.socket 2>/dev/null || true
 
     # Bluetooth battery level reporting (keep FastConnectable disabled for security)
     if [ -f /etc/bluetooth/main.conf ] && ! grep -q "Experimental = true" /etc/bluetooth/main.conf; then
