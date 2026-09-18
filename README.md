@@ -123,21 +123,21 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 | **Status Bar & Desktop Suite** | `quickshell`, `power-profiles-daemon`, `upower` | Modern Quickshell status bar, modular capsules, hardware stats, power profile selector & battery metrics |
 | **Notifications** | `mako`, `libnotify` | Notification daemon & `notify-send` for OSDs (with click-to-focus) |
 | **Wallpaper** | `hyprpaper` | Fast Wayland wallpaper daemon |
-| **App Launchers & Theming** | `quickshell`, `nwg-look`, `gsettings-desktop-schemas`, `dconf`, `xsettingsd` | Fast Quickshell Application Menu plugin and GTK3/4 & DConf settings sync |
+| **App Launchers & Theming** | `quickshell`, `fuzzel`, `nwg-look`, `gsettings-desktop-schemas`, `dconf`, `xsettingsd` | Fast Quickshell Application Menu plugin, Fuzzel dmenu launcher for scripts/theming, and GTK3/4 & DConf settings sync |
 | **Qt/GTK Unified Integration** | `qt5-wayland`, `qt6-wayland`, `qt5ct`, `qt6ct`, `kvantum`, `kvantum-qt5` | Native Wayland runtime and uniform theme/font/icon syncing across Qt5/Qt6 & GTK apps |
-| **File Pickers, Mounts & Thumbs** | `dolphin`, `yazi`, `gvfs`, `gvfs-mtp`, `gvfs-smb`, `tumbler`, `ffmpegthumbnailer`, `poppler-glib`, `webp-pixbuf-loader`, `trash-cli` | File managers, external drive mounting, trash bin support, and PDF/video/image thumbnail previews |
-| **Default Media & App Viewers** | `loupe`, `mpv`, `zathura`, `zathura-pdf-mupdf`, `file-roller`, `system-config-printer`, `cups` | Fast image viewer, media player, minimalist PDF reader, archive manager, and printer configuration |
-| **Modern CLI Power Suite** | `eza`, `bat`, `ripgrep`, `fd`, `git-delta`, `duf`, `dust`, `tealdeer`, `xh`, `glow`, `fzf`, `zoxide`, `wtype` | Daily replacements for ls, cat, grep, find, diff, du, df, man, curl |
+| **File Pickers, Mounts & Thumbs** | `dolphin`, `yazi`, `file`, `zenity`, `desktop-file-utils`, `gvfs`, `gvfs-mtp`, `gvfs-smb`, `tumbler`, `ffmpegthumbnailer`, `poppler`, `poppler-glib`, `webp-pixbuf-loader`, `trash-cli` | File managers, Zenity dialogs, desktop file utils, external drive mounting, trash bin, and PDF/video thumbnail previews |
+| **Default Media & App Viewers** | `loupe`, `mpv`, `zathura`, `zathura-pdf-mupdf`, `file-roller`, `system-config-printer`, `cups`, `cups-pk-helper` | Fast image viewer, media player, minimalist PDF reader, archive manager, and printer configuration |
+| **Modern CLI Power Suite** | `git`, `git-delta`, `eza`, `bat`, `ripgrep`, `fd`, `duf`, `dust`, `tealdeer`, `xh`, `glow`, `fzf`, `zoxide`, `wtype` | Daily replacements for ls, cat, grep, find, diff, du, df, man, curl & Git tools |
 | **TUIs & Multiplexing** | `lazygit`, `lazydocker`, `zellij`, `btop`, `fastfetch` | Interactive terminal UIs for Git, Docker, terminal multiplexing, and system monitoring |
 | **Performance, Gaming & Thermals** | `gamemode`, `thermald`, `power-profiles-daemon`, `upower` | Process CPU/GPU optimizer, Intel thermal daemon, and hardware power profile metrics |
 | **Shell & Environment** | `starship`, `zsh`, `zsh-autosuggestions`, `zsh-syntax-highlighting`, `atuin`, `direnv`, `mise` | Fast prompt, Zsh shell with autosuggestions & syntax highlighting, SQLite history search, per-directory env/venv, tool version manager |
-| **Audio & Media Codecs** | `pipewire`, `pipewire-pulse`, `pipewire-alsa`, `pipewire-jack`, `wireplumber`, `libldac`, `libfreeaptx`, `gst-plugins-good`, `gst-plugins-bad`, `gst-plugins-ugly`, `gst-libav`, `playerctl`, `libva-utils` | PipeWire audio suite, LDAC/aptX Bluetooth HD codecs, GStreamer codecs, VA-API utils, and MPRIS playback keys |
+| **Audio, Bluetooth & Wireless** | `pipewire`, `pipewire-pulse`, `pipewire-alsa`, `pipewire-jack`, `wireplumber`, `bluez`, `bluez-utils`, `iwd`, `libldac`, `libfreeaptx`, `gst-plugins-good`, `gst-plugins-bad`, `gst-plugins-ugly`, `gst-libav`, `playerctl`, `libva-utils` | PipeWire audio suite, BlueZ stack, iwd wireless, LDAC/aptX Bluetooth HD codecs, GStreamer codecs, VA-API utils, and MPRIS playback keys |
 | **System Tuning & Cleanup** | `zram-generator`, `pacman-contrib` | Compressed in-memory ZRAM swap and automated pacman cache maintenance |
 | **Brightness & Night Light**| `brightnessctl`, `ddcutil`, `hyprsunset` / `wlsunset` | Backlight, external DDC brightness, and warm blue-light filter |
 | **Authentication & Hardware 2FA**| `gnome-keyring`, `libsecret`, `seahorse`, `polkit-gnome`, `libfido2`, `ccid`, `pcsc-tools`, `yubikey-manager` | Secrets/password storage, Keyring GUI, Polkit agent, and YubiKey / FIDO2 security key support |
 | **Clipboard** | `wl-clipboard`, `cliphist` | Wayland clipboard manager with binary image and thumbnail support |
-| **Screen Capture & OCR** | `grim`, `slurp`, `swappy`, `wf-recorder`, `hyprpicker`, `tesseract`, `tesseract-data-eng`, `zbar` | Screenshots, annotation, video recording, color picker, OCR & QR scanner |
-| **Python Runtime & UI** | `python`, `python-gobject`, `gtk3`, `gtk4`, `gtk-layer-shell` | Python 3, PyGObject, and Wayland layer-shell for popups |
+| **Screen Capture & OCR** | `grim`, `slurp`, `swappy`, `satty`, `wf-recorder`, `hyprpicker`, `tesseract`, `tesseract-data-eng`, `zbar` | Screenshots, Swappy & Satty annotation, video recording, color picker, OCR & QR scanner |
+| **Python Runtime & UI** | `python`, `python-pillow`, `python-gobject`, `python-dbus`, `gtk3`, `gtk4`, `gtk-layer-shell` | Python 3, Pillow image engine, PyGObject, python-dbus, and Wayland layer-shell for popups |
 | **Fonts & Icons** | `ttf-jetbrains-mono-nerd`, `ttf-liberation`, `noto-fonts`, `noto-fonts-cjk`, `noto-fonts-emoji`, `papirus-icon-theme`, `adwaita-icon-theme` | Nerd font glyphs, CJK characters, emojis, and complete icon themes |
 
 ---
@@ -148,17 +148,22 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
 
 ```bash
 sudo pacman -S --needed \
-    qt5-wayland qt6-wayland qt5ct qt6ct kvantum kvantum-qt5 \
-    nwg-look gsettings-desktop-schemas dconf \
+    hyprland hyprlock hypridle hyprpaper hyprsunset hyprpicker hyprpolkitagent quickshell foot fuzzel mako nwg-look \
+    git git-delta lazygit lazydocker zellij btop fastfetch eza bat ripgrep fd duf dust tealdeer trash-cli xh glow fzf zoxide wtype \
+    starship zsh zsh-autosuggestions zsh-syntax-highlighting atuin direnv mise \
+    qt5-wayland qt6-wayland qt5ct qt6ct kvantum kvantum-qt5 dconf gsettings-desktop-schemas xsettingsd \
     papirus-icon-theme adwaita-icon-theme \
-    xdg-desktop-portal-hyprland xdg-desktop-portal-gtk xdg-utils xdg-user-dirs \
-    gvfs gvfs-mtp gvfs-smb tumbler ffmpegthumbnailer poppler-glib webp-pixbuf-loader trash-cli \
-    loupe mpv zathura zathura-pdf-mupdf file-roller gamemode thermald system-config-printer cups cups-pk-helper \
-    pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber \
-    libldac libfreeaptx gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav playerctl libva-utils \
+    xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-hyprland xdg-utils xdg-user-dirs \
+    file zenity desktop-file-utils gvfs gvfs-mtp gvfs-smb tumbler ffmpegthumbnailer poppler poppler-glib webp-pixbuf-loader \
+    pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber libpulse libcanberra vorbis-tools libldac libfreeaptx \
+    bluez bluez-utils iwd gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav playerctl brightnessctl ddcutil libva-utils \
+    zram-generator pacman-contrib \
+    wl-clipboard cliphist grim slurp swappy satty wf-recorder tesseract tesseract-data-eng zbar imagemagick \
     gnome-keyring libsecret seahorse polkit-gnome libfido2 ccid pcsc-tools yubikey-manager \
-    noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-liberation ttf-jetbrains-mono-nerd \
-    wl-clipboard cliphist brightnessctl zram-generator pacman-contrib zbar
+    ttf-jetbrains-mono-nerd ttf-liberation noto-fonts noto-fonts-cjk noto-fonts-emoji \
+    dolphin firefox loupe mpv zathura zathura-pdf-mupdf file-roller gamemode thermald power-profiles-daemon system-config-printer cups cups-pk-helper \
+    libnotify python python-pillow python-gobject python-dbus gtk3 gtk4 gtk-layer-shell \
+    sddm qt6-declarative qt6-svg qt6-5compat
 ```
 
 ### Automated Setup (Recommended)

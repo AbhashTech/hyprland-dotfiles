@@ -55,6 +55,7 @@ if command -v pacman >/dev/null 2>&1; then
 
         # Bar, Launchers & Notifications
         quickshell
+        fuzzel
         mako
         nwg-look
 
@@ -62,6 +63,7 @@ if command -v pacman >/dev/null 2>&1; then
         foot
         neovim
         yazi
+        git
         zoxide
         fzf
         wtype
@@ -113,13 +115,17 @@ if command -v pacman >/dev/null 2>&1; then
         xdg-user-dirs
 
         # File Choosers, Thumbnails & Storage Integration
+        file
         gvfs
         gvfs-mtp
         gvfs-smb
         tumbler
         ffmpegthumbnailer
+        poppler
         poppler-glib
         webp-pixbuf-loader
+        zenity
+        desktop-file-utils
 
         # Audio, Media Codecs & Bluetooth High-Res
         pipewire
@@ -132,6 +138,9 @@ if command -v pacman >/dev/null 2>&1; then
         vorbis-tools
         libldac
         libfreeaptx
+        bluez
+        bluez-utils
+        iwd
         gst-plugins-good
         gst-plugins-bad
         gst-plugins-ugly
@@ -151,6 +160,7 @@ if command -v pacman >/dev/null 2>&1; then
         grim
         slurp
         swappy
+        satty
         wf-recorder
         tesseract
         tesseract-data-eng
@@ -184,11 +194,13 @@ if command -v pacman >/dev/null 2>&1; then
         file-roller
         gamemode
         thermald
+        power-profiles-daemon
         system-config-printer
         cups
         cups-pk-helper
         libnotify
         python
+        python-pillow
         python-gobject
         python-dbus
         gtk3
@@ -548,6 +560,7 @@ EOF' 2>/dev/null || true
     # Core system services: storage, power, thermal, time sync, smartcard, and bluetooth
     sudo systemctl enable --now udisks2.service upower.service bluetooth.service systemd-timesyncd.service 2>/dev/null || true
     sudo systemctl enable --now thermald.service 2>/dev/null || true
+    sudo systemctl enable --now power-profiles-daemon.service 2>/dev/null || true
     sudo systemctl enable pcscd.socket 2>/dev/null || true
     sudo systemctl enable cups.socket 2>/dev/null || true
 
