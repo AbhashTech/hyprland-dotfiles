@@ -184,6 +184,9 @@ if command -v pacman >/dev/null 2>&1; then
         file-roller
         gamemode
         thermald
+        system-config-printer
+        cups
+        cups-pk-helper
         libnotify
         python
         python-gobject
@@ -546,6 +549,7 @@ EOF' 2>/dev/null || true
     sudo systemctl enable --now udisks2.service upower.service bluetooth.service systemd-timesyncd.service 2>/dev/null || true
     sudo systemctl enable --now thermald.service 2>/dev/null || true
     sudo systemctl enable pcscd.socket 2>/dev/null || true
+    sudo systemctl enable cups.socket 2>/dev/null || true
 
     # Bluetooth battery level reporting (keep FastConnectable disabled for security)
     if [ -f /etc/bluetooth/main.conf ] && ! grep -q "Experimental = true" /etc/bluetooth/main.conf; then
