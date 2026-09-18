@@ -1,0 +1,30 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Screen Capture Hub
+GenericName=Screenshot & Screen Recorder
+Comment=Capture full screen, region, active window, and record screen with audio
+Exec=python3 /home/kunal/.config/hypr/scripts/screen_capture.py
+Icon=applets-screenshooter
+Terminal=false
+Categories=Utility;Graphics;AudioVideo;Recorder;
+StartupWMClass=screen-capture
+StartupNotify=true
+Keywords=screenshot;screencast;record;capture;grim;slurp;wf-recorder;screen;
+Actions=AreaScreenshot;FullScreen;RecordScreen;StopRecording;
+
+[Desktop Action AreaScreenshot]
+Name=Capture Region / Area
+Exec=python3 /home/kunal/.config/hypr/scripts/screen_capture.py screenshot
+
+[Desktop Action FullScreen]
+Name=Capture Full Screen
+Exec=python3 /home/kunal/.config/hypr/scripts/screen_capture.py screenshot --full
+
+[Desktop Action RecordScreen]
+Name=Start Screen Recording
+Exec=python3 /home/kunal/.config/hypr/scripts/screen_capture.py record
+
+[Desktop Action StopRecording]
+Name=Stop Active Recording
+Exec=python3 /home/kunal/.config/hypr/scripts/screen_capture.py stop

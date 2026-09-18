@@ -86,10 +86,23 @@ EOF
 
 log_success "SDDM configuration updated (${CONF_FILE})."
 
-# 5. Enable SDDM systemd service
-log_info "Enabling sddm.service..."
-sudo systemctl enable sddm.service
-log_success "sddm.service enabled."
+# 5. Enable SDDM systemd service & assert graphical target
+log_info "Enabling sddm.service and ensuring graphical boot target..."
+for dm in gdm lightdm lxdm ly greetd; do
+    if systemctl is-enabled "${dm}.service" >/dev/null 2>&1; then
+        log_info "Disabling conflicting display manager: ${dm}.service"
+        sudo systemctl disable "${dm}.service" 2>/dev/null || true
+    fi
+done
+
+sudo systemctl set-default graphical.target 2>/dev/null || true
+sudo systemctl enable -f sddm.service
+
+if systemctl is-enabled sddm.service >/dev/null 2>&1; then
+    log_success "sddm.service successfully enabled (graphical.target default)."
+else
+    log_warn "sddm.service could not be verified as enabled. Please check systemctl status sddm.service."
+fi
 
 # 6. Verify
 echo ""

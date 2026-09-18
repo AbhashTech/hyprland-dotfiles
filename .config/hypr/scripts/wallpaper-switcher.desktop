@@ -1,0 +1,26 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Wallpaper Selector
+GenericName=Desktop Wallpaper Selector
+Comment=Select, cycle, and manage desktop wallpapers dynamically for Hyprland
+Exec=python3 /home/kunal/.config/hypr/scripts/wallpaper_switcher.py --menu
+Icon=preferences-desktop-wallpaper
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;
+StartupWMClass=wallpaper-switcher
+StartupNotify=true
+Keywords=wallpaper;background;image;hyprpaper;swww;desktop;catppuccin;
+Actions=RandomWallpaper;NextWallpaper;PrevWallpaper;
+
+[Desktop Action RandomWallpaper]
+Name=Random Wallpaper
+Exec=python3 /home/kunal/.config/hypr/scripts/wallpaper_switcher.py --random
+
+[Desktop Action NextWallpaper]
+Name=Next Wallpaper
+Exec=python3 /home/kunal/.config/hypr/scripts/wallpaper_switcher.py --next
+
+[Desktop Action PrevWallpaper]
+Name=Previous Wallpaper
+Exec=python3 /home/kunal/.config/hypr/scripts/wallpaper_switcher.py --prev

@@ -300,6 +300,51 @@ hl.window_rule({
     center = true,
 })
 
+-- Clipboard Manager GUI Dialog
+hl.window_rule({
+    name   = "float-clipboard-manager",
+    match  = { class = "(clipboard-manager|clipboard_manager\\.py)" },
+    float  = true,
+    size   = "650 550",
+    center = true,
+})
+
+-- Keybindings Viewer / Cheat Sheet Dialog
+hl.window_rule({
+    name   = "float-keybinds-viewer",
+    match  = { class = "(keybinds-viewer|keybinds_viewer\\.py)" },
+    float  = true,
+    size   = "720 600",
+    center = true,
+})
+
+-- QR Scanner & Reader Dialog
+hl.window_rule({
+    name   = "float-qr-reader",
+    match  = { class = "(qr-reader|qr_reader\\.py)" },
+    float  = true,
+    size   = "520 400",
+    center = true,
+})
+
+-- Audio & Volume Control Menu Dialog
+hl.window_rule({
+    name   = "float-volume-control",
+    match  = { class = "(volume-control|volume_control\\.py)" },
+    float  = true,
+    size   = "500 460",
+    center = true,
+})
+
+-- Brightness & Display Control Menu Dialog
+hl.window_rule({
+    name   = "float-brightness-control",
+    match  = { class = "(brightness-control|brightness_control\\.py)" },
+    float  = true,
+    size   = "500 460",
+    center = true,
+})
+
 
 
 

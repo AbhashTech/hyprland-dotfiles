@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=QR Code Scanner
+GenericName=Screen QR & Barcode Reader
+Comment=Scan and decode QR codes and barcodes directly from your screen into clipboard
+Exec=python3 /home/kunal/.config/hypr/scripts/qr_reader.py
+Icon=camera-photo
+Terminal=false
+Categories=Utility;Graphics;
+StartupWMClass=qr-reader
+StartupNotify=true
+Keywords=qr;barcode;scanner;reader;decode;zbar;screen;

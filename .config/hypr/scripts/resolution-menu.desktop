@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Display Resolution & Scaling
+GenericName=Screen Resolution & Display Scaling Manager
+Comment=Switch monitor display resolution, refresh rate, and scaling factor
+Exec=python3 /home/kunal/.config/hypr/scripts/resolution_menu.py
+Icon=preferences-desktop-display
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;HardwareSettings;
+StartupWMClass=resolution-menu
+StartupNotify=true
+Keywords=resolution;display;monitor;scale;scaling;screen;dpi;hyprland;

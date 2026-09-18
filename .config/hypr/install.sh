@@ -141,10 +141,14 @@ fi
 # 5. Desktop Shortcuts & Initialize Theme Variables
 log_info "Deploying custom desktop application shortcuts..."
 mkdir -p "${HOME}/.local/share/applications"
-for desktop_file in app-shortcut-creator.desktop theme-manager.desktop ocr-language-manager.desktop hyprsunset-hypridle.desktop plugin-manager.desktop keyboard-layout-manager.desktop dotpersonal-manager.desktop keybind-manager.desktop permission-manager.desktop; do
-    if [ -f "${SCRIPTS_DIR}/${desktop_file}" ]; then
-        cp "${SCRIPTS_DIR}/${desktop_file}" "${HOME}/.local/share/applications/"
-        chmod +x "${HOME}/.local/share/applications/${desktop_file}"
+for dt_file in "${SCRIPTS_DIR}/"*.desktop; do
+    if [ -f "$dt_file" ]; then
+        dt_name="$(basename "$dt_file")"
+        dest_file="${HOME}/.local/share/applications/${dt_name}"
+        cp "$dt_file" "$dest_file"
+        sed -i "s|/home/[^/]*|${HOME}|g; s|~/\.config|${HOME}/.config|g; s|\.dotfiles/\.config|\.config|g" "$dest_file" 2>/dev/null || true
+        chmod +x "$dest_file" 2>/dev/null || true
+        log_success "Installed desktop shortcut: ${dt_name}"
     fi
 done
 for app_icon in ocr-language-manager.png permission-manager.png; do

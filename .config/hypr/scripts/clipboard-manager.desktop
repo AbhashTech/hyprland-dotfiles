@@ -1,0 +1,22 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Clipboard Manager
+GenericName=Clipboard History & Manager
+Comment=Search, preview, copy, and manage clipboard history and screenshots
+Exec=python3 /home/kunal/.config/hypr/scripts/clipboard_manager.py --menu
+Icon=clipboard
+Terminal=false
+Categories=Utility;System;
+StartupWMClass=clipboard-manager
+StartupNotify=true
+Keywords=clipboard;cliphist;history;paste;copy;snippets;screenshots;
+Actions=ClearHistory;TogglePause;
+
+[Desktop Action ClearHistory]
+Name=Clear Clipboard History
+Exec=python3 /home/kunal/.config/hypr/scripts/clipboard_manager.py --clear
+
+[Desktop Action TogglePause]
+Name=Toggle Private Mode (Pause/Resume)
+Exec=python3 /home/kunal/.config/hypr/scripts/clipboard_manager.py --toggle-private

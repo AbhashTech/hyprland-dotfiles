@@ -1,0 +1,21 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Brightness & Display Menu
+GenericName=Screen Brightness Controller
+Comment=Adjust screen brightness and contrast across internal and external DDC displays
+Exec=python3 /home/kunal/.config/hypr/scripts/brightness_control.py menu
+Icon=display-brightness
+Terminal=false
+Categories=Utility;Settings;DesktopSettings;HardwareSettings;
+StartupWMClass=brightness-control
+StartupNotify=true
+Keywords=brightness;backlight;display;ddc;contrast;screen;monitor;
+Actions=BrightnessUp;BrightnessDown;
+[Desktop Action BrightnessUp]
+Name=Brightness Up (+5%)
+Exec=python3 /home/kunal/.config/hypr/scripts/brightness_control.py active-up 5
+
+[Desktop Action BrightnessDown]
+Name=Brightness Down (-5%)
+Exec=python3 /home/kunal/.config/hypr/scripts/brightness_control.py active-down 5

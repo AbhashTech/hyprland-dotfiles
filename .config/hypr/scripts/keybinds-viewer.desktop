@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Keybindings Cheat Sheet
+GenericName=Shortcuts Cheat Sheet & Viewer
+Comment=Interactive searchable cheat sheet of all configured Hyprland shortcuts and keybindings
+Exec=python3 /home/kunal/.config/hypr/scripts/keybinds_viewer.py --gui
+Icon=preferences-desktop-keyboard-shortcuts
+Terminal=false
+Categories=Utility;Settings;
+StartupWMClass=keybinds-viewer
+StartupNotify=true
+Keywords=shortcuts;keybinds;hotkeys;cheatsheet;help;hyprland;keys;viewer;

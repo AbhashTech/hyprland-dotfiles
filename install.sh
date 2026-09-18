@@ -16,6 +16,32 @@ COLOR_RED="\033[1;31m"
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_TARGET="${HOME}/.config"
 
+# Parse deployment mode options (--copy vs --symlink)
+DEPLOY_MODE="copy" # Default to decoupled copy mode so runtime modifications never dirty git repo
+for arg in "$@"; do
+    case "$arg" in
+        --symlink|-s|--link)
+            DEPLOY_MODE="symlink"
+            ;;
+        --copy|-c)
+            DEPLOY_MODE="copy"
+            ;;
+        --help|-h)
+            echo "Usage: $0 [--copy | --symlink]"
+            echo "  --copy    (Default) Deploy decoupled configurations into ~/.config/."
+            echo "            User customizations and personal files remain strictly local and never modify the repo."
+            echo "  --symlink Symlink configurations directly to ~/.dotfiles with skip-worktree isolation."
+            exit 0
+            ;;
+    esac
+done
+
+PERSONAL_PRESERVE_TMP="$(mktemp -d)"
+cleanup_personal_tmp() {
+    rm -rf "${PERSONAL_PRESERVE_TMP}" 2>/dev/null || true
+}
+trap cleanup_personal_tmp EXIT
+
 log_info() {
     echo -e "${COLOR_BLUE}[INFO]${COLOR_RESET} $1"
 }
@@ -32,8 +58,108 @@ log_error() {
     echo -e "${COLOR_RED}[ERROR]${COLOR_RESET} $1"
 }
 
+preserve_existing_personal_configs() {
+    local base="$1"
+    [ ! -d "$base" ] && return 0
+
+    log_info "Scanning ${base} for existing personal configurations to preserve..."
+    if [ -d "${base}/hypr/user" ]; then
+        mkdir -p "${PERSONAL_PRESERVE_TMP}/hypr/user"
+        cp -rn "${base}/hypr/user/"* "${PERSONAL_PRESERVE_TMP}/hypr/user/" 2>/dev/null || true
+    fi
+    if [ -d "${base}/shell/user" ]; then
+        mkdir -p "${PERSONAL_PRESERVE_TMP}/shell/user"
+        cp -rn "${base}/shell/user/"* "${PERSONAL_PRESERVE_TMP}/shell/user/" 2>/dev/null || true
+    fi
+    if [ -d "${base}/nvim/lua/custom" ]; then
+        mkdir -p "${PERSONAL_PRESERVE_TMP}/nvim/lua/custom"
+        cp -rn "${base}/nvim/lua/custom/"* "${PERSONAL_PRESERVE_TMP}/nvim/lua/custom/" 2>/dev/null || true
+    fi
+    if [ -d "${base}/nvim/lua/plugins" ]; then
+        mkdir -p "${PERSONAL_PRESERVE_TMP}/nvim/lua/plugins"
+        for pf in "${base}/nvim/lua/plugins"/personal_*.lua; do
+            [ -f "$pf" ] && cp -n "$pf" "${PERSONAL_PRESERVE_TMP}/nvim/lua/plugins/" 2>/dev/null || true
+        done
+    fi
+    if [ -d "${base}/shell" ]; then
+        mkdir -p "${PERSONAL_PRESERVE_TMP}/shell"
+        for lf in "${base}/shell"/*.local.sh; do
+            [ -f "$lf" ] && cp -n "$lf" "${PERSONAL_PRESERVE_TMP}/shell/" 2>/dev/null || true
+        done
+    fi
+    if [ -f "${base}/dotpersonal_includes.json" ]; then
+        cp -n "${base}/dotpersonal_includes.json" "${PERSONAL_PRESERVE_TMP}/" 2>/dev/null || true
+    fi
+}
+
+restore_and_honor_personal_configs() {
+    log_info "Honoring and restoring personal configurations into active environment..."
+    mkdir -p "${CONFIG_TARGET}/hypr/user"
+    mkdir -p "${CONFIG_TARGET}/shell/user"
+    mkdir -p "${CONFIG_TARGET}/nvim/lua/custom"
+    mkdir -p "${CONFIG_TARGET}/nvim/lua/plugins"
+
+    if [ -d "${PERSONAL_PRESERVE_TMP}/hypr/user" ]; then
+        cp -rn "${PERSONAL_PRESERVE_TMP}/hypr/user/"* "${CONFIG_TARGET}/hypr/user/" 2>/dev/null || true
+    fi
+    if [ -d "${PERSONAL_PRESERVE_TMP}/shell/user" ]; then
+        cp -rn "${PERSONAL_PRESERVE_TMP}/shell/user/"* "${CONFIG_TARGET}/shell/user/" 2>/dev/null || true
+    fi
+    if [ -d "${PERSONAL_PRESERVE_TMP}/nvim/lua/custom" ]; then
+        cp -rn "${PERSONAL_PRESERVE_TMP}/nvim/lua/custom/"* "${CONFIG_TARGET}/nvim/lua/custom/" 2>/dev/null || true
+    fi
+    if [ -d "${PERSONAL_PRESERVE_TMP}/nvim/lua/plugins" ]; then
+        cp -rn "${PERSONAL_PRESERVE_TMP}/nvim/lua/plugins/"* "${CONFIG_TARGET}/nvim/lua/plugins/" 2>/dev/null || true
+    fi
+    if [ -d "${PERSONAL_PRESERVE_TMP}/shell" ]; then
+        cp -rn "${PERSONAL_PRESERVE_TMP}/shell/"* "${CONFIG_TARGET}/shell/" 2>/dev/null || true
+    fi
+    if [ -f "${PERSONAL_PRESERVE_TMP}/dotpersonal_includes.json" ]; then
+        cp -n "${PERSONAL_PRESERVE_TMP}/dotpersonal_includes.json" "${CONFIG_TARGET}/" 2>/dev/null || true
+    fi
+
+    # Check for dedicated personal git repository ~/.dotfiles-personal
+    if [ -d "${HOME}/.dotfiles-personal" ] && [ -f "${DOTFILES_DIR}/scripts/dotfiles-personal.sh" ]; then
+        log_info "Found dedicated personal git repository at ~/.dotfiles-personal. Restoring settings..."
+        DOTFILES_DIR="${DOTFILES_DIR}" bash "${DOTFILES_DIR}/scripts/dotfiles-personal.sh" import "${HOME}/.dotfiles-personal" >/dev/null 2>&1 || true
+        log_success "Personal settings from ~/.dotfiles-personal imported and honored."
+    fi
+
+    # Check for any personal dotfiles archive in home directory
+    for arc in "${HOME}"/personal-dotfiles-*.tar.gz; do
+        if [ -f "$arc" ] && [ -f "${DOTFILES_DIR}/scripts/dotfiles-personal.sh" ]; then
+            log_info "Found personal dotfiles archive: $(basename "$arc"). Restoring personal settings..."
+            DOTFILES_DIR="${DOTFILES_DIR}" bash "${DOTFILES_DIR}/scripts/dotfiles-personal.sh" import "$arc" >/dev/null 2>&1 || true
+            log_success "Personal configuration archive restored."
+            break
+        fi
+    done
+}
+
+enable_sddm_display_manager() {
+    if command -v sudo >/dev/null 2>&1; then
+        log_info "Configuring and enabling SDDM Display Manager service..."
+        for dm in gdm lightdm lxdm ly greetd; do
+            if systemctl is-enabled "${dm}.service" >/dev/null 2>&1; then
+                log_info "Disabling conflicting display manager: ${dm}.service"
+                sudo systemctl disable "${dm}.service" 2>/dev/null || true
+            fi
+        done
+        sudo systemctl set-default graphical.target 2>/dev/null || true
+        sudo systemctl enable -f sddm.service 2>/dev/null || true
+        if systemctl is-enabled sddm.service >/dev/null 2>&1; then
+            log_success "sddm.service successfully enabled as default display manager (graphical.target)."
+        else
+            log_warn "sddm.service could not be verified as enabled. Run 'sudo systemctl enable -f sddm.service' manually."
+        fi
+    else
+        log_warn "Sudo privileges not available. Unable to automatically enable sddm.service."
+    fi
+}
+
 echo -e "${COLOR_BOLD}======================================================${COLOR_RESET}"
 echo -e "${COLOR_BOLD} Unified Dotfiles Setup: Hyprland & Quickshell Desktop${COLOR_RESET}"
+echo -e "${COLOR_BOLD} Mode: ${DEPLOY_MODE} (Personal Config Preservation Active)${COLOR_RESET}"
 echo -e "${COLOR_BOLD}======================================================${COLOR_RESET}"
 
 # 1. Install System Dependencies (Arch Linux / Pacman Only)
@@ -223,9 +349,10 @@ else
     log_info "Ensure Hyprland, Quickshell, Mako, Cliphist, Grim, Slurp, Pipewire, SDDM, and Python dependencies are installed."
 fi
 
-# 2. Symlink Configs to ~/.config
-log_info "Deploying symlinks from ${DOTFILES_DIR}/.config to ${CONFIG_TARGET}..."
+# 2. Deploy Configs to ~/.config
+log_info "Deploying configurations to ${CONFIG_TARGET} (Mode: ${DEPLOY_MODE})..."
 mkdir -p "${CONFIG_TARGET}"
+preserve_existing_personal_configs "${CONFIG_TARGET}"
 
 DOT_CONFIG_DIRS=(
     "hypr"
@@ -249,49 +376,96 @@ DOT_CONFIG_DIRS=(
     "systemd"
 )
 
+if [ "$DEPLOY_MODE" = "copy" ]; then
+    log_info "Deploying in decoupled copy mode (all desktop settings stay in ~/.config, keeping git repository clean)..."
+    for pkg in "${DOT_CONFIG_DIRS[@]}"; do
+        SRC="${DOTFILES_DIR}/.config/${pkg}"
+        DEST="${CONFIG_TARGET}/${pkg}"
 
-for pkg in "${DOT_CONFIG_DIRS[@]}"; do
-    SRC="${DOTFILES_DIR}/.config/${pkg}"
-    DEST="${CONFIG_TARGET}/${pkg}"
-
-    if [ -d "$SRC" ]; then
-        if [ -L "$DEST" ]; then
-            rm "$DEST"
-        elif [ -d "$DEST" ]; then
-            BACKUP="${DEST}.backup_$(date +%Y%m%d_%H%M%S)"
-            log_warn "Existing directory at ${DEST} backed up to ${BACKUP}"
-            mv "$DEST" "$BACKUP"
+        if [ -d "$SRC" ]; then
+            if [ -L "$DEST" ]; then
+                rm "$DEST"
+            fi
+            mkdir -p "$DEST"
+            cp -rn "$SRC/"* "$DEST/" 2>/dev/null || true
+            log_success "Deployed ~/.config/${pkg} (decoupled local copy)"
         fi
-        ln -s "$SRC" "$DEST"
-        log_success "Symlinked ~/.config/${pkg} -> ${SRC}"
-    fi
-done
+    done
 
-# Symlink standalone config files
-for cfg_file in "starship.toml" "mimeapps.list" "dolphinrc" "kdeglobals" "kwinrc"; do
-    if [ -f "${DOTFILES_DIR}/.config/${cfg_file}" ]; then
-        FILE_DEST="${CONFIG_TARGET}/${cfg_file}"
-        if [ -L "$FILE_DEST" ]; then
-            rm "$FILE_DEST"
-        elif [ -f "$FILE_DEST" ]; then
-            mv "$FILE_DEST" "${FILE_DEST}.backup_$(date +%Y%m%d_%H%M%S)"
+    # Deploy standalone config files
+    for cfg_file in "starship.toml" "mimeapps.list" "dolphinrc" "kdeglobals" "kwinrc"; do
+        if [ -f "${DOTFILES_DIR}/.config/${cfg_file}" ]; then
+            FILE_DEST="${CONFIG_TARGET}/${cfg_file}"
+            if [ -L "$FILE_DEST" ]; then
+                rm "$FILE_DEST"
+            fi
+            if [ ! -f "$FILE_DEST" ]; then
+                cp "${DOTFILES_DIR}/.config/${cfg_file}" "$FILE_DEST"
+            fi
+            log_success "Deployed ~/.config/${cfg_file} (decoupled local copy)"
         fi
-        ln -s "${DOTFILES_DIR}/.config/${cfg_file}" "$FILE_DEST"
-        log_success "Symlinked ~/.config/${cfg_file} -> ${DOTFILES_DIR}/.config/${cfg_file}"
-    fi
-done
+    done
 
-# Symlink .zshrc
-if [ -f "${DOTFILES_DIR}/.zshrc" ]; then
-    ZSH_DEST="${HOME}/.zshrc"
-    if [ -L "$ZSH_DEST" ]; then
-        rm "$ZSH_DEST"
-    elif [ -f "$ZSH_DEST" ]; then
-        mv "$ZSH_DEST" "${ZSH_DEST}.backup_$(date +%Y%m%d_%H%M%S)"
+    # Deploy .zshrc
+    if [ -f "${DOTFILES_DIR}/.zshrc" ]; then
+        ZSH_DEST="${HOME}/.zshrc"
+        if [ -L "$ZSH_DEST" ]; then
+            rm "$ZSH_DEST"
+        fi
+        if [ ! -f "$ZSH_DEST" ]; then
+            cp "${DOTFILES_DIR}/.zshrc" "$ZSH_DEST"
+        fi
+        log_success "Deployed ~/.zshrc (decoupled local copy)"
     fi
-    ln -s "${DOTFILES_DIR}/.zshrc" "$ZSH_DEST"
-    log_success "Symlinked ~/.zshrc -> ${DOTFILES_DIR}/.zshrc"
+else
+    log_info "Deploying symlinks from ${DOTFILES_DIR}/.config to ${CONFIG_TARGET}..."
+    for pkg in "${DOT_CONFIG_DIRS[@]}"; do
+        SRC="${DOTFILES_DIR}/.config/${pkg}"
+        DEST="${CONFIG_TARGET}/${pkg}"
+
+        if [ -d "$SRC" ]; then
+            if [ -L "$DEST" ]; then
+                rm "$DEST"
+            elif [ -d "$DEST" ]; then
+                BACKUP="${DEST}.backup_$(date +%Y%m%d_%H%M%S)"
+                log_warn "Existing directory at ${DEST} backed up to ${BACKUP}"
+                preserve_existing_personal_configs "$DEST"
+                mv "$DEST" "$BACKUP"
+            fi
+            ln -s "$SRC" "$DEST"
+            log_success "Symlinked ~/.config/${pkg} -> ${SRC}"
+        fi
+    done
+
+    # Symlink standalone config files
+    for cfg_file in "starship.toml" "mimeapps.list" "dolphinrc" "kdeglobals" "kwinrc"; do
+        if [ -f "${DOTFILES_DIR}/.config/${cfg_file}" ]; then
+            FILE_DEST="${CONFIG_TARGET}/${cfg_file}"
+            if [ -L "$FILE_DEST" ]; then
+                rm "$FILE_DEST"
+            elif [ -f "$FILE_DEST" ]; then
+                mv "$FILE_DEST" "${FILE_DEST}.backup_$(date +%Y%m%d_%H%M%S)"
+            fi
+            ln -s "${DOTFILES_DIR}/.config/${cfg_file}" "$FILE_DEST"
+            log_success "Symlinked ~/.config/${cfg_file} -> ${DOTFILES_DIR}/.config/${cfg_file}"
+        fi
+    done
+
+    # Symlink .zshrc
+    if [ -f "${DOTFILES_DIR}/.zshrc" ]; then
+        ZSH_DEST="${HOME}/.zshrc"
+        if [ -L "$ZSH_DEST" ]; then
+            rm "$ZSH_DEST"
+        elif [ -f "$ZSH_DEST" ]; then
+            mv "$ZSH_DEST" "${ZSH_DEST}.backup_$(date +%Y%m%d_%H%M%S)"
+        fi
+        ln -s "${DOTFILES_DIR}/.zshrc" "$ZSH_DEST"
+        log_success "Symlinked ~/.zshrc -> ${DOTFILES_DIR}/.zshrc"
+    fi
 fi
+
+# Restore and honor all user personal configurations
+restore_and_honor_personal_configs
 
 # Configure Starship prompt & modern shell environment as default in ~/.bashrc
 BASHRC="${HOME}/.bashrc"
@@ -455,12 +629,13 @@ if [ -d "${DOTFILES_DIR}/sddm/themes/catppuccin-mocha" ]; then
 [Theme]
 Current=catppuccin-mocha
 EOF
-        log_info "Enabling sddm.service..."
-        sudo systemctl enable sddm.service 2>/dev/null || true
-        log_success "Catppuccin Mocha SDDM theme installed, activated (/etc/sddm.conf.d/theme.conf), and sddm.service enabled."
+        enable_sddm_display_manager
+        log_success "Catppuccin Mocha SDDM theme installed, activated (/etc/sddm.conf.d/theme.conf), and display manager verified."
     else
         log_warn "Sudo not available. Run 'sddm/scripts/install-theme.sh' with root privileges to activate the SDDM theme."
     fi
+else
+    enable_sddm_display_manager
 fi
 
 # 8. User Desktop Shortcuts (App Menu)
@@ -514,14 +689,26 @@ log_success "Application menus and icons deployed."
 
 # 9. Initialize Theme, Wallpaper & Color Variables
 log_info "Initializing desktop theme and dynamic color variables..."
-if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" ]; then
+if [ -f "${CONFIG_TARGET}/hypr/scripts/theme_switcher.py" ]; then
+    python3 "${CONFIG_TARGET}/hypr/scripts/theme_switcher.py" --set catppuccin-mocha --silent 2>/dev/null || true
+    log_success "Catppuccin Mocha theme variables initialized."
+elif [ -f "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" ]; then
     python3 "${DOTFILES_DIR}/.config/hypr/scripts/theme_switcher.py" --set catppuccin-mocha --silent 2>/dev/null || true
     log_success "Catppuccin Mocha theme variables initialized."
 fi
-if [ -f "${DOTFILES_DIR}/.config/hypr/scripts/wallpaper_switcher.py" ]; then
+if [ -f "${CONFIG_TARGET}/hypr/scripts/wallpaper_switcher.py" ]; then
+    python3 "${CONFIG_TARGET}/hypr/scripts/wallpaper_switcher.py" --init --silent 2>/dev/null || true
+    log_success "Desktop wallpaper initialized."
+elif [ -f "${DOTFILES_DIR}/.config/hypr/scripts/wallpaper_switcher.py" ]; then
     python3 "${DOTFILES_DIR}/.config/hypr/scripts/wallpaper_switcher.py" --init --silent 2>/dev/null || true
     log_success "Desktop wallpaper initialized."
 fi
+
+# Ensure git repository state remains pristine and not dirtied by runtime configuration
+if [ -d "${DOTFILES_DIR}/.git" ]; then
+    git -C "${DOTFILES_DIR}" checkout -- .config/hypr/hyprpaper.conf .config/hypr/theme.conf .config/hypr/theme_vars.lua 2>/dev/null || true
+fi
+
 # 10. Implement Dotfiles Sync & User Config Isolation by Default
 log_info "Enforcing Dotfiles Sync & User Config Isolation (skip-worktree)..."
 if [ -f "${DOTFILES_DIR}/scripts/dotfiles-push.sh" ]; then
@@ -532,7 +719,7 @@ if [ -f "${DOTFILES_DIR}/scripts/dotfiles-push.sh" ]; then
     log_success "User config isolation enforced: runtime theme and preferences protected from git tracking."
 fi
 
-# 10. System Enhancements: Fontconfig, ZRAM, Pacman Cache & Bluetooth
+# 11. System Enhancements: Fontconfig, ZRAM, Pacman Cache & Bluetooth
 log_info "Configuring system enhancements (Subpixel Fonts, ZRAM, Pacman cache, Bluetooth)..."
 if command -v sudo >/dev/null 2>&1; then
     # Subpixel LCD font rendering
@@ -564,6 +751,9 @@ EOF' 2>/dev/null || true
     sudo systemctl enable pcscd.socket 2>/dev/null || true
     sudo systemctl enable cups.socket 2>/dev/null || true
 
+    # Enable and verify SDDM display manager service
+    enable_sddm_display_manager
+
     # Bluetooth battery level reporting (keep FastConnectable disabled for security)
     if [ -f /etc/bluetooth/main.conf ] && ! grep -q "Experimental = true" /etc/bluetooth/main.conf; then
         sudo sed -i '/^\[General\]/a Experimental = true' /etc/bluetooth/main.conf 2>/dev/null || true
@@ -574,6 +764,10 @@ fi
 # 12. Personal Configurations & Modular Extensions Initialization
 log_info "Initializing modular personal configuration environment..."
 mkdir -p "${HOME}/.local/bin"
+mkdir -p "${CONFIG_TARGET}/hypr/user"
+mkdir -p "${CONFIG_TARGET}/shell/user"
+mkdir -p "${CONFIG_TARGET}/nvim/lua/custom"
+mkdir -p "${CONFIG_TARGET}/nvim/lua/plugins"
 mkdir -p "${DOTFILES_DIR}/.config/hypr/user"
 mkdir -p "${DOTFILES_DIR}/.config/shell/user"
 mkdir -p "${DOTFILES_DIR}/.config/nvim/lua/custom"

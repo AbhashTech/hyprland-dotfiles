@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OCR Screen Snip
+GenericName=OCR Text Grabber
+Comment=Select any area on your screen, extract text via OCR, and copy it to the clipboard
+Exec=python3 /home/kunal/.config/hypr/scripts/ocr_grab.py
+Icon=accessories-character-map
+Terminal=false
+Categories=Utility;Office;Graphics;
+StartupWMClass=ocr-grab
+StartupNotify=true
+Keywords=ocr;snip;grab;extract;text;tesseract;screenshot;copy;
