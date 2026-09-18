@@ -23,7 +23,8 @@ __pycache__/
 !.config/quickshell/custom_plugins/README.md
 .config/quickshell/.generated/
 .config/quickshell/generated/
-.config/systemd/user/*.wants/
+.config/systemd/user/*
+!.config/systemd/user/quickshell-filepicker-portal.service
 
 # Modular User Personal Configurations (Self-descriptive & Untracked)
 .config/hypr/user/*
