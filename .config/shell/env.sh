@@ -107,5 +107,14 @@ if [ -d "${HOME}/.config/shell/user" ]; then
         unset _had_nullglob
     fi
 fi
+# --- Keyring & SSH Agent Socket Fallback ---
+if [ -z "$SSH_AUTH_SOCK" ]; then
+    if [ -S "${XDG_RUNTIME_DIR}/keyring/ssh" ]; then
+        export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/keyring/ssh"
+    elif [ -S "${XDG_RUNTIME_DIR}/gcr/ssh" ]; then
+        export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/gcr/ssh"
+    fi
+fi
+
 [[ -f "${HOME}/.config/shell/env.local.sh" ]] && source "${HOME}/.config/shell/env.local.sh"
 

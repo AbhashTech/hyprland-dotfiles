@@ -23,6 +23,7 @@ __pycache__/
 !.config/quickshell/custom_plugins/README.md
 .config/quickshell/.generated/
 .config/quickshell/generated/
+.config/systemd/user/*.wants/
 
 # Modular User Personal Configurations (Self-descriptive & Untracked)
 .config/hypr/user/*

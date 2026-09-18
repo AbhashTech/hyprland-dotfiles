@@ -160,6 +160,7 @@ if command -v pacman >/dev/null 2>&1; then
         # Authentication, Keyring & Security
         gnome-keyring
         libsecret
+        seahorse
         polkit-gnome
         libfido2
         ccid
@@ -328,6 +329,11 @@ if [ -f "${DOTFILES_DIR}/.config/systemd/user/quickshell-filepicker-portal.servi
     systemctl --user enable --now quickshell-filepicker-portal.service 2>/dev/null || true
     log_success "Quickshell file picker portal backend service enabled and started."
 fi
+
+# Enable GNOME Keyring daemon and socket
+log_info "Enabling GNOME Keyring daemon and socket services..."
+systemctl --user enable --now gnome-keyring-daemon.service gnome-keyring-daemon.socket 2>/dev/null || true
+log_success "GNOME Keyring services enabled."
 
 # Also symlink the portal config files explicitly (in case ~/.config/xdg-desktop-portal is a real dir)
 XDP_CONF_DIR="${HOME}/.config/xdg-desktop-portal"
