@@ -19,7 +19,7 @@ Rectangle {
     readonly property var actions: [
         { id: "lock", label: "Lock", icon: "󰌾", key: "L", desc: "hyprlock" },
         { id: "suspend", label: "Suspend", icon: "󰒲", key: "U", desc: "systemctl suspend" },
-        { id: "logout", label: "Logout", icon: "󰍃", key: "E", desc: "hyprctl dispatch exit" },
+        { id: "logout", label: "Logout", icon: "󰍃", key: "E", desc: "hyprctl dispatch 'hl.dsp.exit()'" },
         { id: "reboot", label: "Reboot", icon: "󰑐", key: "R", desc: "systemctl reboot" },
         { id: "shutdown", label: "Shutdown", icon: "󰐥", key: "S", desc: "systemctl poweroff" }
     ]
@@ -32,13 +32,13 @@ Rectangle {
         PluginManager.closeAll();
         switch (actionId) {
             case "lock":
-                execProc.exec(["bash", "-c", "hyprlock &"]);
+                execProc.exec(["bash", "-c", "hyprctl dispatch 'hl.dsp.exec_cmd(\"pidof hyprlock || hyprlock\")' 2>/dev/null || pidof hyprlock || nohup hyprlock </dev/null >/dev/null 2>&1 &"]);
                 break;
             case "suspend":
                 execProc.exec(["systemctl", "suspend"]);
                 break;
             case "logout":
-                execProc.exec(["bash", "-c", "hyprctl eval 'return hl.dsp.exit()' || loginctl terminate-session ${XDG_SESSION_ID}"]);
+                execProc.exec(["bash", "-c", "hyprctl dispatch 'hl.dsp.exit()' 2>/dev/null || hyprctl dispatch exit 2>/dev/null || loginctl terminate-user $USER 2>/dev/null || loginctl terminate-session ${XDG_SESSION_ID}"]);
                 break;
             case "reboot":
                 execProc.exec(["systemctl", "reboot"]);
