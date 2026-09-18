@@ -414,168 +414,23 @@ EOF
 fi
 
 # 8. User Desktop Shortcuts (App Menu)
-log_info "Deploying custom desktop application shortcuts..."
+log_info "Deploying custom desktop application shortcuts from hypr/scripts..."
 mkdir -p "${HOME}/.local/share/applications"
 
-cat > "${HOME}/.local/share/applications/app-shortcut-creator.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=App Shortcut Creator
-GenericName=Desktop Entry Creator
-Comment=Create and manage application shortcuts for your App menu
-Exec=python3 ${HOME}/.config/hypr/scripts/app_shortcut_creator.py
-Icon=preferences-desktop-keyboard-shortcuts
-Terminal=false
-Categories=Utility;Settings;DesktopSettings;Development;
-StartupWMClass=app-shortcut-creator
-StartupNotify=true
-EOF
-
-cat > "${HOME}/.local/share/applications/theme-manager.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Theme Manager
-GenericName=Desktop Theme & Palette Switcher
-Comment=Select and apply custom color palettes across Hyprland, Quickshell, and applications
-Exec=python3 ${HOME}/.config/hypr/scripts/theme_switcher.py --gui
-Icon=preferences-desktop-theme
-Terminal=false
-Categories=Utility;Settings;DesktopSettings;Appearance;
-StartupWMClass=theme-manager
-StartupNotify=true
-Keywords=theme;palette;colorscheme;hyprland;catppuccin;dracula;nord;gruvbox;
-EOF
-
-cat > "${HOME}/.local/share/applications/ocr-language-manager.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=OCR Language Manager
-GenericName=Tesseract OCR Language Manager & Model Installer
-Comment=Install language models, manage active OCR recognition languages, and test capture
-Exec=python3 ${HOME}/.config/hypr/scripts/ocr_language_manager.py --gui
-Icon=ocr-language-manager
-Terminal=false
-Categories=Utility;Settings;DesktopSettings;Office;
-StartupWMClass=ocr-language-manager
-StartupNotify=true
-Keywords=ocr;tesseract;language;text;grab;scanner;translate;
-EOF
-
-cat > "${HOME}/.local/share/applications/hyprsunset-hypridle.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Night Light & Idle Manager
-GenericName=Display Power & Night Light Control
-Comment=Configure Hyprsunset color temperature, Hypridle timeouts, monitor turn-off, and Caffeine mode
-Exec=python3 ${HOME}/.config/hypr/scripts/sunset_idle_manager.py --gui
-Icon=preferences-desktop-display
-Terminal=false
-Categories=Utility;Settings;DesktopSettings;HardwareSettings;
-StartupWMClass=sunset-idle-manager
-StartupNotify=true
-Keywords=hyprsunset;hypridle;nightlight;bluelight;display;screen;idle;dpms;sleep;caffeine;brightness;temperature;
-Actions=ToggleNightLight;TurnOffMonitor;CaffeineMode;OpenMenu;
-
-[Desktop Action ToggleNightLight]
-Name=Toggle Night Light (On/Off)
-Exec=python3 ${HOME}/.config/hypr/scripts/sunset_idle_manager.py --sunset-toggle
-
-[Desktop Action TurnOffMonitor]
-Name=Turn Off Displays Now (DPMS)
-Exec=python3 ${HOME}/.config/hypr/scripts/sunset_idle_manager.py --dpms-off
-
-[Desktop Action CaffeineMode]
-Name=Toggle Caffeine Mode (Inhibit Sleep)
-Exec=python3 ${HOME}/.config/hypr/scripts/sunset_idle_manager.py --caffeine-toggle
-
-[Desktop Action OpenMenu]
-Name=Open Interactive Idle & Power Menu
-Exec=python3 ${HOME}/.config/hypr/scripts/sunset_idle_manager.py --menu
-EOF
-
-cat > "${HOME}/.local/share/applications/keyboard-layout-manager.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Keyboard Layout Manager
-GenericName=Input Layouts & Regional Variant Switcher
-Comment=Switch and configure keyboard layouts, Indian regional variants, and XKB options
-Exec=python3 ${HOME}/.config/hypr/scripts/keyboard_layout.py --gui
-Icon=preferences-desktop-keyboard
-Terminal=false
-Categories=Utility;Settings;DesktopSettings;HardwareSettings;
-StartupWMClass=keyboard-layout-manager
-StartupNotify=true
-Keywords=keyboard;layout;variant;language;typing;input;xkb;hindi;tamil;telugu;dvorak;colemak;marathi;bengali;kannada;malayalam;gujarati;
-EOF
-
-cat > "${HOME}/.local/share/applications/plugin-manager.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Plugin Manager
-GenericName=Quickshell Plugin Manager
-Comment=Manage, configure, enable/disable, install and scaffold Quickshell plugins
-Exec=bash ${HOME}/.config/quickshell/scripts/toggle_plugin.sh plugin_manager
-Icon=preferences-plugin
-Terminal=false
-Categories=Utility;Settings;DesktopSettings;System;
-StartupWMClass=quickshell:plugin_manager
-StartupNotify=true
-Keywords=plugin;manager;quickshell;extensions;widgets;custom;store;
-EOF
-
-cat > "${HOME}/.local/share/applications/dotpersonal-manager.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Personal Settings Manager
-GenericName=Modular Dotfiles & Private Backup Manager
-Comment=Manage untracked personal configurations, export backups, and sync private Git repository
-Exec=python3 ${HOME}/.config/hypr/scripts/dotpersonal_gui.py
-Icon=preferences-desktop-personal
-Terminal=false
-Categories=Utility;Settings;DesktopSettings;
-StartupWMClass=dotpersonal-manager
-StartupNotify=true
-Keywords=dotfiles;personal;backup;git;export;import;private;modular;neovim;hyprland;shell;
-EOF
-
-cat > "${HOME}/.local/share/applications/keybind-manager.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Keybindings Manager
-GenericName=Hyprland Shortcuts & Hotkeys Manager
-Comment=Manage, override, disable, and create custom Hyprland keybindings
-Exec=python3 ${HOME}/.config/hypr/scripts/keybind_manager.py
-Icon=preferences-desktop-keyboard
-Terminal=false
-Categories=Utility;Settings;DesktopSettings;
-StartupWMClass=keybind-manager
-StartupNotify=true
-Keywords=hyprland;keybind;keys;shortcuts;hotkeys;binds;keyboard;actions;override;custom;
-EOF
-
-cat > "${HOME}/.local/share/applications/permission-manager.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Hyprland Permissions
-GenericName=Security & Permission Rules Manager
-Comment=Manage persistent screencopy and plugin security permissions for Hyprland
-Exec=python3 ${HOME}/.config/hypr/scripts/permission_manager.py --gui
-Icon=permission-manager
-Terminal=false
-Categories=Settings;DesktopSettings;Security;
-StartupWMClass=permission-manager
-StartupNotify=true
-Keywords=permission;security;hyprland;screencopy;hyprlock;capture;portal;plugin;
-EOF
+# Install all .desktop files from hypr/scripts
+if [ -d "${DOTFILES_DIR}/.config/hypr/scripts" ]; then
+    for dt_file in "${DOTFILES_DIR}/.config/hypr/scripts/"*.desktop; do
+        if [ -f "$dt_file" ]; then
+            dt_name="$(basename "$dt_file")"
+            dest_file="${HOME}/.local/share/applications/${dt_name}"
+            cp "$dt_file" "$dest_file"
+            # Normalize home directory paths in Exec and Icon keys for current user
+            sed -i "s|/home/[^/]*|${HOME}|g; s|~/\.config|${HOME}/.config|g; s|\.dotfiles/\.config|\.config|g" "$dest_file" 2>/dev/null || true
+            chmod +x "$dest_file" 2>/dev/null || true
+            log_success "Installed desktop shortcut: ${dt_name}"
+        fi
+    done
+fi
 
 chmod +x "${HOME}/.local/share/applications/"*.desktop 2>/dev/null || true
 
