@@ -335,6 +335,11 @@ log_info "Enabling GNOME Keyring daemon and socket services..."
 systemctl --user enable --now gnome-keyring-daemon.service gnome-keyring-daemon.socket 2>/dev/null || true
 log_success "GNOME Keyring services enabled."
 
+# Enable Hyprland Polkit Authentication Agent
+log_info "Enabling Hyprland Polkit authentication agent service..."
+systemctl --user enable --now hyprpolkitagent.service 2>/dev/null || true
+log_success "Hyprland Polkit authentication agent enabled."
+
 # Also symlink the portal config files explicitly (in case ~/.config/xdg-desktop-portal is a real dir)
 XDP_CONF_DIR="${HOME}/.config/xdg-desktop-portal"
 mkdir -p "${XDP_CONF_DIR}"

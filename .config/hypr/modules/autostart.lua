@@ -15,10 +15,19 @@
 -- end)
 
 hl.on("hyprland.start", function ()
+    -- 1. Sync session environment to D-Bus and systemd user session
+    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORMTHEME QT_USE_PORTAL GTK_USE_PORTAL")
+    hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORMTHEME QT_USE_PORTAL GTK_USE_PORTAL 2>/dev/null || true")
+
+    -- 2. Security & Authentication Agents
+    hl.exec_cmd("systemctl --user start hyprpolkitagent.service 2>/dev/null || /usr/lib/hyprpolkitagent/hyprpolkitagent &")
+    hl.exec_cmd("gnome-keyring-daemon --start --components=secrets,ssh,pkcs11 &")
+
+    -- 3. Core Desktop Daemons & Quickshell
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("mako")
     hl.exec_cmd("hypridle")
-    hl.exec_cmd("systemctl --user start hyprpolkitagent 2>/dev/null || /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 & || /usr/lib/polkit-kde-authentication-agent-1 &")
+    hl.exec_cmd("xsettingsd &")
     hl.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/launch_quickshell.sh --restart")
     hl.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --daemon")
     hl.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/monitor_workspace_manager.py --daemon")
@@ -26,8 +35,4 @@ hl.on("hyprland.start", function ()
     hl.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/quickshell/plugins/workspace_viewer/window_preview_capture.py &")
     hl.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/wallpaper_switcher.py --init")
     hl.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/bluetooth_agent.py &")
-    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORMTHEME QT_USE_PORTAL GTK_USE_PORTAL")
-    hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORMTHEME QT_USE_PORTAL GTK_USE_PORTAL 2>/dev/null || true")
-    hl.exec_cmd("xsettingsd &")
-    hl.exec_cmd("gnome-keyring-daemon --start --components=secrets,ssh,pkcs11 &")
 end)
