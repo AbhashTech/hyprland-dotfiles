@@ -332,7 +332,14 @@ if command -v pacman >/dev/null 2>&1; then
         gtk3
         gtk4
         gtk-layer-shell
-
+        
+        #Development & Nvim with plugins requirements
+        node
+        npm
+        tree-sitter-cli
+        base-devel
+        go
+        
         # SDDM Display Manager
         sddm
         qt6-declarative
