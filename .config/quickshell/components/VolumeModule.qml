@@ -80,8 +80,8 @@ Rectangle {
             }
         ]
         shortcuts: [
-            { action: "Toggle Mute", key: "Left Click" },
-            { action: "Audio Mixer Menu", key: "Right Click" },
+            { action: "Audio Mixer Menu", key: "Left Click" },
+            { action: "Toggle Mute", key: "Right Click" },
             { action: "Volume Up / Down", key: "Scroll" }
         ]
     }
@@ -123,9 +123,9 @@ Rectangle {
                 BarConfig.endDrag();
                 didDrag = false;
             } else if (mouse.button === Qt.LeftButton) {
-                ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/volume_control.py", "mute"]);
-            } else if (mouse.button === Qt.RightButton) {
                 PluginManager.toggle("volume");
+            } else if (mouse.button === Qt.RightButton) {
+                ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/volume_control.py", "mute"]);
             }
         }
 
