@@ -825,7 +825,7 @@ def launch_gtk_gui():
     css_provider.load_from_data(css_data.encode("utf-8"))
     screen = Gdk.Screen.get_default()
     Gtk.StyleContext.add_provider_for_screen(
-        screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
     )
 
     class OCRLangWindow(Gtk.Window):

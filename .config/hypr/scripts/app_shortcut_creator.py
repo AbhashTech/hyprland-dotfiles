@@ -627,7 +627,7 @@ def run_gtk_gui():
             Gtk.StyleContext.add_provider_for_screen(
                 screen,
                 css_provider,
-                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+                Gtk.STYLE_PROVIDER_PRIORITY_USER,
             )
         except Exception as e:
             print(f"Warning: Custom CSS error: {e}", file=sys.stderr)

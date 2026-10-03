@@ -140,7 +140,7 @@ def get_active_theme_colors():
     """Load colors from active theme JSON file with fallback."""
     cache_state = HOME / ".cache" / "hypr_theme_state.json"
     current_txt = HOME / ".cache" / "current_theme"
-    theme_id = "gruvbox-light"
+    theme_id = "catppuccin-mocha"
 
     if cache_state.exists():
         try:
@@ -1182,7 +1182,7 @@ def launch_gtk_gui(initial_tab=0):
     css_provider.load_from_data(css_data.encode("utf-8"))
     screen = Gdk.Screen.get_default()
     Gtk.StyleContext.add_provider_for_screen(
-        screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
     )
 
     class KeyboardLayoutWindow(Gtk.Window):

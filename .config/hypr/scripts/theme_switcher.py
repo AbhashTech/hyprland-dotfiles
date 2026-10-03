@@ -1662,7 +1662,7 @@ def run_gui_theme_manager(themes=None):
         * {{
             font-family: system-ui, -apple-system, 'Noto Sans', 'Segoe UI', 'Ubuntu', 'DejaVu Sans', sans-serif;
         }}
-        window, dialog, .dialog-vbox {{
+        window, dialog, .dialog-vbox, paned, scrolledwindow, viewport, box, grid {{
             background-color: {base};
             color: {text};
         }}
@@ -1934,7 +1934,7 @@ def run_gui_theme_manager(themes=None):
             Gtk.StyleContext.add_provider_for_screen(
                 Gdk.Screen.get_default(),
                 self.css_provider,
-                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+                Gtk.STYLE_PROVIDER_PRIORITY_USER
             )
 
             self._setup_css()
@@ -1951,6 +1951,11 @@ def run_gui_theme_manager(themes=None):
             tdata = self.themes.get(tid) or self.themes.get(DEFAULT_THEME, {})
             colors = tdata.get("colors", {})
             ttype = tdata.get("type", "dark")
+
+            settings = Gtk.Settings.get_default()
+            if settings:
+                settings.set_property("gtk-application-prefer-dark-theme", ttype == "dark")
+
             css_str = get_theme_manager_gtk_css(colors, ttype)
             screen = Gdk.Screen.get_default()
             try:
@@ -1960,7 +1965,7 @@ def run_gui_theme_manager(themes=None):
                 Gtk.StyleContext.add_provider_for_screen(
                     screen,
                     self.css_provider,
-                    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+                    Gtk.STYLE_PROVIDER_PRIORITY_USER,
                 )
             except Exception as e:
                 print(f"Warning: Failed to load custom CSS: {e}", file=sys.stderr)

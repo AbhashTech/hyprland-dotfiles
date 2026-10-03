@@ -901,7 +901,7 @@ def launch_gui():
     Gtk.StyleContext.add_provider_for_screen(
         Gdk.Screen.get_default(),
         css_provider,
-        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        Gtk.STYLE_PROVIDER_PRIORITY_USER
     )
 
     main_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
