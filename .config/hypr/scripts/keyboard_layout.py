@@ -936,12 +936,71 @@ def launch_gtk_gui(initial_tab=0):
     css_provider = Gtk.CssProvider()
     css_data = f"""
     * {{
-        font-family: system-ui, -apple-system, 'Inter', 'Roboto', 'Noto Sans', 'JetBrainsMono Nerd Font', sans-serif;
+        font-family: 'JetBrainsMono Nerd Font', system-ui, -apple-system, 'Inter', 'Roboto', 'Noto Sans', sans-serif;
     }}
 
-    window {{
+    window,
+    notebook,
+    notebook > stack,
+    notebook > stack > * {{
         background-color: {c_base};
         color: {c_text};
+    }}
+
+    box,
+    grid {{
+        background-color: transparent;
+    }}
+
+    scrolledwindow,
+    viewport {{
+        background-color: {c_base};
+        border: none;
+    }}
+
+    list,
+    listbox {{
+        background-color: {c_base};
+        color: {c_text};
+        border: none;
+    }}
+
+    list row,
+    listbox row,
+    row {{
+        background-color: transparent;
+        color: {c_text};
+        border: none;
+        padding: 0;
+        margin: 0;
+    }}
+
+    list row:hover,
+    row:hover {{
+        background-color: transparent;
+    }}
+
+    list row:selected,
+    row:selected {{
+        background-color: transparent;
+    }}
+
+    label {{
+        color: {c_text};
+    }}
+
+    scrollbar trough {{
+        background-color: {c_base};
+        border: none;
+    }}
+    scrollbar slider {{
+        background-color: {c_surface1};
+        border-radius: 4px;
+        min-width: 6px;
+        min-height: 6px;
+    }}
+    scrollbar slider:hover {{
+        background-color: {c_surface2};
     }}
 
     /* Theme-matched tooltips */
@@ -1003,9 +1062,9 @@ def launch_gtk_gui(initial_tab=0):
         border-radius: 6px;
         font-weight: 600;
         font-size: 12px;
-        padding: 5px 12px;
+        padding: 6px 14px;
         border: 1px solid {c_surface1};
-        background-color: {c_mantle};
+        background-color: {c_surface0};
         color: {c_text};
         transition: all 100ms ease-in-out;
     }}
@@ -1014,8 +1073,12 @@ def launch_gtk_gui(initial_tab=0):
         font-weight: 600;
     }}
     button:hover {{
-        background-color: {c_surface0};
-        border-color: {c_surface2};
+        background-color: {c_surface1};
+        border-color: {c_accent};
+        color: {c_text};
+    }}
+    button:hover label {{
+        color: {c_text};
     }}
 
     button.btn-accent {{
@@ -1038,17 +1101,34 @@ def launch_gtk_gui(initial_tab=0):
 
     button.btn-icon {{
         padding: 4px 8px;
-        font-size: 11px;
-        background-color: transparent;
-        border-color: transparent;
+        font-size: 12px;
+        background-color: {c_surface0};
+        border: 1px solid {c_surface1};
+        border-radius: 6px;
+        margin-left: 2px;
+    }}
+    button.btn-icon label {{
+        color: {c_subtext0};
+        font-weight: 700;
     }}
     button.btn-icon:hover {{
-        background-color: {c_surface0};
-        border-color: {c_surface1};
+        background-color: {c_surface1};
+        border-color: {c_accent};
+    }}
+    button.btn-icon:hover label {{
+        color: {c_text};
     }}
 
+    button.btn-icon-danger {{
+        background-color: {c_surface0};
+        border: 1px solid {c_surface1};
+    }}
+    button.btn-icon-danger label {{
+        color: {c_subtext0};
+        font-weight: 700;
+    }}
     button.btn-icon-danger:hover {{
-        background-color: rgba(243, 139, 168, 0.2);
+        background-color: rgba(232, 36, 36, 0.2);
         border-color: {c_red};
         color: {c_red};
     }}
@@ -1061,16 +1141,25 @@ def launch_gtk_gui(initial_tab=0):
         background-color: {c_mantle};
         border: 1px solid {c_surface0};
         border-radius: 8px;
-        padding: 8px 12px;
+        padding: 10px 14px;
         margin: 3px 12px;
+        transition: all 100ms ease-in-out;
     }}
     .layout-card:hover {{
         background-color: {c_surface0};
         border-color: {c_surface1};
     }}
     .layout-card-active {{
-        background-color: {c_mantle};
+        background-color: {c_surface0};
         border: 1.5px solid {c_accent};
+    }}
+    .layout-card label {{
+        color: {c_text};
+    }}
+    .layout-title {{
+        color: {c_text};
+        font-weight: 700;
+        font-size: 13px;
     }}
 
     /* Tag & Badges */
@@ -1123,7 +1212,7 @@ def launch_gtk_gui(initial_tab=0):
         color: {c_subtext0};
         border: 1px solid {c_surface0};
         border-radius: 12px;
-        padding: 3px 10px;
+        padding: 4px 12px;
         font-size: 11px;
         font-weight: 600;
     }}
@@ -1173,6 +1262,21 @@ def launch_gtk_gui(initial_tab=0):
     }}
 
     /* Modern Switch & Checkbox */
+    checkbutton {{
+        background-color: transparent;
+    }}
+    checkbutton check {{
+        min-width: 18px;
+        min-height: 18px;
+        border-radius: 4px;
+        border: 1px solid {c_surface2};
+        background-color: {c_surface0};
+    }}
+    checkbutton check:checked {{
+        background-color: {c_accent};
+        border-color: {c_accent};
+        color: {accent_fg};
+    }}
     checkbutton label {{
         color: {c_text};
         font-size: 12px;
@@ -1181,9 +1285,10 @@ def launch_gtk_gui(initial_tab=0):
 
     css_provider.load_from_data(css_data.encode("utf-8"))
     screen = Gdk.Screen.get_default()
-    Gtk.StyleContext.add_provider_for_screen(
-        screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
-    )
+    if screen:
+        Gtk.StyleContext.add_provider_for_screen(
+            screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
+        )
 
     class KeyboardLayoutWindow(Gtk.Window):
         def __init__(self, start_tab=0):
@@ -1350,7 +1455,8 @@ def launch_gtk_gui(initial_tab=0):
 
                 # Name & Tag
                 name_lbl = Gtk.Label(label=desc, xalign=0)
-                name_lbl.set_markup(f"<span weight='bold'>{html.escape(desc)}</span>")
+                name_lbl.get_style_context().add_class("layout-title")
+                name_lbl.set_markup(f"<span weight='bold' foreground='{c_text}'>{html.escape(desc)}</span>")
                 card.pack_start(name_lbl, False, False, 4)
 
                 tag_lbl = Gtk.Label(label=tag)
@@ -1537,6 +1643,14 @@ def launch_gtk_gui(initial_tab=0):
                 card = self.create_catalog_card(item)
                 self.catalog_listbox.add(card)
 
+            if count == 0:
+                empty_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+                empty_card.get_style_context().add_class("layout-card")
+                lbl_empty = Gtk.Label(xalign=0.5)
+                lbl_empty.set_markup(f"<span foreground='{c_subtext0}'>No keyboard layouts found matching '<b>{html.escape(query)}</b>'</span>")
+                empty_card.pack_start(lbl_empty, True, True, 14)
+                self.catalog_listbox.add(empty_card)
+
             self.catalog_listbox.show_all()
 
         def create_catalog_card(self, item):
@@ -1552,7 +1666,8 @@ def launch_gtk_gui(initial_tab=0):
             card.pack_start(flag_lbl, False, False, 2)
 
             name_lbl = Gtk.Label(xalign=0)
-            name_lbl.set_markup(f"<span weight='bold'>{html.escape(desc)}</span>")
+            name_lbl.get_style_context().add_class("layout-title")
+            name_lbl.set_markup(f"<span weight='bold' foreground='{c_text}'>{html.escape(desc)}</span>")
             card.pack_start(name_lbl, False, False, 4)
 
             tag_lbl = Gtk.Label(label=tag)
@@ -1659,7 +1774,8 @@ def launch_gtk_gui(initial_tab=0):
                 card.pack_start(icon_lbl, False, False, 2)
 
                 name_lbl = Gtk.Label(xalign=0)
-                name_lbl.set_markup(f"<span weight='bold'>{html.escape(kb.get('name', 'Keyboard'))}</span>")
+                name_lbl.get_style_context().add_class("layout-title")
+                name_lbl.set_markup(f"<span weight='bold' foreground='{c_text}'>{html.escape(kb.get('name', 'Keyboard'))}</span>")
                 card.pack_start(name_lbl, False, False, 2)
 
                 if kb.get("main"):
@@ -1696,7 +1812,8 @@ def launch_gtk_gui(initial_tab=0):
 
                 info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
                 title_lbl = Gtk.Label(xalign=0)
-                title_lbl.set_markup(f"<span weight='bold'>{html.escape(opt_title)}</span>")
+                title_lbl.get_style_context().add_class("layout-title")
+                title_lbl.set_markup(f"<span weight='bold' foreground='{c_text}'>{html.escape(opt_title)}</span>")
                 info_box.pack_start(title_lbl, False, False, 0)
 
                 desc_lbl = Gtk.Label(xalign=0)
