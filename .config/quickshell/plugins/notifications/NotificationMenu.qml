@@ -38,7 +38,8 @@ Rectangle {
             if (q.length === 0 ||
                 (item.summary && item.summary.toLowerCase().indexOf(q) !== -1) ||
                 (item.body && item.body.toLowerCase().indexOf(q) !== -1) ||
-                (item.appName && item.appName.toLowerCase().indexOf(q) !== -1)) {
+                (item.appName && item.appName.toLowerCase().indexOf(q) !== -1) ||
+                (item.timeStr && item.timeStr.toLowerCase().indexOf(q) !== -1)) {
                 list.push(item);
             }
         }
@@ -478,6 +479,38 @@ Rectangle {
                         }
 
                         Item { Layout.fillWidth: true }
+
+                        // Display Time when notification was displayed
+                        RowLayout {
+                            spacing: 4
+                            visible: !!(modelData.timeStr || modelData.timeAgo)
+
+                            Text {
+                                text: "󰥔"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                color: Theme.overlay0
+                            }
+
+                            Text {
+                                text: modelData.timeStr || ""
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                color: Theme.subtext0
+                                elide: Text.ElideRight
+                            }
+
+                            ToolTip.visible: timeMouse.containsMouse
+                            ToolTip.text: modelData.timeAgo ? (modelData.timeStr + " (" + modelData.timeAgo + ")") : (modelData.timeStr || "")
+                            ToolTip.delay: 300
+
+                            MouseArea {
+                                id: timeMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.NoButton
+                            }
+                        }
 
                         RowLayout {
                             spacing: 4

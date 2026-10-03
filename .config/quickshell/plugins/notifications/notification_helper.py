@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 DISMISSED_FILE = Path.home() / ".cache" / "quickshell_dismissed_notifs.json"
+TIMESTAMPS_FILE = Path.home() / ".cache" / "quickshell_notif_timestamps.json"
 
 def get_dismissed_ids():
     try:
@@ -33,6 +34,101 @@ def clear_dismissed_cache():
             DISMISSED_FILE.unlink()
     except Exception:
         pass
+
+def get_timestamps():
+    try:
+        if TIMESTAMPS_FILE.exists():
+            data = json.loads(TIMESTAMPS_FILE.read_text())
+            if isinstance(data, dict):
+                return {int(k): float(v) for k, v in data.items() if str(k).isdigit()}
+    except Exception:
+        pass
+    return {}
+
+def save_timestamps(ts_dict):
+    try:
+        TIMESTAMPS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        if len(ts_dict) > 1000:
+            sorted_items = sorted(ts_dict.items(), key=lambda x: x[1], reverse=True)[:500]
+            ts_dict = dict(sorted_items)
+        TIMESTAMPS_FILE.write_text(json.dumps({str(k): v for k, v in ts_dict.items()}))
+    except Exception:
+        pass
+
+def clear_timestamps_cache():
+    try:
+        if TIMESTAMPS_FILE.exists():
+            TIMESTAMPS_FILE.unlink()
+    except Exception:
+        pass
+
+def extract_time_from_text(text):
+    if not text:
+        return None
+    m = re.search(r'(\d{4})-(\d{2})-(\d{2})[_\sT](\d{2})[-:](\d{2})[-:](\d{2})', text)
+    if m:
+        try:
+            import datetime
+            dt = datetime.datetime(
+                int(m.group(1)), int(m.group(2)), int(m.group(3)),
+                int(m.group(4)), int(m.group(5)), int(m.group(6))
+            )
+            return dt.timestamp()
+        except Exception:
+            pass
+    return None
+
+def format_time(ts):
+    now = time.time()
+    diff = max(0, int(now - ts))
+    if diff < 60:
+        time_ago = "Just now"
+    elif diff < 3600:
+        mins = max(1, diff // 60)
+        time_ago = f"{mins}m ago"
+    elif diff < 86400:
+        hours = max(1, diff // 3600)
+        time_ago = f"{hours}h ago"
+    else:
+        days = max(1, diff // 86400)
+        time_ago = f"{days}d ago"
+
+    lt = time.localtime(ts)
+    now_lt = time.localtime(now)
+    if lt.tm_year == now_lt.tm_year and lt.tm_yday == now_lt.tm_yday:
+        time_str = time.strftime("%-I:%M %p", lt)
+    elif lt.tm_year == now_lt.tm_year:
+        time_str = time.strftime("%b %-d, %-I:%M %p", lt)
+    else:
+        time_str = time.strftime("%b %-d %Y, %-I:%M %p", lt)
+
+    return time_str, time_ago
+
+def ensure_timestamps(items):
+    ts_map = get_timestamps()
+    changed = False
+    now = time.time()
+
+    for idx, item in enumerate(items):
+        raw_id = get_field_val(item, "id", default=None)
+        try:
+            nid = int(raw_id)
+        except (ValueError, TypeError):
+            continue
+        if nid not in ts_map:
+            summary = str(get_field_val(item, "summary", default=""))
+            body = str(get_field_val(item, "body", default=""))
+            extracted_ts = extract_time_from_text(f"{summary} {body}")
+            if extracted_ts:
+                ts_map[nid] = extracted_ts
+            else:
+                ts_map[nid] = now - (idx * 2) if not ts_map else now
+            changed = True
+
+    if changed:
+        save_timestamps(ts_map)
+
+    return ts_map
 
 def restart_mako():
     """Restart mako daemon in background to completely flush mako internal buffer."""
@@ -112,11 +208,15 @@ def get_notifications():
         pass
 
     dismissed = get_dismissed_ids()
+    ts_map = ensure_timestamps(live_data + hist_data)
     seen_ids = set()
     notifs = []
 
     # Process live first
     for item in live_data:
+        category = str(get_field_val(item, "category", default="")).lower()
+        if category == "replay":
+            continue
         raw_id = get_field_val(item, "id", default=None)
         try:
             nid = int(raw_id)
@@ -130,6 +230,8 @@ def get_notifications():
         body = clean_text(get_field_val(item, "body", default=""), max_len=400)
         urgency = str(get_field_val(item, "urgency", default="normal"))
         actions = get_field_val(item, "actions", default={})
+        ts = ts_map.get(nid, time.time())
+        time_str, time_ago = format_time(ts)
         notifs.append({
             "id": nid,
             "appName": app,
@@ -137,11 +239,17 @@ def get_notifications():
             "body": body,
             "urgency": urgency,
             "isLive": True,
-            "hasActions": bool(actions)
+            "hasActions": bool(actions),
+            "timestamp": int(ts),
+            "timeStr": time_str,
+            "timeAgo": time_ago
         })
 
     # Process history (up to max history capacity: 500 items)
     for item in hist_data[:500]:
+        category = str(get_field_val(item, "category", default="")).lower()
+        if category == "replay":
+            continue
         raw_id = get_field_val(item, "id", default=None)
         try:
             nid = int(raw_id)
@@ -155,6 +263,8 @@ def get_notifications():
         body = clean_text(get_field_val(item, "body", default=""), max_len=400)
         urgency = str(get_field_val(item, "urgency", default="normal"))
         actions = get_field_val(item, "actions", default={})
+        ts = ts_map.get(nid, time.time())
+        time_str, time_ago = format_time(ts)
         notifs.append({
             "id": nid,
             "appName": app,
@@ -162,7 +272,10 @@ def get_notifications():
             "body": body,
             "urgency": urgency,
             "isLive": False,
-            "hasActions": bool(actions)
+            "hasActions": bool(actions),
+            "timestamp": int(ts),
+            "timeStr": time_str,
+            "timeAgo": time_ago
         })
 
     result = {
@@ -197,6 +310,7 @@ def dismiss_all():
 
     # Clear dismissed tracking file so newly arriving notifications starting at low IDs aren't blocked
     clear_dismissed_cache()
+    clear_timestamps_cache()
 
     # Restart mako to wipe history buffer completely
     restart_mako()
@@ -248,22 +362,27 @@ def replay_notification(nid, fallback_summary="", fallback_body="", fallback_app
 
     title = summary.strip() if summary.strip() else (app_name.strip() or "Notification")
 
-    cmd = ["notify-send"]
+    cmd = ["notify-send", "-p"]
     if app_name and app_name.strip():
         cmd.extend(["-a", app_name.strip()])
     if urgency in ["low", "normal", "critical"]:
         cmd.extend(["-u", urgency])
     if app_icon and app_icon.strip() and app_icon.strip().lower() not in ["none", "null"]:
         cmd.extend(["-i", app_icon.strip()])
-    if category and category.strip() and category.strip().lower() not in ["none", "null"]:
-        cmd.extend(["-c", category.strip()])
+    cmd.extend(["-c", "replay"])
 
     cmd.append(title)
     if body and body.strip():
         cmd.append(body.strip())
 
     try:
-        subprocess.run(cmd, timeout=3)
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=3)
+        out = p.stdout.strip()
+        if out.isdigit():
+            new_nid = int(out)
+            dismissed = get_dismissed_ids()
+            dismissed.add(new_nid)
+            save_dismissed_ids(dismissed)
     except Exception as e:
         sys.stderr.write(f"Replay error: {e}\n")
 
@@ -306,8 +425,12 @@ def get_status():
         live = extract_items(json.loads(p_live.stdout) if p_live.stdout.strip() else [])
         hist = extract_items(json.loads(p_hist.stdout) if p_hist.stdout.strip() else [])
         dismissed = get_dismissed_ids()
+        ensure_timestamps(live + hist)
         all_ids = set()
         for x in live + hist:
+            category = str(get_field_val(x, "category", default="")).lower()
+            if category == "replay":
+                continue
             raw_id = get_field_val(x, "id", default=None)
             try:
                 i = int(raw_id)
@@ -346,6 +469,9 @@ if __name__ == "__main__":
             dismissed = get_dismissed_ids()
             all_ids = set()
             for x in live + hist:
+                category = str(get_field_val(x, "category", default="")).lower()
+                if category == "replay":
+                    continue
                 raw_id = get_field_val(x, "id", default=None)
                 try:
                     i = int(raw_id)
