@@ -775,6 +775,9 @@ def show_menu():
     state = load_state()
     sched_mode = state.get("schedule_mode", "manual")
     sched_label = "Manual" if sched_mode == "manual" else ("Custom Times" if sched_mode == "custom" else "Solar / Location")
+    idle_config = IdleController.parse_config()
+    dpms_val = idle_config.get("dpms_timeout", 330)
+    dpms_label = f"{dpms_val}s" if dpms_val > 0 else "Disabled"
 
     menu_items = [
         f"🌙 Toggle Night Light ({'ON' if sunset_active else 'OFF'} • {current_temp}K)",
@@ -782,6 +785,8 @@ def show_menu():
         f"⏰ Configure Night Light Schedule (Mode: {sched_label})...",
         f"⏱️  Set Monitor Turn-Off Timeout (Currently: {dpms_label})...",
         f"🔒 Set Screen Lock Timeout (Currently: {idle_config.get('lock_timeout', 300)}s)...",
+        f"🔅 Set Dim Brightness Timeout (Currently: {idle_config.get('dim_timeout', 150)}s)...",
+        f"💤 Set Suspend System Timeout (Currently: {idle_config.get('suspend_timeout', 1800)}s)...",
         f"🖥️  Turn Off Displays Now (DPMS Off)",
         f"☕ Toggle Caffeine Mode ({'ACTIVE' if caffeine_active else 'OFF'})",
         f"🔒 Lock Screen Immediately",
@@ -871,7 +876,7 @@ def show_menu():
         d_choice = prompt_menu(launcher, dpms_items, "Turn Off Monitor After")
         if d_choice:
             if "Custom" in d_choice:
-                custom_s = prompt_input(launcher, "Enter idle timeout in seconds (0 to disable):", "300")
+                custom_s = prompt_input(launcher, "Enter idle timeout in seconds (0 to disable):", str(idle_config.get("dpms_timeout", 330)))
                 if custom_s and custom_s.isdigit():
                     IdleController.apply_config(dpms_timeout=int(custom_s))
             else:
@@ -881,12 +886,46 @@ def show_menu():
                         break
     elif "Set Screen Lock Timeout" in choice:
         lock_items = [f"{label} ({sec}s)" if sec > 0 else label for sec, label in LOCK_TIMEOUT_PRESETS]
+        lock_items.append("Custom Timeout in Seconds...")
         l_choice = prompt_menu(launcher, lock_items, "Lock Screen After")
         if l_choice:
-            for sec, label in LOCK_TIMEOUT_PRESETS:
-                if label in l_choice:
-                    IdleController.apply_config(lock_timeout=sec)
-                    break
+            if "Custom" in l_choice:
+                custom_s = prompt_input(launcher, "Enter screen lock timeout in seconds (0 to disable):", str(idle_config.get("lock_timeout", 300)))
+                if custom_s and custom_s.isdigit():
+                    IdleController.apply_config(lock_timeout=int(custom_s))
+            else:
+                for sec, label in LOCK_TIMEOUT_PRESETS:
+                    if label in l_choice:
+                        IdleController.apply_config(lock_timeout=sec)
+                        break
+    elif "Set Dim Brightness Timeout" in choice:
+        dim_items = [f"{label} ({sec}s)" if sec > 0 else label for sec, label in DIM_TIMEOUT_PRESETS]
+        dim_items.append("Custom Timeout in Seconds...")
+        dm_choice = prompt_menu(launcher, dim_items, "Dim Brightness After")
+        if dm_choice:
+            if "Custom" in dm_choice:
+                custom_s = prompt_input(launcher, "Enter dim timeout in seconds (0 to disable):", str(idle_config.get("dim_timeout", 150)))
+                if custom_s and custom_s.isdigit():
+                    IdleController.apply_config(dim_timeout=int(custom_s))
+            else:
+                for sec, label in DIM_TIMEOUT_PRESETS:
+                    if label in dm_choice:
+                        IdleController.apply_config(dim_timeout=sec)
+                        break
+    elif "Set Suspend System Timeout" in choice:
+        susp_items = [f"{label} ({sec}s)" if sec > 0 else label for sec, label in SUSPEND_TIMEOUT_PRESETS]
+        susp_items.append("Custom Timeout in Seconds...")
+        sp_choice = prompt_menu(launcher, susp_items, "Suspend System After")
+        if sp_choice:
+            if "Custom" in sp_choice:
+                custom_s = prompt_input(launcher, "Enter suspend timeout in seconds (0 to disable):", str(idle_config.get("suspend_timeout", 1800)))
+                if custom_s and custom_s.isdigit():
+                    IdleController.apply_config(suspend_timeout=int(custom_s))
+            else:
+                for sec, label in SUSPEND_TIMEOUT_PRESETS:
+                    if label in sp_choice:
+                        IdleController.apply_config(suspend_timeout=sec)
+                        break
     elif "Turn Off Displays Now" in choice:
         IdleController.turn_off_monitors()
     elif "Toggle Caffeine Mode" in choice:
@@ -1175,6 +1214,18 @@ def show_gui():
         background-color: {c_surface0};
         min-height: 1px;
     }}
+    .custom-timeout-box {{
+        background-color: {c_base};
+        border-radius: 8px;
+        padding: 6px 12px;
+        margin-left: 12px;
+        margin-top: 2px;
+        border: 1px solid {c_surface0};
+    }}
+    .custom-timeout-box entry {{
+        background-color: {c_surface0};
+        border: 1px solid {c_surface1};
+    }}
     """
     css_provider = Gtk.CssProvider()
     css_provider.load_from_data(css.encode())
@@ -1301,6 +1352,7 @@ def show_gui():
 
     # 1. Custom Time Container Box
     custom_time_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+    custom_time_box.set_no_show_all(True)
     on_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
     on_lbl = Gtk.Label(label="Turn On At:", xalign=0)
     on_entry = Gtk.Entry()
@@ -1326,6 +1378,7 @@ def show_gui():
 
     # 2. Location Container Box
     location_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+    location_box.set_no_show_all(True)
     loc_inputs_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
     
     lat_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
