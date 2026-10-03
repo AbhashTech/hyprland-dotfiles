@@ -251,7 +251,7 @@ hl.window_rule({
     name   = "float-sunset-idle-manager",
     match  = { class = "(sunset-idle-manager|sunset_idle_manager\\.py)" },
     float  = true,
-    size   = "640 720",
+    size   = "680 800",
     center = true,
 })
 

@@ -1010,7 +1010,7 @@ def show_gui():
     GLib.set_prgname("sunset-idle-manager")
     GLib.set_application_name("Night Light & Display Idle Manager")
     win.set_role("sunset-idle-manager")
-    win.set_default_size(640, 720)
+    win.set_default_size(680, 800)
     win.set_position(Gtk.WindowPosition.CENTER)
     win.set_border_width(18)
 
@@ -1226,6 +1226,20 @@ def show_gui():
         background-color: {c_surface0};
         border: 1px solid {c_surface1};
     }}
+    .custom-toggle-btn, .custom-toggle-btn label {{
+        background-color: {c_surface0};
+        color: {c_peach};
+        border-radius: 8px;
+        border: 1px solid {c_surface1};
+        padding: 4px 10px;
+        font-size: 9pt;
+        font-weight: bold;
+    }}
+    .custom-toggle-btn:hover, .custom-toggle-btn:hover label {{
+        background-color: {c_peach};
+        color: {caffeine_fg};
+        border-color: {c_peach};
+    }}
     """
     css_provider = Gtk.CssProvider()
     css_provider.load_from_data(css.encode())
@@ -1352,7 +1366,6 @@ def show_gui():
 
     # 1. Custom Time Container Box
     custom_time_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-    custom_time_box.set_no_show_all(True)
     on_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
     on_lbl = Gtk.Label(label="Turn On At:", xalign=0)
     on_entry = Gtk.Entry()
@@ -1374,11 +1387,12 @@ def show_gui():
     off_box.pack_start(off_lbl, False, False, 0)
     off_box.pack_start(off_entry, False, False, 0)
     custom_time_box.pack_start(off_box, True, True, 0)
+    for child in custom_time_box.get_children():
+        child.show_all()
     sunset_card.pack_start(custom_time_box, False, False, 0)
 
     # 2. Location Container Box
     location_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-    location_box.set_no_show_all(True)
     loc_inputs_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
     
     lat_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
@@ -1407,6 +1421,9 @@ def show_gui():
 
     # Solar times badge
     solar_info_lbl = Gtk.Label(xalign=0)
+    location_box.pack_start(solar_info_lbl, False, False, 0)
+    for child in location_box.get_children():
+        child.show_all()
     def update_solar_info_label(lat_v, lon_v, loc_name=None):
         try:
             s_rise, s_set = ScheduleManager.calculate_sun_times(float(lat_v), float(lon_v))
@@ -1421,7 +1438,6 @@ def show_gui():
             solar_info_lbl.set_markup("<span size='small' color='{colors.get('red', '#f38ba8')}'>Invalid coordinates</span>")
 
     update_solar_info_label(lat_entry.get_text(), lon_entry.get_text(), current_state.get("location_name"))
-    location_box.pack_start(solar_info_lbl, False, False, 0)
     sunset_card.pack_start(location_box, False, False, 0)
 
     def on_sched_mode_changed(combo):
@@ -1478,6 +1494,7 @@ def show_gui():
 
     # Current config
     parsed_config = IdleController.parse_config()
+    custom_boxes_to_hide = []
 
     def format_seconds_to_value_and_unit(secs):
         if secs <= 0:
@@ -1530,27 +1547,37 @@ def show_gui():
         lbl_box.pack_start(r_desc, False, False, 0)
         row.pack_start(lbl_box, True, True, 0)
 
+        ctrl_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+
         combo = Gtk.ComboBoxText()
         active_id = None
+
+        # Add Custom Time at top so it is immediately visible in the dropdown
+        combo.append("custom", "⚙️ Custom Time...")
         for secs, label in presets_list:
             combo.append(str(secs), label)
             if secs == current_val:
                 active_id = str(secs)
-
-        combo.append("custom", "⚙️ Custom Time...")
 
         if active_id is not None:
             combo.set_active_id(active_id)
         else:
             combo.set_active_id("custom")
 
-        row.pack_end(combo, False, False, 0)
+        ctrl_box.pack_start(combo, False, False, 0)
+
+        # Dedicated quick toggle button
+        custom_toggle_btn = Gtk.Button(label="⏱️ Custom")
+        custom_toggle_btn.get_style_context().add_class("custom-toggle-btn")
+        custom_toggle_btn.set_tooltip_text("Switch to custom duration input")
+        ctrl_box.pack_start(custom_toggle_btn, False, False, 0)
+
+        row.pack_end(ctrl_box, False, False, 0)
         container.pack_start(row, False, False, 0)
 
         # Custom Input Sub-Row Box
         custom_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         custom_box.get_style_context().add_class("custom-timeout-box")
-        custom_box.set_no_show_all(True)
 
         c_prompt = Gtk.Label(xalign=0)
         c_prompt.set_markup(f"<span size='small' weight='bold' color='{colors.get('peach', '#fab387')}'>↳ Custom Time:</span>")
@@ -1574,12 +1601,15 @@ def show_gui():
 
         container.pack_start(custom_box, False, False, 0)
 
-        # Set initial custom input values
+        # Set initial custom input values and toggle button state
         if active_id is not None:
-            custom_box.set_visible(False)
+            custom_boxes_to_hide.append(custom_box)
+            custom_toggle_btn.set_label("⏱️ Custom")
+            custom_toggle_btn.set_tooltip_text("Switch to custom duration input")
             init_v, init_u = format_seconds_to_value_and_unit(current_val if current_val > 0 else default_val)
         else:
-            custom_box.set_visible(True)
+            custom_toggle_btn.set_label("📋 Presets")
+            custom_toggle_btn.set_tooltip_text("Switch back to preset list")
             init_v, init_u = format_seconds_to_value_and_unit(current_val)
 
         custom_entry.set_text(init_v)
@@ -1611,9 +1641,13 @@ def show_gui():
             cid = c.get_active_id()
             if cid == "custom":
                 custom_box.set_visible(True)
+                custom_toggle_btn.set_label("📋 Presets")
+                custom_toggle_btn.set_tooltip_text("Switch back to preset list")
                 update_preview()
             else:
                 custom_box.set_visible(False)
+                custom_toggle_btn.set_label("⏱️ Custom")
+                custom_toggle_btn.set_tooltip_text("Switch to custom duration input")
                 try:
                     val = int(cid)
                     if val > 0:
@@ -1624,6 +1658,17 @@ def show_gui():
                     pass
 
         combo.connect("changed", on_combo_changed)
+
+        def on_custom_toggle_clicked(btn):
+            if combo.get_active_id() == "custom":
+                # Find matching preset for default
+                matched = str(default_val) if any(s == default_val for s, _ in presets_list) else str(presets_list[0][0])
+                combo.set_active_id(matched)
+            else:
+                combo.set_active_id("custom")
+                custom_entry.grab_focus()
+
+        custom_toggle_btn.connect("clicked", on_custom_toggle_clicked)
 
         def get_seconds():
             cid = combo.get_active_id()
@@ -1855,6 +1900,9 @@ def show_gui():
     win.connect("destroy", Gtk.main_quit)
 
     win.show_all()
+    for cb in custom_boxes_to_hide:
+        cb.set_visible(False)
+    on_sched_mode_changed(sched_mode_combo)
     Gtk.main()
 
 
