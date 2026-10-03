@@ -545,7 +545,7 @@ class IdleController:
             content = HYPRIDLE_CONF.read_text()
             # Parse listener blocks
             # Look for brightness dim
-            dim_match = re.search(r'listener\s*\{[^}]*timeout\s*=\s*(\d+)[^}]*(?:brightness_control|brightnessctl)', content, re.DOTALL)
+            dim_match = re.search(r'listener\s*\{[^}]*timeout\s*=\s*(\d+)[^}]*(?:brightness_control|brightness_helper|brightnessctl)', content, re.DOTALL)
             if dim_match:
                 config_data["dim_timeout"] = int(dim_match.group(1))
 
@@ -596,8 +596,8 @@ class IdleController:
                 f"# 1. Dim screen brightness after {dim_timeout}s ({dim_timeout//60}m {dim_timeout%60}s)",
                 "listener {",
                 f"    timeout = {dim_timeout}",
-                "    on-timeout = python3 ~/.config/hypr/scripts/brightness_control.py dim 10",
-                "    on-resume = python3 ~/.config/hypr/scripts/brightness_control.py restore",
+                "    on-timeout = python3 ~/.config/quickshell/plugins/brightness/brightness_helper.py dim 10",
+                "    on-resume = python3 ~/.config/quickshell/plugins/brightness/brightness_helper.py restore",
                 "}",
                 ""
             ])

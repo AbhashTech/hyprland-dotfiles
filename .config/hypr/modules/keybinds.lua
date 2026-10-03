@@ -276,7 +276,7 @@ hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("makoctl set-mode dnd 2>/dev/
 hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(programs.clipboard))
 
 -- Toggle Clipboard Private Mode / Pause Recording
-hl.bind(mainMod .. " + ALT + X", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/clipboard_manager.py --toggle-private"))
+hl.bind(mainMod .. " + ALT + X", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/quickshell/plugins/clipboard/clip_helper.py toggle-private"))
 
 -- Open Clipboard Delete & Wipe Menu (Prompts with confirmation)
 hl.bind(mainMod .. " + ALT + D",   hl.dsp.exec_cmd(programs.clipClear))
@@ -291,7 +291,7 @@ hl.bind(mainMod .. " + ALT + F",   hl.dsp.exec_cmd(programs.filePickerImg))
 -- 🔊 Audio & Media Controls
 -- =============================================================================
 
-local volumeScript = os.getenv("HOME") .. "/.config/hypr/scripts/volume_control.py"
+local volumeScript = "python3 " .. os.getenv("HOME") .. "/.config/quickshell/plugins/volume/audio_helper.py"
 
 -- Speaker Volume Up (+5%) with OSD
 hl.bind("XF86AudioRaiseVolume",         hl.dsp.exec_cmd(volumeScript .. " up"),       { locked = true, repeating = true })
@@ -325,7 +325,7 @@ hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = tr
 -- ☀️ Screen Brightness & External DDC Controls
 -- =============================================================================
 
-local brightnessScript = "python3 " .. os.getenv("HOME") .. "/.config/hypr/scripts/brightness_control.py"
+local brightnessScript = "python3 " .. os.getenv("HOME") .. "/.config/quickshell/plugins/brightness/brightness_helper.py"
 
 -- Screen-Aware Brightness Up (+5%) with OSD (Adjusts active display: laptop or external)
 hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd(brightnessScript .. " active-up"),   { locked = true, repeating = true })

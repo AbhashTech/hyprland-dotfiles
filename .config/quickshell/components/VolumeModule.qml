@@ -125,15 +125,15 @@ Rectangle {
             } else if (mouse.button === Qt.LeftButton) {
                 PluginManager.toggle("volume");
             } else if (mouse.button === Qt.RightButton) {
-                ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/volume_control.py", "mute"]);
+                ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/volume/audio_helper.py", "mute"]);
             }
         }
 
         onWheel: wheel => {
             if (wheel.angleDelta.y > 0) {
-                ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/volume_control.py", "up", "5"]);
+                ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/volume/audio_helper.py", "up", "5"]);
             } else if (wheel.angleDelta.y < 0) {
-                ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/volume_control.py", "down", "5"]);
+                ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/volume/audio_helper.py", "down", "5"]);
             }
         }
     }

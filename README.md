@@ -46,8 +46,6 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │   └── scripts/             # Python & Shell utilities
     │       ├── app_shortcut_creator.py # App menu shortcut (.desktop) creator & manager GUI/CLI
     │       ├── bluetooth_agent.py    # Background Bluetooth auto-pairing DBus agent
-    │       ├── brightness_control.py # Panel & external DDC brightness with OSD & presets
-    │       ├── clipboard_manager.py  # Image/text clipboard manager daemon & thumbnailer
     │       ├── hyprsunset-hypridle.desktop # Application menu entry for Night Light & Idle Manager
     │       ├── keyboard-layout-manager.desktop # Application menu entry for Keyboard Layout & Variant Manager
     │       ├── keyboard_layout.py    # Dynamic keyboard layout switcher, regional installer & GTK3 Manager
@@ -57,13 +55,11 @@ A modular, unified, and fully version-controlled dotfiles suite for **Hyprland**
     │       ├── ocr_language_manager.py # Tesseract OCR language model downloader, manager & selector (GTK3/CLI)
     │       ├── plugin-manager.desktop # Application menu entry for Quickshell Plugin Manager
     │       ├── qr_reader.py          # Screen QR / 2D barcode scanner & decoder
-    │       ├── resolution_menu.py    # Display resolution & UI scaling switcher
     │       ├── scale_window.py       # Window resizing with on-screen dimensions overlay
     │       ├── screen_capture.py     # Screenshot & video recorder with Swappy annotation
     │       ├── sunset_idle_manager.py # Unified Hyprsunset & Hypridle display power & idle control center (GTK3/Menu/CLI)
     │       ├── theme-manager.desktop # Application menu entry for graphical Theme Manager
     │       ├── theme_switcher.py     # Universal desktop theme switcher & palette manager (GTK3/CLI)
-    │       ├── volume_control.py     # Speaker/mic volume control, OSD & sink switcher
     │       └── wallpaper_switcher.py # Wallpaper randomizer & selector (~/Wallpaper)
     ├── quickshell/              # Quickshell Status Bar & Desktop Shell Suite
     │   ├── shell.qml            # Main entrypoint, screen variants, status bar & plugin windows
@@ -589,7 +585,7 @@ The dotfiles include a dedicated GUI and CLI utility ([`app_shortcut_creator.py`
 
 ---
 
-### 📐 Window Resizing & Screen Scaling (`scale_window.py` & `resolution_menu.py`)
+### 📐 Window Resizing & Screen Scaling (`scale_window.py` & QuickShell Display Menu)
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
 | `SUPER + CTRL + =` / `+` / `KP_Add` | **Scale Window Up** | Increase active window size by +40px with live dimension OSD |
@@ -599,7 +595,7 @@ The dotfiles include a dedicated GUI and CLI utility ([`app_shortcut_creator.py`
 | `SUPER + CTRL + Up / K` | **Resize Height Up** | Shrink window vertically from the top (-40px) |
 | `SUPER + CTRL + Down / J` | **Resize Height Down** | Grow window vertically to the bottom (+40px) |
 | `SUPER + CTRL + 0` | **Show Window Size** | Display active window dimensions & screen coverage percentage OSD |
-| `SUPER + SHIFT + R` / `SUPER + SHIFT + D` | **Resolution & Scaling Menu** | Interactive menu to set monitor resolution and DPI scaling |
+| `SUPER + SHIFT + R` | **Resolution & Scaling Menu** | Open QuickShell Display Resolution & Scaling Tab |
 | `SUPER + ALT + =` / `+` | **Display Scale Up** | Increment display scaling (+0.1) |
 | `SUPER + ALT + -` | **Display Scale Down** | Decrement display scaling (-0.1) |
 | `SUPER + ALT + 0` | **Show Display Scale** | Display active monitor resolution & scale factor OSD |
@@ -681,7 +677,7 @@ The desktop status bar and popup windows support **hot-pluggable custom plugins*
 
 ---
 
-### 🔊 Audio & Media Controls (`volume_control.py` & `playerctl`)
+### 🔊 Audio & Media Controls (QuickShell & `playerctl`)
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
 | `XF86AudioRaiseVolume` | **Volume Up (+5%)** | Increase output volume with visual OSD |
@@ -851,7 +847,7 @@ All personal files in these directories are automatically ignored by Git.
 
 #### 1. 🖥️ Hyprland (`~/.config/hypr/user/`)
 Split into dedicated files for each component:
-- `monitors.lua`: Custom multi-display resolutions, refresh rates, and positioning (e.g. `hyprland.monitor(...)`). Automatically written by the Screen Resolution & Display Scaling Manager (`Super+Shift+D` / `resolution_menu.py`).
+- `monitors.lua`: Custom multi-display resolutions, refresh rates, and positioning (e.g. `hyprland.monitor(...)`). Automatically written by the Display Resolution & Scaling Manager (`Super+Shift+R`).
 - `input.lua`: Keyboard layouts, variants, options, mouse sensitivity, and touchpad natural scroll. Automatically written by the Keyboard Layout & Variant Manager (`Super+Shift+K` / `keyboard_layout.py`).
 - `keybinds.lua`: Personal hotkeys and custom application shortcuts (automatically parsed and displayed by the Keybinds Viewer `Super+K` / `keybinds_viewer.py`).
 - `rules.lua`: Custom window rules, floating rules, and workspace assignments.
@@ -943,7 +939,6 @@ Every graphical management tool and dialog in this environment is paired with de
 | **OCR Language Manager** | `ocr-language-manager.desktop` | `ocr-language-manager` | `860×740` | `SUPER + ALT + O` | Tesseract model installer & language hub |
 | **Screen Capture Hub** | Interactive Menu Dialog | `screen-capture` | `480×520` | `SUPER + Print` | Screenshot & screen recording controller |
 | **Wallpaper Selector** | Interactive Menu Dialog | `wallpaper-switcher` | `540×580` | `SUPER + ALT + W` | Desktop wallpaper selector dialog |
-| **Resolution & Scaling** | Interactive Menu Dialog | `resolution-menu` | `460×480` | `SUPER + SHIFT + R` | Display resolution & monitor scale menu |
 
 
 

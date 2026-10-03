@@ -252,7 +252,7 @@ Rectangle {
 
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/volume_control.py", "mute"]);
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/volume/audio_helper.py", "mute"]);
                     } else if (mouse.button === Qt.RightButton) {
                         PluginManager.toggle("volume");
                     }
@@ -260,9 +260,9 @@ Rectangle {
 
                 onWheel: wheel => {
                     if (wheel.angleDelta.y > 0) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/volume_control.py", "up", "5"]);
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/volume/audio_helper.py", "up", "5"]);
                     } else if (wheel.angleDelta.y < 0) {
-                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/volume_control.py", "down", "5"]);
+                        ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/volume/audio_helper.py", "down", "5"]);
                     }
                 }
             }
@@ -355,8 +355,8 @@ Rectangle {
                 onWheel: wheel => {
                     var act = wheel.angleDelta.y > 0 ? (root.screenName !== "" ? "screen-up" : "active-up") : (root.screenName !== "" ? "screen-down" : "active-down");
                     var args = root.screenName !== ""
-                        ? ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", act, root.screenName, "5"]
-                        : ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", act, "5"];
+                        ? ["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/brightness/brightness_helper.py", act, root.screenName, "5"]
+                        : ["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/brightness/brightness_helper.py", act, "5"];
                     ctlProc.exec(args);
                     if (wheel.angleDelta.y > 0) {
                         root.brightness = Math.min(100, root.brightness + 5);

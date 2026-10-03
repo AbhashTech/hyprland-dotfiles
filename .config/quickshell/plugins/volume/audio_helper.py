@@ -389,6 +389,91 @@ def get_all_state():
         "apps": apps
     }
 
+def build_progress_bar(percentage, length=12):
+    filled = int(round((percentage / 100.0) * length))
+    filled = max(0, min(length, filled))
+    return "━" * filled + "╸" + "─" * (length - filled)
+
+def show_notification(title, body, icon, percentage=None, notif_id=9110, tag="volume_osd"):
+    cmd = [
+        "notify-send",
+        "-r", str(notif_id),
+        "-t", "1200",
+        "-u", "low",
+        "-a", "VolumeControl",
+        "-c", "osd",
+        "-i", icon,
+        "-h", f"string:x-canonical-private-synchronous:{tag}",
+        "-h", "boolean:transient:true",
+        "-h", "boolean:history-ignore:true"
+    ]
+    if percentage is not None:
+        cmd.extend(["-h", f"int:value:{int(percentage)}"])
+    cmd.extend([title, body])
+    subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+def notify_sink_osd(vol=None, muted=None, name="Speakers"):
+    if vol is None or muted is None:
+        vol, muted, _ = get_master_sink()
+    bar = build_progress_bar(vol)
+    if muted:
+        icon = "audio-volume-muted"
+        title = "🔇 Volume: Muted"
+        body = f"<b>{name}</b>\n{bar}"
+        show_notification(title, body, icon, percentage=0, tag="volume_osd")
+    else:
+        if vol <= 33:
+            icon = "audio-volume-low"
+        elif vol <= 66:
+            icon = "audio-volume-medium"
+        elif vol <= 100:
+            icon = "audio-volume-high"
+        else:
+            icon = "audio-volume-overamplified"
+        title = f"🔊 Volume: {vol}%"
+        body = f"<b>{name}</b>\n{bar}"
+        show_notification(title, body, icon, percentage=vol, tag="volume_osd")
+
+def notify_source_osd(vol=None, muted=None, name="Microphone"):
+    if vol is None or muted is None:
+        vol, muted, _ = get_master_source()
+    bar = build_progress_bar(vol)
+    if muted:
+        icon = "microphone-sensitivity-muted"
+        title = "🎤 Mic: Muted"
+        body = f"<b>{name}</b>\n{bar}"
+        show_notification(title, body, icon, percentage=0, notif_id=9111, tag="mic_osd")
+    else:
+        if vol <= 33:
+            icon = "microphone-sensitivity-low"
+        elif vol <= 66:
+            icon = "microphone-sensitivity-medium"
+        else:
+            icon = "microphone-sensitivity-high"
+        title = f"🎤 Mic: {vol}%"
+        body = f"<b>{name}</b>\n{bar}"
+        show_notification(title, body, icon, percentage=vol, notif_id=9111, tag="mic_osd")
+
+def change_sink_volume(delta, notify=True):
+    vol, muted, _ = get_master_sink()
+    if muted and delta > 0:
+        run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "0"])
+        muted = False
+    new_vol = max(0, min(150, vol + delta))
+    set_sink_volume(new_vol)
+    if notify:
+        notify_sink_osd(vol=new_vol, muted=muted)
+
+def change_source_volume(delta, notify=True):
+    vol, muted, _ = get_master_source()
+    if muted and delta > 0:
+        run_cmd(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "0"])
+        muted = False
+    new_vol = max(0, min(100, vol + delta))
+    set_source_volume(new_vol)
+    if notify:
+        notify_source_osd(vol=new_vol, muted=muted)
+
 def set_sink_volume(val):
     val = max(0, min(150, int(val)))
     val_float = round(val / 100.0, 2)
@@ -497,8 +582,26 @@ def main():
         set_app_volume(sys.argv[2], sys.argv[3])
     elif cmd == "toggle-app-mute" and len(sys.argv) >= 3:
         toggle_app_mute(sys.argv[2])
-    elif cmd in ["restart", "restart-server", "restart-sound"]:
-        restart_sound_server()
+    elif cmd in ["up", "vol-up", "raise"]:
+        step = int(sys.argv[2]) if len(sys.argv) >= 3 else 5
+        change_sink_volume(step)
+    elif cmd in ["down", "vol-down", "lower"]:
+        step = int(sys.argv[2]) if len(sys.argv) >= 3 else 5
+        change_sink_volume(-step)
+    elif cmd in ["mute", "toggle-mute"]:
+        toggle_sink_mute()
+        notify_sink_osd()
+    elif cmd in ["mic-up"]:
+        step = int(sys.argv[2]) if len(sys.argv) >= 3 else 5
+        change_source_volume(step)
+    elif cmd in ["mic-down"]:
+        step = int(sys.argv[2]) if len(sys.argv) >= 3 else 5
+        change_source_volume(-step)
+    elif cmd in ["mic-mute", "toggle-mic-mute"]:
+        toggle_source_mute()
+        notify_source_osd()
+    elif cmd in ["show", "status-osd"]:
+        notify_sink_osd()
     else:
         print(f"Unknown action: {cmd}")
         sys.exit(1)

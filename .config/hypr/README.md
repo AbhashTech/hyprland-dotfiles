@@ -31,8 +31,6 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
     ├── app-shortcut-creator.desktop # Application shortcut desktop entry
     ├── app_shortcut_creator.py  # Application shortcut & desktop entry creator
     ├── bluetooth_agent.py       # Background Bluetooth auto-pairing DBus agent
-    ├── brightness_control.py    # Backlight & external DDC monitor brightness with OSD
-    ├── clipboard_manager.py     # Image/text clipboard manager daemon & thumbnail cache
     ├── dotpersonal-manager.desktop # Application menu entry for Personal Settings Manager
     ├── dotpersonal_gui.py       # GTK3 graphical Personal Settings & modular dotfiles manager
     ├── hyprsunset-hypridle.desktop  # Application menu entry for Night Light & Idle Manager
@@ -47,13 +45,11 @@ A modular, performant, and feature-rich **Hyprland** setup powered by **Lua conf
     ├── ocr_language_manager.py  # Tesseract OCR language model downloader & manager (GTK3/CLI)
     ├── plugin-manager.desktop   # Application menu entry for Quickshell Plugin Manager
     ├── qr_reader.py             # Screen QR / 2D barcode scanner & decoder
-    ├── resolution_menu.py       # Interactive display resolution & UI scale switcher
     ├── scale_window.py          # Window resizing with on-screen dimensions overlay
     ├── screen_capture.py        # Screenshot & video screen recording with audio & editor support
     ├── sunset_idle_manager.py   # Hyprsunset & Hypridle display power, monitor turn-off & idle manager
     ├── theme-manager.desktop    # Application menu entry for graphical Theme Manager
     ├── theme_switcher.py        # Universal desktop theme switcher & palette manager (SUPER + T)
-    ├── volume_control.py        # Speaker & mic volume control, OSD, and device switcher
     └── wallpaper_switcher.py    # Wallpaper randomizer & selector (~/Wallpaper, hyprpaper)
 ```
 
@@ -339,7 +335,6 @@ All built-in GTK graphical managers and interactive dialogs automatically open i
 | **OCR Language Manager** | `ocr-language-manager` | `float-ocr-language-manager` | `860×740` | Tesseract OCR Language Hub & Model Manager |
 | **Screen Capture Hub** | `screen-capture` | `float-screen-capture` | `480×520` | Screenshot & Screen Recording Menu Dialog |
 | **Wallpaper Selector** | `wallpaper-switcher` | `float-wallpaper-switcher` | `540×580` | Desktop Wallpaper Selector Dialog |
-| **Resolution & Scaling** | `resolution-menu` | `float-resolution-menu` | `460×480` | Screen Resolution & Scale Switcher Dialog |
 
 ---
 

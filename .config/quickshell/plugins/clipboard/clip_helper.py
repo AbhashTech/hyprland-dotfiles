@@ -189,22 +189,52 @@ PAUSE_STATE_FILE = Path.home() / ".cache" / "cliphist_paused"
 def is_paused():
     return PAUSE_STATE_FILE.exists()
 
+def stop_daemon():
+    """Kill running wl-paste cliphist processes."""
+    subprocess.run(["pkill", "-f", "wl-paste.*cliphist"], check=False)
+
+def start_daemon(silent=False):
+    """Start wl-paste cliphist background watchers with sensitive data filtering."""
+    if is_paused():
+        return
+    stop_daemon()
+
+    filter_clause = (
+        'types=\\$(wl-paste -l 2>/dev/null); '
+        'if echo \\\"\\$types\\\" | grep -qiE \\"password|secret|keepass|1password\\"; then exit 0; fi; '
+    )
+    cmd_text = (
+        'wl-paste --type text --watch bash -c "'
+        + filter_clause
+        + 'cliphist store && (pgrep -x waybar >/dev/null && pkill -RTMIN+9 waybar || true)"'
+    )
+    cmd_image = (
+        'wl-paste --type image --watch bash -c "'
+        + filter_clause
+        + 'cliphist store && (pgrep -x waybar >/dev/null && pkill -RTMIN+9 waybar || true)"'
+    )
+    try:
+        subprocess.Popen(cmd_text, shell=True, start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.Popen(cmd_image, shell=True, start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if not silent:
+            subprocess.Popen(["notify-send", "-r", "9920", "-t", "2500", "-a", "Clipboard Manager", "-i", "edit-paste", "󰅍 Clipboard Daemon", "Tracking text and image clipboard."])
+    except Exception as e:
+        sys.stderr.write(f"Failed to start clipboard daemon: {e}\n")
+
 def toggle_private():
     try:
-        mgr_script = Path.home() / ".config" / "hypr" / "scripts" / "clipboard_manager.py"
-        if mgr_script.exists():
-            subprocess.run(["python3", str(mgr_script), "--toggle-private"], timeout=3)
+        if is_paused():
+            try:
+                PAUSE_STATE_FILE.unlink()
+            except Exception:
+                pass
+            start_daemon(silent=True)
+            subprocess.Popen(["notify-send", "-r", "9920", "-t", "2500", "-a", "Clipboard Manager", "-i", "edit-paste", "󰅍 Clipboard Private Mode Inactive", "Clipboard recording is now ACTIVE."], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         else:
-            if is_paused():
-                try:
-                    PAUSE_STATE_FILE.unlink()
-                except Exception:
-                    pass
-                subprocess.Popen(["notify-send", "-r", "9920", "-t", "2500", "-a", "Clipboard Manager", "-i", "edit-paste", "󰅍 Clipboard Private Mode Inactive", "Clipboard recording is now ACTIVE."], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            else:
-                PAUSE_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-                PAUSE_STATE_FILE.write_text("1")
-                subprocess.Popen(["notify-send", "-r", "9920", "-t", "2500", "-a", "Clipboard Manager", "-i", "security-high", "󰈉 Clipboard Private Mode Active", "Private mode active. Copying is not recorded."], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            PAUSE_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+            PAUSE_STATE_FILE.write_text("1")
+            stop_daemon()
+            subprocess.Popen(["notify-send", "-r", "9920", "-t", "2500", "-a", "Clipboard Manager", "-i", "security-high", "󰈉 Clipboard Private Mode Active", "Private mode active. Copying is not recorded."], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception as e:
         sys.stderr.write(f"Toggle Private Mode error: {e}\n")
 
@@ -236,6 +266,8 @@ if __name__ == "__main__":
         get_status()
     elif cmd in ["toggle-private", "private", "toggle-dnd", "toggle-pause", "dnd"]:
         toggle_private()
+    elif cmd in ["daemon", "start-daemon", "--daemon"]:
+        start_daemon(silent=False)
     elif cmd in ["is-private", "is-dnd"]:
         print("1" if is_paused() else "0")
     elif cmd == "copy":

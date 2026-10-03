@@ -131,7 +131,7 @@ Rectangle {
 
         onWheel: wheel => {
             var act = wheel.angleDelta.y > 0 ? "active-up" : "active-down";
-            ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/brightness_control.py", act, "5"]);
+            ctlProc.exec(["python3", Quickshell.env("HOME") + "/.config/quickshell/plugins/brightness/brightness_helper.py", act, "5"]);
             if (wheel.angleDelta.y > 0) {
                 StatusService.brightness = Math.min(100, StatusService.brightness + 5);
             } else if (wheel.angleDelta.y < 0) {
