@@ -940,6 +940,7 @@ def launch_gtk_gui(initial_tab=0):
     }}
 
     window,
+    window.background,
     notebook,
     notebook > stack,
     notebook > stack > * {{
@@ -953,13 +954,15 @@ def launch_gtk_gui(initial_tab=0):
     }}
 
     scrolledwindow,
+    scrolledwindow viewport,
     viewport {{
         background-color: {c_base};
         border: none;
     }}
 
     list,
-    listbox {{
+    listbox,
+    .list {{
         background-color: {c_base};
         color: {c_text};
         border: none;
@@ -967,7 +970,8 @@ def launch_gtk_gui(initial_tab=0):
 
     list row,
     listbox row,
-    row {{
+    row,
+    list > row {{
         background-color: transparent;
         color: {c_text};
         border: none;
@@ -976,10 +980,7 @@ def launch_gtk_gui(initial_tab=0):
     }}
 
     list row:hover,
-    row:hover {{
-        background-color: transparent;
-    }}
-
+    row:hover,
     list row:selected,
     row:selected {{
         background-color: transparent;
@@ -1156,14 +1157,16 @@ def launch_gtk_gui(initial_tab=0):
     .layout-card label {{
         color: {c_text};
     }}
-    .layout-title {{
+    .layout-title,
+    label.layout-title {{
         color: {c_text};
         font-weight: 700;
         font-size: 13px;
     }}
 
     /* Tag & Badges */
-    .pill-badge {{
+    .pill-badge,
+    label.pill-badge {{
         background-color: {c_surface0};
         border: 1px solid {c_surface1};
         border-radius: 4px;
@@ -1173,7 +1176,8 @@ def launch_gtk_gui(initial_tab=0):
         color: {c_text};
     }}
 
-    .active-pill {{
+    .active-pill,
+    label.active-pill {{
         background-color: {c_accent};
         border-radius: 4px;
         padding: 2px 8px;
@@ -1182,7 +1186,8 @@ def launch_gtk_gui(initial_tab=0):
         color: {accent_fg};
     }}
 
-    .configured-pill {{
+    .configured-pill,
+    label.configured-pill {{
         background-color: {c_surface0};
         border-radius: 4px;
         padding: 2px 8px;
@@ -1207,7 +1212,8 @@ def launch_gtk_gui(initial_tab=0):
     }}
 
     /* Category Filter Buttons */
-    .filter-chip {{
+    .filter-chip,
+    button.filter-chip {{
         background-color: {c_mantle};
         color: {c_subtext0};
         border: 1px solid {c_surface0};
@@ -1216,16 +1222,19 @@ def launch_gtk_gui(initial_tab=0):
         font-size: 11px;
         font-weight: 600;
     }}
-    .filter-chip label {{
+    .filter-chip label,
+    button.filter-chip label {{
         color: {c_subtext0};
         font-weight: 600;
     }}
-    .filter-chip:checked {{
+    .filter-chip:checked,
+    button.filter-chip:checked {{
         background-color: {c_accent};
         color: {accent_fg};
         border-color: {c_accent};
     }}
-    .filter-chip:checked label {{
+    .filter-chip:checked label,
+    button.filter-chip:checked label {{
         color: {accent_fg};
         font-weight: 700;
     }}
