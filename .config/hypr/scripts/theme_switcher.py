@@ -64,16 +64,17 @@ DEFAULT_THEME = "catppuccin-mocha"
 def load_themes():
     """
     Scan ~/.config/theme and ~/.dotfiles/.config/theme for .json theme files.
-    Returns a dictionary of {theme_id: theme_dict}.
+    Synchronizes canonical theme definitions to ~/.config/theme and returns {theme_id: theme_dict}.
     """
     themes = {}
-    search_dirs = [THEME_DIR]
-    if FALLBACK_THEME_DIR.exists() and FALLBACK_THEME_DIR not in search_dirs:
+    search_dirs = []
+    # Check dotfiles theme dir first so canonical definitions are prioritized
+    if FALLBACK_THEME_DIR.exists():
         search_dirs.append(FALLBACK_THEME_DIR)
+    if THEME_DIR.exists() and THEME_DIR not in search_dirs:
+        search_dirs.append(THEME_DIR)
 
     for directory in search_dirs:
-        if not directory.exists():
-            continue
         for json_file in sorted(directory.glob("*.json")):
             try:
                 with open(json_file, "r", encoding="utf-8") as f:
@@ -83,8 +84,23 @@ def load_themes():
                     data["file_path"] = str(json_file)
                     if theme_id not in themes:
                         themes[theme_id] = data
+                    else:
+                        prev_mtime = Path(themes[theme_id]["file_path"]).stat().st_mtime
+                        curr_mtime = json_file.stat().st_mtime
+                        if curr_mtime > prev_mtime:
+                            themes[theme_id] = data
             except Exception as e:
                 print(f"Error loading theme {json_file}: {e}", file=sys.stderr)
+
+    # Sync any themes from repo into ~/.config/theme so all local tools see them
+    if FALLBACK_THEME_DIR.exists() and THEME_DIR.exists() and FALLBACK_THEME_DIR != THEME_DIR:
+        for jf in FALLBACK_THEME_DIR.glob("*.json"):
+            dest = THEME_DIR / jf.name
+            try:
+                if not dest.exists() or jf.stat().st_mtime > dest.stat().st_mtime:
+                    shutil.copy2(jf, dest)
+            except Exception:
+                pass
 
     if not themes:
         # Fallback minimal default
@@ -146,6 +162,9 @@ def ensure_dirs():
     (CONFIG_DIR / "hypr").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "quickshell").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "foot").mkdir(parents=True, exist_ok=True)
+    (CONFIG_DIR / "fuzzel").mkdir(parents=True, exist_ok=True)
+    (CONFIG_DIR / "wofi").mkdir(parents=True, exist_ok=True)
+    (CONFIG_DIR / "wlogout").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "btop" / "themes").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "zellij").mkdir(parents=True, exist_ok=True)
     (CONFIG_DIR / "gtk-3.0").mkdir(parents=True, exist_ok=True)
@@ -154,6 +173,10 @@ def ensure_dirs():
     (CONFIG_DIR / "nvim" / "lua").mkdir(parents=True, exist_ok=True)
     (HOME / ".local" / "share" / "color-schemes").mkdir(parents=True, exist_ok=True)
     (HOME / ".local" / "share" / "org.kde.syntax-highlighting" / "themes").mkdir(parents=True, exist_ok=True)
+    if DOTFILES_DIR.exists():
+        (DOTFILES_DIR / "fuzzel").mkdir(parents=True, exist_ok=True)
+        (DOTFILES_DIR / "wofi").mkdir(parents=True, exist_ok=True)
+        (DOTFILES_DIR / "wlogout").mkdir(parents=True, exist_ok=True)
 
 
 def get_current_theme(themes):
@@ -195,6 +218,9 @@ THEME_TRACKED_REL_PATHS = [
     ".config/hypr/theme.conf",
     ".config/hypr/theme_vars.lua",
     ".config/foot/theme.ini",
+    ".config/fuzzel/fuzzel.ini",
+    ".config/wofi/colors.css",
+    ".config/wlogout/colors.css",
     ".config/mako/config",
     ".config/btop/btop.conf",
     ".config/starship.toml",
@@ -488,29 +514,22 @@ urls={c['blue'].lstrip('#')}
         (DOTFILES_DIR / "foot" / "theme.ini").write_text(content)
 
 def update_fuzzel_colors(theme):
-    """Update ~/.config/fuzzel/fuzzel.ini colors section."""
+    """Generate or update ~/.config/fuzzel/fuzzel.ini and dotfiles copy with active theme colors."""
     c = theme["colors"]
-    fuzzel_file = CONFIG_DIR / "fuzzel" / "fuzzel.ini"
-    df_fuzzel = DOTFILES_DIR / "fuzzel" / "fuzzel.ini"
-    
-    target_files = [fuzzel_file]
-    if df_fuzzel.exists() and df_fuzzel not in target_files:
-        target_files.append(df_fuzzel)
-
     is_light = theme.get("type") == "light"
-    bg_rgba = hex_to_rgba_str(c["mantle"], "f0")
-    text_rgba = hex_to_rgba_str(c["text"], "ff")
-    prompt_rgba = hex_to_rgba_str(c["accent"], "ff")
-    placeholder_rgba = hex_to_rgba_str(c["overlay0"], "ff")
-    input_rgba = hex_to_rgba_str(c["text"], "ff")
-    match_rgba = hex_to_rgba_str(c["accent"], "ff")
-    selection_rgba = hex_to_rgba_str(c["surface0"], "ff")
-    sel_text_rgba = hex_to_rgba_str(c["crust" if is_light else "text"], "ff") if is_light else "ffffffef"
-    sel_match_rgba = hex_to_rgba_str(c.get("accent", c.get("pink", "#cba6f7")), "ff")
-    border_rgba = hex_to_rgba_str(c["accent"], "aa")
+    bg_rgba = hex_to_rgba_str(c.get("mantle", c.get("base", "#1e1e2e")), "f2")
+    text_rgba = hex_to_rgba_str(c.get("text", "#cdd6f4"), "ff")
+    prompt_rgba = hex_to_rgba_str(c.get("accent", "#cba6f7"), "ff")
+    placeholder_rgba = hex_to_rgba_str(c.get("overlay0", "#7f849c"), "cc")
+    input_rgba = hex_to_rgba_str(c.get("text", "#cdd6f4"), "ff")
+    match_rgba = hex_to_rgba_str(c.get("accent", "#cba6f7"), "ff")
+    selection_rgba = hex_to_rgba_str(c.get("surface0", "#313244"), "f5")
+    sel_text_rgba = hex_to_rgba_str(c.get("text", "#ffffff"), "ff")
+    sel_match_rgba = hex_to_rgba_str(c.get("peach" if is_light else "yellow", c.get("accent", "#f9e2af")), "ff")
+    border_rgba = hex_to_rgba_str(c.get("accent", "#cba6f7"), "ee")
 
     colors_section = f"""[colors]
-# {theme.get('name', theme['id'])} RGBA
+# Theme: {theme.get('name', theme.get('id', 'Custom'))} ({'Light' if is_light else 'Dark'})
 background={bg_rgba}
 text={text_rgba}
 prompt={prompt_rgba}
@@ -521,19 +540,46 @@ selection={selection_rgba}
 selection-text={sel_text_rgba}
 selection-match={sel_match_rgba}
 border={border_rgba}
-
 """
 
-    for fpath in target_files:
-        if fpath.exists():
-            try:
-                content = fpath.read_text()
+    fuzzel_template = f"""# Auto-generated by theme_switcher.py for Fuzzel
+font=JetBrainsMono Nerd Font:size=11
+dpi-aware=auto
+prompt=" 󰏘 ❯ "
+terminal=foot
+lines=14
+width=52
+horizontal-pad=24
+vertical-pad=16
+inner-pad=10
+line-height=30
+
+[border]
+width=2
+radius=14
+
+{colors_section}
+"""
+
+    target_dirs = [CONFIG_DIR / "fuzzel"]
+    if DOTFILES_DIR.exists():
+        target_dirs.append(DOTFILES_DIR / "fuzzel")
+
+    for tdir in target_dirs:
+        try:
+            tdir.mkdir(parents=True, exist_ok=True)
+            fpath = tdir / "fuzzel.ini"
+            if fpath.exists():
+                content = fpath.read_text(encoding="utf-8")
                 if "[colors]" in content:
-                    import re
                     content = re.sub(r"\[colors\][\s\S]*?(?=\n\[|\Z)", colors_section.rstrip() + "\n", content)
-                    fpath.write_text(content)
-            except Exception as e:
-                print(f"Error updating fuzzel {fpath}: {e}", file=sys.stderr)
+                else:
+                    content = content.rstrip() + "\n\n" + colors_section
+                fpath.write_text(content, encoding="utf-8")
+            else:
+                fpath.write_text(fuzzel_template, encoding="utf-8")
+        except Exception as e:
+            print(f"Error updating fuzzel {tdir}: {e}", file=sys.stderr)
 
 def update_mako_colors(theme):
     """Update ~/.config/mako/config with theme colors."""
@@ -1434,6 +1480,9 @@ def apply_theme(theme_id, themes=None, notify=True):
     generate_hypr_conf(theme)
     generate_quickshell_colors(theme)
     generate_foot_theme(theme)
+    update_fuzzel_colors(theme)
+    generate_wofi_colors(theme)
+    generate_wlogout_colors(theme)
     update_mako_colors(theme)
     generate_btop_theme(theme)
     update_starship_palette(theme)
@@ -1494,11 +1543,24 @@ def run_interactive_menu(themes):
     selected_tid = None
 
     if shutil.which("fuzzel"):
+        cur_theme = themes.get(current) or themes.get(DEFAULT_THEME, {})
+        c = cur_theme.get("colors", {})
+        is_light = cur_theme.get("type") == "light"
+
+        bg_rgba = hex_to_rgba_str(c.get("mantle", "#181825"), "f2")
+        text_rgba = hex_to_rgba_str(c.get("text", "#cdd6f4"), "ff")
+        prompt_rgba = hex_to_rgba_str(c.get("accent", "#cba6f7"), "ff")
+        match_rgba = hex_to_rgba_str(c.get("accent", "#cba6f7"), "ff")
+        selection_rgba = hex_to_rgba_str(c.get("surface0", "#313244"), "f5")
+        sel_text_rgba = hex_to_rgba_str(c.get("text", "#ffffff"), "ff")
+        sel_match_rgba = hex_to_rgba_str(c.get("peach" if is_light else "yellow", "#f9e2af"), "ff")
+        border_rgba = hex_to_rgba_str(c.get("accent", "#cba6f7"), "ee")
+
         cmd = [
             "fuzzel",
             "--dmenu",
             "--prompt", " 󰏘 Theme ❯ ",
-            "--placeholder", "Filter 19 color themes (dark, light, pastel, vibrant)...",
+            "--placeholder", f"Filter {len(themes)} color themes (dark, light, pastel, vibrant)...",
             "--width", "78",
             "--lines", "14",
             "--horizontal-pad", "26",
@@ -1506,6 +1568,14 @@ def run_interactive_menu(themes):
             "--inner-pad", "10",
             "--line-height", "32",
             "--border-radius", "16",
+            "-b", bg_rgba,
+            "-t", text_rgba,
+            "--prompt-color", prompt_rgba,
+            "-m", match_rgba,
+            "-s", selection_rgba,
+            "-S", sel_text_rgba,
+            "-M", sel_match_rgba,
+            "-C", border_rgba,
         ]
         if active_line_str:
             cmd.extend(["--select", active_line_str])
@@ -1870,13 +1940,28 @@ def run_gui_theme_manager(themes=None):
             self._setup_css()
             self._build_ui()
 
-        def _setup_css(self):
-            tdata = self.themes.get(self.current_theme_id) or self.themes.get(DEFAULT_THEME, {})
+        def _setup_css(self, theme_id=None):
+            """Load and apply GTK CSS for the given theme_id (defaults to current_theme_id).
+
+            GTK3 does not re-cascade widget styles when load_from_data is called on an
+            existing CssProvider.  The only reliable way to force a full style refresh is
+            to remove the old provider from the screen, swap its data, then re-add it.
+            """
+            tid = theme_id if theme_id is not None else self.current_theme_id
+            tdata = self.themes.get(tid) or self.themes.get(DEFAULT_THEME, {})
             colors = tdata.get("colors", {})
             ttype = tdata.get("type", "dark")
             css_str = get_theme_manager_gtk_css(colors, ttype)
+            screen = Gdk.Screen.get_default()
             try:
-                self.css_provider.load_from_data(css_str.encode('utf-8'))
+                # Remove → reload data → re-add forces GTK to recompute all style caches
+                Gtk.StyleContext.remove_provider_for_screen(screen, self.css_provider)
+                self.css_provider.load_from_data(css_str.encode("utf-8"))
+                Gtk.StyleContext.add_provider_for_screen(
+                    screen,
+                    self.css_provider,
+                    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+                )
             except Exception as e:
                 print(f"Warning: Failed to load custom CSS: {e}", file=sys.stderr)
 
@@ -2120,6 +2205,7 @@ def run_gui_theme_manager(themes=None):
 
         def _on_card_clicked(self, widget, event, tid):
             self.selected_theme_id = tid
+            self._setup_css(theme_id=tid)
             self._update_card_styles()
             self._update_preview()
             if event.type == Gdk.EventType._2BUTTON_PRESS:
