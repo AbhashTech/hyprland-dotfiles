@@ -101,6 +101,7 @@ def get_wifi_status() -> dict:
         "signal": 0,
         "ip": "",
         "security": "",
+        "scanning": False,
         "networks": []
     }
 
@@ -110,7 +111,9 @@ def get_wifi_status() -> dict:
     # Check station status
     show_out = run_cmd(['iwctl', 'station', iface, 'show'])
     for l in show_out.splitlines():
-        if 'Connected network' in l:
+        if 'Scanning' in l and 'yes' in l.lower():
+            result['scanning'] = True
+        elif 'Connected network' in l:
             result['ssid'] = l.split('Connected network')[-1].strip()
             result['connected'] = bool(result['ssid'])
         elif 'IPv4 address' in l:
@@ -255,10 +258,27 @@ def wifi_toggle() -> bool:
     except Exception:
         return False
 
+def is_wifi_scanning(iface: str = None) -> bool:
+    if not iface:
+        iface = get_wifi_interface()
+    out = run_cmd(['iwctl', 'station', iface, 'show'])
+    for l in out.splitlines():
+        if 'Scanning' in l and 'yes' in l.lower():
+            return True
+    return False
+
 def wifi_scan() -> bool:
     iface = get_wifi_interface()
     try:
         subprocess.run(['iwctl', 'station', iface, 'scan'], timeout=5)
+        # Give station a moment to initiate scanning
+        time.sleep(0.3)
+        # Wait for scan to complete or max 6 seconds
+        t0 = time.time()
+        while time.time() - t0 < 6.0:
+            if not is_wifi_scanning(iface):
+                break
+            time.sleep(0.2)
         return True
     except Exception:
         return False

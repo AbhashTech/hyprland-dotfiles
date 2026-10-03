@@ -61,9 +61,23 @@ Rectangle {
         refreshBluetooth();
     }
 
+    Timer {
+        id: minScanTimer
+        interval: 2500
+        repeat: false
+        onTriggered: {
+            if (!wifiScanProc.running) {
+                root.wifiScanning = false;
+            }
+        }
+    }
+
     function triggerWifiScan() {
         root.wifiScanning = true;
-        wifiScanProc.running = true;
+        minScanTimer.restart();
+        if (!wifiScanProc.running) {
+            wifiScanProc.running = true;
+        }
     }
 
     function toggleWifiPower() {
@@ -156,10 +170,15 @@ Rectangle {
         command: ["python3", root.scriptPath, "wifi-scan"]
         stdout: SplitParser {
             onRead: data => {
-                root.wifiScanning = false;
+                if (!minScanTimer.running) {
+                    root.wifiScanning = false;
+                }
                 try {
                     var obj = JSON.parse(data);
                     root.updateWifiData(obj);
+                    if (obj.scanning) {
+                        root.wifiScanning = true;
+                    }
                 } catch (e) {}
             }
         }
@@ -187,6 +206,13 @@ Rectangle {
         root.wifiIp = obj.ip || "";
         root.wifiSecurity = obj.security || "";
         root.wifiNetworks = obj.networks || [];
+        if (obj.scanning !== undefined) {
+            if (obj.scanning) {
+                root.wifiScanning = true;
+            } else if (!minScanTimer.running && !wifiScanProc.running) {
+                root.wifiScanning = false;
+            }
+        }
     }
 
     Process {
