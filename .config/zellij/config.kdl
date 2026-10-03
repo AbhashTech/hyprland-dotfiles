@@ -264,6 +264,149 @@ keybinds clear-defaults=true {
     }
 }
 themes {
+    nord {
+        bg "#4c566a"
+        fg "#eceff4"
+        red "#bf616a"
+        green "#a3be8c"
+        blue "#81a1c1"
+        yellow "#ebcb8b"
+        magenta "#b48ead"
+        orange "#d08770"
+        cyan "#8fbcbb"
+        black "#242933"
+        white "#eceff4"
+    }
+    catppuccin-latte {
+        bg "#acb0be"
+        fg "#4c4f69"
+        red "#d20f39"
+        green "#40a02b"
+        blue "#1e66f5"
+        yellow "#df8e1d"
+        magenta "#8839ef"
+        orange "#fe640b"
+        cyan "#179299"
+        black "#e6e9ef"
+        white "#4c4f69"
+    }
+    everforest-light {
+        bg "#bdbaa3"
+        fg "#5c6a72"
+        red "#f85552"
+        green "#8da101"
+        blue "#3a94c5"
+        yellow "#dfa000"
+        magenta "#df69ba"
+        orange "#f57d26"
+        cyan "#35a77c"
+        black "#f4ede8"
+        white "#5c6a72"
+    }
+    horizon {
+        bg "#3d3f4e"
+        fg "#cdd1e4"
+        red "#e95379"
+        green "#09f7a0"
+        blue "#21bfc2"
+        yellow "#fac29a"
+        magenta "#b877db"
+        orange "#f9935e"
+        cyan "#21bfc2"
+        black "#16181f"
+        white "#cdd1e4"
+    }
+    ayu-light {
+        bg "#b3b3b3"
+        fg "#1a1a1a"
+        red "#e65050"
+        green "#86b300"
+        blue "#36a3d9"
+        yellow "#f29718"
+        magenta "#a37acc"
+        orange "#fa8d3e"
+        cyan "#4dbf99"
+        black "#f0f0f0"
+        white "#1a1a1a"
+    }
+    ayu-dark {
+        bg "#3d4751"
+        fg "#bfbdb6"
+        red "#ea6c73"
+        green "#7fd962"
+        blue "#59c2ff"
+        yellow "#e6b450"
+        magenta "#d2a6ff"
+        orange "#ff8f40"
+        cyan "#95e6cb"
+        black "#080d14"
+        white "#bfbdb6"
+    }
+    material-deep-ocean {
+        bg "#3a3f57"
+        fg "#a6accd"
+        red "#ff5370"
+        green "#c3e88d"
+        blue "#82aaff"
+        yellow "#ffcb6b"
+        magenta "#c792ea"
+        orange "#f78c6c"
+        cyan "#80cbc4"
+        black "#090b10"
+        white "#a6accd"
+    }
+    palenight {
+        bg "#585f7f"
+        fg "#a6accd"
+        red "#ff5370"
+        green "#c3e88d"
+        blue "#82aaff"
+        yellow "#ffcb6b"
+        magenta "#c792ea"
+        orange "#f78c6c"
+        cyan "#7fdbca"
+        black "#232536"
+        white "#a6accd"
+    }
+    monokai-pro {
+        bg "#727072"
+        fg "#fcfcfa"
+        red "#ff6188"
+        green "#a9dc76"
+        blue "#78dce8"
+        yellow "#ffd866"
+        magenta "#ab9df2"
+        orange "#fc9867"
+        cyan "#78dce8"
+        black "#221f22"
+        white "#fcfcfa"
+    }
+    oxocarbon {
+        bg "#525252"
+        fg "#f2f4f8"
+        red "#ff4040"
+        green "#42be65"
+        blue "#78a9ff"
+        yellow "#ffe97b"
+        magenta "#be95ff"
+        orange "#ff832b"
+        cyan "#3ddbd9"
+        black "#0f0f0f"
+        white "#f2f4f8"
+    }
+    kanagawa {
+        bg "#54546d"
+        fg "#dcd7ba"
+        red "#e82424"
+        green "#76946a"
+        blue "#7e9cd8"
+        yellow "#c0a36e"
+        magenta "#957fb8"
+        orange "#ffa066"
+        cyan "#6a9589"
+        black "#16161d"
+        white "#dcd7ba"
+    }
     tokyo-night {
         bg "#3b4261"
         fg "#c0caf5"
@@ -1347,7 +1490,7 @@ simplified_ui false
 // Choose the theme that is specified in the themes section.
 // Default: default
 // 
-theme "gruvbox-light"
+theme "gruvbox-dark"
  
 // Theme to use when the host terminal reports a dark color palette.
 // Requires `theme_light` to also be set; otherwise `theme` is used.

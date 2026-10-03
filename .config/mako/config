@@ -28,10 +28,10 @@ anchor=bottom-right
 layer=overlay
 
 # Catppuccin Mocha Colors
-background-color=#fbf1c7e6
-text-color=#3c3836
-border-color=#af3a03
-progress-color=over #d5c4a1
+background-color=#282828e6
+text-color=#ebdbb2
+border-color=#fabd2f
+progress-color=over #3c3836
 
 # Typography & Icons
 font=JetBrainsMono Nerd Font 10
@@ -44,16 +44,16 @@ format=<b>%s</b>\n%b
 
 # Urgency Overrides
 [urgency=low]
-border-color=#076678
+border-color=#458588
 default-timeout=8000
 
 [urgency=normal]
-border-color=#af3a03
+border-color=#fabd2f
 default-timeout=10000
 
 [urgency=critical]
-border-color=#9d0006
-text-color=#9d0006
+border-color=#fb4934
+text-color=#fb4934
 default-timeout=0
 
 [mode=dnd]
@@ -61,6 +61,9 @@ invisible=1
 
 # OSD & Transient Rules (Do not store in notification history)
 [category=osd]
+history=0
+
+[category=replay]
 history=0
 
 [app-name=VolumeControl]
