@@ -9,7 +9,7 @@ PopupWindow {
     property var targetItem: parent
     property bool isHovered: false
     property int showDelay: 200
-    property int hideDelay: 150
+    property int hideDelay: 250
 
     anchor.window: calPop.barWindow
     anchor.item: calPop.targetItem
@@ -23,12 +23,26 @@ PopupWindow {
     color: "transparent"
     visible: calCard.opacity > 0
 
+    readonly property bool cardHovered: cardHover.hovered || cardMa.containsMouse
+    readonly property bool shouldBeOpen: calPop.isHovered || cardHovered
+
+    onVisibleChanged: {
+        if (visible) calCard.updateClock();
+    }
+
+    onIsHoveredChanged: {
+        if (isHovered) {
+            calCard.updateClock();
+        }
+    }
+
     Timer {
         id: showTimer
         interval: calPop.showDelay
         repeat: false
         onTriggered: {
-            if (calPop.isHovered || popMa.containsMouse) {
+            if (calPop.shouldBeOpen) {
+                calCard.updateClock();
                 calCard.opacity = 1;
             }
         }
@@ -39,7 +53,7 @@ PopupWindow {
         interval: calPop.hideDelay
         repeat: false
         onTriggered: {
-            if (!calPop.isHovered && !popMa.containsMouse) {
+            if (!calPop.shouldBeOpen) {
                 calCard.opacity = 0;
                 // Reset calendar view to current month when closed
                 calCard.resetToday();
@@ -47,13 +61,18 @@ PopupWindow {
         }
     }
 
-    onIsHoveredChanged: {
-        if (isHovered) {
+    onShouldBeOpenChanged: {
+        if (shouldBeOpen) {
             hideTimer.stop();
-            showTimer.start();
+            calCard.updateClock();
+            if (calCard.opacity > 0) {
+                calCard.opacity = 1;
+            } else {
+                showTimer.restart();
+            }
         } else {
             showTimer.stop();
-            hideTimer.start();
+            hideTimer.restart();
         }
     }
 
@@ -129,6 +148,7 @@ PopupWindow {
 
         function resetToday() {
             var d = new Date();
+            calCard.now = d;
             viewYear = d.getFullYear();
             viewMonth = d.getMonth();
         }
@@ -171,16 +191,18 @@ PopupWindow {
             return days;
         }
 
+        HoverHandler {
+            id: cardHover
+        }
+
         MouseArea {
-            id: popMa
+            id: cardMa
             anchors.fill: parent
             hoverEnabled: true
-            acceptedButtons: Qt.NoButton
-            onContainsMouseChanged: {
-                if (!containsMouse && !calPop.isHovered) {
-                    hideTimer.start();
-                }
-            }
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onPressed: mouse => mouse.accepted = true
+            onReleased: mouse => mouse.accepted = true
+            onClicked: mouse => mouse.accepted = true
         }
 
         Column {
@@ -369,8 +391,8 @@ PopupWindow {
                         height: 28
                         radius: 6
 
-                        color: modelData.isToday ? Theme.accent : (dayMa.containsMouse ? Theme.moduleActiveBg : "transparent")
-                        border.color: modelData.isToday ? Theme.accent : (dayMa.containsMouse ? Theme.surface2 : "transparent")
+                        color: modelData.isToday ? Theme.accent : (dayHover.hovered ? Theme.moduleActiveBg : "transparent")
+                        border.color: modelData.isToday ? Theme.accent : (dayHover.hovered ? Theme.surface2 : "transparent")
                         border.width: 1
 
                         Text {
@@ -378,15 +400,12 @@ PopupWindow {
                             text: modelData.day.toString()
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSizeSmall
-                            font.bold: modelData.isToday || (modelData.isCurrentMonth && dayMa.containsMouse)
+                            font.bold: modelData.isToday || (modelData.isCurrentMonth && dayHover.hovered)
                             color: modelData.isToday ? Theme.crust : (modelData.isCurrentMonth ? Theme.text : Theme.overlay0)
                         }
 
-                        MouseArea {
-                            id: dayMa
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.NoButton
+                        HoverHandler {
+                            id: dayHover
                         }
                     }
                 }
