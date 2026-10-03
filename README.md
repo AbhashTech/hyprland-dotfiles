@@ -665,6 +665,22 @@ The dotfiles include a dedicated GUI and CLI utility ([`app_shortcut_creator.py`
 
 ---
 
+### 🧩 Modular Quickshell Custom Plugins & Override System
+The desktop status bar and popup windows support **hot-pluggable custom plugins** (`~/.config/quickshell/custom_plugins/`) with **zero modifications to core tracked dotfiles**:
+- **Automatic Discovery**: Drop any plugin folder into `~/.config/quickshell/custom_plugins/<name>/` with a `manifest.json`. Quickshell automatically registers capsules, popup windows, and background services on shell start or reload.
+- **Built-in Overrides Architecture**: Custom plugins can cleanly **override and replace** default built-in modules (e.g. replacing default volume mixer or launcher with a custom component) by declaring an `"overrides"` block in `manifest.json`:
+  ```json
+  "overrides": {
+    "module": "volume",      // Replaces the topbar status capsule
+    "window": "volume",      // Replaces the popup window
+    "action": "volume"       // Routes PluginManager.toggle('volume') to the custom plugin
+  }
+  ```
+- **Automatic Fallback**: Disabling the plugin via the Plugin Manager (`SUPER + ALT + P`) or manifest immediately restores the built-in system module.
+- See [`custom_plugins/README.md`](.config/quickshell/custom_plugins/README.md) for complete plugin and override specification.
+
+---
+
 ### 🔊 Audio & Media Controls (`volume_control.py` & `playerctl`)
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |

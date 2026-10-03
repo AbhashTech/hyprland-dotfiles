@@ -257,6 +257,7 @@ def list_plugins():
             kinds = manifest.get("kinds", [])
             entry_points = manifest.get("entryPoints", {})
             dependencies = manifest.get("dependencies", [])
+            overrides = manifest.get("overrides", {})
 
             # Infer kinds if empty
             if not kinds:
@@ -284,6 +285,7 @@ def list_plugins():
                 "position": position,
                 "kinds": kinds,
                 "entryPoints": entry_points,
+                "overrides": overrides,
                 "dependencies": dependencies,
                 "dependencyStatus": dep_status,
                 "path": str(plugin_path),

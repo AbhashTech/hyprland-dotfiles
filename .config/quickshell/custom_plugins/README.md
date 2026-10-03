@@ -61,9 +61,48 @@ Every custom plugin should contain a `manifest.json` file at its root. This inst
 | `entryPoints.barWidget` | `string` | QML file for the topbar capsule (e.g. `Widget.qml`, `WeatherModule.qml`). |
 | `entryPoints.windows` | `array` / `string` | Floating popup window QML file(s) (e.g. `["WeatherWindow.qml"]`). |
 | `entryPoints.service` | `string` | Background QML service file (e.g. `WeatherService.qml`). |
+| `overrides` | `object` | Optional target mapping to **override built-in bar modules, windows, or actions** (`{"module": "volume", "window": "volume", "action": "volume"}`). |
 | `enabled` | `boolean` | Set to `false` to disable the plugin without deleting it (default: `true`). |
 
 *(Note: If `manifest.json` is omitted, the auto-discovery engine will look for standard filenames like `*Module.qml` or `Widget.qml` for topbar widgets and `*Window.qml` for popup windows).*
+
+---
+
+## 🎯 Overriding Built-in Menu Items & Bar Modules
+
+Quickshell allows custom plugins to **completely override and replace** any default built-in status bar capsule, popup window, or toggle action without editing core dotfiles code!
+
+### Overrides Specification:
+In your plugin's `manifest.json`, define an `"overrides"` object:
+```json
+{
+  "id": "my_custom_volume",
+  "name": "Custom Volume Mixer",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "Replaces built-in audio capsule and mixer with a custom PipeWire UI",
+  "kinds": ["bar-widget", "window"],
+  "enabled": true,
+  "overrides": {
+    "module": "volume",
+    "window": "volume",
+    "action": "volume"
+  },
+  "entryPoints": {
+    "barWidget": "CustomVolumeModule.qml",
+    "windows": ["CustomVolumeWindow.qml"]
+  }
+}
+```
+
+### Supported Override Targets:
+| Override Field | Target Examples | Description |
+| :--- | :--- | :--- |
+| `"module"` | `"volume"`, `"launcher"`, `"mpris"`, `"clock"`, `"brightness"`, `"stats"`, `"battery"`, etc. | Replaces the status bar capsule in its current layout slot. |
+| `"window"` | `"volume"`, `"appmenu"`, `"powermenu"`, `"clipboard"`, `"calc"`, `"emoji"`, `"brightness"`, etc. | Disables the core popup window so only your custom window loads. |
+| `"action"` / `"actions"` | `"volume"`, `["volume", "volumemenu"]`, `"launcher"` | Intercepts `PluginManager.toggle(...)` and CLI toggle triggers to route to your custom plugin. |
+
+Whenever your override plugin is enabled, Quickshell's auto-discovery engine dynamically registers it in `PluginOverrides.qml` and routes all bar slots, windows, and toggle triggers to your custom plugin. If you disable the plugin in Plugin Manager, Quickshell instantly falls back to the built-in module!
 
 ---
 

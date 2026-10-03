@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "generated"
 
 QtObject {
     id: root
@@ -32,6 +33,12 @@ QtObject {
     function isPluginVisible(pluginId) {
         var v = customPluginVersion;
         if (!pluginId) return false;
+        if (PluginOverrides.isActionOverridden(pluginId)) {
+            var targetCustom = PluginOverrides.getTargetPluginForAction(pluginId);
+            if (targetCustom && targetCustom !== pluginId) {
+                return isPluginVisible(targetCustom);
+            }
+        }
         if (pluginId === "plugin_manager" || pluginId === "plugin-manager" || pluginId === "pluginmanager") {
             if (root.pluginManagerVisible) return true;
         }
@@ -89,6 +96,19 @@ QtObject {
 
     // Toggle a plugin by name
     function toggle(name) {
+        if (!name) return;
+
+        // Check if an enabled custom plugin overrides this action/module
+        if (PluginOverrides.isActionOverridden(name)) {
+            var targetPlugin = PluginOverrides.getTargetPluginForAction(name);
+            if (targetPlugin) {
+                var isVis = root.isPluginVisible(targetPlugin);
+                root.closeAll();
+                root.setPluginVisible(targetPlugin, !isVis);
+                return;
+            }
+        }
+
         var current = false;
         switch (name) {
             case "appmenu":

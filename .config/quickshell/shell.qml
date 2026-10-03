@@ -160,21 +160,21 @@ ShellRoot {
         onLoaded: _cached = true
     }
 
-    // Modular Quickshell Plugin Windows (Lazy-loaded on first access for instant shell startup)
-    LazyWindow { trigger: PluginManager.appMenuVisible; source: "plugins/appmenu/AppMenuWindow.qml" }
-    LazyWindow { trigger: PluginManager.powerMenuVisible; source: "plugins/powermenu/PowerMenuWindow.qml" }
-    LazyWindow { trigger: PluginManager.clipboardVisible; source: "plugins/clipboard/ClipboardWindow.qml" }
-    LazyWindow { trigger: PluginManager.calcVisible; source: "plugins/calc/QuickCalcWindow.qml" }
-    LazyWindow { trigger: PluginManager.emojiVisible; source: "plugins/emoji/EmojiPickerWindow.qml" }
-    LazyWindow { trigger: PluginManager.keybindsVisible; source: "plugins/keybinds/KeybindsWindow.qml" }
-    LazyWindow { trigger: PluginManager.volumeVisible; source: "plugins/volume/VolumeMixerWindow.qml" }
-    LazyWindow { trigger: PluginManager.brightnessVisible; source: "plugins/brightness/BrightnessWindow.qml" }
-    LazyWindow { trigger: PluginManager.sysinfoVisible; source: "plugins/sysinfo/SysInfoWindow.qml" }
-    LazyWindow { trigger: PluginManager.connectivityVisible; source: "plugins/connectivity/ConnectivityWindow.qml" }
-    LazyWindow { trigger: PluginManager.batteryVisible; source: "plugins/battery/BatteryWindow.qml" }
-    LazyWindow { trigger: PluginManager.notificationVisible; source: "plugins/notifications/NotificationWindow.qml" }
-    LazyWindow { trigger: PluginManager.filePickerVisible; source: "plugins/filepicker/FilePickerWindow.qml" }
-    LazyWindow { trigger: PluginManager.workspaceViewerVisible; source: "plugins/workspace_viewer/WorkspaceViewerWindow.qml" }
-    LazyWindow { trigger: PluginManager.pluginManagerVisible; source: "plugins/plugin-manager/PluginManagerWindow.qml" }
+    // Modular Quickshell Plugin Windows (Lazy-loaded on first access, bypassed if overridden by custom plugin)
+    LazyWindow { trigger: PluginManager.appMenuVisible && !PluginOverrides.hasWindowOverride("appmenu"); source: "plugins/appmenu/AppMenuWindow.qml" }
+    LazyWindow { trigger: PluginManager.powerMenuVisible && !PluginOverrides.hasWindowOverride("powermenu"); source: "plugins/powermenu/PowerMenuWindow.qml" }
+    LazyWindow { trigger: PluginManager.clipboardVisible && !PluginOverrides.hasWindowOverride("clipboard"); source: "plugins/clipboard/ClipboardWindow.qml" }
+    LazyWindow { trigger: PluginManager.calcVisible && !PluginOverrides.hasWindowOverride("calc"); source: "plugins/calc/QuickCalcWindow.qml" }
+    LazyWindow { trigger: PluginManager.emojiVisible && !PluginOverrides.hasWindowOverride("emoji"); source: "plugins/emoji/EmojiPickerWindow.qml" }
+    LazyWindow { trigger: PluginManager.keybindsVisible && !PluginOverrides.hasWindowOverride("keybinds"); source: "plugins/keybinds/KeybindsWindow.qml" }
+    LazyWindow { trigger: PluginManager.volumeVisible && !PluginOverrides.hasWindowOverride("volume"); source: "plugins/volume/VolumeMixerWindow.qml" }
+    LazyWindow { trigger: PluginManager.brightnessVisible && !PluginOverrides.hasWindowOverride("brightness"); source: "plugins/brightness/BrightnessWindow.qml" }
+    LazyWindow { trigger: PluginManager.sysinfoVisible && !PluginOverrides.hasWindowOverride("sysinfo"); source: "plugins/sysinfo/SysInfoWindow.qml" }
+    LazyWindow { trigger: PluginManager.connectivityVisible && !PluginOverrides.hasWindowOverride("connectivity"); source: "plugins/connectivity/ConnectivityWindow.qml" }
+    LazyWindow { trigger: PluginManager.batteryVisible && !PluginOverrides.hasWindowOverride("battery"); source: "plugins/battery/BatteryWindow.qml" }
+    LazyWindow { trigger: PluginManager.notificationVisible && !PluginOverrides.hasWindowOverride("notifications"); source: "plugins/notifications/NotificationWindow.qml" }
+    LazyWindow { trigger: PluginManager.filePickerVisible && !PluginOverrides.hasWindowOverride("filepicker"); source: "plugins/filepicker/FilePickerWindow.qml" }
+    LazyWindow { trigger: PluginManager.workspaceViewerVisible && !PluginOverrides.hasWindowOverride("workspaces"); source: "plugins/workspace_viewer/WorkspaceViewerWindow.qml" }
+    LazyWindow { trigger: PluginManager.pluginManagerVisible && !PluginOverrides.hasWindowOverride("plugin-manager"); source: "plugins/plugin-manager/PluginManagerWindow.qml" }
     CustomWindows {}
 }

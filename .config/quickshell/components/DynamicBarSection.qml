@@ -123,8 +123,19 @@ Row {
         }
     }
 
+    // Override components helper instance
+    OverrideComponents {
+        id: overrideHelper
+        barWindow: root.barWindow
+    }
+
     // Component Registry Resolver
     function getComponentForId(id) {
+        if (PluginOverrides.hasBarOverride(id)) {
+            var customComp = overrideHelper.getComponentForModule(id);
+            if (customComp) return customComp;
+        }
+
         switch (id) {
             case "launcher":
                 return launcherComp;
