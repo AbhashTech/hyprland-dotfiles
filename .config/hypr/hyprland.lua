@@ -7,6 +7,15 @@
 local config_dir = os.getenv("HOME") .. "/.config/hypr"
 package.path = config_dir .. "/?.lua;" .. config_dir .. "/?/init.lua;" .. package.path
 
+-- Unload cached modules to ensure live reload reflects all edits on disk
+for _, mod in ipairs({
+  "modules.env", "modules.monitors", "modules.programs", "modules.autostart",
+  "modules.appearance", "modules.animations", "modules.layouts", "modules.misc",
+  "modules.input", "modules.keybinds", "modules.rules", "modules.permissions"
+}) do
+  package.loaded[mod] = nil
+end
+
 -- Load configuration modules
 require("modules.env")
 require("modules.monitors")

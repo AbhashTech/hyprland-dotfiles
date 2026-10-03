@@ -52,11 +52,14 @@ hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd(programs.powerMenu))
 -- Toggle Status Bar (Quickshell)
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/launch_quickshell.sh --toggle"))
 
+local qsScript = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh "
+
 -- Open Keyboard Shortcuts Cheat Sheet (Quickshell Plugin)
-hl.bind(mainMod .. " + slash",    hl.dsp.exec_cmd(programs.keybinds))
-hl.bind(mainMod .. " + question", hl.dsp.exec_cmd(programs.keybinds))
-hl.bind(mainMod .. " + F1",       hl.dsp.exec_cmd(programs.keybinds))
-hl.bind(mainMod .. " + K",        hl.dsp.exec_cmd(programs.keybinds))
+local keybindsCmd = programs.keybinds or (qsScript .. "keybinds")
+hl.bind(mainMod .. " + slash",    hl.dsp.exec_cmd(keybindsCmd))
+hl.bind(mainMod .. " + question", hl.dsp.exec_cmd(keybindsCmd))
+hl.bind(mainMod .. " + F1",       hl.dsp.exec_cmd(keybindsCmd))
+hl.bind(mainMod .. " + K",        hl.dsp.exec_cmd(keybindsCmd))
 
 -- =============================================================================
 -- 🗂️ Workspaces & Window Navigation
@@ -137,8 +140,9 @@ hl.bind(mainMod .. " + CTRL + J",     hl.dsp.exec_cmd(scaleScript .. " down"),  
 hl.bind(mainMod .. " + CTRL + 0", hl.dsp.exec_cmd(scaleScript .. " show"))
 
 -- Open Display Resolution & Scaling Menu (Brightness GUI Tab 2)
-hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd(programs.displayResolution))
-hl.bind(mainMod .. " + SHIFT + D", hl.dsp.exec_cmd(programs.displayResolution))
+local displayResCmd = programs.displayResolution or (qsScript .. "resolution")
+hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd(displayResCmd))
+hl.bind(mainMod .. " + SHIFT + D", hl.dsp.exec_cmd(displayResCmd))
 
 local brightHelper = "python3 " .. os.getenv("HOME") .. "/.config/quickshell/plugins/brightness/brightness_helper.py"
 
@@ -245,14 +249,16 @@ hl.bind(mainMod .. " + ALT + W",   hl.dsp.exec_cmd(wallpaperScript .. " --menu")
 -- =============================================================================
 
 -- Open Sound Control Center & Device Switcher (Quickshell Audio Mixer Plugin)
-hl.bind(mainMod .. " + CTRL + A",  hl.dsp.exec_cmd(programs.volumeMenu))
-hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd(programs.volumeMenu))
-hl.bind(mainMod .. " + ALT + A",   hl.dsp.exec_cmd(programs.volumeMenu))
+local volumeCmd = programs.volumeMenu or (qsScript .. "volume")
+hl.bind(mainMod .. " + CTRL + A",  hl.dsp.exec_cmd(volumeCmd))
+hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd(volumeCmd))
+hl.bind(mainMod .. " + ALT + A",   hl.dsp.exec_cmd(volumeCmd))
 
 -- Open Display Brightness & Contrast Control Center (Quickshell Brightness Plugin)
-hl.bind(mainMod .. " + CTRL + B",  hl.dsp.exec_cmd(programs.brightnessMenu))
-hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd(programs.brightnessMenu))
-hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd(programs.brightnessMenu))
+local brightnessCmd = programs.brightnessMenu or (qsScript .. "brightness")
+hl.bind(mainMod .. " + CTRL + B",  hl.dsp.exec_cmd(brightnessCmd))
+hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd(brightnessCmd))
+hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd(brightnessCmd))
 
 -- Open Wireless & Wi-Fi Management Control Center (Quickshell Connectivity Plugin)
 hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd(programs.wifiMenu))
@@ -284,8 +290,9 @@ hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd(programs.notifications))
 hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("makoctl set-mode dnd 2>/dev/null || makoctl mode -t dnd"))
 
 -- Open Searchable Clipboard History Browser (Quickshell Plugin)
-hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(programs.clipboard))
-hl.bind("ALT + V",                 hl.dsp.exec_cmd(programs.clipboard))
+local clipCmd = programs.clipboard or (qsScript .. "clipboard")
+hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(clipCmd))
+hl.bind("ALT + V",                 hl.dsp.exec_cmd(clipCmd))
 
 -- Toggle Clipboard Private Mode / Pause Recording
 hl.bind(mainMod .. " + ALT + X",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/quickshell/plugins/clipboard/clip_helper.py toggle-private"))
