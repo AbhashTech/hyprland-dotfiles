@@ -232,11 +232,41 @@ Rectangle {
                 }
 
                 Slider {
+                    id: intSlider
                     Layout.fillWidth: true
                     from: 1
                     to: 100
                     value: root.internalBrightness
                     onMoved: root.setInternalBrightness(Math.round(value))
+
+                    background: Rectangle {
+                        x: intSlider.leftPadding
+                        y: intSlider.topPadding + intSlider.availableHeight / 2 - height / 2
+                        implicitWidth: 200
+                        implicitHeight: 6
+                        width: intSlider.availableWidth
+                        height: implicitHeight
+                        radius: 3
+                        color: Theme.surface2
+
+                        Rectangle {
+                            width: intSlider.visualPosition * parent.width
+                            height: parent.height
+                            color: Theme.yellow
+                            radius: 3
+                        }
+                    }
+
+                    handle: Rectangle {
+                        x: intSlider.leftPadding + intSlider.visualPosition * (intSlider.availableWidth - width)
+                        y: intSlider.topPadding + intSlider.availableHeight / 2 - height / 2
+                        implicitWidth: 16
+                        implicitHeight: 16
+                        radius: 8
+                        color: intSlider.pressed ? Theme.text : Theme.yellow
+                        border.color: Theme.crust
+                        border.width: 2
+                    }
                 }
 
                 // Presets Row
@@ -379,6 +409,7 @@ Rectangle {
                         }
 
                         Slider {
+                            id: extBSlider
                             Layout.fillWidth: true
                             from: 0
                             to: 100
@@ -386,6 +417,35 @@ Rectangle {
                             onMoved: {
                                 extCard.liveBrightness = Math.round(value);
                                 root.setExtBrightness(extCard.monitorBus, Math.round(value));
+                            }
+
+                            background: Rectangle {
+                                x: extBSlider.leftPadding
+                                y: extBSlider.topPadding + extBSlider.availableHeight / 2 - height / 2
+                                implicitWidth: 200
+                                implicitHeight: 6
+                                width: extBSlider.availableWidth
+                                height: implicitHeight
+                                radius: 3
+                                color: Theme.surface2
+
+                                Rectangle {
+                                    width: extBSlider.visualPosition * parent.width
+                                    height: parent.height
+                                    color: Theme.yellow
+                                    radius: 3
+                                }
+                            }
+
+                            handle: Rectangle {
+                                x: extBSlider.leftPadding + extBSlider.visualPosition * (extBSlider.availableWidth - width)
+                                y: extBSlider.topPadding + extBSlider.availableHeight / 2 - height / 2
+                                implicitWidth: 16
+                                implicitHeight: 16
+                                radius: 8
+                                color: extBSlider.pressed ? Theme.text : Theme.yellow
+                                border.color: Theme.crust
+                                border.width: 2
                             }
                         }
 
@@ -452,6 +512,7 @@ Rectangle {
                         }
 
                         Slider {
+                            id: extCSlider
                             Layout.fillWidth: true
                             from: 0
                             to: 100
@@ -459,6 +520,35 @@ Rectangle {
                             onMoved: {
                                 extCard.liveContrast = Math.round(value);
                                 root.setExtContrast(extCard.monitorBus, Math.round(value));
+                            }
+
+                            background: Rectangle {
+                                x: extCSlider.leftPadding
+                                y: extCSlider.topPadding + extCSlider.availableHeight / 2 - height / 2
+                                implicitWidth: 200
+                                implicitHeight: 6
+                                width: extCSlider.availableWidth
+                                height: implicitHeight
+                                radius: 3
+                                color: Theme.surface2
+
+                                Rectangle {
+                                    width: extCSlider.visualPosition * parent.width
+                                    height: parent.height
+                                    color: Theme.teal
+                                    radius: 3
+                                }
+                            }
+
+                            handle: Rectangle {
+                                x: extCSlider.leftPadding + extCSlider.visualPosition * (extCSlider.availableWidth - width)
+                                y: extCSlider.topPadding + extCSlider.availableHeight / 2 - height / 2
+                                implicitWidth: 16
+                                implicitHeight: 16
+                                radius: 8
+                                color: extCSlider.pressed ? Theme.text : Theme.teal
+                                border.color: Theme.crust
+                                border.width: 2
                             }
                         }
 

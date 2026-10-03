@@ -410,11 +410,41 @@ Rectangle {
                     }
 
                     Slider {
+                        id: spkSlider
                         Layout.fillWidth: true
                         from: 0
                         to: 100
                         value: root.speakerVolume
                         onMoved: root.setSinkVolume(Math.round(value))
+
+                        background: Rectangle {
+                            x: spkSlider.leftPadding
+                            y: spkSlider.topPadding + spkSlider.availableHeight / 2 - height / 2
+                            implicitWidth: 200
+                            implicitHeight: 6
+                            width: spkSlider.availableWidth
+                            height: implicitHeight
+                            radius: 3
+                            color: Theme.surface2
+
+                            Rectangle {
+                                width: spkSlider.visualPosition * parent.width
+                                height: parent.height
+                                color: root.speakerMuted ? Theme.overlay0 : Theme.blue
+                                radius: 3
+                            }
+                        }
+
+                        handle: Rectangle {
+                            x: spkSlider.leftPadding + spkSlider.visualPosition * (spkSlider.availableWidth - width)
+                            y: spkSlider.topPadding + spkSlider.availableHeight / 2 - height / 2
+                            implicitWidth: 16
+                            implicitHeight: 16
+                            radius: 8
+                            color: spkSlider.pressed ? Theme.text : (root.speakerMuted ? Theme.overlay0 : Theme.blue)
+                            border.color: Theme.crust
+                            border.width: 2
+                        }
                     }
                 }
             }
@@ -500,11 +530,41 @@ Rectangle {
                     }
 
                     Slider {
+                        id: micSlider
                         Layout.fillWidth: true
                         from: 0
                         to: 100
                         value: root.micVolume
                         onMoved: root.setSourceVolume(Math.round(value))
+
+                        background: Rectangle {
+                            x: micSlider.leftPadding
+                            y: micSlider.topPadding + micSlider.availableHeight / 2 - height / 2
+                            implicitWidth: 200
+                            implicitHeight: 6
+                            width: micSlider.availableWidth
+                            height: implicitHeight
+                            radius: 3
+                            color: Theme.surface2
+
+                            Rectangle {
+                                width: micSlider.visualPosition * parent.width
+                                height: parent.height
+                                color: root.micMuted ? Theme.overlay0 : Theme.green
+                                radius: 3
+                            }
+                        }
+
+                        handle: Rectangle {
+                            x: micSlider.leftPadding + micSlider.visualPosition * (micSlider.availableWidth - width)
+                            y: micSlider.topPadding + micSlider.availableHeight / 2 - height / 2
+                            implicitWidth: 16
+                            implicitHeight: 16
+                            radius: 8
+                            color: micSlider.pressed ? Theme.text : (root.micMuted ? Theme.overlay0 : Theme.green)
+                            border.color: Theme.crust
+                            border.width: 2
+                        }
                     }
                 }
             }
@@ -767,11 +827,41 @@ Rectangle {
                         }
 
                         Slider {
+                            id: appSlider
                             Layout.fillWidth: true
                             from: 0
                             to: 100
                             value: modelData.volume
                             onMoved: root.setAppVolume(modelData.id, Math.round(value))
+
+                            background: Rectangle {
+                                x: appSlider.leftPadding
+                                y: appSlider.topPadding + appSlider.availableHeight / 2 - height / 2
+                                implicitWidth: 200
+                                implicitHeight: 6
+                                width: appSlider.availableWidth
+                                height: implicitHeight
+                                radius: 3
+                                color: Theme.surface2
+
+                                Rectangle {
+                                    width: appSlider.visualPosition * parent.width
+                                    height: parent.height
+                                    color: modelData.muted ? Theme.overlay0 : Theme.accent
+                                    radius: 3
+                                }
+                            }
+
+                            handle: Rectangle {
+                                x: appSlider.leftPadding + appSlider.visualPosition * (appSlider.availableWidth - width)
+                                y: appSlider.topPadding + appSlider.availableHeight / 2 - height / 2
+                                implicitWidth: 16
+                                implicitHeight: 16
+                                radius: 8
+                                color: appSlider.pressed ? Theme.text : (modelData.muted ? Theme.overlay0 : Theme.accent)
+                                border.color: Theme.crust
+                                border.width: 2
+                            }
                         }
                     }
                 }
