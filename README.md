@@ -256,22 +256,22 @@ The dotfiles include a dedicated **Audio Mixer & Sound Hub** (`~/.config/quicksh
 
 ---
 
-## ☀️ Display Brightness & External Monitor Manager (Quickshell Plugin)
+## ☀️ Display Brightness & Resolution Control Center (Quickshell Plugin)
 
-The dotfiles include a dedicated **Display & Brightness Control Center** (`~/.config/quickshell/plugins/brightness/`):
+The dotfiles include a unified **Display Brightness & Resolution Control Center** (`~/.config/quickshell/plugins/brightness/`) featuring two integrated tabs:
 
-- **Status Bar Trigger**: Left-clicking the brightness indicator or pressing **`SUPER + SHIFT + B`** opens the glassmorphic Display Control Center.
-- **Built-in Laptop Display Controls**:
-  - Continuous range slider (1% – 100%) with live value badge.
-  - Quick preset buttons (`10%`, `25%`, `50%`, `75%`, `100%`).
-- **External Monitor(s) Brightness & Contrast (DDC/CI)**:
-  - Auto-detects connected external displays (e.g. HDMI, DisplayPort).
-  - Dedicated **Brightness Range Slider** (0% – 100%) with presets (`20%`, `40%`, `60%`, `80%`, `100%`).
-  - Dedicated **Contrast Range Slider** (0% – 100%) with presets (`30%`, `50%`, `70%`, `85%`, `100%`).
-  - Asynchronous debounced hardware writes for smooth 60fps slider drag without UI freeze.
-- **Night Light (Blue Light Filter)**:
-  - One-click toggle button with active state badge.
-  - Color temperature range slider (2500K – 6500K) and presets (`3000K Candle`, `3800K Warm`, `4500K Soft`, `6500K Daylight`).
+- **Access Hotkeys**:
+  - Press **`SUPER + CTRL + B`**, **`SUPER + SHIFT + B`**, or **`SUPER + ALT + B`** to open the Brightness menu (Tab 1).
+  - Press **`SUPER + SHIFT + R`** or **`SUPER + SHIFT + D`** to jump directly to the Display Resolution & Scaling menu (Tab 2).
+  - Status bar: Left-click the brightness indicator on the top bar.
+- **Tab 1: Brightness & Display Contrast**:
+  - **Built-in Laptop Display Controls**: Continuous range slider (1% – 100%) with live value badge and quick preset buttons (`10%`, `25%`, `50%`, `75%`, `100%`).
+  - **External Monitor(s) Brightness & Contrast (DDC/CI)**: Auto-detects connected external displays (HDMI/DP). Dedicated **Brightness Range Slider** (0% – 100%) and **Contrast Range Slider** (0% – 100%) with presets. Debounced hardware writes for smooth 60fps slider drag without UI freeze.
+  - **Night Light (Blue Light Filter)**: One-click toggle button with active state badge, color temperature slider (2500K – 6500K), and presets (`3000K Candle`, `3800K Warm`, `4500K Soft`, `6500K Daylight`).
+- **Tab 2: Display Resolution & Scaling**:
+  - **Interactive Multi-Monitor Selector**: Switch between internal and external monitors.
+  - **Resolution & Refresh Rate Presets**: Switch display modes with live preview and apply buttons (e.g. 1080p, 1440p, 4K at 60Hz, 120Hz, 144Hz, 165Hz).
+  - **Fractional Display Scaling**: Adjust display scaling from 1.0x to 2.0x (100%, 125%, 150%, 175%, 200%) with persistent config writes to `~/.config/hypr/modules/monitors.lua`.
 
 ---
 
@@ -564,7 +564,7 @@ The dotfiles include a dedicated GUI and CLI utility ([`app_shortcut_creator.py`
 | `SUPER + L` / `SUPER + ALT + L` | **Lock Screen** | Immediately trigger `hyprlock` lockscreen |
 | `SUPER + Escape` / `SUPER + M` | **Power & Session Menu** | Open **Quickshell** session modal (Lock, Logout, Suspend, Reboot, Shutdown) |
 | `SUPER + SHIFT + W` | **Toggle Status Bar** | Toggle Quickshell status bar on/off with state persistence |
-| `SUPER + /` / `SUPER + ?` / `SUPER + F1` | **Shortcut Cheat Sheet** | Open interactive **Quickshell** dynamic keybindings viewer |
+| `SUPER + /` / `SUPER + ?` / `SUPER + F1` / `SUPER + K` | **Shortcut Cheat Sheet** | Open interactive **Quickshell** dynamic keybindings viewer |
 
 ---
 
@@ -595,7 +595,7 @@ The dotfiles include a dedicated GUI and CLI utility ([`app_shortcut_creator.py`
 | `SUPER + CTRL + Up / K` | **Resize Height Up** | Shrink window vertically from the top (-40px) |
 | `SUPER + CTRL + Down / J` | **Resize Height Down** | Grow window vertically to the bottom (+40px) |
 | `SUPER + CTRL + 0` | **Show Window Size** | Display active window dimensions & screen coverage percentage OSD |
-| `SUPER + SHIFT + R` | **Resolution & Scaling Menu** | Open QuickShell Display Resolution & Scaling Tab |
+| `SUPER + SHIFT + R` / `SUPER + SHIFT + D` | **Resolution & Scaling Menu** | Open QuickShell Display Resolution & Scaling Tab (Brightness Menu Tab 2) |
 | `SUPER + ALT + =` / `+` | **Display Scale Up** | Increment display scaling (+0.1) |
 | `SUPER + ALT + -` | **Display Scale Down** | Decrement display scaling (-0.1) |
 | `SUPER + ALT + 0` | **Show Display Scale** | Display active monitor resolution & scale factor OSD |
@@ -686,7 +686,7 @@ The desktop status bar and popup windows support **hot-pluggable custom plugins*
 | `XF86AudioMicMute` | **Toggle Mic Mute** | Mute / unmute microphone input |
 | `SHIFT + XF86AudioRaiseVolume` | **Mic Volume Up** | Increase microphone input gain (+5%) |
 | `SHIFT + XF86AudioLowerVolume` | **Mic Volume Down** | Decrease microphone input gain (-5%) |
-| `SUPER + SHIFT + A` / `SUPER + ALT + A` | **Audio Control Center** | Open **Quickshell** Sound Control Center & audio sink/source device switcher |
+| `SUPER + CTRL + A` / `SUPER + SHIFT + A` / `SUPER + ALT + A` | **Audio Control Center** | Open **Quickshell** Sound Control Center & audio sink/source device switcher |
 | `XF86AudioPlay` / `XF86AudioPause` | **Play / Pause** | Toggle media playback (Spotify, browser, playerctl) |
 | `XF86AudioNext` | **Next Track** | Skip to next track in active media player |
 | `XF86AudioPrev` | **Previous Track** | Skip to previous track in active media player |
@@ -700,9 +700,9 @@ The desktop status bar and popup windows support **hot-pluggable custom plugins*
 | `XF86MonBrightnessDown` | **Brightness Down (-5%)** | Decrease laptop panel backlight with visual OSD |
 | `SHIFT + XF86MonBrightnessUp` / `SUPER + Up` | **External DDC Up** | Increase external monitor brightness via DDC/CI (`ddcutil`) |
 | `SHIFT + XF86MonBrightnessDown` / `SUPER + Down` | **External DDC Down** | Decrease external monitor brightness via DDC/CI (`ddcutil`) |
-| `SUPER + SHIFT + B` / `SUPER + ALT + B` | **Display Control Center** | Open **Quickshell** Display Brightness & Contrast Control Center |
+| `SUPER + CTRL + B` / `SUPER + SHIFT + B` / `SUPER + ALT + B` | **Display Control Center** | Open **Quickshell** Display Brightness & Contrast Control Center |
 | `SUPER + CTRL + W` | **Wi-Fi Network Manager** | Open native **Quickshell** Wi-Fi network scanner and connection manager |
-| `SUPER + CTRL + B` | **Bluetooth Manager** | Open native **Quickshell** Bluetooth device manager |
+| `SUPER + CTRL + SHIFT + B` | **Bluetooth Manager** | Open native **Quickshell** Bluetooth device manager |
 
 ---
 
@@ -847,9 +847,9 @@ All personal files in these directories are automatically ignored by Git.
 
 #### 1. 🖥️ Hyprland (`~/.config/hypr/user/`)
 Split into dedicated files for each component:
-- `monitors.lua`: Custom multi-display resolutions, refresh rates, and positioning (e.g. `hyprland.monitor(...)`). Automatically written by the Display Resolution & Scaling Manager (`Super+Shift+R`).
+- `monitors.lua`: Custom multi-display resolutions, refresh rates, and positioning (e.g. `hyprland.monitor(...)`). Automatically written by the Display Resolution & Scaling Tab (`Super+Shift+R` / `Super+Shift+D`).
 - `input.lua`: Keyboard layouts, variants, options, mouse sensitivity, and touchpad natural scroll. Automatically written by the Keyboard Layout & Variant Manager (`Super+Shift+K` / `keyboard_layout.py`).
-- `keybinds.lua`: Personal hotkeys and custom application shortcuts (automatically parsed and displayed by the Keybinds Viewer `Super+K` / `keybinds_viewer.py`).
+- `keybinds.lua`: Personal hotkeys and custom application shortcuts (automatically parsed and displayed by the Keybinds Viewer `Super+/` / `Super+K` / `keybinds_viewer.py`).
 - `rules.lua`: Custom window rules, floating rules, and workspace assignments.
 - `autostart.lua`: Background applications to launch on login (e.g. Discord, Spotify).
 - `env.lua`: Personal compositor environment variables.

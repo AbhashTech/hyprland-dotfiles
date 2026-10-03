@@ -53,7 +53,10 @@ hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd(programs.powerMenu))
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/launch_quickshell.sh --toggle"))
 
 -- Open Keyboard Shortcuts Cheat Sheet (Quickshell Plugin)
-hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd(programs.keybinds))
+hl.bind(mainMod .. " + slash",    hl.dsp.exec_cmd(programs.keybinds))
+hl.bind(mainMod .. " + question", hl.dsp.exec_cmd(programs.keybinds))
+hl.bind(mainMod .. " + F1",       hl.dsp.exec_cmd(programs.keybinds))
+hl.bind(mainMod .. " + K",        hl.dsp.exec_cmd(programs.keybinds))
 
 -- =============================================================================
 -- 🗂️ Workspaces & Window Navigation
@@ -135,6 +138,7 @@ hl.bind(mainMod .. " + CTRL + 0", hl.dsp.exec_cmd(scaleScript .. " show"))
 
 -- Open Display Resolution & Scaling Menu (Brightness GUI Tab 2)
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd(programs.displayResolution))
+hl.bind(mainMod .. " + SHIFT + D", hl.dsp.exec_cmd(programs.displayResolution))
 
 local brightHelper = "python3 " .. os.getenv("HOME") .. "/.config/quickshell/plugins/brightness/brightness_helper.py"
 
@@ -161,6 +165,9 @@ hl.bind(mainMod .. " + ALT + 4", hl.dsp.exec_cmd(brightHelper .. " 1.75"))
 
 -- Set Display Scale to 2.00x (200%)
 hl.bind(mainMod .. " + ALT + 5", hl.dsp.exec_cmd(brightHelper .. " 2.00"))
+
+-- Reset Display Scale to 1.0x (100%)
+hl.bind(mainMod .. " + ALT + BackSpace", hl.dsp.exec_cmd(brightHelper .. " 1.0"))
 
 -- =============================================================================
 -- ⚡ Productivity, Development & System Utilities
@@ -238,10 +245,14 @@ hl.bind(mainMod .. " + ALT + W",   hl.dsp.exec_cmd(wallpaperScript .. " --menu")
 -- =============================================================================
 
 -- Open Sound Control Center & Device Switcher (Quickshell Audio Mixer Plugin)
-hl.bind(mainMod .. " + CTRL + A", hl.dsp.exec_cmd(programs.volumeMenu))
+hl.bind(mainMod .. " + CTRL + A",  hl.dsp.exec_cmd(programs.volumeMenu))
+hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd(programs.volumeMenu))
+hl.bind(mainMod .. " + ALT + A",   hl.dsp.exec_cmd(programs.volumeMenu))
 
 -- Open Display Brightness & Contrast Control Center (Quickshell Brightness Plugin)
-hl.bind(mainMod .. " + CTRL + B", hl.dsp.exec_cmd(programs.brightnessMenu))
+hl.bind(mainMod .. " + CTRL + B",  hl.dsp.exec_cmd(programs.brightnessMenu))
+hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd(programs.brightnessMenu))
+hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd(programs.brightnessMenu))
 
 -- Open Wireless & Wi-Fi Management Control Center (Quickshell Connectivity Plugin)
 hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd(programs.wifiMenu))
@@ -274,9 +285,11 @@ hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("makoctl set-mode dnd 2>/dev/
 
 -- Open Searchable Clipboard History Browser (Quickshell Plugin)
 hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(programs.clipboard))
+hl.bind("ALT + V",                 hl.dsp.exec_cmd(programs.clipboard))
 
 -- Toggle Clipboard Private Mode / Pause Recording
-hl.bind(mainMod .. " + ALT + X", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/quickshell/plugins/clipboard/clip_helper.py toggle-private"))
+hl.bind(mainMod .. " + ALT + X",   hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/quickshell/plugins/clipboard/clip_helper.py toggle-private"))
+hl.bind(mainMod .. " + SHIFT + X", hl.dsp.exec_cmd("python3 " .. os.getenv("HOME") .. "/.config/quickshell/plugins/clipboard/clip_helper.py toggle-private"))
 
 -- Open Clipboard Delete & Wipe Menu (Prompts with confirmation)
 hl.bind(mainMod .. " + ALT + D",   hl.dsp.exec_cmd(programs.clipClear))

@@ -649,6 +649,9 @@ fi
 log_info "Deploying custom desktop application shortcuts from hypr/scripts..."
 mkdir -p "${HOME}/.local/share/applications"
 
+# Clean up obsolete desktop shortcuts
+rm -f "${HOME}/.local/share/applications/"{volume-control,brightness-control,clipboard-manager,resolution-menu,keybinds-viewer}.desktop 2>/dev/null || true
+
 # Install all .desktop files from hypr/scripts
 if [ -d "${DOTFILES_DIR}/.config/hypr/scripts" ]; then
     for dt_file in "${DOTFILES_DIR}/.config/hypr/scripts/"*.desktop; do
@@ -795,6 +798,10 @@ echo -e "  ${COLOR_BOLD}source ~/.config/shell/aliases.sh${COLOR_RESET}"
 echo ""
 echo -e "To apply or reload desktop components:"
 echo -e "  • Shortcuts Cheat:   ${COLOR_BOLD}SUPER + /${COLOR_RESET} or ${COLOR_BOLD}SUPER + F1${COLOR_RESET} (interactive search)"
+echo -e "  • Audio & Volume:    ${COLOR_BOLD}SUPER + CTRL + A${COLOR_RESET} or ${COLOR_BOLD}SUPER + SHIFT + A${COLOR_RESET} (Quickshell Volume Mixer)"
+echo -e "  • Brightness & Display: ${COLOR_BOLD}SUPER + CTRL + B${COLOR_RESET} or ${COLOR_BOLD}SUPER + SHIFT + B${COLOR_RESET} (Quickshell Brightness & Resolution)"
+echo -e "  • Resolution & Scale: ${COLOR_BOLD}SUPER + SHIFT + R${COLOR_RESET} (Brightness Menu Tab 2)"
+echo -e "  • Clipboard History: ${COLOR_BOLD}SUPER + SHIFT + V${COLOR_RESET} or ${COLOR_BOLD}ALT + V${COLOR_RESET} (Quickshell Clipboard Browser)"
 echo -e "  • Workspace Overview: ${COLOR_BOLD}SUPER + Tab${COLOR_RESET} (or hover on workspace bar)"
 echo -e "  • Theme Menu:        ${COLOR_BOLD}SUPER + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --menu${COLOR_RESET})"
 echo -e "  • Theme Manager GUI: ${COLOR_BOLD}SUPER + ALT + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --gui${COLOR_RESET})"

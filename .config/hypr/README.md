@@ -194,19 +194,19 @@ sudo usermod -aG i2c $USER
 | :--- | :--- |
 | `SUPER + Return` | Open Foot Terminal |
 | `SUPER + grave (~)` | Toggle Dropdown Scratchpad Terminal (`dropdown-terminal`) |
-| `SUPER + R` / `SUPER + Space` | Open Fuzzel Application Launcher (with outside click-dismiss) |
+| `SUPER + Space` | Open Application Launcher (Quickshell App Menu) |
 | `SUPER + B` | Open Firefox Browser |
 | `SUPER + E` | Open Dolphin File Manager |
 | `SUPER + SHIFT + E` | Open Yazi Terminal File Manager in Foot |
-| `SUPER + C` / `SUPER + SHIFT + Q` / `ALT + F4` | Close Active Focused Window |
+| `SUPER + C` / `ALT + F4` | Close Active Focused Window |
 | `SUPER + F` | Toggle Window Fullscreen Mode |
 | `SUPER + V` | Toggle Window Floating Mode |
 | `SUPER + P` | Toggle Pseudo Tiling Mode |
 | `SUPER + J` | Toggle Layout Split Orientation (Dwindle) |
-| `SUPER + L` / `SUPER + ALT + L` | Lock Screen immediately (`hyprlock`) |
-| `SUPER + Escape` / `SUPER + M` | Open Power & Session Menu (`wlogout`) |
+| `SUPER + L` | Lock Screen immediately (`hyprlock`) |
+| `SUPER + Escape` | Open Power & Session Menu (Quickshell Power Plugin) |
 | `SUPER + SHIFT + W` | Toggle Quickshell Status Bar (Show / Hide) |
-| `SUPER + /` / `SUPER + ?` / `SUPER + F1` | Open Dynamic Keybindings Cheat Sheet Viewer |
+| `SUPER + /` / `SUPER + ?` / `SUPER + F1` / `SUPER + K` | Open Dynamic Keybindings Cheat Sheet Viewer (Quickshell Plugin) |
 
 ---
 
@@ -233,7 +233,7 @@ sudo usermod -aG i2c $USER
 | `SUPER + CTRL + -` / `KP_Subtract` | Scale Window Down (-40px) with live dimension OSD |
 | `SUPER + CTRL + Arrow / HJKL` | Directional Window Resize (Left / Right / Up / Down) |
 | `SUPER + CTRL + I` / `0` | Display active window dimensions & screen coverage % |
-| `SUPER + SHIFT + R` / `SUPER + SHIFT + D` | Open Interactive Screen Resolution & Display Scaling Menu |
+| `SUPER + SHIFT + R` / `SUPER + SHIFT + D` | Open Interactive Screen Resolution & Display Scaling Menu (Brightness Menu Tab 2) |
 | `SUPER + ALT + =` / `+` | Increment Display Scale (+0.1) |
 | `SUPER + ALT + -` | Decrement Display Scale (-0.1) |
 | `SUPER + ALT + 0` | Display Active Screen Scale Factor OSD |
@@ -299,11 +299,11 @@ sudo usermod -aG i2c $USER
 | `XF86AudioMute` | Toggle Speaker Mute with OSD |
 | `XF86AudioMicMute` | Toggle Microphone Mute with OSD |
 | `SHIFT + XF86AudioRaiseVolume` / `LowerVolume` | Adjust Microphone Gain (±5%) |
-| `SUPER + SHIFT + A` / `SUPER + ALT + A` | Open Sound Control Center & Device Switcher Menu |
+| `SUPER + CTRL + A` / `SUPER + SHIFT + A` / `SUPER + ALT + A` | Open Sound Control Center & Device Switcher (Quickshell Volume Mixer) |
 | `XF86AudioPlay` / `Pause` / `Next` / `Prev` | Media playback controls via `playerctl` |
 | `XF86MonBrightnessUp` / `Down` | Adjust Laptop Screen Brightness with OSD |
 | `SUPER / SHIFT + XF86MonBrightnessUp` / `Down` | Adjust External Monitor Brightness (DDC/CI) |
-| `SUPER + SHIFT + B` / `SUPER + ALT + B` | Open Display Brightness & Contrast Control Center |
+| `SUPER + CTRL + B` / `SUPER + SHIFT + B` / `SUPER + ALT + B` | Open Display Brightness & Contrast Control Center (Quickshell Brightness Plugin) |
 
 ---
 

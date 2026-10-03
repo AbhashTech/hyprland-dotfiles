@@ -141,6 +141,8 @@ fi
 # 5. Desktop Shortcuts & Initialize Theme Variables
 log_info "Deploying custom desktop application shortcuts..."
 mkdir -p "${HOME}/.local/share/applications"
+# Clean up obsolete desktop shortcuts
+rm -f "${HOME}/.local/share/applications/"{volume-control,brightness-control,clipboard-manager,resolution-menu,keybinds-viewer}.desktop 2>/dev/null || true
 for dt_file in "${SCRIPTS_DIR}/"*.desktop; do
     if [ -f "$dt_file" ]; then
         dt_name="$(basename "$dt_file")"
@@ -185,6 +187,10 @@ log_success "Installation and environment setup completed!"
 echo -e "To launch or apply the configuration:"
 echo -e "  • Start Hyprland:    ${COLOR_BOLD}Hyprland${COLOR_RESET}"
 echo -e "  • Shortcuts Cheat:   ${COLOR_BOLD}SUPER + /${COLOR_RESET} or ${COLOR_BOLD}SUPER + F1${COLOR_RESET} (interactive search)"
+echo -e "  • Audio & Volume:    ${COLOR_BOLD}SUPER + CTRL + A${COLOR_RESET} or ${COLOR_BOLD}SUPER + SHIFT + A${COLOR_RESET} (Quickshell Volume Mixer)"
+echo -e "  • Brightness & Display: ${COLOR_BOLD}SUPER + CTRL + B${COLOR_RESET} or ${COLOR_BOLD}SUPER + SHIFT + B${COLOR_RESET} (Quickshell Brightness & Resolution)"
+echo -e "  • Resolution & Scale: ${COLOR_BOLD}SUPER + SHIFT + R${COLOR_RESET} (Brightness Menu Tab 2)"
+echo -e "  • Clipboard History: ${COLOR_BOLD}SUPER + SHIFT + V${COLOR_RESET} or ${COLOR_BOLD}ALT + V${COLOR_RESET} (Quickshell Clipboard Browser)"
 echo -e "  • Theme Menu:        ${COLOR_BOLD}SUPER + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --menu${COLOR_RESET})"
 echo -e "  • Theme Manager GUI: ${COLOR_BOLD}SUPER + ALT + T${COLOR_RESET} (or ${COLOR_BOLD}~/.config/hypr/scripts/theme_switcher.py --gui${COLOR_RESET})"
 echo -e "  • If already in Hyprland, reload with: ${COLOR_BOLD}hyprctl reload${COLOR_RESET}"
