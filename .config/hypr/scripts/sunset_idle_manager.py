@@ -1479,8 +1479,47 @@ def show_gui():
     # Current config
     parsed_config = IdleController.parse_config()
 
-    # Helper function to create dropdown settings row
-    def create_timeout_row(title_text, desc_text, presets_list, current_val):
+    def format_seconds_to_value_and_unit(secs):
+        if secs <= 0:
+            return "0", "seconds"
+        if secs >= 3600 and secs % 3600 == 0:
+            return str(secs // 3600), "hours"
+        if secs % 60 == 0:
+            return str(secs // 60), "minutes"
+        if secs % 30 == 0 and (secs / 60) <= 60:
+            val_m = secs / 60
+            if val_m == int(val_m):
+                return str(int(val_m)), "minutes"
+            return f"{val_m:.1f}", "minutes"
+        return str(secs), "seconds"
+
+    def format_seconds_summary(secs):
+        if secs == 0:
+            return f"<span size='small' color='{colors.get('subtext0', '#a6adc8')}'>(= 0s, <b>Disabled</b>)</span>"
+        if secs < 60:
+            return f"<span size='small' color='{colors.get('peach', '#fab387')}'>(= <b>{secs}s</b>)</span>"
+        m = secs // 60
+        s = secs % 60
+        if s == 0:
+            if m >= 60 and m % 60 == 0:
+                h = m // 60
+                return f"<span size='small' color='{colors.get('peach', '#fab387')}'>(= <b>{secs}s</b> / {h}h)</span>"
+            elif m >= 60:
+                h = m // 60
+                rem_m = m % 60
+                return f"<span size='small' color='{colors.get('peach', '#fab387')}'>(= <b>{secs}s</b> / {h}h {rem_m}m)</span>"
+            return f"<span size='small' color='{colors.get('peach', '#fab387')}'>(= <b>{secs}s</b> / {m}m)</span>"
+        else:
+            if m >= 60:
+                h = m // 60
+                rem_m = m % 60
+                return f"<span size='small' color='{colors.get('peach', '#fab387')}'>(= <b>{secs}s</b> / {h}h {rem_m}m {s}s)</span>"
+            return f"<span size='small' color='{colors.get('peach', '#fab387')}'>(= <b>{secs}s</b> / {m}m {s}s)</span>"
+
+    # Helper function to create dropdown settings row with custom time option
+    def create_timeout_row(title_text, desc_text, presets_list, current_val, default_val=300):
+        container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+
         row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         lbl_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         r_title = Gtk.Label(xalign=0)
@@ -1492,55 +1531,166 @@ def show_gui():
         row.pack_start(lbl_box, True, True, 0)
 
         combo = Gtk.ComboBoxText()
-        active_idx = 0
-        match_found = False
-        for idx, (secs, label) in enumerate(presets_list):
+        active_id = None
+        for secs, label in presets_list:
             combo.append(str(secs), label)
             if secs == current_val:
-                active_idx = idx
-                match_found = True
+                active_id = str(secs)
 
-        if not match_found:
-            combo.append(str(current_val), f"Custom ({current_val}s)")
-            active_idx = len(presets_list)
+        combo.append("custom", "⚙️ Custom Time...")
 
-        combo.set_active(active_idx)
+        if active_id is not None:
+            combo.set_active_id(active_id)
+        else:
+            combo.set_active_id("custom")
+
         row.pack_end(combo, False, False, 0)
-        return row, combo
+        container.pack_start(row, False, False, 0)
+
+        # Custom Input Sub-Row Box
+        custom_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        custom_box.get_style_context().add_class("custom-timeout-box")
+        custom_box.set_no_show_all(True)
+
+        c_prompt = Gtk.Label(xalign=0)
+        c_prompt.set_markup(f"<span size='small' weight='bold' color='{colors.get('peach', '#fab387')}'>↳ Custom Time:</span>")
+        custom_box.pack_start(c_prompt, False, False, 0)
+
+        custom_entry = Gtk.Entry()
+        custom_entry.set_width_chars(6)
+        custom_entry.set_alignment(0.5)
+        custom_entry.set_placeholder_text("300")
+        custom_box.pack_start(custom_entry, False, False, 0)
+
+        unit_combo = Gtk.ComboBoxText()
+        unit_combo.append("seconds", "Seconds (s)")
+        unit_combo.append("minutes", "Minutes (m)")
+        unit_combo.append("hours", "Hours (h)")
+        custom_box.pack_start(unit_combo, False, False, 0)
+
+        preview_lbl = Gtk.Label(xalign=0)
+        preview_lbl.set_ellipsize(Pango.EllipsizeMode.END)
+        custom_box.pack_start(preview_lbl, True, True, 4)
+
+        container.pack_start(custom_box, False, False, 0)
+
+        # Set initial custom input values
+        if active_id is not None:
+            custom_box.set_visible(False)
+            init_v, init_u = format_seconds_to_value_and_unit(current_val if current_val > 0 else default_val)
+        else:
+            custom_box.set_visible(True)
+            init_v, init_u = format_seconds_to_value_and_unit(current_val)
+
+        custom_entry.set_text(init_v)
+        unit_combo.set_active_id(init_u)
+
+        def update_preview():
+            txt = custom_entry.get_text().strip().replace(",", ".")
+            unit = unit_combo.get_active_id() or "minutes"
+            try:
+                val = float(txt)
+                if val < 0:
+                    preview_lbl.set_markup(f"<span size='small' color='{colors.get('red', '#f38ba8')}'>Must be ≥ 0</span>")
+                    return
+                if unit == "minutes":
+                    secs = int(round(val * 60))
+                elif unit == "hours":
+                    secs = int(round(val * 3600))
+                else:
+                    secs = int(round(val))
+                preview_lbl.set_markup(format_seconds_summary(secs))
+            except ValueError:
+                preview_lbl.set_markup(f"<span size='small' color='{colors.get('red', '#f38ba8')}'>Enter a valid number</span>")
+
+        custom_entry.connect("changed", lambda e: update_preview())
+        unit_combo.connect("changed", lambda c: update_preview())
+        update_preview()
+
+        def on_combo_changed(c):
+            cid = c.get_active_id()
+            if cid == "custom":
+                custom_box.set_visible(True)
+                update_preview()
+            else:
+                custom_box.set_visible(False)
+                try:
+                    val = int(cid)
+                    if val > 0:
+                        v_str, u_str = format_seconds_to_value_and_unit(val)
+                        custom_entry.set_text(v_str)
+                        unit_combo.set_active_id(u_str)
+                except Exception:
+                    pass
+
+        combo.connect("changed", on_combo_changed)
+
+        def get_seconds():
+            cid = combo.get_active_id()
+            if cid != "custom":
+                try:
+                    return int(cid)
+                except Exception:
+                    return default_val
+            txt = custom_entry.get_text().strip().replace(",", ".")
+            if not txt:
+                clean_title = re.sub(r'^[^\w\s]+', '', title_text).replace(':', '').strip()
+                raise ValueError(f"Please enter a custom timeout for {clean_title}")
+            try:
+                val = float(txt)
+            except ValueError:
+                clean_title = re.sub(r'^[^\w\s]+', '', title_text).replace(':', '').strip()
+                raise ValueError(f"Invalid duration number for {clean_title}: '{txt}'")
+            if val < 0:
+                clean_title = re.sub(r'^[^\w\s]+', '', title_text).replace(':', '').strip()
+                raise ValueError(f"Duration cannot be negative for {clean_title}")
+            unit = unit_combo.get_active_id() or "minutes"
+            if unit == "minutes":
+                return int(round(val * 60))
+            elif unit == "hours":
+                return int(round(val * 3600))
+            else:
+                return int(round(val))
+
+        return container, get_seconds
 
     # 1. Turn Off Display Timeout (DPMS)
-    dpms_row, dpms_combo = create_timeout_row(
+    dpms_row, dpms_getter = create_timeout_row(
         "🖥️ Turn Off Monitor After:",
         "Power down display panels via DPMS after idle time",
         DPMS_TIMEOUT_PRESETS,
-        parsed_config.get("dpms_timeout", 330)
+        parsed_config.get("dpms_timeout", 330),
+        default_val=330
     )
     idle_card.pack_start(dpms_row, False, False, 0)
 
     # 2. Lock Screen Timeout
-    lock_row, lock_combo = create_timeout_row(
+    lock_row, lock_getter = create_timeout_row(
         "🔒 Lock Screen After:",
         "Lock desktop session using hyprlock",
         LOCK_TIMEOUT_PRESETS,
-        parsed_config.get("lock_timeout", 300)
+        parsed_config.get("lock_timeout", 300),
+        default_val=300
     )
     idle_card.pack_start(lock_row, False, False, 0)
 
     # 3. Dim Screen Brightness Timeout
-    dim_row, dim_combo = create_timeout_row(
+    dim_row, dim_getter = create_timeout_row(
         "🔅 Dim Brightness After:",
         "Lower display brightness to 10% before locking",
         DIM_TIMEOUT_PRESETS,
-        parsed_config.get("dim_timeout", 150)
+        parsed_config.get("dim_timeout", 150),
+        default_val=150
     )
     idle_card.pack_start(dim_row, False, False, 0)
 
     # 4. Suspend System Timeout
-    suspend_row, suspend_combo = create_timeout_row(
+    suspend_row, suspend_getter = create_timeout_row(
         "💤 Suspend System After:",
         "Put computer to low-power sleep state",
         SUSPEND_TIMEOUT_PRESETS,
-        parsed_config.get("suspend_timeout", 1800)
+        parsed_config.get("suspend_timeout", 1800),
+        default_val=1800
     )
     idle_card.pack_start(suspend_row, False, False, 0)
 
@@ -1627,10 +1777,14 @@ def show_gui():
     lock_now_btn.connect("clicked", on_lock_now_clicked)
 
     def on_apply_clicked(btn):
-        dpms_s = int(dpms_combo.get_active_id() or 330)
-        lock_s = int(lock_combo.get_active_id() or 300)
-        dim_s = int(dim_combo.get_active_id() or 150)
-        suspend_s = int(suspend_combo.get_active_id() or 1800)
+        try:
+            dpms_s = dpms_getter()
+            lock_s = lock_getter()
+            dim_s = dim_getter()
+            suspend_s = suspend_getter()
+        except ValueError as err:
+            notify("❌ Invalid Timeout", str(err), "dialog-error")
+            return
 
         IdleController.apply_config(
             dim_timeout=dim_s,
