@@ -584,7 +584,7 @@ class IdleController:
             "    lock_cmd = pidof hyprlock || hyprlock       # Command to run on dbus lock-session",
             "    unlock_cmd = loginctl unlock-session        # Command to run on dbus unlock-session",
             "    before_sleep_cmd = loginctl lock-session    # Lock before suspend",
-            "    after_sleep_cmd = hyprctl dispatch dpms on  # Turn display back on after resume",
+            "    after_sleep_cmd = hyprctl dispatch 'hl.dsp.dpms(\"on\")'  # Turn display back on after resume",
             f"    ignore_dbus_inhibit = {'true' if ignore_dbus_inhibit else 'false'}                 # Respect media players inhibiting idle",
             "}",
             ""
@@ -619,7 +619,7 @@ class IdleController:
                 f"# 3. Turn off displays (DPMS) after {dpms_timeout}s ({dpms_timeout//60}m {dpms_timeout%60}s)",
                 "listener {",
                 f"    timeout = {dpms_timeout}",
-                "    on-timeout = hyprctl dispatch dpms off",
+                "    on-timeout = hyprctl dispatch 'hl.dsp.dpms(\"off\")'",
                 "}",
                 ""
             ])
