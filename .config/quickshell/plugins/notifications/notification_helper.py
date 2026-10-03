@@ -143,8 +143,13 @@ def restart_mako():
 def clean_text(t, max_len=500):
     if not t:
         return ""
-    clean = re.sub(r'<[^>]+>', '', str(t))
+    s = str(t).strip()
+    if s.lower() in ("none", "null"):
+        return ""
+    clean = re.sub(r'<[^>]+>', '', s)
     clean = html.unescape(clean).strip()
+    if clean.lower() in ("none", "null"):
+        return ""
     if len(clean) > max_len:
         clean = clean[:max_len] + "..."
     return clean
@@ -178,8 +183,9 @@ def get_field_val(item, *keys, default=""):
         if k in item:
             val = item[k]
             if isinstance(val, dict) and "data" in val:
-                return val["data"]
-            return val
+                val = val["data"]
+            if val is not None:
+                return val
     return default
 
 def get_notifications():
@@ -346,16 +352,16 @@ def find_raw_notification(nid):
 def replay_notification(nid, fallback_summary="", fallback_body="", fallback_app="", fallback_urgency="normal"):
     item = find_raw_notification(nid) if nid else None
     if item:
-        app_name = str(get_field_val(item, "app-name", "app_name", default=fallback_app or "System"))
-        summary = str(get_field_val(item, "summary", default=fallback_summary or ""))
-        body = str(get_field_val(item, "body", default=fallback_body or ""))
+        app_name = clean_text(get_field_val(item, "app-name", "app_name", default=fallback_app or "System")) or (fallback_app or "System")
+        summary = clean_text(get_field_val(item, "summary", default=fallback_summary or ""))
+        body = clean_text(get_field_val(item, "body", default=fallback_body or ""))
         urgency = str(get_field_val(item, "urgency", default=fallback_urgency or "normal"))
         app_icon = str(get_field_val(item, "app-icon", "app_icon", default=""))
         category = str(get_field_val(item, "category", default=""))
     else:
-        app_name = fallback_app or "System"
-        summary = fallback_summary or ""
-        body = fallback_body or ""
+        app_name = clean_text(fallback_app) or "System"
+        summary = clean_text(fallback_summary)
+        body = clean_text(fallback_body)
         urgency = fallback_urgency or "normal"
         app_icon = ""
         category = ""
@@ -363,7 +369,7 @@ def replay_notification(nid, fallback_summary="", fallback_body="", fallback_app
     title = summary.strip() if summary.strip() else (app_name.strip() or "Notification")
 
     cmd = ["notify-send", "-p"]
-    if app_name and app_name.strip():
+    if app_name and app_name.strip() and app_name.strip().lower() not in ("none", "null"):
         cmd.extend(["-a", app_name.strip()])
     if urgency in ["low", "normal", "critical"]:
         cmd.extend(["-u", urgency])
@@ -372,7 +378,7 @@ def replay_notification(nid, fallback_summary="", fallback_body="", fallback_app
     cmd.extend(["-c", "replay"])
 
     cmd.append(title)
-    if body and body.strip():
+    if body and body.strip() and body.strip().lower() not in ("none", "null"):
         cmd.append(body.strip())
 
     try:
@@ -389,14 +395,11 @@ def replay_notification(nid, fallback_summary="", fallback_body="", fallback_app
 def copy_notification(nid, mode="message", fallback_summary="", fallback_body=""):
     item = find_raw_notification(nid) if nid else None
     if item:
-        summary = str(get_field_val(item, "summary", default=fallback_summary or ""))
-        body = str(get_field_val(item, "body", default=fallback_body or ""))
+        summary = clean_text(get_field_val(item, "summary", default=fallback_summary or ""), max_len=1000000)
+        body = clean_text(get_field_val(item, "body", default=fallback_body or ""), max_len=1000000)
     else:
-        summary = fallback_summary or ""
-        body = fallback_body or ""
-
-    summary = clean_text(summary, max_len=1000000)
-    body = clean_text(body, max_len=1000000)
+        summary = clean_text(fallback_summary, max_len=1000000)
+        body = clean_text(fallback_body, max_len=1000000)
 
     if mode == "full":
         if summary and body:
