@@ -15,6 +15,7 @@ local programs = {
     keybinds    = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh keybinds",
     volumeMenu  = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh volume",
     brightnessMenu = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh brightness",
+    displayResolution = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh resolution",
     sysinfo     = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh sysinfo",
     wifiMenu    = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh wifi",
     bluetoothMenu = "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/toggle_plugin.sh bluetooth",

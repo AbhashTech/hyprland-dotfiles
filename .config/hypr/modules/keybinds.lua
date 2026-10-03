@@ -133,33 +133,34 @@ hl.bind(mainMod .. " + CTRL + J",     hl.dsp.exec_cmd(scaleScript .. " down"),  
 -- Show Active Window Dimensions OSD
 hl.bind(mainMod .. " + CTRL + 0", hl.dsp.exec_cmd(scaleScript .. " show"))
 
--- Open Screen Resolution & Scaling Menu
-local resScript = os.getenv("HOME") .. "/.config/hypr/scripts/resolution_menu.py"
-hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd(resScript))
+-- Open Display Resolution & Scaling Menu (Brightness GUI Tab 2)
+hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd(programs.displayResolution))
+
+local brightHelper = "python3 " .. os.getenv("HOME") .. "/.config/quickshell/plugins/brightness/brightness_helper.py"
 
 -- Increment Display Scale (+0.1)
-hl.bind(mainMod .. " + ALT + equal", hl.dsp.exec_cmd(resScript .. " scale_up"),   { repeating = true })
+hl.bind(mainMod .. " + ALT + equal", hl.dsp.exec_cmd(brightHelper .. " scale_up"),   { repeating = true })
 
 -- Decrement Display Scale (-0.1)
-hl.bind(mainMod .. " + ALT + minus", hl.dsp.exec_cmd(resScript .. " scale_down"), { repeating = true })
+hl.bind(mainMod .. " + ALT + minus", hl.dsp.exec_cmd(brightHelper .. " scale_down"), { repeating = true })
 
 -- Show Display Resolution & Scale OSD
-hl.bind(mainMod .. " + ALT + 0", hl.dsp.exec_cmd(resScript .. " show"))
+hl.bind(mainMod .. " + ALT + 0", hl.dsp.exec_cmd(brightHelper .. " scale-show"))
 
 -- Set Display Scale to 1.0x (100%)
-hl.bind(mainMod .. " + ALT + 1", hl.dsp.exec_cmd(resScript .. " 1.0"))
+hl.bind(mainMod .. " + ALT + 1", hl.dsp.exec_cmd(brightHelper .. " 1.0"))
 
 -- Set Display Scale to 1.25x (125%)
-hl.bind(mainMod .. " + ALT + 2",         hl.dsp.exec_cmd(resScript .. " 1.25"))
+hl.bind(mainMod .. " + ALT + 2", hl.dsp.exec_cmd(brightHelper .. " 1.25"))
 
 -- Set Display Scale to 1.50x (150%)
-hl.bind(mainMod .. " + ALT + 3",         hl.dsp.exec_cmd(resScript .. " 1.50"))
+hl.bind(mainMod .. " + ALT + 3", hl.dsp.exec_cmd(brightHelper .. " 1.50"))
 
 -- Set Display Scale to 1.75x (175%)
-hl.bind(mainMod .. " + ALT + 4",         hl.dsp.exec_cmd(resScript .. " 1.75"))
+hl.bind(mainMod .. " + ALT + 4", hl.dsp.exec_cmd(brightHelper .. " 1.75"))
 
 -- Set Display Scale to 2.00x (200%)
-hl.bind(mainMod .. " + ALT + 5",         hl.dsp.exec_cmd(resScript .. " 2.00"))
+hl.bind(mainMod .. " + ALT + 5", hl.dsp.exec_cmd(brightHelper .. " 2.00"))
 
 -- =============================================================================
 -- ⚡ Productivity, Development & System Utilities

@@ -16,6 +16,7 @@ QtObject {
     property bool keybindsVisible: false
     property bool volumeVisible: false
     property bool brightnessVisible: false
+    property string brightnessTab: "brightness"
     property bool sysinfoVisible: false
     property bool batteryVisible: false
     property bool notificationVisible: false
@@ -172,9 +173,26 @@ QtObject {
             case "brightness":
             case "brightnessmenu":
             case "light":
-                current = brightnessVisible;
-                closeAll();
-                brightnessVisible = !current;
+                if (root.brightnessVisible && root.brightnessTab === "brightness") {
+                    root.closeAll();
+                } else {
+                    root.closeAll();
+                    root.brightnessTab = "brightness";
+                    root.brightnessVisible = true;
+                }
+                break;
+            case "resolution":
+            case "resolutionmenu":
+            case "display":
+            case "scale":
+            case "scaling":
+                if (root.brightnessVisible && root.brightnessTab === "resolution") {
+                    root.closeAll();
+                } else {
+                    root.closeAll();
+                    root.brightnessTab = "resolution";
+                    root.brightnessVisible = true;
+                }
                 break;
             case "sysinfo":
             case "system":
