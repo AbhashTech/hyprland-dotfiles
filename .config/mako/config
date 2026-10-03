@@ -23,7 +23,7 @@ margin=12,12
 padding=14,18
 border-size=2
 border-radius=14
-anchor=top-right
+anchor=bottom-right
 layer=overlay
 
 # Catppuccin Mocha Colors
