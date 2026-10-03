@@ -291,14 +291,6 @@ hl.window_rule({
     center = true,
 })
 
--- Keybindings Viewer / Cheat Sheet Dialog
-hl.window_rule({
-    name   = "float-keybinds-viewer",
-    match  = { class = "(keybinds-viewer|keybinds_viewer\\.py)" },
-    float  = true,
-    size   = "720 600",
-    center = true,
-})
 
 -- QR Scanner & Reader Dialog
 hl.window_rule({
