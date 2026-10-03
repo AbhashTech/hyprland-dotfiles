@@ -443,13 +443,21 @@ Rectangle {
 
                 // Rescan Button
                 Rectangle {
-                    implicitWidth: 110
+                    implicitWidth: root.wifiScanning ? 122 : 110
                     implicitHeight: 34
                     radius: Theme.pillRadius
-                    color: scanArea.containsMouse ? Theme.surface1 : Theme.surface0
-                    border.color: Theme.moduleBorder
+                    color: root.wifiScanning ? Qt.rgba(Theme.teal.r, Theme.teal.g, Theme.teal.b, 0.18) : (scanArea.containsMouse ? Theme.surface1 : Theme.surface0)
+                    border.color: root.wifiScanning ? Theme.teal : Theme.moduleBorder
                     border.width: 1
                     visible: root.wifiPowered
+
+                    Behavior on implicitWidth {
+                        NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation { duration: 180 }
+                    }
 
                     RowLayout {
                         anchors.centerIn: parent
@@ -459,7 +467,7 @@ Rectangle {
                             text: "󰑐"
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSizeSmall
-                            color: root.wifiScanning ? Theme.accent : Theme.text
+                            color: root.wifiScanning ? Theme.teal : (scanArea.containsMouse ? Theme.accent : Theme.text)
 
                             RotationAnimator on rotation {
                                 running: root.wifiScanning
@@ -474,7 +482,8 @@ Rectangle {
                             text: root.wifiScanning ? "Scanning..." : "Rescan"
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSizeSmall
-                            color: Theme.text
+                            font.bold: root.wifiScanning
+                            color: root.wifiScanning ? Theme.teal : Theme.text
                         }
                     }
 
@@ -738,6 +747,69 @@ Rectangle {
                             }
 
                             onTextChanged: root.wifiSearchText = text.toLowerCase().trim()
+                        }
+                    }
+                }
+
+                // Scanning indicator banner
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: root.wifiScanning ? 32 : 0
+                    visible: implicitHeight > 0
+                    radius: Theme.pillRadius
+                    color: Qt.rgba(Theme.teal.r, Theme.teal.g, Theme.teal.b, 0.12)
+                    border.color: Qt.rgba(Theme.teal.r, Theme.teal.g, Theme.teal.b, 0.4)
+                    border.width: 1
+                    clip: true
+
+                    Behavior on implicitHeight {
+                        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                    }
+
+                    // Shimmer / sweep beam
+                    Rectangle {
+                        id: sweepBeam
+                        width: 90
+                        height: parent.height
+                        y: 0
+                        color: Qt.rgba(Theme.teal.r, Theme.teal.g, Theme.teal.b, 0.28)
+                        radius: Theme.pillRadius
+                        visible: root.wifiScanning
+
+                        NumberAnimation on x {
+                            running: root.wifiScanning
+                            from: -100
+                            to: sweepBeam.parent.width + 20
+                            duration: 1200
+                            loops: Animation.Infinite
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: 8
+
+                        Text {
+                            text: "󰤨"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                            color: Theme.teal
+
+                            SequentialAnimation on opacity {
+                                running: root.wifiScanning
+                                loops: Animation.Infinite
+                                NumberAnimation { from: 0.3; to: 1.0; duration: 600; easing.type: Easing.InOutQuad }
+                                NumberAnimation { from: 1.0; to: 0.3; duration: 600; easing.type: Easing.InOutQuad }
+                            }
+                        }
+
+                        Text {
+                            text: "Scanning for nearby Wi-Fi networks..."
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            font.bold: true
+                            color: Theme.teal
                         }
                     }
                 }
@@ -1038,6 +1110,55 @@ Rectangle {
                             anchors.fill: parent
                             hoverEnabled: true
                             acceptedButtons: Qt.NoButton
+                        }
+                    }
+
+                    // Empty state: Scanning Radar Animation
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        visible: wifiListView.count === 0 && root.wifiScanning
+                        spacing: 12
+
+                        Rectangle {
+                            Layout.alignment: Qt.AlignHCenter
+                            implicitWidth: 64
+                            implicitHeight: 64
+                            radius: 32
+                            color: Qt.rgba(Theme.teal.r, Theme.teal.g, Theme.teal.b, 0.12)
+                            border.color: Theme.teal
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰤨"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 28
+                                color: Theme.teal
+
+                                SequentialAnimation on scale {
+                                    running: root.wifiScanning
+                                    loops: Animation.Infinite
+                                    NumberAnimation { from: 0.85; to: 1.15; duration: 700; easing.type: Easing.InOutQuad }
+                                    NumberAnimation { from: 1.15; to: 0.85; duration: 700; easing.type: Easing.InOutQuad }
+                                }
+                            }
+                        }
+
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "Scanning for networks..."
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                            font.bold: true
+                            color: Theme.teal
+                        }
+
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "Please wait a moment"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            color: Theme.overlay0
                         }
                     }
 
