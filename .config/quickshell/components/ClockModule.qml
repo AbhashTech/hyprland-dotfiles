@@ -48,27 +48,21 @@ Rectangle {
         root.dateStr = days[now.getDay()] + ", " + now.getDate() + " " + months[now.getMonth()] + " " + now.getFullYear();
     }
 
-    function scheduleNextMinute() {
-        var now = new Date();
-        var msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 50;
-        if (msToNextMinute < 500) msToNextMinute = 60000;
-        timer.interval = msToNextMinute;
-        timer.restart();
-    }
-
     Component.onCompleted: {
         updateTime();
-        scheduleNextMinute();
+    }
+
+    onVisibleChanged: {
+        if (visible) updateTime();
     }
 
     Timer {
         id: timer
-        interval: 60000
+        interval: 1000
         running: root.visible
-        repeat: false
+        repeat: true
         onTriggered: {
             root.updateTime();
-            root.scheduleNextMinute();
         }
     }
 
