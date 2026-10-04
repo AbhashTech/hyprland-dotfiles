@@ -161,7 +161,31 @@ def generate_override_components(bar_ovs):
     for mod_id, meta in sorted(bar_ovs.items()):
         comp_id = f"override_comp_{mod_id.replace('-', '_')}"
         cases.append(f'            case "{mod_id}":\n                return {comp_id};')
-        comps.append(f'    Component {{\n        id: {comp_id}\n        Loader {{\n            source: "{meta["url"]}"\n            asynchronous: false\n            onLoaded: {{\n                if (item && item.hasOwnProperty("barWindow")) item.barWindow = root.barWindow;\n            }}\n        }}\n    }}')
+        comps.append(f'''    Component {{
+        id: {comp_id}
+        Loader {{
+            source: "{meta["url"]}"
+            asynchronous: false
+            // Forward bar context so DynamicBarSection Bindings reach the override module
+            property var barWindow: root.barWindow
+            property string barSection: ""
+            property int barIndex: -1
+            property var barContainer: null
+            // Propagate implicit size so capsuleContainer measures the module correctly
+            implicitWidth: item ? item.implicitWidth : 0
+            implicitHeight: item ? item.implicitHeight : 0
+            width: implicitWidth
+            height: implicitHeight
+            onLoaded: {{
+                if (item) {{
+                    if (item.hasOwnProperty("barWindow"))    item.barWindow    = Qt.binding(() => barWindow);
+                    if (item.hasOwnProperty("barSection"))   item.barSection   = Qt.binding(() => barSection);
+                    if (item.hasOwnProperty("barIndex"))     item.barIndex     = Qt.binding(() => barIndex);
+                    if (item.hasOwnProperty("barContainer")) item.barContainer = Qt.binding(() => barContainer);
+                }}
+            }}
+        }}
+    }}''')
     return "\n".join(cases), "\n".join(comps)
 
 cases_code, comps_code = generate_override_components(bar_overrides)
