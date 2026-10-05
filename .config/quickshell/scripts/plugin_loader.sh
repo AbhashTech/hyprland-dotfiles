@@ -159,71 +159,11 @@ def generate_override_components(bar_ovs):
     cases = []
     comps = []
     for mod_id, meta in sorted(bar_ovs.items()):
-        comp_id = f"override_comp_{mod_id.replace('-', '_')}"
-        safe_id = mod_id.replace('-', '_')
+        comp_id = f"comp_{mod_id.replace('-', '_')}"
         cases.append(f'            case "{mod_id}":\n                return {comp_id};')
-        # Loader.implicitWidth/implicitHeight are read-only, so we wrap the Loader
-        # in an Item that owns implicitWidth/implicitHeight and all bar context props.
-        # DynamicBarSection Bindings target the wrapper Item (moduleLoader.item),
-        # and declarative Bindings forward them directly into the actual plugin item.
-        comps.append(f'''    Component {{
-        id: {comp_id}
-        Item {{
-            id: wrapper_{safe_id}
-            property var barWindow: root.barWindow
-            property string barSection: ""
-            property int barIndex: -1
-            property var barContainer: null
-            implicitWidth: ldr_{safe_id}.item ? ldr_{safe_id}.item.implicitWidth : 0
-            implicitHeight: ldr_{safe_id}.item ? ldr_{safe_id}.item.implicitHeight : 0
-            width: implicitWidth
-            height: implicitHeight
-
-            Loader {{
-                id: ldr_{safe_id}
-                anchors.fill: parent
-                source: "{meta["url"]}"
-                asynchronous: false
-
-                Binding {{
-                    target: ldr_{safe_id}.item
-                    property: "barWindow"
-                    value: wrapper_{safe_id}.barWindow
-                    when: ldr_{safe_id}.item !== null && ldr_{safe_id}.item.hasOwnProperty("barWindow")
-                }}
-                Binding {{
-                    target: ldr_{safe_id}.item
-                    property: "barSection"
-                    value: wrapper_{safe_id}.barSection
-                    when: ldr_{safe_id}.item !== null && ldr_{safe_id}.item.hasOwnProperty("barSection")
-                }}
-                Binding {{
-                    target: ldr_{safe_id}.item
-                    property: "barIndex"
-                    value: wrapper_{safe_id}.barIndex
-                    when: ldr_{safe_id}.item !== null && ldr_{safe_id}.item.hasOwnProperty("barIndex")
-                }}
-                Binding {{
-                    target: ldr_{safe_id}.item
-                    property: "barContainer"
-                    value: wrapper_{safe_id}.barContainer
-                    when: ldr_{safe_id}.item !== null && ldr_{safe_id}.item.hasOwnProperty("barContainer")
-                }}
-                Binding {{
-                    target: ldr_{safe_id}.item
-                    property: "width"
-                    value: wrapper_{safe_id}.width
-                    when: ldr_{safe_id}.item !== null
-                }}
-                Binding {{
-                    target: ldr_{safe_id}.item
-                    property: "height"
-                    value: wrapper_{safe_id}.height
-                    when: ldr_{safe_id}.item !== null
-                }}
-            }}
-        }}
-    }}''')
+        # Create a direct Component so moduleLoader in DynamicBarSection loads the plugin
+        # item directly without intermediate wrappers or nested loaders.
+        comps.append(f'    readonly property var {comp_id}: Qt.createComponent("{meta["url"]}")')
     return "\n".join(cases), "\n".join(comps)
 
 cases_code, comps_code = generate_override_components(bar_overrides)
