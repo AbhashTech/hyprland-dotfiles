@@ -663,50 +663,6 @@ Rectangle {
                                     }
                                 }
 
-                                // ── Live Topbar Position Switcher Chips (Custom plugins) ──
-                                RowLayout {
-                                    visible: modelData.isCustom
-                                    spacing: 4
-
-                                    Repeater {
-                                        model: [
-                                            { key: "left", label: "Left" },
-                                            { key: "center", label: "Center" },
-                                            { key: "right", label: "Right" }
-                                        ]
-                                        delegate: Rectangle {
-                                            required property var modelData
-                                            implicitWidth: 50
-                                            implicitHeight: 22
-                                            radius: 11
-                                            color: cardRoot.modelData.position === modelData.key ? Theme.blue : (posChipMouse.containsMouse ? Theme.surface1 : Theme.surface0)
-                                            border.color: cardRoot.modelData.position === modelData.key ? Theme.blue : Theme.surface2
-                                            border.width: 1
-
-                                            Text {
-                                                anchors.centerIn: parent
-                                                text: modelData.label
-                                                font.family: Theme.fontFamily
-                                                font.pixelSize: 10
-                                                font.bold: cardRoot.modelData.position === modelData.key
-                                                color: cardRoot.modelData.position === modelData.key ? Theme.crust : (posChipMouse.containsMouse ? Theme.text : Theme.subtext0)
-                                            }
-
-                                            MouseArea {
-                                                id: posChipMouse
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                cursorShape: Qt.PointingHandCursor
-                                                onClicked: {
-                                                    if (cardRoot.modelData.position !== modelData.key) {
-                                                        PluginManagerService.setPluginPosition(cardRoot.modelData.id, modelData.key);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
                                 // ── Enable / Disable Switch Toggle ─────────────
                                 Rectangle {
                                     visible: modelData.isCustom
