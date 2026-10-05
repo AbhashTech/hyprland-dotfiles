@@ -1,0 +1,4 @@
+singleton CalendarSyncService 1.0 CalendarSyncService.qml
+CalendarManageModal 1.0 CalendarManageModal.qml
+CalendarSyncWindow 1.0 CalendarSyncWindow.qml
+CalendarHoverCard 1.0 CalendarHoverCard.qml

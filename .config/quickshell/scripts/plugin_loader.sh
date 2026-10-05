@@ -142,7 +142,20 @@ if os.path.isdir(custom_dir):
 def generate_widget_group(widgets):
     items = []
     for w in widgets:
-        items.append(f'        Loader {{\n            source: "{w["url"]}"\n            asynchronous: false\n            width: item ? item.implicitWidth : 0\n            height: item ? item.implicitHeight : 0\n            onLoaded: {{\n                if (item && item.hasOwnProperty("barWindow")) item.barWindow = root.barWindow;\n            }}\n        }}')
+        items.append(f'''        Loader {{
+            source: "{w["url"]}"
+            asynchronous: false
+            width: item ? item.implicitWidth : 0
+            height: item ? item.implicitHeight : 0
+            onLoaded: {{
+                if (item) {{
+                    if (item.hasOwnProperty("barWindow"))    item.barWindow    = root.barWindow;
+                    if (item.hasOwnProperty("barSection"))   item.barSection   = root.barSection;
+                    if (item.hasOwnProperty("barIndex"))     item.barIndex     = root.barIndex;
+                    if (item.hasOwnProperty("barContainer")) item.barContainer = root.barContainer;
+                }}
+            }}
+        }}''')
     return "\n".join(items)
 
 def generate_window_loaders(services, windows):
@@ -242,6 +255,9 @@ import Quickshell
 Row {{
     id: root
     property var barWindow: null
+    property string barSection: "left"
+    property int barIndex: -1
+    property var barContainer: null
     spacing: 6
 {generate_widget_group(left_widgets)}
 }}
@@ -254,6 +270,9 @@ import Quickshell
 Row {{
     id: root
     property var barWindow: null
+    property string barSection: "center"
+    property int barIndex: -1
+    property var barContainer: null
     spacing: 6
 {generate_widget_group(center_widgets)}
 }}
@@ -266,6 +285,9 @@ import Quickshell
 Row {{
     id: root
     property var barWindow: null
+    property string barSection: "right"
+    property int barIndex: -1
+    property var barContainer: null
     spacing: 6
 {generate_widget_group(right_widgets)}
 }}

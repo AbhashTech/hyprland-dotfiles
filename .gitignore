@@ -21,6 +21,8 @@ __pycache__/
 .config/quickshell/**/keybinding.json
 .config/quickshell/custom_plugins/*
 !.config/quickshell/custom_plugins/README.md
+!.config/quickshell/custom_plugins/calendar_sync/
+!.config/quickshell/custom_plugins/calendar_sync/**
 .config/quickshell/.generated/
 .config/quickshell/generated/
 .config/systemd/user/*

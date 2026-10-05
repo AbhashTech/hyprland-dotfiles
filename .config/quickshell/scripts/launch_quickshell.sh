@@ -62,8 +62,7 @@ start_quickshell() {
     export QSG_RENDER_LOOP="${QSG_RENDER_LOOP:-threaded}"
     export MALLOC_TRIM_THRESHOLD_="${MALLOC_TRIM_THRESHOLD_:-131072}"
     
-    nohup "$QS_BIN" -d -p "$HOME/.config/quickshell" "${PASSTHROUGH_ARGS[@]}" >/dev/null 2>&1 &
-    disown
+    "$QS_BIN" -d -p "$HOME/.config/quickshell" "${PASSTHROUGH_ARGS[@]}" >/dev/null 2>&1
 }
 
 case "$ACTION" in

@@ -64,7 +64,7 @@ ShellRoot {
 
                 WlrLayershell.layer: WlrLayer.Top
                 WlrLayershell.namespace: "quickshell"
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
                 exclusiveZone: BarConfig.barHeight + (BarConfig.isTop ? BarConfig.marginTop : BarConfig.marginBottom)
 
                 // Main glassmorphic container

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "calendar_sync",
+  "name": "Calendar & Event Sync",
+  "version": "1.0.0",
+  "author": "Kunal",
+  "description": "Custom calendar plugin importing .ics calendars from URL feeds or disk files, with interactive monthly event viewer and upcoming events list.",
+  "kinds": [
+    "bar-widget",
+    "window",
+    "service"
+  ],
+  "position": "right",
+  "enabled": true,
+  "overrides": {
+    "module": "clock",
+    "action": "calendar"
+  },
+  "entryPoints": {
+    "barWidget": "CalendarSyncModule.qml",
+    "windows": [
+      "CalendarSyncWindow.qml"
+    ],
+    "service": "CalendarSyncService.qml"
+  }
+}

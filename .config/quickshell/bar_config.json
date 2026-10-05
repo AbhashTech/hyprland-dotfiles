@@ -14,8 +14,8 @@
   "leftModules": [
     "launcher",
     "workspaces",
-    "activewindow",
     "mpris",
+    "activewindow",
     "custom_left"
   ],
   "centerModules": [
@@ -23,6 +23,7 @@
     "language"
   ],
   "rightModules": [
+    "clock",
     "tray",
     "clipboard",
     "notifications",
@@ -31,7 +32,6 @@
     "wifi",
     "bluetooth",
     "battery",
-    "clock",
     "stats",
     "power"
   ],
