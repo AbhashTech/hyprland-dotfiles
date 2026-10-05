@@ -312,8 +312,7 @@ Rectangle {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                if (zenityProc.running) zenityProc.running = false;
-                                zenityProc.exec(["python3", CalendarSyncService.helperPath, "pick-file"]);
+                                nativePicker.open(Quickshell.env("HOME") + "/Downloads");
                             }
                         }
                     }
@@ -588,20 +587,16 @@ Rectangle {
         }
     }
 
-    Process {
-        id: zenityProc
-        stdout: SplitParser {
-            onRead: data => {
-                try {
-                    var parsed = JSON.parse(data);
-                    if (parsed && parsed.status === "ok" && parsed.path) {
-                        pathInput.text = parsed.path;
-                        if (!nameInput.text) {
-                            var parts = parsed.path.split("/");
-                            nameInput.text = parts[parts.length - 1].replace(".ics", "");
-                        }
-                    }
-                } catch (e) {}
+    // Native In-Plugin File Picker
+    CalendarFilePicker {
+        id: nativePicker
+        anchors.fill: parent
+        visible: false
+        z: 100
+        onFileSelected: (path, name) => {
+            pathInput.text = path;
+            if (!nameInput.text) {
+                nameInput.text = name;
             }
         }
     }

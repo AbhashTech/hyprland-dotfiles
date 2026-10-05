@@ -365,12 +365,66 @@ END:VCALENDAR
 
 def pick_file_zenity():
     """Launch graphical file chooser to select .ics file."""
+    # 1. Try native PyGObject GTK3 FileChooserDialog first (direct Wayland window, avoids portal hangs)
+    try:
+        import gi
+        gi.require_version("Gtk", "3.0")
+        from gi.repository import Gtk, GLib
+
+        GLib.set_prgname("calendar-file-picker")
+        GLib.set_application_name("Calendar File Picker")
+
+        dialog = Gtk.FileChooserDialog(
+            title="Select iCalendar (.ics) File",
+            action=Gtk.FileChooserAction.OPEN,
+        )
+        dialog.add_buttons(
+            "Cancel", Gtk.ResponseType.CANCEL,
+            "Open", Gtk.ResponseType.OK
+        )
+        dialog.set_default_response(Gtk.ResponseType.OK)
+
+        filter_ics = Gtk.FileFilter()
+        filter_ics.set_name("iCalendar files (*.ics)")
+        filter_ics.add_pattern("*.ics")
+        filter_ics.add_pattern("*.ICS")
+        dialog.add_filter(filter_ics)
+
+        filter_all = Gtk.FileFilter()
+        filter_all.set_name("All files (*.*)")
+        filter_all.add_pattern("*")
+        dialog.add_filter(filter_all)
+
+        downloads = Path(os.path.expanduser("~/Downloads"))
+        if downloads.exists():
+            dialog.set_current_folder(str(downloads))
+        else:
+            dialog.set_current_folder(os.path.expanduser("~"))
+
+        response = dialog.run()
+        selected = None
+        if response == Gtk.ResponseType.OK:
+            selected = dialog.get_filename()
+
+        dialog.destroy()
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+
+        if selected and os.path.exists(selected):
+            return {"status": "ok", "path": selected}
+        return {"status": "cancel"}
+    except Exception as e_gtk:
+        pass
+
+    # 2. Fallbacks if PyGObject GTK3 fails
     try:
         if shutil.which("zenity"):
+            env = os.environ.copy()
             res = subprocess.run(
                 ["zenity", "--file-selection", "--file-filter=iCalendar files (*.ics) | *.ics", "--title=Select iCalendar (.ics) File"],
                 capture_output=True,
                 text=True,
+                env=env,
                 check=False
             )
             selected = res.stdout.strip()
@@ -403,6 +457,102 @@ def pick_file_zenity():
             return {"status": "error", "message": "No file chooser installed (zenity, kdialog, or yad)"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+def list_directory(dir_path=None):
+    """
+    List subfolders and .ics files in dir_path for native QML file picker.
+    """
+    if not dir_path or not os.path.exists(dir_path):
+        downloads = Path(os.path.expanduser("~/Downloads"))
+        dir_path = str(downloads) if downloads.exists() else os.path.expanduser("~")
+
+    p = Path(os.path.expanduser(dir_path)).resolve()
+    if not p.is_dir():
+        p = p.parent
+
+    entries = []
+    ics_files = []
+
+    try:
+        with os.scandir(p) as it:
+            for entry in it:
+                if entry.name.startswith("."):
+                    continue
+                try:
+                    is_dir = entry.is_dir(follow_symlinks=True)
+                    st = entry.stat(follow_symlinks=True)
+                    modified_str = datetime.datetime.fromtimestamp(st.st_mtime).strftime("%b %d, %Y")
+                    size_str = ""
+                    if not is_dir:
+                        size_kb = st.st_size / 1024
+                        size_str = f"{size_kb:.1f} KB" if size_kb < 1024 else f"{size_kb/1024:.1f} MB"
+
+                    item = {
+                        "name": entry.name,
+                        "path": entry.path,
+                        "isDir": is_dir,
+                        "sizeStr": size_str,
+                        "modifiedStr": modified_str,
+                        "isIcs": entry.name.lower().endswith(".ics")
+                    }
+
+                    if is_dir:
+                        entries.append(item)
+                    elif item["isIcs"]:
+                        ics_files.append(item)
+                except Exception:
+                    continue
+    except Exception as e:
+        return {"status": "error", "message": str(e), "current": str(p)}
+
+    entries.sort(key=lambda x: x["name"].lower())
+    ics_files.sort(key=lambda x: x["name"].lower())
+
+    parent_path = str(p.parent) if p.parent != p else ""
+
+    return {
+        "status": "ok",
+        "current": str(p),
+        "parent": parent_path,
+        "dirs": entries,
+        "icsFiles": ics_files
+    }
+
+def find_system_ics():
+    """Quickly find .ics files in common locations for quick selection."""
+    found = []
+    search_dirs = [
+        Path(os.path.expanduser("~/Downloads")),
+        Path(os.path.expanduser("~/Documents")),
+        DATA_DIR,
+    ]
+    seen = set()
+    for d in search_dirs:
+        if not d.exists() or not d.is_dir():
+            continue
+        try:
+            for root, dirs, files in os.walk(d):
+                depth = len(Path(root).relative_to(d).parts)
+                if depth > 2:
+                    dirs.clear()
+                    continue
+                for f in files:
+                    if f.lower().endswith(".ics"):
+                        full_p = str(Path(root) / f)
+                        if full_p not in seen and os.path.exists(full_p):
+                            seen.add(full_p)
+                            st = os.stat(full_p)
+                            found.append({
+                                "name": f,
+                                "path": full_p,
+                                "dir": root,
+                                "sizeStr": f"{st.st_size / 1024:.1f} KB",
+                                "modifiedStr": datetime.datetime.fromtimestamp(st.st_mtime).strftime("%b %d, %Y")
+                            })
+        except Exception:
+            continue
+
+    return {"status": "ok", "files": found[:20]}
 
 import time
 
@@ -441,6 +591,11 @@ if __name__ == "__main__":
         print(json.dumps(toggle_source(src_id)))
     elif cmd == "pick-file":
         print(json.dumps(pick_file_zenity()))
+    elif cmd == "list-dir":
+        target = sys.argv[2] if len(sys.argv) > 2 else ""
+        print(json.dumps(list_directory(target)))
+    elif cmd == "find-ics":
+        print(json.dumps(find_system_ics()))
     elif cmd == "init-sample":
         print(json.dumps(import_sample_ics()))
     else:
