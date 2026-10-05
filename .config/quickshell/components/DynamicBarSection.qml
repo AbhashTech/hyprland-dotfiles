@@ -88,6 +88,27 @@ Row {
 
                 Behavior on opacity { NumberAnimation { duration: 150 } }
 
+                DragHandler {
+                    id: capsuleDragHandler
+                    target: null
+                    grabPermissions: PointerHandler.CanTakeOverFromItems | PointerHandler.CanTakeOverFromHandlersOfDifferentType
+                    onActiveChanged: {
+                        if (active) {
+                            BarConfig.startDrag(moduleWrapper.moduleId, root.section, moduleWrapper.index);
+                        } else {
+                            if (BarConfig.isDragging && BarConfig.draggedModule === moduleWrapper.moduleId) {
+                                BarConfig.endDrag();
+                            }
+                        }
+                    }
+                    onTranslationChanged: {
+                        if (active && root.barContainer) {
+                            var pt = capsuleContainer.mapToItem(root.barContainer, centroid.position.x, centroid.position.y);
+                            BarConfig.updateDragPos(pt.x, root.barContainer.width);
+                        }
+                    }
+                }
+
                 Loader {
                     id: moduleLoader
                     anchors.centerIn: parent
@@ -118,6 +139,12 @@ Row {
                         value: root.barContainer
                         when: moduleLoader.item !== null && moduleLoader.item.hasOwnProperty("barContainer")
                     }
+                    Binding {
+                        target: moduleLoader.item
+                        property: "moduleId"
+                        value: moduleWrapper.moduleId
+                        when: moduleLoader.item !== null && moduleLoader.item.hasOwnProperty("moduleId")
+                    }
                 }
             }
         }
@@ -131,10 +158,10 @@ Row {
 
     // Component Registry Resolver
     function getComponentForId(id) {
-        if (PluginOverrides.hasBarOverride(id)) {
-            var customComp = overrideHelper.getComponentForModule(id);
-            if (customComp) return customComp;
-        }
+        if (!id) return null;
+
+        var customComp = overrideHelper.getComponentForModule(id);
+        if (customComp) return customComp;
 
         switch (id) {
             case "launcher":
@@ -185,6 +212,9 @@ Row {
                 return customRightComp;
             default:
                 if (id && id.startsWith("plugin_")) {
+                    var strippedId = id.substring(7);
+                    var altComp = overrideHelper.getComponentForModule(strippedId);
+                    if (altComp) return altComp;
                     return customCenterComp;
                 }
                 return null;

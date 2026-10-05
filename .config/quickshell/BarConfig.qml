@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "generated"
 
 QtObject {
     id: root
@@ -35,7 +36,7 @@ QtObject {
 
     property var leftModules: ["launcher", "workspaces", "activewindow", "custom_left"]
     property var centerModules: ["mpris", "custom_center", "language"]
-    property var rightModules: ["tray", "clipboard", "notifications", "volume", "brightness", "wifi", "bluetooth", "battery", "stats", "power", "clock"]
+    property var rightModules: ["custom_right", "tray", "clipboard", "notifications", "volume", "brightness", "wifi", "bluetooth", "battery", "stats", "power", "clock"]
     property var hiddenModules: []
 
     // ── Master Catalog ────────────────────────────────────────────────────────
@@ -135,12 +136,24 @@ QtObject {
         if (!moduleId) return null;
         for (var i = 0; i < moduleCatalog.length; i++) {
             if (moduleCatalog[i].id === moduleId) {
+                if ((moduleId === "custom_left" || moduleId === "custom_center" || moduleId === "custom_right") &&
+                    typeof PluginOverrides !== "undefined" && PluginOverrides.hasCustomMeta && PluginOverrides.hasCustomMeta(moduleId)) {
+                    return PluginOverrides.getCustomMeta(moduleId);
+                }
                 return moduleCatalog[i];
+            }
+        }
+        if (typeof PluginOverrides !== "undefined" && PluginOverrides.hasCustomMeta) {
+            if (PluginOverrides.hasCustomMeta(moduleId)) {
+                return PluginOverrides.getCustomMeta(moduleId);
+            }
+            if (moduleId.startsWith("plugin_") && PluginOverrides.hasCustomMeta(moduleId.substring(7))) {
+                return PluginOverrides.getCustomMeta(moduleId.substring(7));
             }
         }
         return {
             id: moduleId,
-            name: moduleId.replace(/_/g, " ").replace(/-/g, " "),
+            name: moduleId.replace(/^plugin_/, "").replace(/_/g, " ").replace(/-/g, " "),
             icon: "󰏖",
             description: "Module " + moduleId,
             category: "Custom",

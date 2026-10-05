@@ -155,6 +155,13 @@ Rectangle {
 
     // Injected automatically by the shell loader
     property var barWindow: null
+    property string barSection: "center"
+    property int barIndex: -1
+    property var barContainer: null
+    property string moduleId: ""
+
+    // Note: Quickshell automatically provides drag-and-drop support for custom plugins across
+    // the status bar just like built-in modules. No boilerplate drag handling is required!
 
     implicitHeight: Theme.barHeight - 8
     implicitWidth: contentRow.implicitWidth + 20

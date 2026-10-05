@@ -27,6 +27,9 @@ bar_overrides = {}      # target_module_id -> {"id": plugin_id, "url": qml_url}
 window_overrides = {}   # target_window_id -> {"id": plugin_id, "url": qml_url}
 action_overrides = {}   # target_action_name -> plugin_id
 
+custom_bar_modules = {}     # module_id -> {"id": plugin_id, "url": qml_url}
+custom_modules_meta = {}    # module_id -> dict(id, name, icon, description, category, defaultSection)
+
 if os.path.isdir(custom_dir):
     for entry in sorted(os.listdir(custom_dir)):
         plugin_path = os.path.join(custom_dir, entry)
@@ -60,6 +63,28 @@ if os.path.isdir(custom_dir):
         if isinstance(override_actions, str):
             override_actions = [override_actions]
 
+        # Determine icon for plugin
+        icon = manifest.get("icon")
+        if not icon:
+            lower_entry = (manifest.get("name", "") + " " + plugin_id + " " + entry).lower()
+            if "whatsapp" in lower_entry:
+                icon = "󰖣"
+            elif "calendar" in lower_entry:
+                icon = "󰸗"
+            elif "weather" in lower_entry:
+                icon = "󰖐"
+            else:
+                icon = "󰏖"
+
+        plugin_meta = {
+            "id": f"plugin_{plugin_id}",
+            "name": manifest.get("name", entry),
+            "icon": icon,
+            "description": manifest.get("description", f"Custom plugin: {entry}"),
+            "category": "Custom Plugins",
+            "defaultSection": position
+        }
+
         # 1. Bar Widget
         bar_widget = entry_points.get("barWidget")
         if not bar_widget:
@@ -72,9 +97,25 @@ if os.path.isdir(custom_dir):
             qml_url = f"file://{plugin_path}/{bar_widget}"
             widget_entry = {"id": plugin_id, "url": qml_url}
 
+            # Register individual module identifiers
+            for mid in [f"plugin_{plugin_id}", plugin_id, f"plugin_{entry}", entry]:
+                custom_bar_modules[mid] = widget_entry
+                custom_modules_meta[mid] = plugin_meta
+
             if override_module:
                 bar_overrides[override_module] = widget_entry
+                custom_modules_meta[override_module] = plugin_meta
             else:
+                pos_key = f"custom_{position}"
+                if pos_key not in custom_modules_meta:
+                    custom_modules_meta[pos_key] = {
+                        "id": pos_key,
+                        "name": plugin_meta["name"],
+                        "icon": plugin_meta["icon"],
+                        "description": plugin_meta["description"],
+                        "category": "Custom Plugins",
+                        "defaultSection": position
+                    }
                 if position == "left":
                     left_widgets.append(widget_entry)
                 elif position == "right":
@@ -139,21 +180,49 @@ if os.path.isdir(custom_dir):
 
         plugin_toggles.append(plugin_id)
 
-def generate_widget_group(widgets):
+def generate_widget_group(widgets, group_pos):
+    if not widgets:
+        return "        Item { implicitWidth: 0; implicitHeight: 0 }"
     items = []
-    for w in widgets:
+    for i, w in enumerate(widgets):
+        w_id = w["id"]
+        lid = f"loader_{group_pos}_{i}"
         items.append(f'''        Loader {{
+            id: {lid}
             source: "{w["url"]}"
             asynchronous: false
             width: item ? item.implicitWidth : 0
             height: item ? item.implicitHeight : 0
-            onLoaded: {{
-                if (item) {{
-                    if (item.hasOwnProperty("barWindow"))    item.barWindow    = root.barWindow;
-                    if (item.hasOwnProperty("barSection"))   item.barSection   = root.barSection;
-                    if (item.hasOwnProperty("barIndex"))     item.barIndex     = root.barIndex;
-                    if (item.hasOwnProperty("barContainer")) item.barContainer = root.barContainer;
-                }}
+
+            Binding {{
+                target: {lid}.item
+                property: "barWindow"
+                value: root.barWindow
+                when: {lid}.item !== null && {lid}.item.hasOwnProperty("barWindow")
+            }}
+            Binding {{
+                target: {lid}.item
+                property: "barSection"
+                value: root.barSection
+                when: {lid}.item !== null && {lid}.item.hasOwnProperty("barSection")
+            }}
+            Binding {{
+                target: {lid}.item
+                property: "barIndex"
+                value: root.barIndex
+                when: {lid}.item !== null && {lid}.item.hasOwnProperty("barIndex")
+            }}
+            Binding {{
+                target: {lid}.item
+                property: "barContainer"
+                value: root.barContainer
+                when: {lid}.item !== null && {lid}.item.hasOwnProperty("barContainer")
+            }}
+            Binding {{
+                target: {lid}.item
+                property: "moduleId"
+                value: root.moduleId ? root.moduleId : "{w_id}"
+                when: {lid}.item !== null && {lid}.item.hasOwnProperty("moduleId")
             }}
         }}''')
     return "\n".join(items)
@@ -168,23 +237,34 @@ def generate_window_loaders(services, windows):
         items.append(f'    Loader {{\n        property bool _cached: false\n        active: (PluginManager.customPluginVersion >= 0 && PluginManager.isPluginVisible("{w["id"]}")) || _cached\n        onLoaded: _cached = true\n        source: "{w["url"]}"\n        asynchronous: false\n    }}')
     return "\n".join(items)
 
-def generate_override_components(bar_ovs):
-    cases = []
+def generate_override_components(bar_ovs, custom_mods):
+    all_targets = dict(bar_ovs)
+    all_targets.update(custom_mods)
+
+    url_to_comp_id = {}
     comps = []
-    for mod_id, meta in sorted(bar_ovs.items()):
-        comp_id = f"comp_{mod_id.replace('-', '_')}"
+    cases = []
+
+    for mod_id, meta in sorted(all_targets.items()):
+        url = meta["url"]
+        if url not in url_to_comp_id:
+            safe_id = meta["id"].replace("-", "_").replace(".", "_")
+            comp_id = f"comp_{safe_id}_{len(url_to_comp_id)}"
+            url_to_comp_id[url] = comp_id
+            comps.append(f'    readonly property var {comp_id}: Qt.createComponent("{url}")')
+        else:
+            comp_id = url_to_comp_id[url]
         cases.append(f'            case "{mod_id}":\n                return {comp_id};')
-        # Create a direct Component so moduleLoader in DynamicBarSection loads the plugin
-        # item directly without intermediate wrappers or nested loaders.
-        comps.append(f'    readonly property var {comp_id}: Qt.createComponent("{meta["url"]}")')
+
     return "\n".join(cases), "\n".join(comps)
 
-cases_code, comps_code = generate_override_components(bar_overrides)
+cases_code, comps_code = generate_override_components(bar_overrides, custom_bar_modules)
 
 # Generate PluginOverrides.qml
 bar_overrides_json = json.dumps({k: v["url"] for k, v in bar_overrides.items()}, indent=4)
 win_overrides_json = json.dumps({k: v["url"] for k, v in window_overrides.items()}, indent=4)
 act_overrides_json = json.dumps(action_overrides, indent=4)
+custom_meta_json = json.dumps(custom_modules_meta, indent=4)
 
 plugin_overrides_qml = f"""pragma Singleton
 import QtQuick
@@ -201,20 +281,43 @@ QtObject {{
     // Mapping of action/toggle name -> Plugin ID to toggle
     readonly property var actionOverrides: ({act_overrides_json})
 
+    // Metadata dictionary for custom plugins & modules
+    readonly property var customModulesMeta: ({custom_meta_json})
+
     function hasBarOverride(moduleId) {{
-        return barOverrides.hasOwnProperty(moduleId);
+        if (!moduleId) return false;
+        var key = moduleId.toLowerCase();
+        return barOverrides.hasOwnProperty(moduleId) || barOverrides.hasOwnProperty(key);
     }}
 
     function getBarOverrideUrl(moduleId) {{
-        return barOverrides[moduleId] || "";
+        if (!moduleId) return "";
+        var key = moduleId.toLowerCase();
+        return barOverrides[moduleId] || barOverrides[key] || "";
+    }}
+
+    function hasCustomMeta(moduleId) {{
+        if (!moduleId) return false;
+        var key = moduleId.toLowerCase();
+        return customModulesMeta.hasOwnProperty(moduleId) || customModulesMeta.hasOwnProperty(key);
+    }}
+
+    function getCustomMeta(moduleId) {{
+        if (!moduleId) return null;
+        var key = moduleId.toLowerCase();
+        return customModulesMeta[moduleId] || customModulesMeta[key] || null;
     }}
 
     function hasWindowOverride(windowId) {{
-        return windowOverrides.hasOwnProperty(windowId);
+        if (!windowId) return false;
+        var key = windowId.toLowerCase();
+        return windowOverrides.hasOwnProperty(windowId) || windowOverrides.hasOwnProperty(key);
     }}
 
     function getWindowOverrideUrl(windowId) {{
-        return windowOverrides[windowId] || "";
+        if (!windowId) return "";
+        var key = windowId.toLowerCase();
+        return windowOverrides[windowId] || windowOverrides[key] || "";
     }}
 
     function isActionOverridden(actionName) {{
@@ -258,8 +361,9 @@ Row {{
     property string barSection: "left"
     property int barIndex: -1
     property var barContainer: null
+    property string moduleId: "custom_left"
     spacing: 6
-{generate_widget_group(left_widgets)}
+{generate_widget_group(left_widgets, "left")}
 }}
 """
 
@@ -273,8 +377,9 @@ Row {{
     property string barSection: "center"
     property int barIndex: -1
     property var barContainer: null
+    property string moduleId: "custom_center"
     spacing: 6
-{generate_widget_group(center_widgets)}
+{generate_widget_group(center_widgets, "center")}
 }}
 """
 
@@ -288,8 +393,9 @@ Row {{
     property string barSection: "right"
     property int barIndex: -1
     property var barContainer: null
+    property string moduleId: "custom_right"
     spacing: 6
-{generate_widget_group(right_widgets)}
+{generate_widget_group(right_widgets, "right")}
 }}
 """
 
@@ -335,3 +441,4 @@ with open(os.path.join(gen_dir, "qmldir"), "w") as f:
 
 
 EOF
+
