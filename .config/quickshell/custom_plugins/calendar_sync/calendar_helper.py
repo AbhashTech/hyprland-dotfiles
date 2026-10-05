@@ -9,6 +9,8 @@ and querying today's and upcoming events.
 import sys
 import os
 import json
+import subprocess
+import shutil
 import urllib.request
 import urllib.error
 import datetime
@@ -362,18 +364,43 @@ END:VCALENDAR
     return {"status": "ok", "path": str(sample_file)}
 
 def pick_file_zenity():
-    """Launch zenity file chooser to select .ics file."""
+    """Launch graphical file chooser to select .ics file."""
     try:
-        res = subprocess.run(
-            ["zenity", "--file-selection", "--file-filter=iCalendar files (*.ics) | *.ics", "--title=Select iCalendar (.ics) File"],
-            capture_output=True,
-            text=True,
-            check=False
-        )
-        selected = res.stdout.strip()
-        if selected and os.path.exists(selected):
-            return {"status": "ok", "path": selected}
-        return {"status": "cancel"}
+        if shutil.which("zenity"):
+            res = subprocess.run(
+                ["zenity", "--file-selection", "--file-filter=iCalendar files (*.ics) | *.ics", "--title=Select iCalendar (.ics) File"],
+                capture_output=True,
+                text=True,
+                check=False
+            )
+            selected = res.stdout.strip()
+            if selected and os.path.exists(selected):
+                return {"status": "ok", "path": selected}
+            return {"status": "cancel"}
+        elif shutil.which("kdialog"):
+            res = subprocess.run(
+                ["kdialog", "--getopenfilename", os.path.expanduser("~"), "*.ics | iCalendar files (*.ics)"],
+                capture_output=True,
+                text=True,
+                check=False
+            )
+            selected = res.stdout.strip()
+            if selected and os.path.exists(selected):
+                return {"status": "ok", "path": selected}
+            return {"status": "cancel"}
+        elif shutil.which("yad"):
+            res = subprocess.run(
+                ["yad", "--file", "--file-filter=iCalendar files (*.ics) | *.ics", "--title=Select iCalendar (.ics) File"],
+                capture_output=True,
+                text=True,
+                check=False
+            )
+            selected = res.stdout.strip()
+            if selected and os.path.exists(selected):
+                return {"status": "ok", "path": selected}
+            return {"status": "cancel"}
+        else:
+            return {"status": "error", "message": "No file chooser installed (zenity, kdialog, or yad)"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 

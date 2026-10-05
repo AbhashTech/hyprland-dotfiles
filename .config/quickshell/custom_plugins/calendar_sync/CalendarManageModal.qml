@@ -311,7 +311,10 @@ Rectangle {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: zenityProc.exec(["python3", CalendarSyncService.helperPath, "pick-file"])
+                            onClicked: {
+                                if (zenityProc.running) zenityProc.running = false;
+                                zenityProc.exec(["python3", CalendarSyncService.helperPath, "pick-file"]);
+                            }
                         }
                     }
 
