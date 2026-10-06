@@ -16,21 +16,16 @@ Rectangle {
     readonly property int validItemCount: {
         const list = SystemTray.items ? SystemTray.items.values : null;
         if (!list || list.length === 0) return 0;
-        let c = 0;
-        for (let i = 0; i < list.length; i++) {
-            const it = list[i];
-            if (it && it.icon && it.icon.length > 0) {
-                c++;
-            }
-        }
-        return c;
+        return list.length;
     }
 
-    readonly property bool hasItems: validItemCount > 0
+    readonly property bool hasItems: validItemCount > 0 || (trayRepeater && trayRepeater.count > 0)
+    readonly property bool isTrayActive: hasItems || (BarConfig.isDragging && BarConfig.draggedModule === "tray")
 
-    visible: hasItems || (BarConfig.isDragging && BarConfig.draggedModule === "tray")
-    implicitHeight: visible ? Theme.barHeight - 8 : 0
-    implicitWidth: hasItems ? (trayRow.implicitWidth + 8) : (visible ? 28 : 0)
+    visible: isTrayActive
+    implicitHeight: isTrayActive ? Theme.barHeight - 8 : 0
+    implicitWidth: hasItems ? (trayRow.implicitWidth + 8) : (isTrayActive ? 28 : 0)
+    opacity: isTrayActive ? 1.0 : 0.0
     radius: Theme.capsuleRadius
 
     color: Theme.moduleBg
@@ -50,9 +45,9 @@ Rectangle {
                 id: trayItemWrapper
                 required property var modelData
                 readonly property bool hasIcon: !!(modelData && modelData.icon && modelData.icon.length > 0)
-                visible: hasIcon
-                width: hasIcon ? 18 : 0
-                height: hasIcon ? 18 : 0
+                visible: hasIcon || !!modelData
+                width: 18
+                height: 18
                 anchors.verticalCenter: parent.verticalCenter
 
                 QsMenuAnchor {
@@ -62,11 +57,9 @@ Rectangle {
                     anchor.item: trayItemWrapper
                 }
 
-                Image {
+                IconImage {
                     anchors.fill: parent
-                    source: modelData.icon || ""
-                    sourceSize: Qt.size(24, 24)
-                    fillMode: Image.PreserveAspectFit
+                    source: trayItemWrapper.hasIcon ? modelData.icon : "application-x-executable"
                 }
 
                 MouseArea {

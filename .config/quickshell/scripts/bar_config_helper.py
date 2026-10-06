@@ -174,6 +174,70 @@ MODULE_CATALOG = [
         "defaultSection": "right"
     },
     {
+        "id": "tray",
+        "name": "System Tray",
+        "icon": "󰍜",
+        "description": "System background application tray icons",
+        "category": "system",
+        "defaultSection": "right"
+    },
+    {
+        "id": "clipboard",
+        "name": "Clipboard History",
+        "icon": "󰅌",
+        "description": "Clipboard manager button with search and private mode toggle",
+        "category": "system",
+        "defaultSection": "right"
+    },
+    {
+        "id": "notifications",
+        "name": "Notification Center",
+        "icon": "󰂚",
+        "description": "Notification center and DND toggle",
+        "category": "system",
+        "defaultSection": "right"
+    },
+    {
+        "id": "volume",
+        "name": "Audio Volume",
+        "icon": "󰕾",
+        "description": "Audio output volume level and mute toggle",
+        "category": "hardware",
+        "defaultSection": "right"
+    },
+    {
+        "id": "brightness",
+        "name": "Screen Brightness",
+        "icon": "󰃠",
+        "description": "Display backlight brightness level and control",
+        "category": "hardware",
+        "defaultSection": "right"
+    },
+    {
+        "id": "wifi",
+        "name": "Wi-Fi Network",
+        "icon": "󰤨",
+        "description": "Wireless network connectivity status",
+        "category": "hardware",
+        "defaultSection": "right"
+    },
+    {
+        "id": "bluetooth",
+        "name": "Bluetooth Peripherals",
+        "icon": "󰂯",
+        "description": "Bluetooth connectivity and paired devices",
+        "category": "hardware",
+        "defaultSection": "right"
+    },
+    {
+        "id": "battery",
+        "name": "Battery & Power",
+        "icon": "󰁹",
+        "description": "Battery charge indicator and power profiles",
+        "category": "hardware",
+        "defaultSection": "right"
+    },
+    {
         "id": "traynotif",
         "name": "Tray & Notification Hub",
         "icon": "󰂚",

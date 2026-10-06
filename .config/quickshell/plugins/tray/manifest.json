@@ -1,0 +1,13 @@
+{
+  "id": "tray",
+  "name": "System Tray",
+  "version": "1.0.0",
+  "author": "Quickshell System",
+  "description": "System tray icon module for background applications and StatusNotifier indicators",
+  "position": "right",
+  "kinds": ["bar-widget", "core"],
+  "entryPoints": {
+    "barWidget": "components/TrayModule.qml"
+  },
+  "dependencies": []
+}

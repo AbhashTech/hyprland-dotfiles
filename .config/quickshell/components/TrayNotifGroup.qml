@@ -100,9 +100,9 @@ Rectangle {
                     id: trayItemWrapper
                     required property var modelData
                     readonly property bool hasIcon: !!(modelData && modelData.icon && modelData.icon.length > 0)
-                    visible: hasIcon
-                    width: hasIcon ? 18 : 0
-                    height: hasIcon ? 18 : 0
+                    visible: hasIcon || !!modelData
+                    width: 18
+                    height: 18
                     anchors.verticalCenter: parent.verticalCenter
 
                     QsMenuAnchor {
@@ -112,11 +112,9 @@ Rectangle {
                         anchor.item: trayItemWrapper
                     }
 
-                    Image {
+                    IconImage {
                         anchors.fill: parent
-                        source: modelData.icon || ""
-                        sourceSize: Qt.size(24, 24)
-                        fillMode: Image.PreserveAspectFit
+                        source: trayItemWrapper.hasIcon ? modelData.icon : "application-x-executable"
                     }
 
                     MouseArea {

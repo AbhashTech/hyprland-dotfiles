@@ -307,22 +307,36 @@ def list_plugins():
             if not builtin_path.is_dir() or entry.startswith("."):
                 continue
 
+            manifest_file = builtin_path / "manifest.json"
+            manifest = {}
+            has_manifest = False
+            if manifest_file.is_file():
+                try:
+                    with open(manifest_file, "r") as f:
+                        manifest = json.load(f)
+                        has_manifest = True
+                except Exception:
+                    pass
+
+            builtin_name = manifest.get("name", entry.replace("-", " ").replace("_", " ").title())
+            builtin_desc = manifest.get("description", f"Built-in core module ({entry})")
+
             builtin_plugins.append({
-                "id": entry,
+                "id": manifest.get("id", entry),
                 "folderName": entry,
-                "name": entry.replace("-", " ").replace("_", " ").title(),
-                "version": "Core",
-                "author": "Quickshell System",
-                "description": f"Built-in core module ({entry})",
+                "name": builtin_name,
+                "version": manifest.get("version", "Core"),
+                "author": manifest.get("author", "Quickshell System"),
+                "description": builtin_desc,
                 "enabled": True,
-                "position": "core",
-                "kinds": ["window", "core"],
-                "entryPoints": {},
-                "dependencies": [],
+                "position": manifest.get("position", "core"),
+                "kinds": manifest.get("kinds", ["window", "core"]),
+                "entryPoints": manifest.get("entryPoints", {}),
+                "dependencies": manifest.get("dependencies", []),
                 "dependencyStatus": {"allSatisfied": True, "deps": []},
                 "path": str(builtin_path),
                 "isCustom": False,
-                "hasManifest": False,
+                "hasManifest": has_manifest,
                 "hasGit": False,
                 "gitBranch": "",
                 "gitRemote": "",
